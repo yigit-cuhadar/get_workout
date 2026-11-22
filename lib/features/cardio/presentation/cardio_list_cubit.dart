@@ -19,6 +19,7 @@ class CardioListState extends Equatable {
     this.chart = const [],
     this.failure,
     this.writeRejected = false,
+    this.healthConnected = false,
   });
 
   final CardioListStatus status;
@@ -37,10 +38,14 @@ class CardioListState extends Equatable {
   /// user, then call [CardioListCubit.rejectionShown].
   final bool writeRejected;
 
+  /// The health store gives workouts (see [IsHealthCardioConnected]).
+  final bool healthConnected;
+
   CardioListState copyWith({
     List<CardioWeek>? weeks,
     List<CardioWeek>? chart,
     bool? writeRejected,
+    bool? healthConnected,
   }) => CardioListState(
     status: status,
     sessions: sessions,
@@ -48,6 +53,7 @@ class CardioListState extends Equatable {
     chart: chart ?? this.chart,
     failure: failure,
     writeRejected: writeRejected ?? this.writeRejected,
+    healthConnected: healthConnected ?? this.healthConnected,
   );
 
   @override
@@ -58,6 +64,7 @@ class CardioListState extends Equatable {
     chart,
     failure,
     writeRejected,
+    healthConnected,
   ];
 }
 
@@ -71,6 +78,7 @@ class CardioListCubit extends Cubit<CardioListState> {
     required WatchAuthUser watchAuthUser,
     required this._watchSessions,
     required this._getHealth,
+    required this._healthConnected,
     required WatchRejectedCardioWrites watchRejectedWrites,
     DateTime Function()? clock,
   }) : _clock = clock ?? DateTime.now,
@@ -86,6 +94,8 @@ class CardioListCubit extends Cubit<CardioListState> {
 
   final WatchCardioSessions _watchSessions;
   final GetHealthCardio _getHealth;
+  final IsHealthCardioConnected _healthConnected;
+  bool _connected = false;
   final DateTime Function() _clock;
 
   /// The last stored sessions and health store sessions, newest first.
@@ -102,6 +112,7 @@ class CardioListCubit extends Cubit<CardioListState> {
   void _onUser(String? uid) {
     _uid = uid;
     _health = const [];
+    _connected = false;
     _follow();
     if (uid != null) unawaited(_readHealth());
   }
@@ -128,15 +139,16 @@ class CardioListCubit extends Cubit<CardioListState> {
   /// on their own.
   Future<void> _readHealth() async {
     final uid = _uid;
-    final result = await _getHealth();
+    final (result, connected) = await (_getHealth(), _healthConnected()).wait;
     if (isClosed || uid != _uid) return;
+    _connected = connected.valueOrNull ?? _connected;
     switch (result) {
       case Err(:final failure):
         Log.e('cardio', 'health store not read: ${failure.message}');
       case Ok(value: final health):
         _health = health;
-        if (state.status == CardioListStatus.ready) _emitReady();
     }
+    if (state.status == CardioListStatus.ready) _emitReady();
   }
 
   void _emitReady() {
@@ -149,6 +161,7 @@ class CardioListCubit extends Cubit<CardioListState> {
         weeks: groupByWeek(sessions, _firstWeekday),
         chart: lastWeeks(sessions, _firstWeekday, now: _clock()),
         writeRejected: state.writeRejected,
+        healthConnected: _connected,
       ),
     );
   }

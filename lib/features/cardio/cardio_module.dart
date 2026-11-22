@@ -28,6 +28,7 @@ class CardioModule implements FeatureModule {
       ..registerFactory(() => SaveCardioSession(sl()))
       ..registerFactory(() => DeleteCardioSession(sl()))
       ..registerFactory(() => GetHealthCardio(sl()))
+      ..registerFactory(() => IsHealthCardioConnected(sl()))
       // One list for the whole app: the list and the session pages share it.
       ..registerLazySingleton(
         () => CardioListCubit(
@@ -35,6 +36,7 @@ class CardioModule implements FeatureModule {
           watchAuthUser: sl(),
           watchSessions: sl(),
           getHealth: sl(),
+          healthConnected: sl(),
           watchRejectedWrites: sl(),
         ),
       )

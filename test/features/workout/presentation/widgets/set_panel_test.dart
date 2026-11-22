@@ -8,7 +8,6 @@ import 'package:get_workout/features/workout/presentation/widgets/set_panel.dart
 const _labels = SetPanelLabels(
   log: 'Log set',
   done: 'Done',
-  next: 'Next',
   options: 'Set options',
   addDrop: 'Add drop',
   removeDrop: 'Remove drop',
@@ -89,8 +88,8 @@ void main() {
     );
   });
 
-  testWidgets('typing the weight, Next types the reps and Done closes the '
-      'keyboard; a drop\'s values come next', (tester) async {
+  testWidgets('a tap on another value types it; a tap outside closes the '
+      'keyboard', (tester) async {
     await _pump(
       tester,
       SetPanel(
@@ -119,22 +118,18 @@ void main() {
     await tester.pump();
     expect(typing(0), isTrue);
 
-    await tester.tap(find.text('Next'));
-    await tester.pump();
-    expect(typing(1), isTrue);
-    await tester.tap(find.text('Next'));
+    await tester.tap(find.text('60'));
     await tester.pump();
     expect(typing(2), isTrue);
+    expect(typing(0), isFalse);
 
-    await tester.tap(find.text('Done'));
+    await tester.tap(find.text('Bench Press · set 3 of 4'));
     await tester.pump();
-    expect(find.text('Next'), findsNothing);
     expect([for (var i = 0; i < 4; i++) typing(i)], everyElement(isFalse));
   });
 
-  testWidgets('one tap on a value types it with the keyboard up and the '
-      'Next / Done bar on it', (tester) async {
-    addTearDown(tester.view.resetViewInsets);
+  testWidgets('one tap on a value types it with the keyboard up and no bar '
+      'above it', (tester) async {
     await _pump(
       tester,
       SetPanel(
@@ -157,18 +152,8 @@ void main() {
       isTrue,
     );
     expect(tester.testTextInput.isVisible, isTrue);
-
-    // The keyboard rises; the Scaffold keeps its height from the panel.
-    tester.view.viewInsets = const FakeViewPadding(bottom: 900);
-    await tester.pump();
-    final keyboardTop =
-        (tester.view.physicalSize.height - 900) / tester.view.devicePixelRatio;
-    expect(tester.getBottomLeft(find.text('Next')).dy, lessThan(keyboardTop));
-    expect(
-      tester.getBottomLeft(find.text('Done')).dy,
-      greaterThan(keyboardTop - StepperField.barHeight),
-    );
-    expect(tester.testTextInput.isVisible, isTrue);
+    expect(find.text('Next'), findsNothing);
+    expect(find.text('Done'), findsNothing);
   });
 
   testWidgets('a load added to the body shows its sign', (tester) async {

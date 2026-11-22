@@ -117,6 +117,7 @@ void main() {
           watchAuthUser: WatchAuthUser(sessionAuth),
           watchSessions: WatchCardioSessions(cardio),
           getHealth: GetHealthCardio(FakeHealthSteps()),
+          healthConnected: IsHealthCardioConnected(FakeHealthSteps()),
           watchRejectedWrites: WatchRejectedCardioWrites(cardio),
         ),
       )

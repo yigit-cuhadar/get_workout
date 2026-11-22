@@ -215,7 +215,6 @@ class SetBar extends StatelessWidget {
       labels: SetPanelLabels(
         log: l10n.workoutLogSet,
         done: l10n.setPanelDone,
-        next: l10n.setPanelNext,
         options: l10n.workoutSetOptions,
         addDrop: l10n.workoutAddDrop,
         removeDrop: l10n.workoutRemoveDrop,

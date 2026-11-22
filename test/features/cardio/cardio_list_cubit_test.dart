@@ -65,6 +65,7 @@ void main() {
     watchAuthUser: WatchAuthUser(auth),
     watchSessions: WatchCardioSessions(cardio),
     getHealth: GetHealthCardio(FakeHealthSteps()),
+    healthConnected: IsHealthCardioConnected(FakeHealthSteps()),
     watchRejectedWrites: WatchRejectedCardioWrites(cardio),
     clock: () => now,
   );
@@ -74,6 +75,32 @@ void main() {
     sessions: sessions,
     weeks: groupByWeek(sessions, DateTime.monday),
     chart: lastWeeks(sessions, DateTime.monday, now: now),
+  );
+
+  blocTest<CardioListCubit, CardioListState>(
+    'says when the health store gives workouts, even with none in it',
+    build: () => CardioListCubit(
+      firstWeekday: DateTime.monday,
+      watchAuthUser: WatchAuthUser(auth),
+      watchSessions: WatchCardioSessions(cardio),
+      getHealth: GetHealthCardio(FakeHealthSteps()),
+      healthConnected: IsHealthCardioConnected(
+        FakeHealthSteps(workoutsPermissionStatus: HealthPermission.granted),
+      ),
+      watchRejectedWrites: WatchRejectedCardioWrites(cardio),
+      clock: () => now,
+    ),
+    act: (_) async {
+      users.add(member);
+      await pumpEventQueue();
+      stored['u1']!.add(const []);
+      await pumpEventQueue();
+    },
+    verify: (cubit) {
+      expect(cubit.state.status, CardioListStatus.ready);
+      expect(cubit.state.sessions, isEmpty);
+      expect(cubit.state.healthConnected, isTrue);
+    },
   );
 
   blocTest<CardioListCubit, CardioListState>(
@@ -98,6 +125,7 @@ void main() {
         ),
         clock: () => now,
       ),
+      healthConnected: IsHealthCardioConnected(FakeHealthSteps()),
       watchRejectedWrites: WatchRejectedCardioWrites(cardio),
       clock: () => now,
     ),
@@ -314,6 +342,7 @@ void main() {
         watchAuthUser: WatchAuthUser(auth),
         watchSessions: WatchCardioSessions(cardio),
         getHealth: GetHealthCardio(FakeHealthSteps()),
+        healthConnected: IsHealthCardioConnected(FakeHealthSteps()),
         watchRejectedWrites: WatchRejectedCardioWrites(cardio),
         clock: () => now,
       ),

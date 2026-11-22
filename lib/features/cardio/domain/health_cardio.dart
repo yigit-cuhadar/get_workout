@@ -83,3 +83,26 @@ class GetHealthCardio implements UseCase<List<CardioSession>, NoParams> {
     );
   }
 }
+
+/// Whether the health store can give workouts: it is available and their
+/// read was not denied. iOS never says whether a read is allowed, so an
+/// asked one counts as connected there.
+class IsHealthCardioConnected implements UseCase<bool, NoParams> {
+  const IsHealthCardioConnected(this._health);
+  final HealthSteps _health;
+
+  @override
+  Future<Result<bool>> call([NoParams params = const NoParams()]) async {
+    switch (await _health.availability()) {
+      case Err(:final failure):
+        return Err(failure);
+      case Ok(value: HealthAvailability.available):
+        break;
+      case Ok():
+        return const Ok(false);
+    }
+    return (await _health.workoutsPermission()).map(
+      (permission) => permission != HealthPermission.denied,
+    );
+  }
+}
