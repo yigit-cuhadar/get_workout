@@ -87,6 +87,15 @@ App-wide decisions only. How each feature behaves is under Feature notes.
   access as a parameter so `npm test` (lint, build, `node --test`) runs
   without an emulator; CI runs it. Deploying is the Architect's step
   (`firebase deploy --only functions --project <id>`), never an agent's.
+- **Dependencies** (owner's picks, 2026-11-22): everything current, upgraded
+  from an analysis. Flutter 3.50.1 (Dart 3.14) in the app, Forge and CI;
+  `health` 14; AGP, Gradle and Kotlin at their latest, targetSdk follows
+  Flutter's default (36 meets Play's rule); functions on Node 24 with
+  nodemailer 10 and TypeScript 6.0 (typescript-eslint does not support 7
+  yet); CI on actions/checkout and setup-node v7. `cupertino_icons` is
+  removed as unused. The `camera_avfoundation` override stays until
+  flutter/flutter#196204 is fixed; `equatable` stays at 2 in the app only
+  through the `cel` test dependency.
 - **Notifications**: local for rest end, workout reminders and measurement
   reminders; FCM topic push for announcements.
 - **UX pass** (2026-11-13, owner's call): before the design phase the
