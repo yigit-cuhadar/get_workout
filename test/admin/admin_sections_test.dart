@@ -11,6 +11,7 @@ void main() {
         ('People', 'Support inbox'),
         ('Content', 'Exercises'),
         ('Content', 'Programs'),
+        ('Content', 'Generator'),
         ('Content', 'Announcements'),
         ('App', 'App settings'),
       ],

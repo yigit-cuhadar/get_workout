@@ -8,8 +8,13 @@ import '../../features/exercises/domain/vocabulary.dart';
 String codeLabel(Coded value) {
   // A code its words alone misread.
   if (value == SensitiveArea.elbowsWrists) return 'Elbows and wrists';
-  final words = value.code.replaceAll('_', ' ');
-  return words[0].toUpperCase() + words.substring(1);
+  return codeWords(value.code);
+}
+
+/// A stored code as words: `build_muscle` → "Build muscle".
+String codeWords(String code) {
+  final words = code.replaceAll('_', ' ');
+  return words.isEmpty ? words : words[0].toUpperCase() + words.substring(1);
 }
 
 String codeLabels(Iterable<Coded> values) => values.map(codeLabel).join(', ');

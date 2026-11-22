@@ -298,6 +298,19 @@ enum GeneratorTier implements Coded {
   final String code;
 }
 
+/// What a slot of a generator template is for: its dose and its place in
+/// the day.
+enum SlotRole implements Coded {
+  primary('primary'),
+  secondary('secondary'),
+  accessory('accessory'),
+  core('core');
+
+  const SlotRole(this.code);
+  @override
+  final String code;
+}
+
 /// A part of the body a user may mark as sensitive; the generator then
 /// leaves out the exercises that stress it.
 enum SensitiveArea implements Coded {
@@ -308,6 +321,32 @@ enum SensitiveArea implements Coded {
   knees('knees');
 
   const SensitiveArea(this.code);
+  @override
+  final String code;
+}
+
+/// A part of the body the generator's user may focus on or leave out.
+enum FocusArea implements Coded {
+  chest('chest'),
+  back('back'),
+  shoulders('shoulders'),
+  arms('arms'),
+  core('core'),
+  glutes('glutes'),
+  legs('legs');
+
+  const FocusArea(this.code);
+  @override
+  final String code;
+}
+
+/// What a generated program prefers to train with, when the user has both.
+enum EquipmentStyle implements Coded {
+  any('any'),
+  machines('machines'),
+  freeWeights('free_weights');
+
+  const EquipmentStyle(this.code);
   @override
   final String code;
 }

@@ -6,15 +6,13 @@ import 'package:intl/intl.dart';
 
 import '../../shell/admin_form.dart';
 import '../../shell/admin_text.dart';
+import '../../shell/publishing.dart';
 import '../domain/app_settings.dart';
 import 'app_settings_cubit.dart';
 
 /// The widths of a key's input and its "Changed" column on the C1 board.
 const _inputWidth = 240.0;
 const _changedWidth = 170.0;
-
-/// The history panel's width on the C3 board.
-const _historyWidth = 400.0;
 
 /// The publish confirm's width on the C2 board.
 const _dialogWidth = 620.0;
@@ -224,7 +222,7 @@ class _AppSettingsView extends StatelessWidget {
             const Expanded(child: _Settings()),
             if (historyOpen) ...[
               const VerticalDivider(width: 1),
-              const SizedBox(width: _historyWidth, child: _History()),
+              const SizedBox(width: historyWidth, child: _History()),
             ],
           ],
         ),
@@ -298,7 +296,15 @@ class _Settings extends StatelessWidget {
             ),
           ),
         ),
-        if (changes.isNotEmpty) _PublishBar(changes),
+        if (changes.isNotEmpty)
+          PublishBar(
+            count: changes.length,
+            publishing: state.publishing,
+            onDiscard: cubit.discard,
+            onReview: state.canPublish
+                ? () => _confirmPublish(context, changes)
+                : null,
+          ),
       ],
     );
   }
@@ -426,49 +432,6 @@ class _Input extends StatelessWidget {
   }
 }
 
-/// The count of unpublished changes with Discard and Review and publish.
-class _PublishBar extends StatelessWidget {
-  const _PublishBar(this.changes);
-
-  final List<SettingChange> changes;
-
-  @override
-  Widget build(BuildContext context) {
-    final cubit = context.read<AppSettingsCubit>();
-    final state = context.watch<AppSettingsCubit>().state;
-    final count = changes.length;
-    return Material(
-      color: Theme.of(context).colorScheme.surfaceContainer,
-      child: Padding(
-        padding: const EdgeInsets.all(Gap.md),
-        child: Row(
-          children: [
-            Expanded(
-              child: Text(
-                state.publishing
-                    ? 'Publishing...'
-                    : '$count unpublished ${count == 1 ? 'change' : 'changes'}',
-                style: Theme.of(context).textTheme.titleSmall,
-              ),
-            ),
-            OutlinedButton(
-              onPressed: state.publishing ? null : cubit.discard,
-              child: const Text('Discard'),
-            ),
-            const SizedBox(width: Gap.sm),
-            FilledButton(
-              onPressed: state.canPublish
-                  ? () => _confirmPublish(context, changes)
-                  : null,
-              child: const Text('Review and publish'),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
 /// Key / Now / After publishing.
 class _ChangeTable extends StatelessWidget {
   const _ChangeTable(this.changes);
@@ -476,37 +439,11 @@ class _ChangeTable extends StatelessWidget {
   final List<SettingChange> changes;
 
   @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final heading = theme.textTheme.labelMedium?.copyWith(
-      color: theme.colorScheme.onSurfaceVariant,
-    );
-    Widget cell(String text, [TextStyle? style]) => Padding(
-      padding: const EdgeInsets.symmetric(vertical: Gap.xs),
-      child: Text(text, style: style),
-    );
-    return Table(
-      defaultVerticalAlignment: TableCellVerticalAlignment.middle,
-      children: [
-        TableRow(
-          children: [
-            cell('Key', heading),
-            cell('Now', heading),
-            cell('After publishing', heading),
-          ],
-        ),
-        for (final change in changes)
-          if (specOf(change.key) case final spec)
-            TableRow(
-              children: [
-                cell(change.key),
-                cell(_label(spec, change.before)),
-                cell(_label(spec, change.after)),
-              ],
-            ),
-      ],
-    );
-  }
+  Widget build(BuildContext context) => ChangeTable(whereLabel: 'Key', [
+    for (final change in changes)
+      if (specOf(change.key) case final spec)
+        (change.key, _label(spec, change.before), _label(spec, change.after)),
+  ]);
 }
 
 /// The versions, newest first; an opened one shows what restoring it
@@ -519,48 +456,17 @@ class _History extends StatelessWidget {
     final cubit = context.read<AppSettingsCubit>();
     final state = context.watch<AppSettingsCubit>().state;
     final history = state.history;
-    final failure = state.historyFailure;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
+    return HistoryPane(
+      onClose: cubit.closeHistory,
+      onRetry: cubit.retryHistory,
+      loaded: history != null,
+      failure: switch (state.historyFailure) {
+        final failure? => _loadFailureMessage(failure),
+        null => null,
+      },
       children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(Gap.md, Gap.sm, Gap.sm, 0),
-          child: Row(
-            children: [
-              Expanded(
-                child: Text(
-                  'History',
-                  style: Theme.of(context).textTheme.titleMedium,
-                ),
-              ),
-              IconButton(
-                tooltip: 'Close',
-                onPressed: cubit.closeHistory,
-                icon: const Icon(Icons.close),
-              ),
-            ],
-          ),
-        ),
-        Expanded(
-          child: ListView(
-            padding: const EdgeInsets.all(Gap.md),
-            children: [
-              if (failure != null)
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: const Icon(Icons.error_outline),
-                  title: Text(_loadFailureMessage(failure)),
-                  trailing: TextButton(
-                    onPressed: cubit.retryHistory,
-                    child: const Text('Retry'),
-                  ),
-                ),
-              if (history == null && failure == null) const LoadingView(),
-              for (final (i, entry) in (history ?? const []).indexed)
-                _VersionCard(entry, current: i == 0),
-            ],
-          ),
-        ),
+        for (final (i, entry) in (history ?? const []).indexed)
+          _VersionCard(entry, current: i == 0),
       ],
     );
   }

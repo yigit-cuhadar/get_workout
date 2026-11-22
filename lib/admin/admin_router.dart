@@ -14,6 +14,7 @@ import 'dashboard/presentation/dashboard_page.dart';
 import 'exercises/presentation/exercise_editor_page.dart';
 import 'exercises/presentation/exercise_list_cubit.dart';
 import 'exercises/presentation/exercise_list_page.dart';
+import 'generator/presentation/generator_page.dart';
 import 'programs/presentation/program_editor_page.dart';
 import 'programs/presentation/program_list_cubit.dart';
 import 'programs/presentation/program_list_page.dart';
@@ -35,6 +36,7 @@ abstract final class AdminRoutes {
   static const programs = '/programs';
   static const newProgram = '$programs/new';
   static String program(String id) => '$programs/$id';
+  static const generator = '/generator';
   static const announcements = '/announcements';
   static const supportInbox = '/support';
   static const appSettings = '/app-settings';
@@ -88,6 +90,8 @@ class AdminSection {
   bool opens(String location) =>
       location == path || location.startsWith('$path/');
 }
+
+final _generatorPage = GlobalKey<GeneratorPageState>();
 
 /// The menu, in order.
 final adminSections = [
@@ -188,6 +192,17 @@ final adminSections = [
           ],
         ),
       ],
+    ),
+  ),
+  AdminSection(
+    group: 'Content',
+    label: 'Generator',
+    path: AdminRoutes.generator,
+    route: GoRoute(
+      path: AdminRoutes.generator,
+      builder: (_, _) => GeneratorPage(key: _generatorPage),
+      // Unpublished changes are asked about before they are lost.
+      onExit: (_, _) => _generatorPage.currentState?.mayLeave() ?? true,
     ),
   ),
   AdminSection(
