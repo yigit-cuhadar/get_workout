@@ -533,7 +533,9 @@ only, JPEG, max 5 MB.
   focus[], skip[], sensitive[], equipmentStyle, split?}, seed?, kept?,
   lang?}` →
   `{program: {name, lengthWeeks, days[]}, weeklySets, uncovered[],
-  rulesVersion}`. Signed-in users with an active entitlement only
+  rulesVersion}`. The published rules are cached in the instance's
+  memory for 60 s, the live exercises for 5 minutes. Signed-in users with
+  an active entitlement only
   (`permission-denied`, `details.reason` `not-premium`); an admin always
   may, and may also send `rules` (unpublished rules to try) and
   `explain: true` (adds why each exercise was picked). See Feature notes ›
@@ -541,8 +543,10 @@ only, JPEG, max 5 MB.
 - `generatorRulesGet`, `generatorRulesCheck`, `generatorRulesPublish`,
   `generatorRulesHistory` (callables, `functions/src/generator`), admin
   claim only: read the rules (the current ones or a version), check
-  unpublished rules (the validator's problems, and what a set of standard
-  answers gives with them), publish (refused as `stale` when `base` is no
+  unpublished rules (the validator's problems, and when there are none
+  `findings`: refusals, uncovered muscles and days under half the session
+  over every goal × level × 2-6 days × the five equipment presets, at 60
+  minutes, style `any`, seed 0), publish (refused as `stale` when `base` is no
   longer the current version, as `invalid-input` with the problems;
   writes `generator/rules`, its version copy and `generator/options` in
   one transaction), list the last 20 versions.
@@ -3544,8 +3548,13 @@ the feature you are about to touch, and keep it true when you change it.
     panel edits a draft, checks it on the server and publishes it, as App
     settings does; the validator lives only in the function
     (`functions/src/generator/rules.ts`), so the panel and the seed
-    import (`tool/import_content.dart`, which calls the publish with the
-    seed when no rules exist) share it.
+    import share it: `tool/import_content.dart` (and
+    `tool/validate_content.dart`) check `content/generator/rules.json`
+    through the built `functions/lib/generator/cli.js` (Node; a problem
+    refuses the import), and the import writes it as version 1
+    (`publishedBy` `import`, note "Seed"; the rules, their version copy and
+    `generator/options` in one commit, each only if absent) when the
+    project has no rules; once it has, the panel owns them.
   - The exercise and muscle codes the engine needs are in
     `functions/src/generator/vocabulary.ts`; a Dart test holds them equal
     to `vocabulary.dart`.

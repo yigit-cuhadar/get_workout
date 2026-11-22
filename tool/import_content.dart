@@ -1,12 +1,14 @@
-// Imports content/exercises/*.json into Firestore `exercises/<id>` and
+// Imports content/exercises/*.json into Firestore `exercises/<id>`,
 // content/programs/*.json into `programs/<id>` (the catalog card) and
-// `programs/<id>/detail/main` (the days). See _usage for how it decides what
-// to write.
+// `programs/<id>/detail/main` (the days), and seeds the program generator's
+// rules from content/generator/rules.json. See _usage for how it decides
+// what to write.
 import 'dart:io';
 
 import 'src/content_validator.dart';
 import 'src/content_import.dart';
 import 'src/firestore_rest.dart';
+import 'src/rules_seed.dart';
 
 const _usage = '''
 Usage: GOOGLE_ACCESS_TOKEN=\$(gcloud auth print-access-token) \\
@@ -32,6 +34,14 @@ Every write carries a precondition (the document's updateTime from the read,
 or "does not exist" for a new one), so a concurrent edit fails the commit
 instead of being lost. Nothing is ever deleted; documents missing from the
 files are listed as warnings (retire one by setting its status in its file).
+
+content/generator/rules.json, when present, is checked by the functions'
+validator (functions/lib/generator/cli.js, built by `npm run build` in
+functions/; needs node) and refuses the import like any other error. It is
+written as version 1 of the generator rules (generator/rules, its version
+copy and generator/options, in one commit) only when the project has no
+rules yet; once it has, the admin panel owns them and the file is not
+written.
 
 --dry-run prints the same summary without writing.''';
 
@@ -60,6 +70,17 @@ Future<void> main(List<String> args) async {
     if (!dir.existsSync()) _fail('No such directory: ${dir.path}');
   }
   final report = validateContent(exercises, programs: programs);
+  final rulesFile = File('content/generator/rules.json');
+  RulesSeed? rulesSeed;
+  if (rulesFile.existsSync()) {
+    try {
+      final loaded = await loadRulesSeed(rulesFile, validateRulesWithNode);
+      report.errors.addAll(loaded.problems);
+      rulesSeed = loaded.seed;
+    } on RulesValidatorException catch (e) {
+      _fail('$e');
+    }
+  }
   if (report.errors.isNotEmpty) {
     printReport(report);
     _fail('Validation failed; nothing imported.');
@@ -120,6 +141,18 @@ Future<void> main(List<String> args) async {
       ]);
     }
     _printPlan(plan, project: project, dryRun: dryRun);
+    if (rulesSeed != null) {
+      stdout.writeln(
+        await seedRules(
+          rulesSeed,
+          databasePath: firestore.databasePath,
+          rulesExist: () async =>
+              await firestore.getDocument('generator/rules') != null,
+          commit: firestore.commit,
+          dryRun: dryRun,
+        ),
+      );
+    }
     if (plan.skipped.isNotEmpty) {
       _fail(
         '${plan.skipped.length} document(s) were edited elsewhere and skipped, '
