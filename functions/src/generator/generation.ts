@@ -304,6 +304,7 @@ export async function generateFor(
     split: value.split,
     template: value.template,
     weeklySets: value.weeklySets,
+    targeted: value.targeted,
     uncovered: value.uncovered,
     rulesVersion,
     ...(value.trace ? { trace: value.trace } : {}),

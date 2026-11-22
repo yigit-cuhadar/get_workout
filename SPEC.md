@@ -404,7 +404,9 @@ never changed afterwards. Seeded from `content/generator/rules.json`.
 **`generator/options`** (read: any signed-in user; written with every
 publish): `version`, `splits[]` (`id`, `l10n`, `fits[]` of `{days,
 levels[], goals[]?}` from the templates), `sessionMinutes[]`,
-`maxFocusAreas`, `maxSkipAreas`. What the app needs to ask the questions.
+`maxFocusAreas`, `maxSkipAreas`, `focusAreas` and `skipAreas` (each area's
+muscles, so the pickers paint and take taps for exactly the muscles the
+rules act on). What the app needs to ask the questions.
 
 ### Storage
 
@@ -535,7 +537,9 @@ only, JPEG, max 5 MB.
   focus[], skip[], sensitive[], equipmentStyle, split?}, seed?, kept?,
   lang?}` →
   `{program: {name, lengthWeeks, days[]}, split, template, weeklySets,
-  uncovered[], rulesVersion, trace?}`; `null` counts as absent for every
+  targeted[], uncovered[], rulesVersion, trace?}` (`targeted`: the muscles
+  with a weekly target for these answers, so the app can recount the
+  uncovered ones after an edit); `null` counts as absent for every
   optional field. Signed-in users with an active entitlement only; an
   admin always may, and may also send `rules` (unpublished rules to try)
   and `explain: true` (adds why each exercise was picked). The published

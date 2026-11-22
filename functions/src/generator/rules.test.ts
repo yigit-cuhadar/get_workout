@@ -119,6 +119,9 @@ describe("optionsOf", () => {
     const options = optionsOf(seed());
     assert.deepEqual(options.sessionMinutes, [30, 45, 60, 75, 90]);
     assert.equal(options.maxFocusAreas, 2);
+    assert.equal(options.maxSkipAreas, 3);
+    assert.deepEqual(options.focusAreas.shoulders, ["mid_delt", "rear_delt"]);
+    assert.ok(options.skipAreas.legs.includes("calf"));
     assert.deepEqual(
       options.splits.map((split) => split.id),
       ["full_body", "upper_lower", "push_pull_legs", "upper_lower_ppl", "body_part"],
