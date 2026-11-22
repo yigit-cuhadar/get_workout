@@ -3451,11 +3451,23 @@ the feature you are about to touch, and keep it true when you change it.
     https://claude.ai/artifact/UsusNzFfYt5unjbC8gf7vb): the four profile
     answers show on the first page as one card, a row opening its
     question to change it, so the flow has a page per new question
-    instead of nine (G1 A); focus areas are picked on the body model,
-    with a switch to a list (G2, the owner's own answer; drawn as a new
-    row before it is built, with the leave-out question, G4); the
-    sensitive areas question opens with a "No sensitive areas" row,
-    selected until an area is ticked (G3 A).
+    instead of nine: seven in all (G1 A); focus areas are picked on the
+    body model, which opens first, with a Model / List switch to a list
+    of rows with tick boxes and Front / Back on the model; the picked
+    areas sit under the model as chips with the count (G2, the owner's
+    own answer; G4 A); the areas to leave out are a page of their own
+    after focus, on the same model and list, a left-out area hatched, an
+    area in focus not selectable there (G5 A); the sensitive areas
+    question opens with a "No sensitive areas" row, selected until an
+    area is ticked (G3 A). Decided by the Architect: the equipment style
+    question shows only when the user's equipment has both a machine
+    kind (machine, cable, Smith machine) and a free-weight kind (barbell,
+    EZ bar, trap bar, dumbbell, kettlebell), else it is `any`; the split
+    question shows only when more than one split fits the days, level
+    and goal.
+  - The owner accepted the printed set of sample programs on 2026-11-22
+    (https://claude.ai/artifact/7aNE5piW85CXo1Bg6UGVu6); ratings, templates
+    and numbers are tuned later from the admin panel.
   - Engine (`functions/src/generator/engine.ts`, pure: answers, rules,
     exercises, seed and kept items in; the same inputs give the same
     program):
