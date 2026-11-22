@@ -795,14 +795,25 @@ Where it stands (2026-11-18, end of Group 11):
     Zealand, Ireland), not in new territories; others open as the app gets
     their language. iPhone only (#216); iPads use compatibility mode.
   - TestFlight builds: 1.0.0 (1), 1.0.0 (2) (privacy manifest, iPhone only,
-    23 programs). Still to do before submission: the prod entitlement after
-    the sandbox renewal, restore, renewal and expiry on TestFlight; then
-    submit the version with both subscriptions, manual release.
+    23 programs). Still to do before submission: the app icon (still
+    Flutter's default on iOS, the 1024 store icon and Android; the drawn
+    options were rejected, the owner brings a 1024 PNG made with ChatGPT,
+    then generate the iOS set and Android mipmaps, adaptive and Android 12
+    splash icons); build 1.0.0 (3) on Flutter 3.50.1 (#223) and attach it;
+    the prod entitlement after the sandbox renewal (due 2026-11-23 08:56
+    UTC), restore, renewal and expiry on TestFlight; then submit the
+    version with both subscriptions, manual release.
 - Both studios' links match main again (published 2026-11-18 from a
   session: they belong to the owner's account, so a session publishes
   them directly). Owner to do: the Play Console Health declaration
   (above).
-- Small: the Forge Widgetbook use case "ListRow · Info hint" is broken.
+- Android round (2026-11-22, emulator): onboarding, the 3D sex cards,
+  notifications, Health Connect, the suggestion, the paywall and the muscle
+  tap work. Google sign-in uses Firebase's web flow in Chrome (email and
+  password, no device account picker, broken by Chrome's first-run
+  screens); open decision for the owner: native Credential Manager
+  (recommended) or keep the web flow.
+- Cloud Functions run on Node 24 on dev and prod (deployed 2026-11-22).
 
 Group 12, analytics (owner's plan, 2026-11-20; before the admin panel rework)
 - [x] Opt-out collection — analytics and crash reports on by default for every user, the Profile → Privacy switch turns them off; the onboarding and over-the-tabs consent page removed; privacy policy and labels updated
