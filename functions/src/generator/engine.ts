@@ -83,7 +83,9 @@ export interface Generated {
   days: { name: string; items: Item[] }[];
   /** 1 per set for each main muscle, 0.5 for each secondary one. */
   weeklySets: { [muscle: string]: number };
-  /** Muscles with a target that no exercise trains as a main muscle. */
+  /** The muscles that have a weekly target for these answers. */
+  targeted: string[];
+  /** Those of them that no exercise trains as a main muscle. */
   uncovered: string[];
   trace?: Why[][];
 }
@@ -670,6 +672,7 @@ export function generate(input: Input): Result {
     lengthWeeks: rules.lengthWeeks[answers.level],
     days: days.map((day) => ({ name: day.name, items: layout(day) })),
     weeklySets,
+    targeted: MUSCLES.filter((m) => target(m) > 0),
     uncovered: MUSCLES.filter((m) => target(m) > 0 && !trained.has(m)),
   };
   if (input.explain) {

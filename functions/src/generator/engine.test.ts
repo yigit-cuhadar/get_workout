@@ -197,6 +197,7 @@ describe("the seed rules with the content library", () => {
       ["Upper A", "Upper B", "Upper A 2", "Upper B 2"],
     );
     assert.ok(!noLegs.uncovered.includes("quads"));
+    assert.ok(!noLegs.targeted.includes("quads"));
     // Full-body days stay, without their leg work.
     const fullBody = program({ daysPerWeek: 3, skip: ["legs"] });
     assert.deepEqual(
@@ -467,6 +468,9 @@ describe("generate, with small rules", () => {
     assert.ok(result.ok);
     assert.ok(result.value.uncovered.includes("pec"));
     assert.ok(!result.value.uncovered.includes("quads"));
+    assert.ok(result.value.targeted.includes("quads"));
+    assert.ok(result.value.targeted.includes("pec"));
+    assert.ok(!result.value.targeted.includes("forearm"));
   });
 
   describe("focus", () => {

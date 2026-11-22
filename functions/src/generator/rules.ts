@@ -114,6 +114,9 @@ export interface Options {
   sessionMinutes: number[];
   maxFocusAreas: number;
   maxSkipAreas: number;
+  /** The muscles of each area, as the pickers paint them. */
+  focusAreas: { [area: string]: string[] };
+  skipAreas: { [area: string]: string[] };
 }
 
 export const optionsOf = (rules: Rules): Options => ({
@@ -131,6 +134,8 @@ export const optionsOf = (rules: Rules): Options => ({
   sessionMinutes: rules.time.sessionMinutes,
   maxFocusAreas: rules.focus.max,
   maxSkipAreas: rules.skip.max,
+  focusAreas: rules.focus.areas,
+  skipAreas: rules.skip.areas,
 });
 
 const ID = /^[a-z][a-z0-9_]{0,39}$/;
