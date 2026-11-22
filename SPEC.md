@@ -348,7 +348,9 @@ readable by admins.
 
 **`generator/rules`** (the program generator's rules; Admin SDK only, no
 client reads or writes it): `version` (int, from 1), `publishedAt`,
-`publishedBy` (uid), `publishedByEmail`, `note?`, `rules` (below). Every
+`publishedBy` (uid, or `import` for the seed), `publishedByEmail`,
+`note?`, `restores?` (the version a restore brought back), `rules`
+(below). Every
 publish also stores the same document as `generator/rules/versions/{n}`,
 never changed afterwards. Seeded from `content/generator/rules.json`.
 
@@ -532,20 +534,33 @@ only, JPEG, max 5 MB.
   `{answers: {goal, level, daysPerWeek, sessionMinutes, equipment[],
   focus[], skip[], sensitive[], equipmentStyle, split?}, seed?, kept?,
   lang?}` →
-  `{program: {name, lengthWeeks, days[]}, weeklySets, uncovered[],
-  rulesVersion}`. Signed-in users with an active entitlement only
-  (`permission-denied`, `details.reason` `not-premium`); an admin always
-  may, and may also send `rules` (unpublished rules to try) and
-  `explain: true` (adds why each exercise was picked). See Feature notes ›
+  `{program: {name, lengthWeeks, days[]}, split, template, weeklySets,
+  uncovered[], rulesVersion, trace?}`; `null` counts as absent for every
+  optional field. Signed-in users with an active entitlement only; an
+  admin always may, and may also send `rules` (unpublished rules to try)
+  and `explain: true` (adds why each exercise was picked). The published
+  rules are cached in the instance's memory for 60 s (checked with the
+  validator on every read; invalid ones count as none and are logged), the
+  live exercises for 5 minutes; a `split` or `sessionMinutes` the cached
+  rules do not offer reads them again once before refusing. Refusals:
+  `unauthenticated`; `invalid-argument` with `details.reason`
+  `invalid-input` and `details.field`; `permission-denied` with
+  `details.reason` `not-premium`, or `not-admin` for a non-admin sending
+  `rules` or `explain`; `failed-precondition` with `details.reason`
+  `no-rules`, `no-template` or `no-exercises`. See Feature notes ›
   Programs.
 - `generatorRulesGet`, `generatorRulesCheck`, `generatorRulesPublish`,
   `generatorRulesHistory` (callables, `functions/src/generator`), admin
   claim only: read the rules (the current ones or a version), check
-  unpublished rules (the validator's problems, and what a set of standard
-  answers gives with them), publish (refused as `stale` when `base` is no
-  longer the current version, as `invalid-input` with the problems;
-  writes `generator/rules`, its version copy and `generator/options` in
-  one transaction), list the last 20 versions.
+  unpublished rules (the validator's problems, and when there are none
+  `findings`: refusals, uncovered muscles and days under half the session
+  over every goal × level × 2-6 days × the five equipment presets, at 60
+  minutes, style `any`, seed 0), publish (refused as `stale` when `base` is no
+  longer the current version, as `invalid-input` with the problems, or
+  with `details.field` `restores` when `restores` names no earlier
+  version; writes `generator/rules`, its write-once version copy and
+  `generator/options` in one transaction), list the last 20 versions.
+  `null` counts as absent for `version`, `note` and `restores`.
 - `appSettingsGet`, `appSettingsPublish`, `appSettingsHistory`
   (callables, `functions/src/app_settings`), admin claim only, the app's
   Remote Config template through the Admin SDK. Only the keys of the app's
@@ -799,7 +814,7 @@ its own panel; every page drawn on a canvas and picked before it is built)
 - [x] App settings — the app's Remote Config keys (paywall layout, app gate) shown and edited; saving shows old and new side by side, publishing needs a confirm, an earlier version can be restored — a change reaches the app after its next fetch
 
 Group 14, program generator rebuild (owner's picks, 2026-11-22; see Feature notes › Programs, "Program generator, rebuild")
-- [ ] Generator engine and rules — the engine in `functions/src/generator`, the rules seed `content/generator/rules.json`, `generatorTier` and `stressAreas` on every exercise — standard answers give programs the owner accepts from a printed set
+- [x] Generator engine and rules — the engine in `functions/src/generator`, the rules seed `content/generator/rules.json`, `generatorTier` and `stressAreas` on every exercise — standard answers give programs the owner accepts from a printed set
 - [ ] Generator callables — `generateProgram`, the rules callables, `generator/options`, Firestore rules, deployed to dev — a Premium user gets a program, a free one is refused
 - [ ] Generator in the app — the nine questions, the server call, preview, save; the on-device engine and the leave-out picker go — a program is generated, edited and saved on the simulator; offline says so
 - [ ] Admin, exercise fields — generator tier and stress areas in the exercise editor, as table columns and filters
@@ -3465,6 +3480,28 @@ the feature you are about to touch, and keep it true when you change it.
     EZ bar, trap bar, dumbbell, kettlebell), else it is `any`; the split
     question shows only when more than one split fits the days, level
     and goal.
+  - Admin picks (owner, 2026-11-22, canvas
+    https://claude.ai/artifact/LzZtENTKSGZ4rUuivkEPSZ): one "Generator"
+    entry in the menu's Content group, a page with the tabs Templates,
+    Dosing, Volume, Selection, Areas and Simulator, every tab editing one
+    draft, with the version line and the unpublished-changes bar
+    (Discard, History, Review and publish) above them (AG1 A); the
+    template editor is a list of templates by split on the left and, on
+    the right, the template's fields, a tab per day and that day's slots
+    as table rows: role, what it picks, priority 1-3, key, move and
+    remove; Add slot, the day's name and extras under it (AG2 A); the
+    exercise editor gets a seventh tab, Generator: the tier as four
+    radio rows with their meaning and the stress areas as chips, and the
+    exercise table a Tier column and a Generator tier filter (AG3 A);
+    the simulator is the last tab: the answers and "Published vN / My
+    changes" on the left, the program on the right with a tab per day,
+    each exercise's slot, dose and score, a row opening to the score
+    parts and the next candidates, the weekly sets under it (AG4);
+    Review and publish opens a dialog with the changed fields (Where /
+    Now / After publishing), what the 300 standard answers give with
+    the new rules next to the published ones (no program, a target
+    muscle without direct work, a day under half the session; warnings
+    that never block), a note and "Publish version N" (AG5).
   - The owner accepted the printed set of sample programs on 2026-11-22
     (https://claude.ai/artifact/7aNE5piW85CXo1Bg6UGVu6); ratings, templates
     and numbers are tuned later from the admin panel.
@@ -3544,8 +3581,13 @@ the feature you are about to touch, and keep it true when you change it.
     panel edits a draft, checks it on the server and publishes it, as App
     settings does; the validator lives only in the function
     (`functions/src/generator/rules.ts`), so the panel and the seed
-    import (`tool/import_content.dart`, which calls the publish with the
-    seed when no rules exist) share it.
+    import share it: `tool/import_content.dart` (and
+    `tool/validate_content.dart`) check `content/generator/rules.json`
+    through the built `functions/lib/generator/cli.js` (Node; a problem
+    refuses the import), and the import writes it as version 1
+    (`publishedBy` `import`, note "Seed"; the rules, their version copy and
+    `generator/options` in one commit, each only if absent) when the
+    project has no rules; once it has, the panel owns them.
   - The exercise and muscle codes the engine needs are in
     `functions/src/generator/vocabulary.ts`; a Dart test holds them equal
     to `vocabulary.dart`.

@@ -34,6 +34,12 @@ rules_version = '2';
 //   dashboard/{id}           anyone else                            deny  deny
 //   revenueEvents/{id},      anyone, admins included (only the      deny  deny
 //   dashboardRevenue/{day}   functions write and read them)
+//   generator/options        signed out                             deny  deny
+//   generator/options        any signed-in user, guests included    allow deny
+//   generator/options        admin claim                            allow deny
+//   generator/rules,         anyone, admins included (only the      deny  deny
+//   generator/rules/         generator functions, through the
+//     versions/{n}           Admin SDK)
 //   users/{uid}/feedback/{id} owner: create only, validated below   deny  allow
 //   users/*/feedback/{id}    admin claim (also as a collection      allow update
 //                            group): update changes status only,          status
@@ -535,6 +541,12 @@ service cloud.firestore {
     // sendAnnouncement function through the Admin SDK.
     match /announcements/{id} {
       allow read: if isAdmin();
+    }
+
+    // What the program generator asks, written with every rules publish by
+    // generatorRulesPublish. generator/rules and its versions stay denied.
+    match /generator/options {
+      allow read: if signedIn();
     }
 
     // The admin panel's Dashboard: reports the dashboard functions store.
