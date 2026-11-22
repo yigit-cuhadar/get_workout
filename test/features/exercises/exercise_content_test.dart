@@ -36,7 +36,15 @@ void main() {
           expect(_statuses, contains(entry['status']), reason: id);
           expect(
             _storedForm(exercise),
-            {...entry}..removeWhere((key, _) => key == 'id' || key == 'status'),
+            // The generator's fields are read by the server only.
+            {...entry}..removeWhere(
+              (key, _) => const {
+                'id',
+                'status',
+                'generatorTier',
+                'stressAreas',
+              }.contains(key),
+            ),
             reason: id,
           );
         }

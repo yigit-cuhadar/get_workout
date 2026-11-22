@@ -25,6 +25,7 @@
     "defaultRestS": 60,
     "incrementKg": 5,
     "popularity": 29,
+    "generatorTier": "staple",
     "l10n": {
       "en": {
         "name": "Standing Calf Raise",
@@ -76,6 +77,7 @@
     "defaultRestS": 60,
     "incrementKg": 5,
     "popularity": 67,
+    "generatorTier": "staple",
     "l10n": {
       "en": {
         "name": "Seated Calf Raise",
@@ -125,6 +127,7 @@
     ],
     "defaultRestS": 45,
     "popularity": 127,
+    "generatorTier": "standard",
     "l10n": {
       "en": {
         "name": "Bodyweight Calf Raise",
@@ -175,6 +178,7 @@
     ],
     "defaultRestS": 45,
     "popularity": 143,
+    "generatorTier": "staple",
     "l10n": {
       "en": {
         "name": "Single-Leg Calf Raise",
@@ -223,6 +227,7 @@
     "defaultRestS": 60,
     "incrementKg": 5,
     "popularity": 161,
+    "generatorTier": "standard",
     "l10n": {
       "en": {
         "name": "Leg Press Calf Raise",
@@ -274,6 +279,7 @@
     "defaultRestS": 45,
     "incrementKg": 2,
     "popularity": 169,
+    "generatorTier": "staple",
     "l10n": {
       "en": {
         "name": "Dumbbell Single-Leg Calf Raise",
@@ -322,6 +328,7 @@
     "defaultRestS": 60,
     "incrementKg": 5,
     "popularity": 205,
+    "generatorTier": "standard",
     "l10n": {
       "en": {
         "name": "Smith Machine Calf Raise",
@@ -367,6 +374,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 45,
     "popularity": 253,
+    "generatorTier": "never",
     "l10n": {
       "en": {
         "name": "Tibialis Raise",
@@ -418,6 +426,7 @@
     "defaultRestS": 45,
     "incrementKg": 2,
     "popularity": 279,
+    "generatorTier": "standard",
     "l10n": {
       "en": {
         "name": "Seated Dumbbell Calf Raise",
@@ -465,6 +474,10 @@
     "excludedAlternatives": [],
     "defaultRestS": 60,
     "popularity": 305,
+    "generatorTier": "never",
+    "stressAreas": [
+      "knees"
+    ],
     "l10n": {
       "en": {
         "name": "Pogo Hop",
@@ -514,6 +527,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 45,
     "popularity": 335,
+    "generatorTier": "standard",
     "l10n": {
       "en": {
         "name": "Band Calf Press",
@@ -564,6 +578,10 @@
     "excludedAlternatives": [],
     "defaultRestS": 60,
     "popularity": 150,
+    "generatorTier": "never",
+    "stressAreas": [
+      "knees"
+    ],
     "l10n": {
       "en": {
         "name": "Jump Rope",

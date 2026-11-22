@@ -1,0 +1,4364 @@
+{
+  "splits": [
+    {
+      "id": "full_body",
+      "l10n": {
+        "en": {
+          "name": "Full body",
+          "info": "Every session trains the whole body."
+        }
+      }
+    },
+    {
+      "id": "upper_lower",
+      "l10n": {
+        "en": {
+          "name": "Upper / Lower",
+          "info": "Upper-body and lower-body sessions take turns."
+        }
+      }
+    },
+    {
+      "id": "push_pull_legs",
+      "l10n": {
+        "en": {
+          "name": "Push / Pull / Legs",
+          "info": "Pushing muscles, pulling muscles and legs each get a session."
+        }
+      }
+    },
+    {
+      "id": "upper_lower_ppl",
+      "l10n": {
+        "en": {
+          "name": "Upper / Lower + Push / Pull / Legs",
+          "info": "Two broad sessions, then three focused ones, so every muscle is trained twice."
+        }
+      }
+    },
+    {
+      "id": "body_part",
+      "l10n": {
+        "en": {
+          "name": "Body part split",
+          "info": "One session each for chest, back, legs, shoulders and arms."
+        }
+      }
+    }
+  ],
+  "templates": [
+    {
+      "id": "full_body_2",
+      "split": "full_body",
+      "days": 2,
+      "levels": [
+        "beginner",
+        "intermediate",
+        "advanced"
+      ],
+      "priority": 10,
+      "dayList": [
+        {
+          "l10n": {
+            "en": {
+              "name": "Full Body A"
+            }
+          },
+          "slots": [
+            {
+              "role": "primary",
+              "pick": {
+                "patterns": [
+                  "squat"
+                ],
+                "muscles": [
+                  "quads"
+                ]
+              },
+              "priority": 1
+            },
+            {
+              "role": "primary",
+              "pick": {
+                "patterns": [
+                  "horizontal_push"
+                ],
+                "muscles": [
+                  "pec"
+                ]
+              },
+              "priority": 1
+            },
+            {
+              "role": "secondary",
+              "pick": {
+                "patterns": [
+                  "horizontal_pull"
+                ],
+                "muscles": [
+                  "lat"
+                ]
+              },
+              "priority": 1
+            },
+            {
+              "role": "secondary",
+              "pick": {
+                "patterns": [
+                  "hinge"
+                ],
+                "muscles": [
+                  "hamstring"
+                ]
+              },
+              "priority": 1
+            },
+            {
+              "role": "accessory",
+              "pick": {
+                "muscles": [
+                  "mid_delt"
+                ],
+                "mechanic": "isolation"
+              },
+              "priority": 2
+            },
+            {
+              "role": "accessory",
+              "pick": {
+                "muscles": [
+                  "triceps"
+                ],
+                "mechanic": "isolation"
+              },
+              "priority": 2
+            },
+            {
+              "role": "core",
+              "pick": {
+                "patterns": [
+                  "core_flexion",
+                  "core_stability",
+                  "rotation"
+                ],
+                "muscles": [
+                  "abdominal",
+                  "oblique"
+                ]
+              },
+              "priority": 2
+            },
+            {
+              "role": "accessory",
+              "pick": {
+                "muscles": [
+                  "biceps"
+                ],
+                "mechanic": "isolation"
+              },
+              "priority": 3
+            },
+            {
+              "role": "accessory",
+              "pick": {
+                "muscles": [
+                  "calf"
+                ],
+                "mechanic": "isolation"
+              },
+              "priority": 3
+            }
+          ],
+          "extras": [
+            "pec",
+            "lat",
+            "mid_delt",
+            "rear_delt",
+            "biceps",
+            "triceps",
+            "quads",
+            "hamstring",
+            "glute",
+            "calf",
+            "abdominal",
+            "oblique"
+          ]
+        },
+        {
+          "l10n": {
+            "en": {
+              "name": "Full Body B"
+            }
+          },
+          "slots": [
+            {
+              "role": "primary",
+              "pick": {
+                "patterns": [
+                  "hinge"
+                ],
+                "muscles": [
+                  "hamstring"
+                ]
+              },
+              "priority": 1
+            },
+            {
+              "role": "primary",
+              "pick": {
+                "patterns": [
+                  "vertical_push"
+                ],
+                "muscles": [
+                  "front_delt"
+                ]
+              },
+              "priority": 1
+            },
+            {
+              "role": "secondary",
+              "pick": {
+                "patterns": [
+                  "vertical_pull"
+                ],
+                "muscles": [
+                  "lat"
+                ]
+              },
+              "priority": 1
+            },
+            {
+              "role": "secondary",
+              "pick": {
+                "patterns": [
+                  "squat",
+                  "lunge"
+                ],
+                "muscles": [
+                  "quads"
+                ]
+              },
+              "priority": 1
+            },
+            {
+              "role": "secondary",
+              "pick": {
+                "patterns": [
+                  "horizontal_push"
+                ],
+                "muscles": [
+                  "pec"
+                ]
+              },
+              "priority": 2
+            },
+            {
+              "role": "accessory",
+              "pick": {
+                "muscles": [
+                  "biceps"
+                ],
+                "mechanic": "isolation"
+              },
+              "priority": 2
+            },
+            {
+              "role": "core",
+              "pick": {
+                "patterns": [
+                  "core_flexion",
+                  "core_stability",
+                  "rotation"
+                ],
+                "muscles": [
+                  "abdominal",
+                  "oblique"
+                ]
+              },
+              "priority": 2
+            },
+            {
+              "role": "accessory",
+              "pick": {
+                "muscles": [
+                  "rear_delt"
+                ]
+              },
+              "priority": 3
+            },
+            {
+              "role": "accessory",
+              "pick": {
+                "muscles": [
+                  "hamstring"
+                ],
+                "mechanic": "isolation"
+              },
+              "priority": 3
+            },
+            {
+              "role": "accessory",
+              "pick": {
+                "muscles": [
+                  "calf"
+                ],
+                "mechanic": "isolation"
+              },
+              "priority": 3
+            }
+          ],
+          "extras": [
+            "pec",
+            "lat",
+            "mid_delt",
+            "rear_delt",
+            "biceps",
+            "triceps",
+            "quads",
+            "hamstring",
+            "glute",
+            "calf",
+            "abdominal",
+            "oblique"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "full_body_3",
+      "split": "full_body",
+      "days": 3,
+      "levels": [
+        "beginner",
+        "intermediate",
+        "advanced"
+      ],
+      "priority": 10,
+      "dayList": [
+        {
+          "l10n": {
+            "en": {
+              "name": "Full Body A"
+            }
+          },
+          "slots": [
+            {
+              "role": "primary",
+              "pick": {
+                "patterns": [
+                  "squat"
+                ],
+                "muscles": [
+                  "quads"
+                ]
+              },
+              "priority": 1
+            },
+            {
+              "role": "primary",
+              "pick": {
+                "patterns": [
+                  "horizontal_push"
+                ],
+                "muscles": [
+                  "pec"
+                ]
+              },
+              "priority": 1
+            },
+            {
+              "role": "secondary",
+              "pick": {
+                "patterns": [
+                  "horizontal_pull"
+                ],
+                "muscles": [
+                  "lat"
+                ]
+              },
+              "priority": 1
+            },
+            {
+              "role": "accessory",
+              "pick": {
+                "muscles": [
+                  "hamstring"
+                ],
+                "mechanic": "isolation"
+              },
+              "priority": 2
+            },
+            {
+              "role": "accessory",
+              "pick": {
+                "muscles": [
+                  "mid_delt"
+                ],
+                "mechanic": "isolation"
+              },
+              "priority": 2
+            },
+            {
+              "role": "core",
+              "pick": {
+                "patterns": [
+                  "core_flexion",
+                  "core_stability",
+                  "rotation"
+                ],
+                "muscles": [
+                  "abdominal",
+                  "oblique"
+                ]
+              },
+              "priority": 2
+            },
+            {
+              "role": "accessory",
+              "pick": {
+                "muscles": [
+                  "triceps"
+                ],
+                "mechanic": "isolation"
+              },
+              "priority": 3
+            },
+            {
+              "role": "accessory",
+              "pick": {
+                "muscles": [
+                  "calf"
+                ],
+                "mechanic": "isolation"
+              },
+              "priority": 3
+            }
+          ],
+          "extras": [
+            "pec",
+            "lat",
+            "mid_delt",
+            "rear_delt",
+            "biceps",
+            "triceps",
+            "quads",
+            "hamstring",
+            "glute",
+            "calf",
+            "abdominal",
+            "oblique"
+          ]
+        },
+        {
+          "l10n": {
+            "en": {
+              "name": "Full Body B"
+            }
+          },
+          "slots": [
+            {
+              "role": "primary",
+              "pick": {
+                "patterns": [
+                  "hinge"
+                ],
+                "muscles": [
+                  "hamstring"
+                ]
+              },
+              "priority": 1
+            },
+            {
+              "role": "primary",
+              "pick": {
+                "patterns": [
+                  "vertical_push"
+                ],
+                "muscles": [
+                  "front_delt"
+                ]
+              },
+              "priority": 1
+            },
+            {
+              "role": "secondary",
+              "pick": {
+                "patterns": [
+                  "vertical_pull"
+                ],
+                "muscles": [
+                  "lat"
+                ]
+              },
+              "priority": 1
+            },
+            {
+              "role": "secondary",
+              "pick": {
+                "patterns": [
+                  "squat",
+                  "lunge"
+                ],
+                "muscles": [
+                  "quads"
+                ]
+              },
+              "priority": 1
+            },
+            {
+              "role": "accessory",
+              "pick": {
+                "muscles": [
+                  "biceps"
+                ],
+                "mechanic": "isolation"
+              },
+              "priority": 2
+            },
+            {
+              "role": "core",
+              "pick": {
+                "patterns": [
+                  "core_flexion",
+                  "core_stability",
+                  "rotation"
+                ],
+                "muscles": [
+                  "abdominal",
+                  "oblique"
+                ]
+              },
+              "priority": 2
+            },
+            {
+              "role": "accessory",
+              "pick": {
+                "muscles": [
+                  "pec"
+                ],
+                "mechanic": "isolation"
+              },
+              "priority": 3
+            },
+            {
+              "role": "accessory",
+              "pick": {
+                "muscles": [
+                  "calf"
+                ],
+                "mechanic": "isolation"
+              },
+              "priority": 3
+            }
+          ],
+          "extras": [
+            "pec",
+            "lat",
+            "mid_delt",
+            "rear_delt",
+            "biceps",
+            "triceps",
+            "quads",
+            "hamstring",
+            "glute",
+            "calf",
+            "abdominal",
+            "oblique"
+          ]
+        },
+        {
+          "l10n": {
+            "en": {
+              "name": "Full Body C"
+            }
+          },
+          "slots": [
+            {
+              "role": "primary",
+              "pick": {
+                "patterns": [
+                  "squat",
+                  "lunge"
+                ],
+                "muscles": [
+                  "quads"
+                ]
+              },
+              "priority": 1
+            },
+            {
+              "role": "primary",
+              "pick": {
+                "patterns": [
+                  "horizontal_push"
+                ],
+                "muscles": [
+                  "pec"
+                ]
+              },
+              "priority": 1
+            },
+            {
+              "role": "secondary",
+              "pick": {
+                "patterns": [
+                  "horizontal_pull",
+                  "vertical_pull"
+                ],
+                "muscles": [
+                  "lat"
+                ]
+              },
+              "priority": 1
+            },
+            {
+              "role": "secondary",
+              "pick": {
+                "patterns": [
+                  "hinge"
+                ],
+                "muscles": [
+                  "glute"
+                ]
+              },
+              "priority": 1
+            },
+            {
+              "role": "accessory",
+              "pick": {
+                "muscles": [
+                  "mid_delt"
+                ],
+                "mechanic": "isolation"
+              },
+              "priority": 2
+            },
+            {
+              "role": "accessory",
+              "pick": {
+                "muscles": [
+                  "triceps"
+                ],
+                "mechanic": "isolation"
+              },
+              "priority": 2
+            },
+            {
+              "role": "core",
+              "pick": {
+                "patterns": [
+                  "core_flexion",
+                  "core_stability",
+                  "rotation"
+                ],
+                "muscles": [
+                  "abdominal",
+                  "oblique"
+                ]
+              },
+              "priority": 2
+            },
+            {
+              "role": "accessory",
+              "pick": {
+                "muscles": [
+                  "biceps"
+                ],
+                "mechanic": "isolation"
+              },
+              "priority": 3
+            },
+            {
+              "role": "accessory",
+              "pick": {
+                "muscles": [
+                  "rear_delt"
+                ]
+              },
+              "priority": 3
+            }
+          ],
+          "extras": [
+            "pec",
+            "lat",
+            "mid_delt",
+            "rear_delt",
+            "biceps",
+            "triceps",
+            "quads",
+            "hamstring",
+            "glute",
+            "calf",
+            "abdominal",
+            "oblique"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "full_body_3_strength",
+      "split": "full_body",
+      "days": 3,
+      "levels": [
+        "beginner",
+        "intermediate",
+        "advanced"
+      ],
+      "goals": [
+        "get_stronger"
+      ],
+      "priority": 20,
+      "dayList": [
+        {
+          "l10n": {
+            "en": {
+              "name": "Full Body A"
+            }
+          },
+          "slots": [
+            {
+              "role": "primary",
+              "pick": {
+                "patterns": [
+                  "squat"
+                ],
+                "muscles": [
+                  "quads"
+                ]
+              },
+              "priority": 1,
+              "key": "squat"
+            },
+            {
+              "role": "primary",
+              "pick": {
+                "patterns": [
+                  "horizontal_push"
+                ],
+                "muscles": [
+                  "pec"
+                ]
+              },
+              "priority": 1,
+              "key": "press"
+            },
+            {
+              "role": "secondary",
+              "pick": {
+                "patterns": [
+                  "horizontal_pull"
+                ],
+                "muscles": [
+                  "lat"
+                ]
+              },
+              "priority": 1
+            },
+            {
+              "role": "accessory",
+              "pick": {
+                "muscles": [
+                  "mid_delt"
+                ],
+                "mechanic": "isolation"
+              },
+              "priority": 2
+            },
+            {
+              "role": "accessory",
+              "pick": {
+                "muscles": [
+                  "biceps"
+                ],
+                "mechanic": "isolation"
+              },
+              "priority": 2
+            },
+            {
+              "role": "core",
+              "pick": {
+                "patterns": [
+                  "core_flexion",
+                  "core_stability",
+                  "rotation"
+                ],
+                "muscles": [
+                  "abdominal",
+                  "oblique"
+                ]
+              },
+              "priority": 3
+            },
+            {
+              "role": "accessory",
+              "pick": {
+                "muscles": [
+                  "calf"
+                ],
+                "mechanic": "isolation"
+              },
+              "priority": 3
+            }
+          ],
+          "extras": [
+            "pec",
+            "lat",
+            "mid_delt",
+            "rear_delt",
+            "biceps",
+            "triceps",
+            "quads",
+            "hamstring",
+            "glute",
+            "calf",
+            "abdominal",
+            "oblique"
+          ]
+        },
+        {
+          "l10n": {
+            "en": {
+              "name": "Full Body B"
+            }
+          },
+          "slots": [
+            {
+              "role": "primary",
+              "pick": {
+                "patterns": [
+                  "hinge"
+                ],
+                "muscles": [
+                  "hamstring"
+                ]
+              },
+              "priority": 1
+            },
+            {
+              "role": "primary",
+              "pick": {
+                "patterns": [
+                  "vertical_push"
+                ],
+                "muscles": [
+                  "front_delt"
+                ]
+              },
+              "priority": 1
+            },
+            {
+              "role": "secondary",
+              "pick": {
+                "patterns": [
+                  "vertical_pull"
+                ],
+                "muscles": [
+                  "lat"
+                ]
+              },
+              "priority": 1
+            },
+            {
+              "role": "accessory",
+              "pick": {
+                "muscles": [
+                  "triceps"
+                ],
+                "mechanic": "isolation"
+              },
+              "priority": 2
+            },
+            {
+              "role": "core",
+              "pick": {
+                "patterns": [
+                  "core_flexion",
+                  "core_stability",
+                  "rotation"
+                ],
+                "muscles": [
+                  "abdominal",
+                  "oblique"
+                ]
+              },
+              "priority": 2
+            },
+            {
+              "role": "accessory",
+              "pick": {
+                "muscles": [
+                  "hamstring"
+                ],
+                "mechanic": "isolation"
+              },
+              "priority": 3
+            },
+            {
+              "role": "accessory",
+              "pick": {
+                "muscles": [
+                  "rear_delt"
+                ]
+              },
+              "priority": 3
+            }
+          ],
+          "extras": [
+            "pec",
+            "lat",
+            "mid_delt",
+            "rear_delt",
+            "biceps",
+            "triceps",
+            "quads",
+            "hamstring",
+            "glute",
+            "calf",
+            "abdominal",
+            "oblique"
+          ]
+        },
+        {
+          "l10n": {
+            "en": {
+              "name": "Full Body C"
+            }
+          },
+          "slots": [
+            {
+              "role": "primary",
+              "pick": {
+                "patterns": [
+                  "squat"
+                ],
+                "muscles": [
+                  "quads"
+                ]
+              },
+              "priority": 1,
+              "key": "squat"
+            },
+            {
+              "role": "primary",
+              "pick": {
+                "patterns": [
+                  "horizontal_push"
+                ],
+                "muscles": [
+                  "pec"
+                ]
+              },
+              "priority": 1,
+              "key": "press"
+            },
+            {
+              "role": "secondary",
+              "pick": {
+                "patterns": [
+                  "horizontal_pull",
+                  "vertical_pull"
+                ],
+                "muscles": [
+                  "lat"
+                ]
+              },
+              "priority": 1
+            },
+            {
+              "role": "secondary",
+              "pick": {
+                "patterns": [
+                  "hinge"
+                ],
+                "muscles": [
+                  "hamstring"
+                ]
+              },
+              "priority": 2
+            },
+            {
+              "role": "accessory",
+              "pick": {
+                "muscles": [
+                  "mid_delt"
+                ],
+                "mechanic": "isolation"
+              },
+              "priority": 2
+            },
+            {
+              "role": "accessory",
+              "pick": {
+                "muscles": [
+                  "biceps"
+                ],
+                "mechanic": "isolation"
+              },
+              "priority": 3
+            },
+            {
+              "role": "accessory",
+              "pick": {
+                "muscles": [
+                  "triceps"
+                ],
+                "mechanic": "isolation"
+              },
+              "priority": 3
+            }
+          ],
+          "extras": [
+            "pec",
+            "lat",
+            "mid_delt",
+            "rear_delt",
+            "biceps",
+            "triceps",
+            "quads",
+            "hamstring",
+            "glute",
+            "calf",
+            "abdominal",
+            "oblique"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "push_pull_legs_3",
+      "split": "push_pull_legs",
+      "days": 3,
+      "levels": [
+        "intermediate",
+        "advanced"
+      ],
+      "priority": 5,
+      "dayList": [
+        {
+          "l10n": {
+            "en": {
+              "name": "Push"
+            }
+          },
+          "slots": [
+            {
+              "role": "primary",
+              "pick": {
+                "patterns": [
+                  "horizontal_push"
+                ],
+                "muscles": [
+                  "pec"
+                ]
+              },
+              "priority": 1
+            },
+            {
+              "role": "secondary",
+              "pick": {
+                "patterns": [
+                  "vertical_push"
+                ],
+                "muscles": [
+                  "front_delt"
+                ]
+              },
+              "priority": 1
+            },
+            {
+              "role": "secondary",
+              "pick": {
+                "patterns": [
+                  "horizontal_push"
+                ],
+                "muscles": [
+                  "pec"
+                ]
+              },
+              "priority": 1
+            },
+            {
+              "role": "accessory",
+              "pick": {
+                "muscles": [
+                  "mid_delt"
+                ],
+                "mechanic": "isolation"
+              },
+              "priority": 2
+            },
+            {
+              "role": "accessory",
+              "pick": {
+                "muscles": [
+                  "triceps"
+                ],
+                "mechanic": "isolation"
+              },
+              "priority": 2
+            },
+            {
+              "role": "accessory",
+              "pick": {
+                "muscles": [
+                  "pec"
+                ],
+                "mechanic": "isolation"
+              },
+              "priority": 2
+            },
+            {
+              "role": "accessory",
+              "pick": {
+                "muscles": [
+                  "triceps"
+                ],
+                "mechanic": "isolation"
+              },
+              "priority": 3
+            },
+            {
+              "role": "secondary",
+              "pick": {
+                "patterns": [
+                  "vertical_push"
+                ],
+                "muscles": [
+                  "pec"
+                ]
+              },
+              "priority": 3
+            }
+          ],
+          "extras": [
+            "pec",
+            "front_delt",
+            "mid_delt",
+            "triceps"
+          ]
+        },
+        {
+          "l10n": {
+            "en": {
+              "name": "Pull"
+            }
+          },
+          "slots": [
+            {
+              "role": "primary",
+              "pick": {
+                "patterns": [
+                  "vertical_pull"
+                ],
+                "muscles": [
+                  "lat"
+                ]
+              },
+              "priority": 1
+            },
+            {
+              "role": "secondary",
+              "pick": {
+                "patterns": [
+                  "horizontal_pull"
+                ],
+                "muscles": [
+                  "lat"
+                ]
+              },
+              "priority": 1
+            },
+            {
+              "role": "accessory",
+              "pick": {
+                "muscles": [
+                  "biceps"
+                ],
+                "mechanic": "isolation"
+              },
+              "priority": 1
+            },
+            {
+              "role": "secondary",
+              "pick": {
+                "patterns": [
+                  "horizontal_pull",
+                  "vertical_pull"
+                ],
+                "muscles": [
+                  "lat"
+                ]
+              },
+              "priority": 2
+            },
+            {
+              "role": "accessory",
+              "pick": {
+                "muscles": [
+                  "rear_delt"
+                ]
+              },
+              "priority": 2
+            },
+            {
+              "role": "accessory",
+              "pick": {
+                "muscles": [
+                  "biceps"
+                ],
+                "mechanic": "isolation"
+              },
+              "priority": 2
+            },
+            {
+              "role": "accessory",
+              "pick": {
+                "muscles": [
+                  "trap"
+                ],
+                "mechanic": "isolation"
+              },
+              "priority": 3
+            },
+            {
+              "role": "accessory",
+              "pick": {
+                "muscles": [
+                  "lat"
+                ],
+                "mechanic": "isolation"
+              },
+              "priority": 3
+            }
+          ],
+          "extras": [
+            "lat",
+            "trap",
+            "rear_delt",
+            "biceps",
+            "forearm"
+          ]
+        },
+        {
+          "l10n": {
+            "en": {
+              "name": "Legs"
+            }
+          },
+          "slots": [
+            {
+              "role": "primary",
+              "pick": {
+                "patterns": [
+                  "squat"
+                ],
+                "muscles": [
+                  "quads"
+                ]
+              },
+              "priority": 1
+            },
+            {
+              "role": "secondary",
+              "pick": {
+                "patterns": [
+                  "hinge"
+                ],
+                "muscles": [
+                  "hamstring"
+                ]
+              },
+              "priority": 1
+            },
+            {
+              "role": "secondary",
+              "pick": {
+                "patterns": [
+                  "squat",
+                  "lunge"
+                ],
+                "muscles": [
+                  "quads"
+                ]
+              },
+              "priority": 1
+            },
+            {
+              "role": "accessory",
+              "pick": {
+                "muscles": [
+                  "hamstring"
+                ],
+                "mechanic": "isolation"
+              },
+              "priority": 2
+            },
+            {
+              "role": "accessory",
+              "pick": {
+                "muscles": [
+                  "quads"
+                ],
+                "mechanic": "isolation"
+              },
+              "priority": 2
+            },
+            {
+              "role": "accessory",
+              "pick": {
+                "muscles": [
+                  "calf"
+                ],
+                "mechanic": "isolation"
+              },
+              "priority": 2
+            },
+            {
+              "role": "core",
+              "pick": {
+                "patterns": [
+                  "core_flexion",
+                  "core_stability",
+                  "rotation"
+                ],
+                "muscles": [
+                  "abdominal",
+                  "oblique"
+                ]
+              },
+              "priority": 2
+            },
+            {
+              "role": "secondary",
+              "pick": {
+                "patterns": [
+                  "hinge"
+                ],
+                "muscles": [
+                  "glute"
+                ]
+              },
+              "priority": 3
+            },
+            {
+              "role": "accessory",
+              "pick": {
+                "muscles": [
+                  "abductor"
+                ],
+                "mechanic": "isolation"
+              },
+              "priority": 3
+            }
+          ],
+          "extras": [
+            "quads",
+            "hamstring",
+            "glute",
+            "calf",
+            "abductor",
+            "adductor",
+            "abdominal",
+            "oblique"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "upper_lower_4",
+      "split": "upper_lower",
+      "days": 4,
+      "levels": [
+        "beginner",
+        "intermediate",
+        "advanced"
+      ],
+      "priority": 10,
+      "dayList": [
+        {
+          "l10n": {
+            "en": {
+              "name": "Upper A"
+            }
+          },
+          "slots": [
+            {
+              "role": "primary",
+              "pick": {
+                "patterns": [
+                  "horizontal_push"
+                ],
+                "muscles": [
+                  "pec"
+                ]
+              },
+              "priority": 1
+            },
+            {
+              "role": "primary",
+              "pick": {
+                "patterns": [
+                  "horizontal_pull"
+                ],
+                "muscles": [
+                  "lat"
+                ]
+              },
+              "priority": 1
+            },
+            {
+              "role": "secondary",
+              "pick": {
+                "patterns": [
+                  "vertical_push"
+                ],
+                "muscles": [
+                  "front_delt"
+                ]
+              },
+              "priority": 1
+            },
+            {
+              "role": "secondary",
+              "pick": {
+                "patterns": [
+                  "vertical_pull"
+                ],
+                "muscles": [
+                  "lat"
+                ]
+              },
+              "priority": 1
+            },
+            {
+              "role": "accessory",
+              "pick": {
+                "muscles": [
+                  "mid_delt"
+                ],
+                "mechanic": "isolation"
+              },
+              "priority": 2
+            },
+            {
+              "role": "accessory",
+              "pick": {
+                "muscles": [
+                  "triceps"
+                ],
+                "mechanic": "isolation"
+              },
+              "priority": 2
+            },
+            {
+              "role": "accessory",
+              "pick": {
+                "muscles": [
+                  "biceps"
+                ],
+                "mechanic": "isolation"
+              },
+              "priority": 2
+            },
+            {
+              "role": "accessory",
+              "pick": {
+                "muscles": [
+                  "rear_delt"
+                ]
+              },
+              "priority": 3
+            },
+            {
+              "role": "accessory",
+              "pick": {
+                "muscles": [
+                  "pec"
+                ],
+                "mechanic": "isolation"
+              },
+              "priority": 3
+            }
+          ],
+          "extras": [
+            "pec",
+            "lat",
+            "trap",
+            "front_delt",
+            "mid_delt",
+            "rear_delt",
+            "biceps",
+            "triceps",
+            "abdominal",
+            "oblique"
+          ]
+        },
+        {
+          "l10n": {
+            "en": {
+              "name": "Lower A"
+            }
+          },
+          "slots": [
+            {
+              "role": "primary",
+              "pick": {
+                "patterns": [
+                  "squat"
+                ],
+                "muscles": [
+                  "quads"
+                ]
+              },
+              "priority": 1
+            },
+            {
+              "role": "secondary",
+              "pick": {
+                "patterns": [
+                  "hinge"
+                ],
+                "muscles": [
+                  "hamstring"
+                ]
+              },
+              "priority": 1
+            },
+            {
+              "role": "secondary",
+              "pick": {
+                "patterns": [
+                  "squat",
+                  "lunge"
+                ],
+                "muscles": [
+                  "quads"
+                ]
+              },
+              "priority": 1
+            },
+            {
+              "role": "accessory",
+              "pick": {
+                "muscles": [
+                  "hamstring"
+                ],
+                "mechanic": "isolation"
+              },
+              "priority": 2
+            },
+            {
+              "role": "accessory",
+              "pick": {
+                "muscles": [
+                  "calf"
+                ],
+                "mechanic": "isolation"
+              },
+              "priority": 2
+            },
+            {
+              "role": "core",
+              "pick": {
+                "patterns": [
+                  "core_flexion",
+                  "core_stability",
+                  "rotation"
+                ],
+                "muscles": [
+                  "abdominal",
+                  "oblique"
+                ]
+              },
+              "priority": 2
+            },
+            {
+              "role": "accessory",
+              "pick": {
+                "muscles": [
+                  "quads"
+                ],
+                "mechanic": "isolation"
+              },
+              "priority": 3
+            },
+            {
+              "role": "accessory",
+              "pick": {
+                "muscles": [
+                  "glute"
+                ],
+                "mechanic": "isolation"
+              },
+              "priority": 3
+            }
+          ],
+          "extras": [
+            "quads",
+            "hamstring",
+            "glute",
+            "calf",
+            "abductor",
+            "adductor",
+            "abdominal",
+            "oblique"
+          ]
+        },
+        {
+          "l10n": {
+            "en": {
+              "name": "Upper B"
+            }
+          },
+          "slots": [
+            {
+              "role": "primary",
+              "pick": {
+                "patterns": [
+                  "vertical_pull"
+                ],
+                "muscles": [
+                  "lat"
+                ]
+              },
+              "priority": 1
+            },
+            {
+              "role": "primary",
+              "pick": {
+                "patterns": [
+                  "horizontal_push"
+                ],
+                "muscles": [
+                  "pec"
+                ]
+              },
+              "priority": 1
+            },
+            {
+              "role": "secondary",
+              "pick": {
+                "patterns": [
+                  "horizontal_pull"
+                ],
+                "muscles": [
+                  "lat"
+                ]
+              },
+              "priority": 1
+            },
+            {
+              "role": "secondary",
+              "pick": {
+                "patterns": [
+                  "vertical_push"
+                ],
+                "muscles": [
+                  "front_delt"
+                ]
+              },
+              "priority": 2
+            },
+            {
+              "role": "accessory",
+              "pick": {
+                "muscles": [
+                  "mid_delt"
+                ],
+                "mechanic": "isolation"
+              },
+              "priority": 2
+            },
+            {
+              "role": "accessory",
+              "pick": {
+                "muscles": [
+                  "biceps"
+                ],
+                "mechanic": "isolation"
+              },
+              "priority": 2
+            },
+            {
+              "role": "accessory",
+              "pick": {
+                "muscles": [
+                  "triceps"
+                ],
+                "mechanic": "isolation"
+              },
+              "priority": 2
+            },
+            {
+              "role": "accessory",
+              "pick": {
+                "muscles": [
+                  "rear_delt"
+                ]
+              },
+              "priority": 3
+            },
+            {
+              "role": "accessory",
+              "pick": {
+                "muscles": [
+                  "pec"
+                ],
+                "mechanic": "isolation"
+              },
+              "priority": 3
+            }
+          ],
+          "extras": [
+            "pec",
+            "lat",
+            "trap",
+            "front_delt",
+            "mid_delt",
+            "rear_delt",
+            "biceps",
+            "triceps",
+            "abdominal",
+            "oblique"
+          ]
+        },
+        {
+          "l10n": {
+            "en": {
+              "name": "Lower B"
+            }
+          },
+          "slots": [
+            {
+              "role": "primary",
+              "pick": {
+                "patterns": [
+                  "hinge"
+                ],
+                "muscles": [
+                  "hamstring"
+                ]
+              },
+              "priority": 1
+            },
+            {
+              "role": "secondary",
+              "pick": {
+                "patterns": [
+                  "squat",
+                  "lunge"
+                ],
+                "muscles": [
+                  "quads"
+                ]
+              },
+              "priority": 1
+            },
+            {
+              "role": "accessory",
+              "pick": {
+                "muscles": [
+                  "quads"
+                ],
+                "mechanic": "isolation"
+              },
+              "priority": 2
+            },
+            {
+              "role": "accessory",
+              "pick": {
+                "muscles": [
+                  "hamstring"
+                ],
+                "mechanic": "isolation"
+              },
+              "priority": 2
+            },
+            {
+              "role": "accessory",
+              "pick": {
+                "muscles": [
+                  "calf"
+                ],
+                "mechanic": "isolation"
+              },
+              "priority": 2
+            },
+            {
+              "role": "core",
+              "pick": {
+                "patterns": [
+                  "core_flexion",
+                  "core_stability",
+                  "rotation"
+                ],
+                "muscles": [
+                  "abdominal",
+                  "oblique"
+                ]
+              },
+              "priority": 2
+            },
+            {
+              "role": "secondary",
+              "pick": {
+                "patterns": [
+                  "hinge"
+                ],
+                "muscles": [
+                  "glute"
+                ]
+              },
+              "priority": 3
+            },
+            {
+              "role": "accessory",
+              "pick": {
+                "muscles": [
+                  "abductor"
+                ],
+                "mechanic": "isolation"
+              },
+              "priority": 3
+            }
+          ],
+          "extras": [
+            "quads",
+            "hamstring",
+            "glute",
+            "calf",
+            "abductor",
+            "adductor",
+            "abdominal",
+            "oblique"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "upper_lower_ppl_5",
+      "split": "upper_lower_ppl",
+      "days": 5,
+      "levels": [
+        "beginner",
+        "intermediate",
+        "advanced"
+      ],
+      "priority": 10,
+      "dayList": [
+        {
+          "l10n": {
+            "en": {
+              "name": "Upper"
+            }
+          },
+          "slots": [
+            {
+              "role": "primary",
+              "pick": {
+                "patterns": [
+                  "horizontal_push"
+                ],
+                "muscles": [
+                  "pec"
+                ]
+              },
+              "priority": 1
+            },
+            {
+              "role": "primary",
+              "pick": {
+                "patterns": [
+                  "horizontal_pull"
+                ],
+                "muscles": [
+                  "lat"
+                ]
+              },
+              "priority": 1
+            },
+            {
+              "role": "secondary",
+              "pick": {
+                "patterns": [
+                  "vertical_push"
+                ],
+                "muscles": [
+                  "front_delt"
+                ]
+              },
+              "priority": 1
+            },
+            {
+              "role": "secondary",
+              "pick": {
+                "patterns": [
+                  "vertical_pull"
+                ],
+                "muscles": [
+                  "lat"
+                ]
+              },
+              "priority": 1
+            },
+            {
+              "role": "accessory",
+              "pick": {
+                "muscles": [
+                  "mid_delt"
+                ],
+                "mechanic": "isolation"
+              },
+              "priority": 2
+            },
+            {
+              "role": "accessory",
+              "pick": {
+                "muscles": [
+                  "triceps"
+                ],
+                "mechanic": "isolation"
+              },
+              "priority": 2
+            },
+            {
+              "role": "accessory",
+              "pick": {
+                "muscles": [
+                  "biceps"
+                ],
+                "mechanic": "isolation"
+              },
+              "priority": 2
+            },
+            {
+              "role": "accessory",
+              "pick": {
+                "muscles": [
+                  "rear_delt"
+                ]
+              },
+              "priority": 3
+            },
+            {
+              "role": "accessory",
+              "pick": {
+                "muscles": [
+                  "pec"
+                ],
+                "mechanic": "isolation"
+              },
+              "priority": 3
+            }
+          ],
+          "extras": [
+            "pec",
+            "lat",
+            "trap",
+            "front_delt",
+            "mid_delt",
+            "rear_delt",
+            "biceps",
+            "triceps",
+            "abdominal",
+            "oblique"
+          ]
+        },
+        {
+          "l10n": {
+            "en": {
+              "name": "Lower"
+            }
+          },
+          "slots": [
+            {
+              "role": "primary",
+              "pick": {
+                "patterns": [
+                  "squat"
+                ],
+                "muscles": [
+                  "quads"
+                ]
+              },
+              "priority": 1
+            },
+            {
+              "role": "secondary",
+              "pick": {
+                "patterns": [
+                  "hinge"
+                ],
+                "muscles": [
+                  "hamstring"
+                ]
+              },
+              "priority": 1
+            },
+            {
+              "role": "secondary",
+              "pick": {
+                "patterns": [
+                  "squat",
+                  "lunge"
+                ],
+                "muscles": [
+                  "quads"
+                ]
+              },
+              "priority": 1
+            },
+            {
+              "role": "accessory",
+              "pick": {
+                "muscles": [
+                  "hamstring"
+                ],
+                "mechanic": "isolation"
+              },
+              "priority": 2
+            },
+            {
+              "role": "accessory",
+              "pick": {
+                "muscles": [
+                  "calf"
+                ],
+                "mechanic": "isolation"
+              },
+              "priority": 2
+            },
+            {
+              "role": "core",
+              "pick": {
+                "patterns": [
+                  "core_flexion",
+                  "core_stability",
+                  "rotation"
+                ],
+                "muscles": [
+                  "abdominal",
+                  "oblique"
+                ]
+              },
+              "priority": 2
+            },
+            {
+              "role": "accessory",
+              "pick": {
+                "muscles": [
+                  "quads"
+                ],
+                "mechanic": "isolation"
+              },
+              "priority": 3
+            },
+            {
+              "role": "accessory",
+              "pick": {
+                "muscles": [
+                  "glute"
+                ],
+                "mechanic": "isolation"
+              },
+              "priority": 3
+            }
+          ],
+          "extras": [
+            "quads",
+            "hamstring",
+            "glute",
+            "calf",
+            "abductor",
+            "adductor",
+            "abdominal",
+            "oblique"
+          ]
+        },
+        {
+          "l10n": {
+            "en": {
+              "name": "Push"
+            }
+          },
+          "slots": [
+            {
+              "role": "primary",
+              "pick": {
+                "patterns": [
+                  "vertical_push"
+                ],
+                "muscles": [
+                  "front_delt"
+                ]
+              },
+              "priority": 1
+            },
+            {
+              "role": "secondary",
+              "pick": {
+                "patterns": [
+                  "horizontal_push"
+                ],
+                "muscles": [
+                  "pec"
+                ]
+              },
+              "priority": 1
+            },
+            {
+              "role": "accessory",
+              "pick": {
+                "muscles": [
+                  "mid_delt"
+                ],
+                "mechanic": "isolation"
+              },
+              "priority": 1
+            },
+            {
+              "role": "accessory",
+              "pick": {
+                "muscles": [
+                  "pec"
+                ],
+                "mechanic": "isolation"
+              },
+              "priority": 2
+            },
+            {
+              "role": "accessory",
+              "pick": {
+                "muscles": [
+                  "triceps"
+                ],
+                "mechanic": "isolation"
+              },
+              "priority": 2
+            },
+            {
+              "role": "secondary",
+              "pick": {
+                "patterns": [
+                  "horizontal_push",
+                  "vertical_push"
+                ],
+                "muscles": [
+                  "triceps"
+                ]
+              },
+              "priority": 2
+            },
+            {
+              "role": "accessory",
+              "pick": {
+                "muscles": [
+                  "mid_delt"
+                ],
+                "mechanic": "isolation"
+              },
+              "priority": 3
+            },
+            {
+              "role": "accessory",
+              "pick": {
+                "muscles": [
+                  "triceps"
+                ],
+                "mechanic": "isolation"
+              },
+              "priority": 3
+            }
+          ],
+          "extras": [
+            "pec",
+            "front_delt",
+            "mid_delt",
+            "triceps"
+          ]
+        },
+        {
+          "l10n": {
+            "en": {
+              "name": "Pull"
+            }
+          },
+          "slots": [
+            {
+              "role": "primary",
+              "pick": {
+                "patterns": [
+                  "horizontal_pull"
+                ],
+                "muscles": [
+                  "lat"
+                ]
+              },
+              "priority": 1
+            },
+            {
+              "role": "secondary",
+              "pick": {
+                "patterns": [
+                  "vertical_pull"
+                ],
+                "muscles": [
+                  "lat"
+                ]
+              },
+              "priority": 1
+            },
+            {
+              "role": "accessory",
+              "pick": {
+                "muscles": [
+                  "rear_delt"
+                ]
+              },
+              "priority": 1
+            },
+            {
+              "role": "accessory",
+              "pick": {
+                "muscles": [
+                  "biceps"
+                ],
+                "mechanic": "isolation"
+              },
+              "priority": 2
+            },
+            {
+              "role": "secondary",
+              "pick": {
+                "patterns": [
+                  "horizontal_pull",
+                  "vertical_pull"
+                ],
+                "muscles": [
+                  "lat"
+                ]
+              },
+              "priority": 2
+            },
+            {
+              "role": "accessory",
+              "pick": {
+                "muscles": [
+                  "lat"
+                ],
+                "mechanic": "isolation"
+              },
+              "priority": 2
+            },
+            {
+              "role": "accessory",
+              "pick": {
+                "muscles": [
+                  "biceps"
+                ],
+                "mechanic": "isolation"
+              },
+              "priority": 3
+            },
+            {
+              "role": "accessory",
+              "pick": {
+                "muscles": [
+                  "trap"
+                ],
+                "mechanic": "isolation"
+              },
+              "priority": 3
+            }
+          ],
+          "extras": [
+            "lat",
+            "trap",
+            "rear_delt",
+            "biceps",
+            "forearm"
+          ]
+        },
+        {
+          "l10n": {
+            "en": {
+              "name": "Legs"
+            }
+          },
+          "slots": [
+            {
+              "role": "primary",
+              "pick": {
+                "patterns": [
+                  "hinge"
+                ],
+                "muscles": [
+                  "hamstring"
+                ]
+              },
+              "priority": 1
+            },
+            {
+              "role": "secondary",
+              "pick": {
+                "patterns": [
+                  "squat",
+                  "lunge"
+                ],
+                "muscles": [
+                  "quads"
+                ]
+              },
+              "priority": 1
+            },
+            {
+              "role": "secondary",
+              "pick": {
+                "patterns": [
+                  "lunge"
+                ],
+                "muscles": [
+                  "quads"
+                ]
+              },
+              "priority": 1
+            },
+            {
+              "role": "accessory",
+              "pick": {
+                "muscles": [
+                  "quads"
+                ],
+                "mechanic": "isolation"
+              },
+              "priority": 2
+            },
+            {
+              "role": "accessory",
+              "pick": {
+                "muscles": [
+                  "hamstring"
+                ],
+                "mechanic": "isolation"
+              },
+              "priority": 2
+            },
+            {
+              "role": "accessory",
+              "pick": {
+                "muscles": [
+                  "calf"
+                ],
+                "mechanic": "isolation"
+              },
+              "priority": 2
+            },
+            {
+              "role": "core",
+              "pick": {
+                "patterns": [
+                  "core_flexion",
+                  "core_stability",
+                  "rotation"
+                ],
+                "muscles": [
+                  "abdominal",
+                  "oblique"
+                ]
+              },
+              "priority": 2
+            },
+            {
+              "role": "accessory",
+              "pick": {
+                "muscles": [
+                  "glute"
+                ],
+                "mechanic": "isolation"
+              },
+              "priority": 3
+            },
+            {
+              "role": "accessory",
+              "pick": {
+                "muscles": [
+                  "adductor"
+                ],
+                "mechanic": "isolation"
+              },
+              "priority": 3
+            }
+          ],
+          "extras": [
+            "quads",
+            "hamstring",
+            "glute",
+            "calf",
+            "abductor",
+            "adductor",
+            "abdominal",
+            "oblique"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "body_part_5",
+      "split": "body_part",
+      "days": 5,
+      "levels": [
+        "intermediate",
+        "advanced"
+      ],
+      "priority": 5,
+      "dayList": [
+        {
+          "l10n": {
+            "en": {
+              "name": "Chest"
+            }
+          },
+          "slots": [
+            {
+              "role": "primary",
+              "pick": {
+                "patterns": [
+                  "horizontal_push"
+                ],
+                "muscles": [
+                  "pec"
+                ]
+              },
+              "priority": 1
+            },
+            {
+              "role": "secondary",
+              "pick": {
+                "patterns": [
+                  "horizontal_push"
+                ],
+                "muscles": [
+                  "pec"
+                ]
+              },
+              "priority": 1
+            },
+            {
+              "role": "accessory",
+              "pick": {
+                "muscles": [
+                  "pec"
+                ],
+                "mechanic": "isolation"
+              },
+              "priority": 1
+            },
+            {
+              "role": "secondary",
+              "pick": {
+                "patterns": [
+                  "vertical_push"
+                ],
+                "muscles": [
+                  "pec"
+                ]
+              },
+              "priority": 2
+            },
+            {
+              "role": "accessory",
+              "pick": {
+                "muscles": [
+                  "triceps"
+                ],
+                "mechanic": "isolation"
+              },
+              "priority": 2
+            },
+            {
+              "role": "core",
+              "pick": {
+                "patterns": [
+                  "core_flexion",
+                  "core_stability",
+                  "rotation"
+                ],
+                "muscles": [
+                  "abdominal",
+                  "oblique"
+                ]
+              },
+              "priority": 2
+            },
+            {
+              "role": "accessory",
+              "pick": {
+                "muscles": [
+                  "pec"
+                ],
+                "mechanic": "isolation"
+              },
+              "priority": 3
+            },
+            {
+              "role": "accessory",
+              "pick": {
+                "muscles": [
+                  "triceps"
+                ],
+                "mechanic": "isolation"
+              },
+              "priority": 3
+            }
+          ],
+          "extras": [
+            "pec",
+            "triceps"
+          ]
+        },
+        {
+          "l10n": {
+            "en": {
+              "name": "Back"
+            }
+          },
+          "slots": [
+            {
+              "role": "primary",
+              "pick": {
+                "patterns": [
+                  "vertical_pull"
+                ],
+                "muscles": [
+                  "lat"
+                ]
+              },
+              "priority": 1
+            },
+            {
+              "role": "secondary",
+              "pick": {
+                "patterns": [
+                  "horizontal_pull"
+                ],
+                "muscles": [
+                  "lat"
+                ]
+              },
+              "priority": 1
+            },
+            {
+              "role": "secondary",
+              "pick": {
+                "patterns": [
+                  "horizontal_pull",
+                  "vertical_pull"
+                ],
+                "muscles": [
+                  "lat"
+                ]
+              },
+              "priority": 1
+            },
+            {
+              "role": "accessory",
+              "pick": {
+                "muscles": [
+                  "rear_delt"
+                ]
+              },
+              "priority": 2
+            },
+            {
+              "role": "accessory",
+              "pick": {
+                "muscles": [
+                  "lat"
+                ],
+                "mechanic": "isolation"
+              },
+              "priority": 2
+            },
+            {
+              "role": "accessory",
+              "pick": {
+                "muscles": [
+                  "biceps"
+                ],
+                "mechanic": "isolation"
+              },
+              "priority": 2
+            },
+            {
+              "role": "accessory",
+              "pick": {
+                "muscles": [
+                  "trap"
+                ],
+                "mechanic": "isolation"
+              },
+              "priority": 3
+            },
+            {
+              "role": "accessory",
+              "pick": {
+                "muscles": [
+                  "biceps"
+                ],
+                "mechanic": "isolation"
+              },
+              "priority": 3
+            }
+          ],
+          "extras": [
+            "lat",
+            "trap",
+            "rear_delt",
+            "biceps"
+          ]
+        },
+        {
+          "l10n": {
+            "en": {
+              "name": "Legs"
+            }
+          },
+          "slots": [
+            {
+              "role": "primary",
+              "pick": {
+                "patterns": [
+                  "squat"
+                ],
+                "muscles": [
+                  "quads"
+                ]
+              },
+              "priority": 1
+            },
+            {
+              "role": "secondary",
+              "pick": {
+                "patterns": [
+                  "hinge"
+                ],
+                "muscles": [
+                  "hamstring"
+                ]
+              },
+              "priority": 1
+            },
+            {
+              "role": "secondary",
+              "pick": {
+                "patterns": [
+                  "squat",
+                  "lunge"
+                ],
+                "muscles": [
+                  "quads"
+                ]
+              },
+              "priority": 1
+            },
+            {
+              "role": "accessory",
+              "pick": {
+                "muscles": [
+                  "hamstring"
+                ],
+                "mechanic": "isolation"
+              },
+              "priority": 2
+            },
+            {
+              "role": "accessory",
+              "pick": {
+                "muscles": [
+                  "quads"
+                ],
+                "mechanic": "isolation"
+              },
+              "priority": 2
+            },
+            {
+              "role": "accessory",
+              "pick": {
+                "muscles": [
+                  "calf"
+                ],
+                "mechanic": "isolation"
+              },
+              "priority": 2
+            },
+            {
+              "role": "core",
+              "pick": {
+                "patterns": [
+                  "core_flexion",
+                  "core_stability",
+                  "rotation"
+                ],
+                "muscles": [
+                  "abdominal",
+                  "oblique"
+                ]
+              },
+              "priority": 2
+            },
+            {
+              "role": "secondary",
+              "pick": {
+                "patterns": [
+                  "hinge"
+                ],
+                "muscles": [
+                  "glute"
+                ]
+              },
+              "priority": 3
+            },
+            {
+              "role": "accessory",
+              "pick": {
+                "muscles": [
+                  "abductor"
+                ],
+                "mechanic": "isolation"
+              },
+              "priority": 3
+            }
+          ],
+          "extras": [
+            "quads",
+            "hamstring",
+            "glute",
+            "calf",
+            "abductor",
+            "adductor",
+            "abdominal",
+            "oblique"
+          ]
+        },
+        {
+          "l10n": {
+            "en": {
+              "name": "Shoulders"
+            }
+          },
+          "slots": [
+            {
+              "role": "primary",
+              "pick": {
+                "patterns": [
+                  "vertical_push"
+                ],
+                "muscles": [
+                  "front_delt"
+                ]
+              },
+              "priority": 1
+            },
+            {
+              "role": "accessory",
+              "pick": {
+                "muscles": [
+                  "mid_delt"
+                ],
+                "mechanic": "isolation"
+              },
+              "priority": 1
+            },
+            {
+              "role": "accessory",
+              "pick": {
+                "muscles": [
+                  "rear_delt"
+                ]
+              },
+              "priority": 1
+            },
+            {
+              "role": "secondary",
+              "pick": {
+                "patterns": [
+                  "vertical_push"
+                ],
+                "muscles": [
+                  "front_delt"
+                ]
+              },
+              "priority": 2
+            },
+            {
+              "role": "accessory",
+              "pick": {
+                "muscles": [
+                  "mid_delt"
+                ],
+                "mechanic": "isolation"
+              },
+              "priority": 2
+            },
+            {
+              "role": "core",
+              "pick": {
+                "patterns": [
+                  "core_flexion",
+                  "core_stability",
+                  "rotation"
+                ],
+                "muscles": [
+                  "abdominal",
+                  "oblique"
+                ]
+              },
+              "priority": 2
+            },
+            {
+              "role": "accessory",
+              "pick": {
+                "muscles": [
+                  "trap"
+                ],
+                "mechanic": "isolation"
+              },
+              "priority": 3
+            },
+            {
+              "role": "accessory",
+              "pick": {
+                "muscles": [
+                  "front_delt"
+                ],
+                "mechanic": "isolation"
+              },
+              "priority": 3
+            }
+          ],
+          "extras": [
+            "front_delt",
+            "mid_delt",
+            "rear_delt",
+            "trap"
+          ]
+        },
+        {
+          "l10n": {
+            "en": {
+              "name": "Arms"
+            }
+          },
+          "slots": [
+            {
+              "role": "secondary",
+              "pick": {
+                "patterns": [
+                  "horizontal_push",
+                  "vertical_push"
+                ],
+                "muscles": [
+                  "triceps"
+                ]
+              },
+              "priority": 1
+            },
+            {
+              "role": "accessory",
+              "pick": {
+                "muscles": [
+                  "biceps"
+                ],
+                "mechanic": "isolation"
+              },
+              "priority": 1
+            },
+            {
+              "role": "accessory",
+              "pick": {
+                "muscles": [
+                  "triceps"
+                ],
+                "mechanic": "isolation"
+              },
+              "priority": 1
+            },
+            {
+              "role": "accessory",
+              "pick": {
+                "muscles": [
+                  "biceps"
+                ],
+                "mechanic": "isolation"
+              },
+              "priority": 1
+            },
+            {
+              "role": "accessory",
+              "pick": {
+                "muscles": [
+                  "triceps"
+                ],
+                "mechanic": "isolation"
+              },
+              "priority": 2
+            },
+            {
+              "role": "accessory",
+              "pick": {
+                "muscles": [
+                  "biceps"
+                ],
+                "mechanic": "isolation"
+              },
+              "priority": 2
+            },
+            {
+              "role": "core",
+              "pick": {
+                "patterns": [
+                  "core_flexion",
+                  "core_stability",
+                  "rotation"
+                ],
+                "muscles": [
+                  "abdominal",
+                  "oblique"
+                ]
+              },
+              "priority": 2
+            },
+            {
+              "role": "accessory",
+              "pick": {
+                "muscles": [
+                  "forearm"
+                ],
+                "mechanic": "isolation"
+              },
+              "priority": 3
+            }
+          ],
+          "extras": [
+            "biceps",
+            "triceps",
+            "forearm",
+            "abdominal",
+            "oblique"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "push_pull_legs_6",
+      "split": "push_pull_legs",
+      "days": 6,
+      "levels": [
+        "beginner",
+        "intermediate",
+        "advanced"
+      ],
+      "priority": 10,
+      "dayList": [
+        {
+          "l10n": {
+            "en": {
+              "name": "Push A"
+            }
+          },
+          "slots": [
+            {
+              "role": "primary",
+              "pick": {
+                "patterns": [
+                  "horizontal_push"
+                ],
+                "muscles": [
+                  "pec"
+                ]
+              },
+              "priority": 1
+            },
+            {
+              "role": "secondary",
+              "pick": {
+                "patterns": [
+                  "vertical_push"
+                ],
+                "muscles": [
+                  "front_delt"
+                ]
+              },
+              "priority": 1
+            },
+            {
+              "role": "secondary",
+              "pick": {
+                "patterns": [
+                  "horizontal_push"
+                ],
+                "muscles": [
+                  "pec"
+                ]
+              },
+              "priority": 1
+            },
+            {
+              "role": "accessory",
+              "pick": {
+                "muscles": [
+                  "mid_delt"
+                ],
+                "mechanic": "isolation"
+              },
+              "priority": 2
+            },
+            {
+              "role": "accessory",
+              "pick": {
+                "muscles": [
+                  "triceps"
+                ],
+                "mechanic": "isolation"
+              },
+              "priority": 2
+            },
+            {
+              "role": "accessory",
+              "pick": {
+                "muscles": [
+                  "pec"
+                ],
+                "mechanic": "isolation"
+              },
+              "priority": 2
+            },
+            {
+              "role": "accessory",
+              "pick": {
+                "muscles": [
+                  "triceps"
+                ],
+                "mechanic": "isolation"
+              },
+              "priority": 3
+            },
+            {
+              "role": "secondary",
+              "pick": {
+                "patterns": [
+                  "vertical_push"
+                ],
+                "muscles": [
+                  "pec"
+                ]
+              },
+              "priority": 3
+            }
+          ],
+          "extras": [
+            "pec",
+            "front_delt",
+            "mid_delt",
+            "triceps"
+          ]
+        },
+        {
+          "l10n": {
+            "en": {
+              "name": "Pull A"
+            }
+          },
+          "slots": [
+            {
+              "role": "primary",
+              "pick": {
+                "patterns": [
+                  "vertical_pull"
+                ],
+                "muscles": [
+                  "lat"
+                ]
+              },
+              "priority": 1
+            },
+            {
+              "role": "secondary",
+              "pick": {
+                "patterns": [
+                  "horizontal_pull"
+                ],
+                "muscles": [
+                  "lat"
+                ]
+              },
+              "priority": 1
+            },
+            {
+              "role": "accessory",
+              "pick": {
+                "muscles": [
+                  "biceps"
+                ],
+                "mechanic": "isolation"
+              },
+              "priority": 1
+            },
+            {
+              "role": "secondary",
+              "pick": {
+                "patterns": [
+                  "horizontal_pull",
+                  "vertical_pull"
+                ],
+                "muscles": [
+                  "lat"
+                ]
+              },
+              "priority": 2
+            },
+            {
+              "role": "accessory",
+              "pick": {
+                "muscles": [
+                  "rear_delt"
+                ]
+              },
+              "priority": 2
+            },
+            {
+              "role": "accessory",
+              "pick": {
+                "muscles": [
+                  "biceps"
+                ],
+                "mechanic": "isolation"
+              },
+              "priority": 2
+            },
+            {
+              "role": "accessory",
+              "pick": {
+                "muscles": [
+                  "trap"
+                ],
+                "mechanic": "isolation"
+              },
+              "priority": 3
+            },
+            {
+              "role": "accessory",
+              "pick": {
+                "muscles": [
+                  "lat"
+                ],
+                "mechanic": "isolation"
+              },
+              "priority": 3
+            }
+          ],
+          "extras": [
+            "lat",
+            "trap",
+            "rear_delt",
+            "biceps",
+            "forearm"
+          ]
+        },
+        {
+          "l10n": {
+            "en": {
+              "name": "Legs A"
+            }
+          },
+          "slots": [
+            {
+              "role": "primary",
+              "pick": {
+                "patterns": [
+                  "squat"
+                ],
+                "muscles": [
+                  "quads"
+                ]
+              },
+              "priority": 1
+            },
+            {
+              "role": "secondary",
+              "pick": {
+                "patterns": [
+                  "hinge"
+                ],
+                "muscles": [
+                  "hamstring"
+                ]
+              },
+              "priority": 1
+            },
+            {
+              "role": "secondary",
+              "pick": {
+                "patterns": [
+                  "squat",
+                  "lunge"
+                ],
+                "muscles": [
+                  "quads"
+                ]
+              },
+              "priority": 1
+            },
+            {
+              "role": "accessory",
+              "pick": {
+                "muscles": [
+                  "hamstring"
+                ],
+                "mechanic": "isolation"
+              },
+              "priority": 2
+            },
+            {
+              "role": "accessory",
+              "pick": {
+                "muscles": [
+                  "quads"
+                ],
+                "mechanic": "isolation"
+              },
+              "priority": 2
+            },
+            {
+              "role": "accessory",
+              "pick": {
+                "muscles": [
+                  "calf"
+                ],
+                "mechanic": "isolation"
+              },
+              "priority": 2
+            },
+            {
+              "role": "core",
+              "pick": {
+                "patterns": [
+                  "core_flexion",
+                  "core_stability",
+                  "rotation"
+                ],
+                "muscles": [
+                  "abdominal",
+                  "oblique"
+                ]
+              },
+              "priority": 2
+            },
+            {
+              "role": "secondary",
+              "pick": {
+                "patterns": [
+                  "hinge"
+                ],
+                "muscles": [
+                  "glute"
+                ]
+              },
+              "priority": 3
+            },
+            {
+              "role": "accessory",
+              "pick": {
+                "muscles": [
+                  "abductor"
+                ],
+                "mechanic": "isolation"
+              },
+              "priority": 3
+            }
+          ],
+          "extras": [
+            "quads",
+            "hamstring",
+            "glute",
+            "calf",
+            "abductor",
+            "adductor",
+            "abdominal",
+            "oblique"
+          ]
+        },
+        {
+          "l10n": {
+            "en": {
+              "name": "Push B"
+            }
+          },
+          "slots": [
+            {
+              "role": "primary",
+              "pick": {
+                "patterns": [
+                  "vertical_push"
+                ],
+                "muscles": [
+                  "front_delt"
+                ]
+              },
+              "priority": 1
+            },
+            {
+              "role": "secondary",
+              "pick": {
+                "patterns": [
+                  "horizontal_push"
+                ],
+                "muscles": [
+                  "pec"
+                ]
+              },
+              "priority": 1
+            },
+            {
+              "role": "accessory",
+              "pick": {
+                "muscles": [
+                  "mid_delt"
+                ],
+                "mechanic": "isolation"
+              },
+              "priority": 1
+            },
+            {
+              "role": "accessory",
+              "pick": {
+                "muscles": [
+                  "pec"
+                ],
+                "mechanic": "isolation"
+              },
+              "priority": 2
+            },
+            {
+              "role": "accessory",
+              "pick": {
+                "muscles": [
+                  "triceps"
+                ],
+                "mechanic": "isolation"
+              },
+              "priority": 2
+            },
+            {
+              "role": "secondary",
+              "pick": {
+                "patterns": [
+                  "horizontal_push",
+                  "vertical_push"
+                ],
+                "muscles": [
+                  "triceps"
+                ]
+              },
+              "priority": 2
+            },
+            {
+              "role": "accessory",
+              "pick": {
+                "muscles": [
+                  "mid_delt"
+                ],
+                "mechanic": "isolation"
+              },
+              "priority": 3
+            },
+            {
+              "role": "accessory",
+              "pick": {
+                "muscles": [
+                  "triceps"
+                ],
+                "mechanic": "isolation"
+              },
+              "priority": 3
+            }
+          ],
+          "extras": [
+            "pec",
+            "front_delt",
+            "mid_delt",
+            "triceps"
+          ]
+        },
+        {
+          "l10n": {
+            "en": {
+              "name": "Pull B"
+            }
+          },
+          "slots": [
+            {
+              "role": "primary",
+              "pick": {
+                "patterns": [
+                  "horizontal_pull"
+                ],
+                "muscles": [
+                  "lat"
+                ]
+              },
+              "priority": 1
+            },
+            {
+              "role": "secondary",
+              "pick": {
+                "patterns": [
+                  "vertical_pull"
+                ],
+                "muscles": [
+                  "lat"
+                ]
+              },
+              "priority": 1
+            },
+            {
+              "role": "accessory",
+              "pick": {
+                "muscles": [
+                  "rear_delt"
+                ]
+              },
+              "priority": 1
+            },
+            {
+              "role": "accessory",
+              "pick": {
+                "muscles": [
+                  "biceps"
+                ],
+                "mechanic": "isolation"
+              },
+              "priority": 2
+            },
+            {
+              "role": "secondary",
+              "pick": {
+                "patterns": [
+                  "horizontal_pull",
+                  "vertical_pull"
+                ],
+                "muscles": [
+                  "lat"
+                ]
+              },
+              "priority": 2
+            },
+            {
+              "role": "accessory",
+              "pick": {
+                "muscles": [
+                  "lat"
+                ],
+                "mechanic": "isolation"
+              },
+              "priority": 2
+            },
+            {
+              "role": "accessory",
+              "pick": {
+                "muscles": [
+                  "biceps"
+                ],
+                "mechanic": "isolation"
+              },
+              "priority": 3
+            },
+            {
+              "role": "accessory",
+              "pick": {
+                "muscles": [
+                  "trap"
+                ],
+                "mechanic": "isolation"
+              },
+              "priority": 3
+            }
+          ],
+          "extras": [
+            "lat",
+            "trap",
+            "rear_delt",
+            "biceps",
+            "forearm"
+          ]
+        },
+        {
+          "l10n": {
+            "en": {
+              "name": "Legs B"
+            }
+          },
+          "slots": [
+            {
+              "role": "primary",
+              "pick": {
+                "patterns": [
+                  "hinge"
+                ],
+                "muscles": [
+                  "hamstring"
+                ]
+              },
+              "priority": 1
+            },
+            {
+              "role": "secondary",
+              "pick": {
+                "patterns": [
+                  "squat",
+                  "lunge"
+                ],
+                "muscles": [
+                  "quads"
+                ]
+              },
+              "priority": 1
+            },
+            {
+              "role": "secondary",
+              "pick": {
+                "patterns": [
+                  "lunge"
+                ],
+                "muscles": [
+                  "quads"
+                ]
+              },
+              "priority": 1
+            },
+            {
+              "role": "accessory",
+              "pick": {
+                "muscles": [
+                  "quads"
+                ],
+                "mechanic": "isolation"
+              },
+              "priority": 2
+            },
+            {
+              "role": "accessory",
+              "pick": {
+                "muscles": [
+                  "hamstring"
+                ],
+                "mechanic": "isolation"
+              },
+              "priority": 2
+            },
+            {
+              "role": "accessory",
+              "pick": {
+                "muscles": [
+                  "calf"
+                ],
+                "mechanic": "isolation"
+              },
+              "priority": 2
+            },
+            {
+              "role": "core",
+              "pick": {
+                "patterns": [
+                  "core_flexion",
+                  "core_stability",
+                  "rotation"
+                ],
+                "muscles": [
+                  "abdominal",
+                  "oblique"
+                ]
+              },
+              "priority": 2
+            },
+            {
+              "role": "accessory",
+              "pick": {
+                "muscles": [
+                  "glute"
+                ],
+                "mechanic": "isolation"
+              },
+              "priority": 3
+            },
+            {
+              "role": "accessory",
+              "pick": {
+                "muscles": [
+                  "adductor"
+                ],
+                "mechanic": "isolation"
+              },
+              "priority": 3
+            }
+          ],
+          "extras": [
+            "quads",
+            "hamstring",
+            "glute",
+            "calf",
+            "abductor",
+            "adductor",
+            "abdominal",
+            "oblique"
+          ]
+        }
+      ]
+    }
+  ],
+  "dosing": {
+    "build_muscle": {
+      "primary": {
+        "sets": {
+          "beginner": [
+            3,
+            3
+          ],
+          "intermediate": [
+            3,
+            4
+          ],
+          "advanced": [
+            3,
+            5
+          ]
+        },
+        "reps": [
+          6,
+          10
+        ],
+        "bodyweightReps": [
+          8,
+          15
+        ],
+        "holdS": {
+          "beginner": 30,
+          "intermediate": 45,
+          "advanced": 60
+        },
+        "restS": 150
+      },
+      "secondary": {
+        "sets": {
+          "beginner": [
+            2,
+            3
+          ],
+          "intermediate": [
+            3,
+            4
+          ],
+          "advanced": [
+            3,
+            4
+          ]
+        },
+        "reps": [
+          8,
+          12
+        ],
+        "bodyweightReps": [
+          8,
+          15
+        ],
+        "holdS": {
+          "beginner": 30,
+          "intermediate": 45,
+          "advanced": 60
+        },
+        "restS": 120
+      },
+      "accessory": {
+        "sets": {
+          "beginner": [
+            2,
+            3
+          ],
+          "intermediate": [
+            2,
+            4
+          ],
+          "advanced": [
+            3,
+            4
+          ]
+        },
+        "reps": [
+          10,
+          15
+        ],
+        "bodyweightReps": [
+          10,
+          20
+        ],
+        "holdS": {
+          "beginner": 30,
+          "intermediate": 40,
+          "advanced": 45
+        },
+        "restS": 60
+      },
+      "core": {
+        "sets": {
+          "beginner": [
+            2,
+            3
+          ],
+          "intermediate": [
+            2,
+            3
+          ],
+          "advanced": [
+            3,
+            4
+          ]
+        },
+        "reps": [
+          10,
+          15
+        ],
+        "bodyweightReps": [
+          10,
+          20
+        ],
+        "holdS": {
+          "beginner": 30,
+          "intermediate": 45,
+          "advanced": 60
+        },
+        "restS": 45
+      }
+    },
+    "get_stronger": {
+      "primary": {
+        "sets": {
+          "beginner": [
+            3,
+            3
+          ],
+          "intermediate": [
+            3,
+            5
+          ],
+          "advanced": [
+            4,
+            5
+          ]
+        },
+        "reps": [
+          3,
+          6
+        ],
+        "bodyweightReps": [
+          5,
+          10
+        ],
+        "holdS": {
+          "beginner": 30,
+          "intermediate": 45,
+          "advanced": 60
+        },
+        "restS": 180
+      },
+      "secondary": {
+        "sets": {
+          "beginner": [
+            2,
+            3
+          ],
+          "intermediate": [
+            3,
+            4
+          ],
+          "advanced": [
+            3,
+            4
+          ]
+        },
+        "reps": [
+          5,
+          8
+        ],
+        "bodyweightReps": [
+          6,
+          12
+        ],
+        "holdS": {
+          "beginner": 30,
+          "intermediate": 45,
+          "advanced": 60
+        },
+        "restS": 150
+      },
+      "accessory": {
+        "sets": {
+          "beginner": [
+            2,
+            3
+          ],
+          "intermediate": [
+            2,
+            3
+          ],
+          "advanced": [
+            2,
+            4
+          ]
+        },
+        "reps": [
+          8,
+          12
+        ],
+        "bodyweightReps": [
+          8,
+          15
+        ],
+        "holdS": {
+          "beginner": 30,
+          "intermediate": 40,
+          "advanced": 45
+        },
+        "restS": 75
+      },
+      "core": {
+        "sets": {
+          "beginner": [
+            2,
+            3
+          ],
+          "intermediate": [
+            2,
+            3
+          ],
+          "advanced": [
+            3,
+            3
+          ]
+        },
+        "reps": [
+          8,
+          12
+        ],
+        "bodyweightReps": [
+          10,
+          15
+        ],
+        "holdS": {
+          "beginner": 30,
+          "intermediate": 45,
+          "advanced": 60
+        },
+        "restS": 60
+      }
+    },
+    "lose_fat": {
+      "primary": {
+        "sets": {
+          "beginner": [
+            2,
+            3
+          ],
+          "intermediate": [
+            3,
+            3
+          ],
+          "advanced": [
+            3,
+            4
+          ]
+        },
+        "reps": [
+          8,
+          12
+        ],
+        "bodyweightReps": [
+          10,
+          20
+        ],
+        "holdS": {
+          "beginner": 30,
+          "intermediate": 40,
+          "advanced": 45
+        },
+        "restS": 90
+      },
+      "secondary": {
+        "sets": {
+          "beginner": [
+            2,
+            3
+          ],
+          "intermediate": [
+            3,
+            3
+          ],
+          "advanced": [
+            3,
+            4
+          ]
+        },
+        "reps": [
+          8,
+          12
+        ],
+        "bodyweightReps": [
+          10,
+          20
+        ],
+        "holdS": {
+          "beginner": 30,
+          "intermediate": 40,
+          "advanced": 45
+        },
+        "restS": 75
+      },
+      "accessory": {
+        "sets": {
+          "beginner": [
+            2,
+            3
+          ],
+          "intermediate": [
+            2,
+            3
+          ],
+          "advanced": [
+            3,
+            3
+          ]
+        },
+        "reps": [
+          12,
+          15
+        ],
+        "bodyweightReps": [
+          12,
+          20
+        ],
+        "holdS": {
+          "beginner": 30,
+          "intermediate": 40,
+          "advanced": 45
+        },
+        "restS": 45
+      },
+      "core": {
+        "sets": {
+          "beginner": [
+            2,
+            3
+          ],
+          "intermediate": [
+            2,
+            3
+          ],
+          "advanced": [
+            3,
+            3
+          ]
+        },
+        "reps": [
+          12,
+          20
+        ],
+        "bodyweightReps": [
+          12,
+          20
+        ],
+        "holdS": {
+          "beginner": 30,
+          "intermediate": 40,
+          "advanced": 45
+        },
+        "restS": 45
+      }
+    },
+    "general_fitness": {
+      "primary": {
+        "sets": {
+          "beginner": [
+            2,
+            3
+          ],
+          "intermediate": [
+            3,
+            3
+          ],
+          "advanced": [
+            3,
+            4
+          ]
+        },
+        "reps": [
+          8,
+          12
+        ],
+        "bodyweightReps": [
+          8,
+          15
+        ],
+        "holdS": {
+          "beginner": 30,
+          "intermediate": 40,
+          "advanced": 45
+        },
+        "restS": 120
+      },
+      "secondary": {
+        "sets": {
+          "beginner": [
+            2,
+            3
+          ],
+          "intermediate": [
+            3,
+            3
+          ],
+          "advanced": [
+            3,
+            4
+          ]
+        },
+        "reps": [
+          8,
+          12
+        ],
+        "bodyweightReps": [
+          8,
+          15
+        ],
+        "holdS": {
+          "beginner": 30,
+          "intermediate": 40,
+          "advanced": 45
+        },
+        "restS": 90
+      },
+      "accessory": {
+        "sets": {
+          "beginner": [
+            2,
+            3
+          ],
+          "intermediate": [
+            2,
+            3
+          ],
+          "advanced": [
+            2,
+            3
+          ]
+        },
+        "reps": [
+          10,
+          15
+        ],
+        "bodyweightReps": [
+          10,
+          20
+        ],
+        "holdS": {
+          "beginner": 30,
+          "intermediate": 40,
+          "advanced": 45
+        },
+        "restS": 60
+      },
+      "core": {
+        "sets": {
+          "beginner": [
+            2,
+            3
+          ],
+          "intermediate": [
+            2,
+            3
+          ],
+          "advanced": [
+            2,
+            3
+          ]
+        },
+        "reps": [
+          10,
+          15
+        ],
+        "bodyweightReps": [
+          10,
+          20
+        ],
+        "holdS": {
+          "beginner": 30,
+          "intermediate": 40,
+          "advanced": 45
+        },
+        "restS": 45
+      }
+    }
+  },
+  "grouping": [
+    {
+      "goals": [
+        "lose_fat"
+      ],
+      "roles": [
+        "accessory",
+        "core"
+      ],
+      "size": 3,
+      "restS": 60
+    },
+    {
+      "sessionMax": 30,
+      "roles": [
+        "accessory",
+        "core"
+      ],
+      "size": 2,
+      "restS": 60
+    }
+  ],
+  "volume": {
+    "targets": {
+      "beginner": {
+        "pec": 8,
+        "lat": 8,
+        "quads": 8,
+        "glute": 6,
+        "hamstring": 6,
+        "front_delt": 4,
+        "mid_delt": 4,
+        "biceps": 4,
+        "triceps": 4,
+        "calf": 4,
+        "abdominal": 4
+      },
+      "intermediate": {
+        "pec": 12,
+        "lat": 12,
+        "quads": 12,
+        "glute": 8,
+        "hamstring": 10,
+        "front_delt": 6,
+        "mid_delt": 8,
+        "rear_delt": 4,
+        "biceps": 8,
+        "triceps": 8,
+        "calf": 6,
+        "abdominal": 6
+      },
+      "advanced": {
+        "pec": 16,
+        "lat": 16,
+        "quads": 14,
+        "glute": 10,
+        "hamstring": 12,
+        "front_delt": 6,
+        "mid_delt": 12,
+        "rear_delt": 6,
+        "biceps": 10,
+        "triceps": 10,
+        "calf": 8,
+        "abdominal": 8
+      }
+    },
+    "cap": {
+      "beginner": 14,
+      "intermediate": 20,
+      "advanced": 22
+    }
+  },
+  "focus": {
+    "areas": {
+      "chest": [
+        "pec"
+      ],
+      "back": [
+        "lat"
+      ],
+      "shoulders": [
+        "mid_delt",
+        "rear_delt"
+      ],
+      "arms": [
+        "biceps",
+        "triceps"
+      ],
+      "core": [
+        "abdominal",
+        "oblique"
+      ],
+      "glutes": [
+        "glute"
+      ],
+      "legs": [
+        "quads",
+        "hamstring"
+      ]
+    },
+    "extraSets": 4,
+    "max": 2
+  },
+  "skip": {
+    "areas": {
+      "chest": [
+        "pec"
+      ],
+      "back": [
+        "lat",
+        "trap"
+      ],
+      "shoulders": [
+        "front_delt",
+        "mid_delt",
+        "rear_delt"
+      ],
+      "arms": [
+        "biceps",
+        "triceps",
+        "forearm"
+      ],
+      "core": [
+        "abdominal",
+        "oblique"
+      ],
+      "glutes": [
+        "glute"
+      ],
+      "legs": [
+        "quads",
+        "hamstring",
+        "calf",
+        "adductor",
+        "abductor"
+      ]
+    },
+    "max": 3
+  },
+  "selection": {
+    "tier": {
+      "staple": 30,
+      "standard": 15,
+      "fallback": 0
+    },
+    "equipment": {
+      "any": {
+        "barbell": 12,
+        "ez_bar": 12,
+        "trap_bar": 10,
+        "dumbbell": 12,
+        "kettlebell": 6,
+        "plate": 4,
+        "cable": 12,
+        "machine": 12,
+        "smith_machine": 7,
+        "bench": 5,
+        "box": 3,
+        "back_extension_bench": 10,
+        "pull_up_bar": 10,
+        "dip_station": 10,
+        "resistance_band": -8,
+        "suspension_trainer": 2,
+        "rings": 2,
+        "medicine_ball": 2,
+        "stability_ball": 2,
+        "ab_wheel": 6,
+        "landmine": 5,
+        "sled": 0,
+        "jump_rope": 0,
+        "bodyweight": -8,
+        "other": 0
+      },
+      "machines": {
+        "barbell": 3,
+        "ez_bar": 5,
+        "trap_bar": 3,
+        "dumbbell": 6,
+        "kettlebell": 2,
+        "plate": 2,
+        "cable": 13,
+        "machine": 15,
+        "smith_machine": 11,
+        "bench": 4,
+        "box": 3,
+        "back_extension_bench": 8,
+        "pull_up_bar": 6,
+        "dip_station": 6,
+        "resistance_band": -8,
+        "suspension_trainer": 1,
+        "rings": 1,
+        "medicine_ball": 1,
+        "stability_ball": 1,
+        "ab_wheel": 4,
+        "landmine": 3,
+        "sled": 0,
+        "jump_rope": 0,
+        "bodyweight": -8,
+        "other": 0
+      },
+      "free_weights": {
+        "barbell": 15,
+        "ez_bar": 13,
+        "trap_bar": 11,
+        "dumbbell": 13,
+        "kettlebell": 8,
+        "plate": 6,
+        "cable": 6,
+        "machine": 3,
+        "smith_machine": 2,
+        "bench": 6,
+        "box": 4,
+        "back_extension_bench": 8,
+        "pull_up_bar": 10,
+        "dip_station": 10,
+        "resistance_band": -8,
+        "suspension_trainer": 2,
+        "rings": 2,
+        "medicine_ball": 2,
+        "stability_ball": 2,
+        "ab_wheel": 6,
+        "landmine": 8,
+        "sled": 0,
+        "jump_rope": 0,
+        "bodyweight": -6,
+        "other": 0
+      }
+    },
+    "goalEquipment": {
+      "get_stronger": {
+        "barbell": 8,
+        "trap_bar": 6
+      }
+    },
+    "aboveLevel": -30,
+    "repeat": -20,
+    "family": -6,
+    "popularity": 20,
+    "variety": 4
+  },
+  "time": {
+    "setupS": 45,
+    "sessionMinutes": [
+      30,
+      45,
+      60,
+      75,
+      90
+    ]
+  },
+  "lengthWeeks": {
+    "beginner": 8,
+    "intermediate": 10,
+    "advanced": 12
+  }
+}
