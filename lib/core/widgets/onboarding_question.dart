@@ -109,13 +109,24 @@ class OnboardingQuestionBody extends StatelessWidget {
     this.eyebrow,
     this.info,
     this.scrolls = true,
-  });
+  }) : _fills = false;
+
+  /// The [answer] takes all the height under the header: a body model.
+  const OnboardingQuestionBody.filled({
+    super.key,
+    required this.title,
+    required this.answer,
+    this.eyebrow,
+    this.info,
+  }) : scrolls = false,
+       _fills = true;
 
   final String title;
   final Widget answer;
   final String? eyebrow;
   final String? info;
   final bool scrolls;
+  final bool _fills;
 
   @override
   Widget build(BuildContext context) {
@@ -136,6 +147,16 @@ class OnboardingQuestionBody extends StatelessWidget {
         ],
       ),
     );
+    if (_fills) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          header,
+          const SizedBox(height: 12),
+          Expanded(child: answer),
+        ],
+      );
+    }
     if (!scrolls) {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,

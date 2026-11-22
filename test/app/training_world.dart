@@ -75,6 +75,7 @@ import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
 import '../features/body/body_fakes.dart' show FakeProfileRepository;
+import '../features/generator/fixtures.dart' show FakeGeneratorRepository;
 import '../features/programs/fixtures.dart' show FixedPremium;
 import 'answered_consent.dart';
 import 'review_prompt_stand_in.dart';
@@ -449,6 +450,9 @@ class TrainingWorld {
   late final workouts = FakeWorkoutRepository(programs);
   final local = FakeLocalWorkoutStore();
   final catalogue = FakeCatalogueRepository();
+
+  /// Makes programs from [exercises], several a week.
+  late final generator = FakeGeneratorRepository(library: exercises);
   final profiles = FakeProfileRepository();
   late GoRouter router;
 
@@ -708,14 +712,18 @@ class TrainingWorld {
         instanceName: ProgramsModule.pickerLibrary,
       )
       ..registerFactoryParam<GeneratorQuestionsCubit, GeneratorPrefill, void>(
-        (prefill, _) => GeneratorQuestionsCubit(prefill),
+        (prefill, _) => GeneratorQuestionsCubit(
+          prefill,
+          watchOptions: WatchGeneratorOptions(generator),
+        ),
       )
-      ..registerFactoryParam<GeneratorPreviewCubit, GeneratorAnswers, void>(
-        (answers, _) => GeneratorPreviewCubit(
+      ..registerFactoryParam<GeneratorPreviewCubit, GeneratorAnswers, String>(
+        (answers, language) => GeneratorPreviewCubit(
           analytics: fakeAnalytics(),
           answers,
+          language: language,
           catalogue: exerciseCatalogue,
-          generateProgram: const GenerateProgram(),
+          generateProgram: GenerateProgram(generator),
           saveProgram: saveProgram,
           getCurrentUser: currentUser,
         ),

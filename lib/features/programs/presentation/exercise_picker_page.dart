@@ -30,9 +30,6 @@ typedef PickerRoute = String Function({
 enum ExercisePickerForm {
   add,
 
-  /// Exercises the generator leaves out.
-  leaveOut,
-
   /// A workout's exercise, some of whose sets may be logged.
   swap,
 
@@ -256,7 +253,6 @@ class _PickerViewState extends State<_PickerView> {
     };
     final title = switch (widget.form) {
       ExercisePickerForm.add => l10n.pickerTitleAdd,
-      ExercisePickerForm.leaveOut => l10n.pickerTitleLeaveOut,
       ExercisePickerForm.swap =>
         subject == null ? l10n.workoutSwap : l10n.pickerTitleSwap(subject),
       ExercisePickerForm.replace =>
@@ -324,9 +320,7 @@ class _PickerViewState extends State<_PickerView> {
                       : l10n.pickerChosen(count),
                   none: count == 0,
                   action: ForgeButton(
-                    label: widget.form == ExercisePickerForm.leaveOut
-                        ? l10n.pickerLeaveOut(count)
-                        : l10n.pickerAddCount(count),
+                    label: l10n.pickerAddCount(count),
                     size: ForgeButtonSize.large,
                     onPressed: count == 0
                         ? null

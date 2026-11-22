@@ -140,23 +140,6 @@ void main() {
     expect(find.text('1 chosen'), findsOneWidget);
   });
 
-  testWidgets('the generator leaves exercises out', (tester) async {
-    await pump(
-      tester,
-      const ExercisePickerPage(
-        max: 20,
-        limit: 20,
-        multiple: true,
-        form: ExercisePickerForm.leaveOut,
-      ),
-    );
-
-    expect(find.text('Leave out exercises'), findsNWidgets(2));
-    await tester.tap(find.text('Cable Fly'));
-    await tester.pump();
-    expect(find.text('Leave out 1 exercise'), findsOneWidget);
-  });
-
   testWidgets('swapping lists the similar ones first and swaps on a tap', (
     tester,
   ) async {

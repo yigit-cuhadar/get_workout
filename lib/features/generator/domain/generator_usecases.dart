@@ -1,30 +1,23 @@
 import 'package:forge_core/forge_core.dart';
 
-import '../../exercises/domain/exercise.dart';
-import '../../programs/domain/program.dart';
-import 'generator_answers.dart';
-import 'program_generator.dart';
+import 'generated_program.dart';
+import 'generator_options.dart';
+import 'generator_repository.dart';
 
-/// [exercises] is the library to choose from; [seed] and [kept] see
-/// [generateProgram].
-typedef GenerationRequest = ({
-  GeneratorAnswers answers,
-  List<Exercise> exercises,
-  int seed,
-  List<List<ProgramItem>> kept,
-});
-
-/// A program from the answers, or a [GenerationFailure] saying why none
-/// can be made; see [generateProgram].
+/// A program from the server, or a [GenerationRefused] or another failure
+/// saying why there is none.
 class GenerateProgram implements UseCase<GeneratedProgram, GenerationRequest> {
-  const GenerateProgram();
+  const GenerateProgram(this._repository);
+  final GeneratorRepository _repository;
 
   @override
-  Future<Result<GeneratedProgram>> call(GenerationRequest params) async =>
-      generateProgram(
-        params.answers,
-        params.exercises,
-        seed: params.seed,
-        kept: params.kept,
-      );
+  Future<Result<GeneratedProgram>> call(GenerationRequest params) =>
+      _repository.generate(params);
+}
+
+class WatchGeneratorOptions {
+  const WatchGeneratorOptions(this._repository);
+  final GeneratorRepository _repository;
+
+  Stream<GeneratorOptions> call() => _repository.watchOptions();
 }

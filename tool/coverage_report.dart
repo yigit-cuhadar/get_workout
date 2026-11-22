@@ -2,8 +2,7 @@
 // content/exercises/*.json (tool/src/content_coverage.dart).
 //
 // Run from the app root: dart run tool/coverage_report.dart [content dir]
-// Exits non-zero when the files do not validate or the generator rule
-// fails.
+// Exits non-zero when the files do not validate.
 import 'dart:io';
 
 import 'src/content_coverage.dart';
@@ -25,10 +24,4 @@ void main(List<String> args) {
     exit(1);
   }
   stdout.write(coverageReport(report.live));
-  final failed = shortfalls(generatorCoverage(report.live));
-  if (failed.isNotEmpty) {
-    stderr.writeln('FAILED: ${failed.length} profile × muscle cell(s) short.');
-    exit(1);
-  }
-  stdout.writeln('OK');
 }
