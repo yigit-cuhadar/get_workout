@@ -1,7 +1,11 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:forge_core/forge_core.dart';
 import 'package:get_it/get_it.dart';
 
+import 'data/server_generator_repository.dart';
 import 'domain/generator_answers.dart';
+import 'domain/generator_repository.dart';
 import 'domain/generator_usecases.dart';
 import 'presentation/generator_preview_cubit.dart';
 import 'presentation/generator_questions_cubit.dart';
@@ -14,13 +18,24 @@ class GeneratorModule implements FeatureModule {
   @override
   void register(GetIt sl) {
     sl
-      ..registerFactory(GenerateProgram.new)
-      ..registerFactoryParam<GeneratorQuestionsCubit, GeneratorPrefill, void>(
-        (prefill, _) => GeneratorQuestionsCubit(prefill),
+      ..registerLazySingleton<GeneratorRepository>(
+        () => ServerGeneratorRepository(
+          FirebaseFunctions.instanceFor(
+            region: ServerGeneratorRepository.region,
+          ),
+          FirebaseFirestore.instance,
+        ),
       )
-      ..registerFactoryParam<GeneratorPreviewCubit, GeneratorAnswers, void>(
-        (answers, _) => GeneratorPreviewCubit(
+      ..registerFactory(() => GenerateProgram(sl()))
+      ..registerFactory(() => WatchGeneratorOptions(sl()))
+      ..registerFactoryParam<GeneratorQuestionsCubit, GeneratorPrefill, void>(
+        (prefill, _) => GeneratorQuestionsCubit(prefill, watchOptions: sl()),
+      )
+      // The second parameter is the language the program is named in.
+      ..registerFactoryParam<GeneratorPreviewCubit, GeneratorAnswers, String>(
+        (answers, language) => GeneratorPreviewCubit(
           answers,
+          language: language,
           catalogue: sl(),
           generateProgram: sl(),
           saveProgram: sl(),

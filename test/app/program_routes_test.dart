@@ -22,6 +22,7 @@ import 'package:get_workout/features/exercises/presentation/body_model_cubit.dar
 import 'package:get_workout/features/exercises/presentation/exercise_catalogue_cubit.dart';
 import 'package:get_workout/features/exercises/presentation/favorites_cubit.dart';
 import 'package:get_workout/features/exercises/presentation/library_cubit.dart';
+import 'package:get_workout/features/generator/domain/generator_usecases.dart';
 import 'package:get_workout/features/generator/presentation/generator_page.dart';
 import 'package:get_workout/features/generator/presentation/generator_questions_cubit.dart';
 import 'package:get_workout/features/programs/data/no_completed_days.dart';
@@ -47,6 +48,7 @@ import 'package:get_workout/l10n/app_localizations.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../features/generator/fixtures.dart' show FakeGeneratorRepository;
 import '../features/programs/fixtures.dart';
 import 'answered_consent.dart';
 import 'no_workout.dart';
@@ -228,7 +230,10 @@ void main() {
         ),
       )
       ..registerFactoryParam<GeneratorQuestionsCubit, GeneratorPrefill, void>(
-        (prefill, _) => GeneratorQuestionsCubit(prefill),
+        (prefill, _) => GeneratorQuestionsCubit(
+          prefill,
+          watchOptions: WatchGeneratorOptions(FakeGeneratorRepository()),
+        ),
       )
       ..registerFactoryParam<ExercisePickerCubit, int, bool>(
         (max, multiple) => ExercisePickerCubit(max: max, multiple: multiple),

@@ -1,23 +1,31 @@
+import 'dart:async';
+
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:forge_core/forge_core.dart';
 
 import '../../exercises/domain/vocabulary.dart';
+import '../../profile/domain/user_profile.dart';
 import '../domain/generator_answers.dart';
+import '../domain/generator_options.dart';
+import '../domain/generator_usecases.dart';
 
-/// The questions, in the order they are asked.
-enum GeneratorStep {
-  goal,
-  level,
-  days,
-  session,
-  equipment,
-  focus,
-  excluded,
-  easyArea,
-  split,
+/// The pages of the questions, in order; [style] and [split] show only
+/// when they have something to ask ([GeneratorQuestionsState.steps]).
+enum GeneratorStep { profile, session, focus, skip, sensitive, style, split }
+
+enum OptionsStatus {
+  loading,
+  ready,
+
+  /// Offline, and the options were never loaded on this device.
+  offline,
+
+  /// Nothing is published yet.
+  unavailable,
+  failure,
 }
 
-/// What the user already told the app; each prefills its question.
+/// What the user already told the app; each prefills its answer.
 typedef GeneratorPrefill = ({
   Goal? goal,
   Level? level,
@@ -27,201 +35,326 @@ typedef GeneratorPrefill = ({
 
 class GeneratorQuestionsState extends Equatable {
   const GeneratorQuestionsState({
-    this.step = GeneratorStep.goal,
+    this.status = OptionsStatus.loading,
+    this.options,
+    this.step = GeneratorStep.profile,
     this.goal,
     this.level,
     this.daysPerWeek,
-    this.sessionMinutes = defaultSessionMinutes,
     this.equipment,
+    this.sessionMinutes,
     this.focus = const {},
-    this.excluded = const {},
-    this.easyArea,
-    this.split,
+    this.skip = const {},
+    this.sensitive = const {},
+    this.equipmentStyle = EquipmentStyle.any,
+    this.splitId,
   });
 
-  static const defaultSessionMinutes = 60;
+  final OptionsStatus status;
 
+  /// Once loaded; kept when a later read fails.
+  final GeneratorOptions? options;
   final GeneratorStep step;
   final Goal? goal;
   final Level? level;
   final int? daysPerWeek;
-  final int sessionMinutes;
 
-  /// Null until chosen; empty is bodyweight only.
+  /// Never holds [Equipment.bodyweight]; empty is bodyweight only.
   final Set<Equipment>? equipment;
-  final Set<Muscle> focus;
-  final Set<String> excluded;
-  final EasyArea? easyArea;
-  final TrainingSplit? split;
 
-  bool get isLast => step == GeneratorStep.values.last;
+  /// Null until the options are loaded.
+  final int? sessionMinutes;
+  final Set<FocusArea> focus;
+  final Set<FocusArea> skip;
+  final Set<SensitiveArea> sensitive;
 
-  /// Whether the question on screen is answered. The later ones have an
-  /// answer from the start: none, or the best split.
-  bool get answered => switch (step) {
-    GeneratorStep.goal => goal != null,
-    GeneratorStep.level => level != null,
-    GeneratorStep.days => daysPerWeek != null,
-    GeneratorStep.equipment => equipment != null,
-    GeneratorStep.split => split == null || splitFits(split!),
-    _ => true,
-  };
+  /// The style picked; it counts only while [styleApplies].
+  final EquipmentStyle equipmentStyle;
 
-  /// Whether [split] can be trained on the days chosen.
-  bool splitFits(TrainingSplit split) => (daysPerWeek ?? 0) >= split.minDays;
+  /// The split picked, null for "Let the app choose"; it counts only while
+  /// it fits.
+  final String? splitId;
 
-  /// Null until every question needing an answer has one.
+  bool get profileAnswered =>
+      goal != null && level != null && daysPerWeek != null && equipment != null;
+
+  bool get styleApplies => equipmentStyleApplies(equipment ?? const {});
+
+  /// The splits the split question offers for the profile answers.
+  List<GeneratorSplit> get fittingSplits {
+    final options = this.options;
+    if (options == null || !profileAnswered) return const [];
+    return options.splitsFitting(daysPerWeek!, level!, goal!);
+  }
+
+  /// The pages that show, in order.
+  List<GeneratorStep> get steps => [
+    GeneratorStep.profile,
+    GeneratorStep.session,
+    GeneratorStep.focus,
+    GeneratorStep.skip,
+    GeneratorStep.sensitive,
+    if (styleApplies) GeneratorStep.style,
+    if (fittingSplits.length > 1) GeneratorStep.split,
+  ];
+
+  bool get isLast => step == steps.last;
+
+  /// Whether the page on screen is answered; only the profile can be
+  /// unanswered, the others start with an answer.
+  bool get answered => step != GeneratorStep.profile || profileAnswered;
+
+  /// Null until the options are loaded and the profile is answered.
   GeneratorAnswers? get answers {
-    final goal = this.goal;
-    final level = this.level;
-    final days = daysPerWeek;
-    final equipment = this.equipment;
-    if (goal == null || level == null || days == null || equipment == null) {
-      return null;
-    }
+    final minutes = sessionMinutes;
+    if (!profileAnswered || minutes == null) return null;
+    final split = splitId;
+    final splits = fittingSplits;
     return GeneratorAnswers(
-      goal: goal,
-      level: level,
-      daysPerWeek: days,
-      sessionMinutes: sessionMinutes,
-      equipment: equipment,
+      goal: goal!,
+      level: level!,
+      daysPerWeek: daysPerWeek!,
+      sessionMinutes: minutes,
+      equipment: equipment!,
       focus: focus,
-      excluded: excluded,
-      easyArea: easyArea,
-      split: split,
+      skip: skip,
+      sensitive: sensitive,
+      equipmentStyle: styleApplies ? equipmentStyle : EquipmentStyle.any,
+      splitId: splits.length > 1 && splits.any((s) => s.id == split)
+          ? split
+          : null,
     );
   }
 
   GeneratorQuestionsState copyWith({
+    OptionsStatus? status,
+    GeneratorOptions? options,
     GeneratorStep? step,
     Goal? goal,
     Level? level,
     int? daysPerWeek,
-    int? sessionMinutes,
     Set<Equipment>? equipment,
-    Set<Muscle>? focus,
-    Set<String>? excluded,
-    EasyArea? Function()? easyArea,
-    TrainingSplit? Function()? split,
+    int? sessionMinutes,
+    Set<FocusArea>? focus,
+    Set<FocusArea>? skip,
+    Set<SensitiveArea>? sensitive,
+    EquipmentStyle? equipmentStyle,
+    String? Function()? splitId,
   }) => GeneratorQuestionsState(
+    status: status ?? this.status,
+    options: options ?? this.options,
     step: step ?? this.step,
     goal: goal ?? this.goal,
     level: level ?? this.level,
     daysPerWeek: daysPerWeek ?? this.daysPerWeek,
-    sessionMinutes: sessionMinutes ?? this.sessionMinutes,
     equipment: equipment ?? this.equipment,
+    sessionMinutes: sessionMinutes ?? this.sessionMinutes,
     focus: focus ?? this.focus,
-    excluded: excluded ?? this.excluded,
-    easyArea: easyArea != null ? easyArea() : this.easyArea,
-    split: split != null ? split() : this.split,
+    skip: skip ?? this.skip,
+    sensitive: sensitive ?? this.sensitive,
+    equipmentStyle: equipmentStyle ?? this.equipmentStyle,
+    splitId: splitId != null ? splitId() : this.splitId,
   );
 
   @override
   List<Object?> get props => [
+    status,
+    options,
     step,
     goal,
     level,
     daysPerWeek,
-    sessionMinutes,
     equipment,
+    sessionMinutes,
     focus,
-    excluded,
-    easyArea,
-    split,
+    skip,
+    sensitive,
+    equipmentStyle,
+    splitId,
   ];
 }
 
-/// The generator's questions, one at a time, prefilled from what the user
-/// already answered in onboarding.
+/// The generator's questions, a page at a time, over what the server
+/// offers; the profile answers are prefilled and changed for this program
+/// only.
 class GeneratorQuestionsCubit extends Cubit<GeneratorQuestionsState> {
-  GeneratorQuestionsCubit(GeneratorPrefill prefill) : super(_answered(prefill));
+  GeneratorQuestionsCubit(
+    GeneratorPrefill prefill, {
+    required this._watchOptions,
+  }) : super(_prefilled(const GeneratorQuestionsState(), prefill)) {
+    _listen();
+  }
 
-  /// The questions [prefill] answers; days the generator does not offer
-  /// stay unanswered.
-  static GeneratorQuestionsState _answered(GeneratorPrefill prefill) =>
-      GeneratorQuestionsState(
-        goal: prefill.goal,
-        level: prefill.level,
-        daysPerWeek: switch (prefill.daysPerWeek) {
-          final days?
-              when days >= GeneratorLimits.minDays &&
-                  days <= GeneratorLimits.maxDays =>
-            days,
+  final WatchGeneratorOptions _watchOptions;
+  StreamSubscription<GeneratorOptions>? _subscription;
+
+  /// [state] with the profile answers it lacks taken from [prefill]; days
+  /// out of the generator's range stay unanswered.
+  static GeneratorQuestionsState _prefilled(
+    GeneratorQuestionsState state,
+    GeneratorPrefill prefill,
+  ) => state.copyWith(
+    goal: state.goal ?? prefill.goal,
+    level: state.level ?? prefill.level,
+    daysPerWeek:
+        state.daysPerWeek ??
+        switch (prefill.daysPerWeek) {
+          final days? when ProfileLimits.daysPerWeek(days) => days,
           _ => null,
         },
-        equipment: prefill.equipment?.difference({Equipment.bodyweight}),
-      );
+    equipment:
+        state.equipment ??
+        prefill.equipment?.difference(const {Equipment.bodyweight}),
+  );
 
-  /// Fills the questions not answered yet from [prefill], e.g. once the
-  /// profile has loaded.
-  void prefill(GeneratorPrefill prefill) {
-    final from = _answered(prefill);
-    emit(
+  void _listen() {
+    _subscription = _watchOptions().listen(
+      _onOptions,
+      onError: (Object error) {
+        // Options already loaded still answer every question.
+        if (state.options != null) return;
+        emit(
+          state.copyWith(
+            status: switch (error) {
+              NetworkFailure() => OptionsStatus.offline,
+              NotFoundFailure() => OptionsStatus.unavailable,
+              _ => OptionsStatus.failure,
+            },
+          ),
+        );
+      },
+    );
+  }
+
+  /// Keeps the answers the new [options] still offer.
+  void _onOptions(GeneratorOptions options) {
+    final minutes = state.sessionMinutes;
+    _emitPages(
       state.copyWith(
-        goal: state.goal ?? from.goal,
-        level: state.level ?? from.level,
-        daysPerWeek: state.daysPerWeek ?? from.daysPerWeek,
-        equipment: state.equipment ?? from.equipment,
+        status: OptionsStatus.ready,
+        options: options,
+        sessionMinutes:
+            minutes != null && options.sessionMinutes.contains(minutes)
+            ? minutes
+            : options.defaultSessionMinutes,
+        focus: _first(state.focus, options.maxFocusAreas),
+        skip: _first(state.skip, options.maxSkipAreas),
       ),
     );
   }
 
-  /// To the next question, once this one is answered.
-  void next() {
-    if (!state.answered || state.isLast) return;
-    emit(state.copyWith(step: GeneratorStep.values[state.step.index + 1]));
+  static Set<FocusArea> _first(Set<FocusArea> areas, int max) =>
+      areas.length <= max ? areas : areas.take(max).toSet();
+
+  /// Reads the options again after they failed to load.
+  void retry() {
+    unawaited(_subscription?.cancel());
+    emit(state.copyWith(status: OptionsStatus.loading));
+    _listen();
   }
 
-  /// To the previous question; false on the first one.
+  /// Fills the profile answers not given yet, e.g. once the profile has
+  /// loaded.
+  void prefill(GeneratorPrefill prefill) =>
+      _emitPages(_prefilled(state, prefill));
+
+  /// The profile answers of [answers] for this program, from a question
+  /// opened on the first page.
+  void changeProfile(UserProfile answers) => _emitPages(
+    state.copyWith(
+      goal: answers.goal,
+      level: answers.level,
+      daysPerWeek: answers.daysPerWeek,
+      equipment: answers.equipment?.difference(const {Equipment.bodyweight}),
+    ),
+  );
+
+  /// [next] with its page list recomputed: a page that no longer shows
+  /// gives way to the nearest one before it.
+  void _emitPages(GeneratorQuestionsState next) {
+    final steps = next.steps;
+    emit(
+      steps.contains(next.step)
+          ? next
+          : next.copyWith(
+              step: steps.lastWhere((step) => step.index < next.step.index),
+            ),
+    );
+  }
+
+  /// To the next page, once this one is answered.
+  void next() {
+    final steps = state.steps;
+    if (!state.answered || state.isLast) return;
+    emit(state.copyWith(step: steps[steps.indexOf(state.step) + 1]));
+  }
+
+  /// To the previous page; false on the first one.
   bool back() {
-    if (state.step.index == 0) return false;
-    emit(state.copyWith(step: GeneratorStep.values[state.step.index - 1]));
+    final steps = state.steps;
+    final index = steps.indexOf(state.step);
+    if (index <= 0) return false;
+    emit(state.copyWith(step: steps[index - 1]));
     return true;
   }
-
-  void setGoal(Goal goal) => emit(state.copyWith(goal: goal));
-
-  void setLevel(Level level) => emit(state.copyWith(level: level));
-
-  void setDays(int days) => emit(state.copyWith(daysPerWeek: days));
 
   void setSessionMinutes(int minutes) =>
       emit(state.copyWith(sessionMinutes: minutes));
 
-  void applyPreset(EquipmentProfile profile) =>
-      emit(state.copyWith(equipment: profile.equipment));
-
-  /// A preset tuned item by item.
-  void setEquipment(Set<Equipment> owned) =>
-      emit(state.copyWith(equipment: owned));
-
-  /// Up to [GeneratorLimits.maxFocusMuscles]; never a muscle of the area to
-  /// go easy on.
-  void toggleFocus(Muscle muscle) {
+  /// Adds [area] to the focus areas up to the most allowed, taking it out
+  /// of those left out, or removes it.
+  void toggleFocus(FocusArea area) {
     final focus = state.focus;
-    if (focus.contains(muscle)) {
-      emit(state.copyWith(focus: focus.difference({muscle})));
-    } else if (focus.length < GeneratorLimits.maxFocusMuscles &&
-        !(state.easyArea?.muscles.contains(muscle) ?? false)) {
-      emit(state.copyWith(focus: {...focus, muscle}));
+    if (focus.contains(area)) {
+      return emit(state.copyWith(focus: focus.difference({area})));
     }
+    if (focus.length >= (state.options?.maxFocusAreas ?? 0)) return;
+    emit(
+      state.copyWith(
+        focus: {...focus, area},
+        skip: state.skip.difference({area}),
+      ),
+    );
   }
 
-  void exclude(Iterable<String> exerciseIds) =>
-      emit(state.copyWith(excluded: {...state.excluded, ...exerciseIds}));
+  /// Adds [area] to those left out up to the most allowed, or removes it;
+  /// a focus area cannot be left out.
+  void toggleSkip(FocusArea area) {
+    final skip = state.skip;
+    if (skip.contains(area)) {
+      return emit(state.copyWith(skip: skip.difference({area})));
+    }
+    if (state.focus.contains(area) ||
+        skip.length >= (state.options?.maxSkipAreas ?? 0)) {
+      return;
+    }
+    emit(state.copyWith(skip: {...skip, area}));
+  }
 
-  void include(String exerciseId) =>
-      emit(state.copyWith(excluded: state.excluded.difference({exerciseId})));
+  /// "No sensitive areas".
+  void clearSensitive() => emit(state.copyWith(sensitive: const {}));
 
-  /// Null for none. Focus muscles of the area are dropped: it wins.
-  void setEasyArea(EasyArea? area) => emit(
-    state.copyWith(
-      easyArea: () => area,
-      focus: area == null ? null : state.focus.difference(area.muscles),
-    ),
-  );
+  void toggleSensitive(SensitiveArea area) {
+    final sensitive = state.sensitive;
+    emit(
+      state.copyWith(
+        sensitive: sensitive.contains(area)
+            ? sensitive.difference({area})
+            : {...sensitive, area},
+      ),
+    );
+  }
 
-  /// Null for the one that suits the days best.
-  void setSplit(TrainingSplit? split) =>
-      emit(state.copyWith(split: () => split));
+  void setEquipmentStyle(EquipmentStyle style) =>
+      emit(state.copyWith(equipmentStyle: style));
+
+  /// Null for "Let the app choose".
+  void setSplit(String? splitId) =>
+      emit(state.copyWith(splitId: () => splitId));
+
+  @override
+  Future<void> close() async {
+    await _subscription?.cancel();
+    return super.close();
+  }
 }

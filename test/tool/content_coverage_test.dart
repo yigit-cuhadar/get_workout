@@ -1,12 +1,8 @@
-import 'dart:io';
-
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:get_workout/features/exercises/domain/content_rules.dart';
-import 'package:get_workout/features/exercises/domain/vocabulary.dart';
 
 import '../../tool/src/content_coverage.dart';
-import '../../tool/src/content_validator.dart';
 
 ExerciseEntry ex(
   String id, {
@@ -44,115 +40,6 @@ ExerciseEntry ex(
 });
 
 void main() {
-  group('generatorUsable', () {
-    const beginner = Level.beginner;
-
-    test('takes one level above the user, not two', () {
-      expect(generatorUsable(ex('a'), EquipmentProfile.bands, beginner), true);
-      expect(
-        generatorUsable(
-          ex('a', level: 'intermediate'),
-          EquipmentProfile.bands,
-          beginner,
-        ),
-        true,
-      );
-      expect(
-        generatorUsable(
-          ex('a', level: 'advanced'),
-          EquipmentProfile.bands,
-          beginner,
-        ),
-        false,
-      );
-      expect(
-        generatorUsable(
-          ex('a', level: 'advanced'),
-          EquipmentProfile.bands,
-          Level.intermediate,
-        ),
-        true,
-      );
-    });
-
-    test('leaves out mobility and explosive patterns', () {
-      for (final pattern in ['mobility', 'explosive']) {
-        expect(
-          generatorUsable(
-            ex('a', pattern: pattern),
-            EquipmentProfile.fullGym,
-            beginner,
-          ),
-          false,
-        );
-      }
-    });
-
-    test('fits the profile through equipment or an alternative set', () {
-      final rowing = ex(
-        'a',
-        equipment: ['kettlebell'],
-        alternatives: [
-          ['dumbbell'],
-        ],
-      );
-      expect(
-        generatorUsable(rowing, EquipmentProfile.dumbbells, beginner),
-        true,
-      );
-      expect(generatorUsable(rowing, EquipmentProfile.bands, beginner), false);
-      expect(generatorUsable(rowing, EquipmentProfile.fullGym, beginner), true);
-    });
-  });
-
-  group('shortfalls', () {
-    test('names every profile and muscle below the minimum', () {
-      final coverage = generatorCoverage([
-        for (final id in ['a', 'b', 'c']) ex(id),
-      ]);
-
-      expect(coverage[EquipmentProfile.bands]![Muscle.pec], 3);
-      expect(coverage[EquipmentProfile.bands]![Muscle.lat], 0);
-      final found = shortfalls(coverage);
-      expect(found, isNot(contains(startsWith('bands × pec'))));
-      expect(found, contains('bands × lat: 0, needs 3'));
-      expect(
-        found,
-        hasLength(EquipmentProfile.values.length * (Muscle.values.length - 1)),
-      );
-    });
-
-    test('counts main muscles only, and not advanced exercises', () {
-      final coverage = generatorCoverage([
-        ex('a', main: ['lat'], secondary: ['pec']),
-        ex('b', level: 'advanced'),
-      ]);
-
-      expect(coverage[EquipmentProfile.fullGym]![Muscle.pec], 0);
-      expect(coverage[EquipmentProfile.fullGym]![Muscle.lat], 1);
-    });
-
-    test('holds the exception cells to their own minimum', () {
-      expect(neededFor(EquipmentProfile.bodyweight, Muscle.midDelt), 2);
-      expect(neededFor(EquipmentProfile.bands, Muscle.midDelt), 3);
-      final found = shortfalls(
-        generatorCoverage([
-          ex('a', main: ['mid_delt']),
-          ex('b', main: ['mid_delt']),
-        ]),
-      );
-      expect(found, isNot(contains(startsWith('bodyweight × mid_delt'))));
-      expect(found, contains('bands × mid_delt: 2, needs 3'));
-    });
-
-    test('pass for the content files', () {
-      final report = validateContent(Directory('content/exercises'));
-
-      expect(report.errors, isEmpty);
-      expect(shortfalls(generatorCoverage(report.live)), isEmpty);
-    });
-  });
-
   test('countBy counts codes in single values and lists', () {
     final exercises = [
       ex('a', main: ['pec', 'triceps']),

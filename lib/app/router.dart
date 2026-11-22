@@ -38,6 +38,7 @@ import '../features/generator/domain/generator_answers.dart';
 import '../features/notifications/data/notification_payloads.dart';
 import '../features/generator/presentation/generator_page.dart';
 import '../features/generator/presentation/generator_preview_page.dart';
+import '../features/generator/presentation/generator_profile_question_page.dart';
 import '../features/feedback/domain/feedback.dart';
 import '../features/feedback/presentation/feedback_page.dart';
 import '../features/profile/domain/user_profile.dart';
@@ -132,6 +133,12 @@ abstract final class Routes {
   /// back to the questions.
   static const programGeneratorPreview = '$programGenerator/preview';
 
+  /// A profile question of the generator's first page, for this program
+  /// only. Push it with the generator's answers as a `UserProfile` in
+  /// `extra`; it pops with the changed ones.
+  static String generatorProfileQuestion(ProfileField field) =>
+      '$programGenerator/profile/${field.name}';
+
   static String catalogueProgram(String id) =>
       '$catalogue/${Uri.encodeComponent(id)}';
 
@@ -169,11 +176,6 @@ abstract final class Routes {
   /// the one tapped.
   static String exercisePicker({required int max, required bool multiple}) =>
       '$programs/pick?max=$max&multiple=$multiple';
-
-  /// The exercise picker above the generator, for the exercises it leaves
-  /// out; see [exercisePicker].
-  static String exerciseLeaveOutPicker(int max) =>
-      '$programGenerator/pick?max=$max&multiple=true&form=leaveOut';
 
   /// [exercisePicker] above the generator's preview.
   static String generatorPicker({required int max, required bool multiple}) =>
@@ -545,6 +547,21 @@ GoRouter buildRouter(
             pageBuilder: (_, state) => _pushed(
               state,
               GeneratorPreviewPage(answers: state.extra! as GeneratorAnswers),
+            ),
+          ),
+          _route(
+            'generator_profile_question',
+            path: 'profile/:field',
+            redirect: (_, state) =>
+                state.extra is UserProfile && _field(state) != null
+                ? null
+                : Routes.programGenerator,
+            pageBuilder: (_, state) => _pushed(
+              state,
+              GeneratorProfileQuestionPage(
+                field: _field(state)!,
+                initial: state.extra! as UserProfile,
+              ),
             ),
           ),
           ..._pickerRoutes(limit: ProgramLimits.maxItemsPerDay, root: root),
@@ -1051,7 +1068,7 @@ ProfileField? _field(GoRouterState state) =>
 
 /// The exercise picker of a page whose lists hold at most [limit]
 /// exercises, with a custom exercise created above it as a full page.
-/// Adding (and leaving out) opens over the flow (close) from the [root]
+/// Adding opens over the flow (close) from the [root]
 /// navigator, so a picker opened inside a tab covers the tab bar too; Swap
 /// and Replace are steps of their page (back), at `swap`.
 List<GoRoute> _pickerRoutes({

@@ -11,6 +11,7 @@ import '../../../core/page_parts.dart';
 import '../../../core/widgets/volume_band.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../exercises/domain/exercise.dart';
+import '../../exercises/domain/vocabulary.dart';
 import '../../exercises/presentation/exercise_catalogue_cubit.dart';
 import '../../exercises/presentation/vocabulary_labels.dart';
 import '../../profile/presentation/profile_questions.dart';
@@ -25,9 +26,8 @@ import '../../settings/domain/user_settings.dart';
 import '../../settings/presentation/settings_cubit.dart';
 import '../../volume/presentation/volume_charts.dart';
 import '../domain/generator_answers.dart';
-import '../domain/program_generator.dart';
+import '../domain/generated_program.dart';
 import 'generator_preview_cubit.dart';
-import 'generator_text.dart';
 
 /// The program generated from [answers]: its weekly sets and days, each
 /// exercise with a menu (swap, keep, sets and reps, remove), made again on
@@ -39,7 +39,10 @@ class GeneratorPreviewPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => BlocProvider(
-    create: (_) => sl<GeneratorPreviewCubit>(param1: answers),
+    create: (_) => sl<GeneratorPreviewCubit>(
+      param1: answers,
+      param2: Localizations.localeOf(context).languageCode,
+    ),
     child: const _PreviewView(),
   );
 }
@@ -54,8 +57,19 @@ class _PreviewView extends StatelessWidget {
     final answers = cubit.answers;
     return BlocConsumer<GeneratorPreviewCubit, GeneratorPreviewState>(
       listenWhen: (previous, current) =>
-          previous.saveStatus != current.saveStatus,
+          previous.saveStatus != current.saveStatus ||
+          previous.regenerateFailure != current.regenerateFailure,
       listener: (context, state) {
+        if (state.regenerateFailure case final failure?) {
+          showForgeSnackbar(
+            context,
+            message: failure is NetworkFailure
+                ? l10n.generatorOffline
+                : l10n.generatorRegenerateFailed,
+            error: true,
+          );
+          cubit.regenerateFailureShown();
+        }
         switch (state.saveStatus) {
           case SaveStatus.saved:
             context.go(Routes.program(state.savedId!, created: true));
@@ -80,10 +94,36 @@ class _PreviewView extends StatelessWidget {
         final ready = state.status == PreviewStatus.ready && program != null;
         final saving = state.saveStatus == SaveStatus.saving;
         const padding = EdgeInsets.fromLTRB(Gap.md, Gap.xs, Gap.md, Gap.md);
+        Widget error(String title, String message) => ListView(
+          padding: padding,
+          children: [
+            ErrorView(
+              title: title,
+              message: message,
+              retryLabel: l10n.retry,
+              onRetry: cubit.retry,
+              card: true,
+            ),
+          ],
+        );
         return Scaffold(
           appBar: ForgeAppBar(title: l10n.generatorPreviewTitle),
           body: switch (state.status) {
-            PreviewStatus.loading => ListView(
+            // The rows need the library to be named.
+            PreviewStatus.building ||
+            PreviewStatus.ready when state.libraryFailed => ListView(
+              padding: padding,
+              children: [
+                ErrorView(
+                  title: l10n.libraryLoadFailed,
+                  message: l10n.loadFailedDetail,
+                  retryLabel: l10n.retry,
+                  onRetry: cubit.retryLibrary,
+                  card: true,
+                ),
+              ],
+            ),
+            PreviewStatus.building => ListView(
               padding: padding,
               children: [
                 SurfaceCard(
@@ -91,31 +131,34 @@ class _PreviewView extends StatelessWidget {
                     title: l10n.generatorBuildingTitle,
                     message: l10n.generatorBuilding(
                       answers.daysPerWeek,
-                      l10n.splitName(splitFor(answers)),
                       answers.sessionMinutes,
                     ),
                   ),
                 ),
               ],
             ),
-            PreviewStatus.libraryFailed => ListView(
-              padding: padding,
-              children: [
-                ErrorView(
-                  title: l10n.libraryLoadFailed,
-                  message: l10n.loadFailedDetail,
-                  retryLabel: l10n.retry,
-                  onRetry: cubit.retry,
-                  card: true,
-                ),
-              ],
+            PreviewStatus.offline => error(
+              l10n.offlineTitle,
+              l10n.generatorOffline,
             ),
-            PreviewStatus.impossible => ListView(
+            PreviewStatus.notPremium => error(
+              l10n.generatorNotPremiumTitle,
+              l10n.generatorNotPremium,
+            ),
+            PreviewStatus.unavailable => error(
+              l10n.generatorUnavailableTitle,
+              l10n.generatorUnavailable,
+            ),
+            PreviewStatus.failure => error(
+              l10n.generatorFailed,
+              l10n.loadFailedDetail,
+            ),
+            PreviewStatus.noProgram => ListView(
               padding: padding,
               children: [
                 EmptyView(
                   icon: ForgeIcons.info,
-                  message: l10n.generationIssueText(state.issue!),
+                  message: l10n.generatorNoProgram,
                   actions: [
                     ForgeButton(
                       label: l10n.generatorChangeAnswers,
@@ -136,31 +179,31 @@ class _PreviewView extends StatelessWidget {
           // Off while the program is being built, and Regenerate while it
           // is saved.
           bottomNavigationBar: switch (state.status) {
-            PreviewStatus.loading ||
-            PreviewStatus.ready => ForgeBottomActionBar.sideBySide(
-              secondary: ForgeButton(
-                label: l10n.generatorRegenerate,
-                variant: ForgeButtonVariant.secondary,
-                size: ForgeButtonSize.large,
-                onPressed: ready && state.saveStatus == SaveStatus.idle
-                    ? cubit.regenerate
-                    : null,
+            PreviewStatus.building || PreviewStatus.ready
+                when !state.libraryFailed =>
+              ForgeBottomActionBar.sideBySide(
+                secondary: ForgeButton(
+                  label: l10n.generatorRegenerate,
+                  variant: ForgeButtonVariant.secondary,
+                  size: ForgeButtonSize.large,
+                  onPressed: ready && state.saveStatus == SaveStatus.idle
+                      ? cubit.regenerate
+                      : null,
+                ),
+                primary: ForgeButton(
+                  label: l10n.generatorSave,
+                  size: ForgeButtonSize.large,
+                  loading: saving,
+                  onPressed: ready
+                      ? () => cubit.save(
+                          name: l10n.generatorProgramName(
+                            program.splitName,
+                            program.days.length,
+                          ),
+                        )
+                      : null,
+                ),
               ),
-              primary: ForgeButton(
-                label: l10n.generatorSave,
-                size: ForgeButtonSize.large,
-                loading: saving,
-                onPressed: ready
-                    ? () => cubit.save(
-                        name: l10n.generatorProgramName(
-                          l10n.splitName(program.split),
-                          answers.daysPerWeek,
-                        ),
-                        dayName: l10n.generatedDayName,
-                      )
-                    : null,
-              ),
-            ),
             _ => null,
           },
         );
@@ -200,8 +243,8 @@ class _Program extends StatelessWidget {
                 children: [
                   Text(
                     l10n.generatorHeading(
-                      l10n.splitName(program.split),
-                      answers.daysPerWeek,
+                      program.splitName,
+                      program.days.length,
                     ),
                     style: ForgeStyle.of(context).heading,
                   ),
@@ -216,14 +259,17 @@ class _Program extends StatelessWidget {
                 ],
               ),
             ),
-            if (program.uncovered.isNotEmpty)
+            if (state.uncovered.isNotEmpty)
               NoticeBanner.line(
                 icon: ForgeIcons.warning,
                 message: l10n.generatorUncovered(
-                  l10n.muscleNames(program.uncovered),
+                  l10n.muscleNames([
+                    for (final muscle in Muscle.values)
+                      if (state.uncovered.contains(muscle)) muscle,
+                  ]),
                 ),
               ),
-            _WeeklySets(program),
+            const _WeeklySets(),
             _Days(program: program, state: state),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: Gap.xs),
@@ -242,33 +288,34 @@ class _Program extends StatelessWidget {
   }
 }
 
-/// Each target muscle's weekly sets as a VolumeBand, under the week's
-/// working sets.
+/// Each muscle the week works as a VolumeBand, busiest first, under the
+/// week's working sets; counted by the app from the library.
 class _WeeklySets extends StatelessWidget {
-  const _WeeklySets(this.program);
-
-  final GeneratedProgram program;
+  const _WeeklySets();
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final sets = {
-      for (final muscle in program.targets.keys)
-        muscle: program.weeklySets[muscle] ?? 0.0,
-    };
-    final scale = volumeScale(sets.values);
-    final total = [for (final day in program.days) ...day.items]
-        .fold(0, (sum, item) => sum + item.sets);
+    // Recounted with each edit and each library change.
+    context.watch<GeneratorPreviewCubit>();
+    context.watch<ExerciseCatalogueCubit>();
+    final volume = context.read<GeneratorPreviewCubit>().volume;
+    if (volume == null) return const SizedBox.shrink();
+    final sets = [
+      for (final entry in volume.ranked)
+        if (entry.sets > 0) entry,
+    ];
+    final scale = volumeScale([for (final entry in sets) entry.sets]);
     return SectionCard(
       title: l10n.generatorWeeklySets,
-      detail: l10n.generatorSetsTotal(total),
+      detail: l10n.generatorSetsTotal(volume.total),
       onTap: null,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         spacing: Gap.sm,
         children: [
-          for (final MapEntry(key: muscle, value: count) in sets.entries)
-            VolumeBand(muscle: muscle, sets: count, scale: scale),
+          for (final entry in sets)
+            VolumeBand(muscle: entry.muscle, sets: entry.sets, scale: scale),
         ],
       ),
     );
@@ -298,7 +345,6 @@ class _DaysState extends State<_Days> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
     final unit = context.select(
       (SettingsCubit cubit) => cubit.state.settings.weightUnit,
     );
@@ -314,7 +360,7 @@ class _DaysState extends State<_Days> {
       children: [
         for (final (index, day) in widget.program.days.indexed)
           ProgramDayCard(
-            day: ProgramDay(name: l10n.generatedDayName(day), items: day.items),
+            day: day,
             index: index,
             open: _open.contains(index),
             onToggle: () => setState(() {
@@ -441,7 +487,7 @@ class _ItemRow extends StatelessWidget {
             targets: _PreviewItemTargets(cubit, day, index, unit),
           ),
         ),
-      ),
+      ).then((_) => cubit.discardDraft()),
     );
   }
 }
@@ -458,16 +504,14 @@ class _PreviewItemTargets implements ItemTargets {
   @override
   final WeightUnit weightUnit;
 
+  /// The item with the change not valid yet, if there is one.
   @override
-  ProgramItem get item => _cubit.state.program!.days[_day].items[_index];
+  ProgramItem get item => _cubit.state.itemAt(_day, _index)!;
 
   @override
   Set<ItemIssue> watchIssues(BuildContext context) =>
       context.select((GeneratorPreviewCubit cubit) {
-        final item = cubit.state.program?.days
-            .elementAtOrNull(_day)
-            ?.items
-            .elementAtOrNull(_index);
+        final item = cubit.state.itemAt(_day, _index);
         return item == null
             ? const <ItemIssue>{}
             : validateItem(item, cubit.loggingTypeOf(item.exerciseId));

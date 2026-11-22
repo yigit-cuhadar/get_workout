@@ -1,69 +1,10 @@
 // The coverage audit of the live exercise library: counts by muscle,
 // equipment, equipment profile, level and pattern, the exercises a user
-// could not swap or vary, and text that looks wrong. Its one rule is the
-// program generator's: every muscle has [maxExercisesPerMuscle] exercises
-// the generator may give a beginner, in every equipment profile.
+// could not swap or vary, and text that looks wrong.
 //
 // Used by tool/coverage_report.dart.
 import 'package:get_workout/features/exercises/domain/content_rules.dart';
 import 'package:get_workout/features/exercises/domain/vocabulary.dart';
-import 'package:get_workout/features/generator/domain/program_generator.dart'
-    show leftOutPatterns, maxExercisesPerMuscle;
-
-/// Whether the generator may give [e] to a user of [level] who owns the
-/// equipment of [profile]: at most one level above, a strength pattern, and
-/// doable with the profile through `equipment` or an alternative set.
-bool generatorUsable(ExerciseEntry e, EquipmentProfile profile, Level level) {
-  final own = Level.values.byCode(e.data['level']);
-  final pattern = MovementPattern.values.byCode(e.data['movementPattern']);
-  return own != null &&
-      own.index <= level.index + 1 &&
-      pattern != null &&
-      !leftOutPatterns.contains(pattern) &&
-      e.fitsProfile(profile);
-}
-
-/// For each profile and muscle, how many of [live] the generator may give a
-/// beginner (the smallest pool) as a main-muscle exercise.
-Map<EquipmentProfile, Map<Muscle, int>> generatorCoverage(
-  List<ExerciseEntry> live,
-) => {
-  for (final profile in EquipmentProfile.values)
-    profile: {
-      for (final muscle in Muscle.values)
-        muscle: live
-            .where(
-              (e) =>
-                  e.strings('mainMuscles').contains(muscle.code) &&
-                  generatorUsable(e, profile, Level.beginner),
-            )
-            .length,
-    },
-};
-
-/// Cells allowed fewer than [maxExercisesPerMuscle], because no standard
-/// exercise with that equipment loads the muscle as a main mover: without
-/// a load, side delts get the prone Y raise and an isometric (the presses
-/// that also work them are front-delt exercises), and forearms get the
-/// hangs. The generator still covers them, repeating within the week.
-const coverageExceptions = {
-  (EquipmentProfile.bodyweight, Muscle.midDelt): 2,
-  (EquipmentProfile.bodyweight, Muscle.forearm): 2,
-};
-
-/// How many usable exercises [muscle] needs in [profile].
-int neededFor(EquipmentProfile profile, Muscle muscle) =>
-    coverageExceptions[(profile, muscle)] ?? maxExercisesPerMuscle;
-
-/// The cells of [coverage] below [neededFor], as
-/// `profile × muscle: n, needs m`.
-List<String> shortfalls(Map<EquipmentProfile, Map<Muscle, int>> coverage) => [
-  for (final MapEntry(key: profile, value: counts) in coverage.entries)
-    for (final MapEntry(key: muscle, value: count) in counts.entries)
-      if (count < neededFor(profile, muscle))
-        '${profile.code} × ${muscle.code}: $count, '
-            'needs ${neededFor(profile, muscle)}',
-];
 
 /// How many of [exercises] carry each of [codes] in [key] (a code or a list
 /// of codes), every code listed, in order.
@@ -219,8 +160,7 @@ textDefects(List<ExerciseEntry> exercises) {
   );
 }
 
-/// The printable report of [live] exercises; the generator rule's
-/// [shortfalls] decide whether the library passes.
+/// The printable report of [live] exercises.
 String coverageReport(List<ExerciseEntry> live) {
   final out = StringBuffer();
   void table(String title, Map<String, int> counts) {
@@ -244,13 +184,8 @@ String coverageReport(List<ExerciseEntry> live) {
     ]),
   );
 
-  final generator = generatorCoverage(live);
   out
-    ..writeln(
-      'Profiles: doable / usable by the generator for a beginner '
-      '(level <= intermediate, no ${leftOutPatterns.map((p) => p.code).join(' or ')}), '
-      'by main muscle',
-    )
+    ..writeln('Profiles: doable exercises by main muscle')
     ..writeln(
       '  ${''.padRight(12)}'
       '${EquipmentProfile.values.map((p) => p.code.padLeft(12)).join()}',
@@ -265,9 +200,7 @@ String coverageReport(List<ExerciseEntry> live) {
                 e.fitsProfile(profile),
           )
           .length;
-      final usable = generator[profile]![muscle]!;
-      final mark = usable < neededFor(profile, muscle) ? '!' : ' ';
-      out.write('$mark$doable/$usable'.padLeft(12));
+      out.write('$doable'.padLeft(12));
     }
     out.writeln();
   }
@@ -296,15 +229,5 @@ String coverageReport(List<ExerciseEntry> live) {
   list('Empty or short text lines', text.short);
   list('Lines that are not a sentence', text.unpunctuated);
   list('Fields identical across exercises', text.shared);
-  list('Generator rule exceptions', [
-    for (final MapEntry(key: (profile, muscle), value: needed)
-        in coverageExceptions.entries)
-      '${profile.code} × ${muscle.code}: needs $needed',
-  ]);
-  list(
-    'Generator rule: every muscle has $maxExercisesPerMuscle usable '
-    'exercises in every profile; shortfalls',
-    shortfalls(generator),
-  );
   return out.toString();
 }

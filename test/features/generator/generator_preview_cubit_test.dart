@@ -1,21 +1,23 @@
 import 'dart:async';
 
 import 'package:bloc_test/bloc_test.dart';
+import 'package:fake_async/fake_async.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:forge_auth/forge_auth.dart';
 import 'package:forge_core/forge_core.dart';
+import 'package:get_workout/features/exercises/domain/vocabulary.dart';
 import 'package:get_workout/features/exercises/presentation/exercise_catalogue_cubit.dart';
-import 'package:get_workout/features/generator/domain/generator_answers.dart';
+import 'package:get_workout/features/generator/domain/generated_program.dart';
+import 'package:get_workout/features/generator/domain/generator_repository.dart';
 import 'package:get_workout/features/generator/domain/generator_usecases.dart';
-import 'package:get_workout/features/generator/domain/program_generator.dart';
 import 'package:get_workout/features/generator/presentation/generator_preview_cubit.dart';
 import 'package:get_workout/features/programs/domain/program.dart';
 import 'package:get_workout/features/programs/domain/program_repository.dart';
 import 'package:get_workout/features/programs/domain/program_usecases.dart';
 import 'package:mocktail/mocktail.dart';
 
-import 'fixtures.dart';
 import '../../fake_analytics.dart';
+import 'fixtures.dart';
 
 class MockAuthRepository extends Mock implements AuthRepository {}
 
@@ -25,281 +27,468 @@ class MockCatalogueCubit extends MockCubit<ExerciseCatalogueState>
     implements ExerciseCatalogueCubit {}
 
 void main() {
-  final library = contentLibrary();
-  final given = answers(days: 3, split: TrainingSplit.upperLower);
+  final library = [
+    lift('squat', [Muscle.quads]),
+    lift('bench', [Muscle.pec]),
+    lift('row', [Muscle.lat]),
+    lift('raise', [Muscle.calf]),
+    lift('curl', [Muscle.biceps]),
+  ];
+  final given = answers(days: 2);
+  final first = generated(
+    [
+      ['squat', 'bench'],
+      ['row', 'bench'],
+    ],
+    targeted: {
+      Muscle.quads,
+      Muscle.pec,
+      Muscle.lat,
+      Muscle.calf,
+      Muscle.biceps,
+    },
+    uncovered: {Muscle.calf, Muscle.biceps},
+  );
 
-  late MockProgramRepository repository;
+  late FakeGeneratorRepository generator;
+  late MockProgramRepository programs;
   late MockCatalogueCubit catalogue;
   late StreamController<ExerciseCatalogueState> libraries;
+  late RecordingTelemetry telemetry;
 
   setUpAll(() => registerFallbackValue(const Program(name: '', days: [])));
 
   setUp(() {
-    repository = MockProgramRepository();
-    when(() => repository.createProgram('u1', any()))
+    generator = FakeGeneratorRepository()..answer = (_) => Ok(first);
+    programs = MockProgramRepository();
+    when(() => programs.createProgram('u1', any()))
         .thenAnswer((_) async => const Ok('p9'));
     catalogue = MockCatalogueCubit();
     libraries = StreamController<ExerciseCatalogueState>.broadcast();
     when(() => catalogue.stream).thenAnswer((_) => libraries.stream);
-    when(() => catalogue.state).thenReturn(const CatalogueLoading());
+    when(() => catalogue.state).thenReturn(CatalogueReady(library));
     when(() => catalogue.retry()).thenAnswer((_) async {});
+    telemetry = RecordingTelemetry();
   });
 
   tearDown(() => libraries.close());
 
-  GeneratorPreviewCubit build([
-    GeneratorAnswers? answers,
+  GeneratorPreviewCubit build({
     AuthUser? user = const AuthUser(id: 'u1', isAnonymous: true),
-  ]) {
+  }) {
     final auth = MockAuthRepository();
     when(() => auth.currentUser).thenReturn(user);
     return GeneratorPreviewCubit(
-      analytics: fakeAnalytics(),
-      answers ?? given,
+      given,
+      language: 'tr',
+      analytics: fakeAnalytics(telemetry),
       catalogue: catalogue,
-      generateProgram: const GenerateProgram(),
-      saveProgram: SaveProgram(repository),
+      generateProgram: GenerateProgram(generator),
+      saveProgram: SaveProgram(programs),
       getCurrentUser: GetCurrentUser(auth),
     );
   }
 
-  void libraryArrives() {
-    final ready = CatalogueReady(library);
-    when(() => catalogue.state).thenReturn(ready);
-    libraries.add(ready);
+  Future<GeneratorPreviewCubit> ready() async {
+    final cubit = build();
+    addTearDown(cubit.close);
+    await pumpEventQueue();
+    return cubit;
   }
 
-  GeneratedProgram expected(int seed) =>
-      generateProgram(given, library, seed: seed).valueOrNull!;
-
-  test('waits for the library, then generates', () async {
-    final cubit = build();
-    expect(cubit.state, const GeneratorPreviewState());
-    libraryArrives();
-    await pumpEventQueue();
-    expect(
-      cubit.state,
-      GeneratorPreviewState(status: PreviewStatus.ready, program: expected(0)),
+  test('builds, then shows the program', () async {
+    final pending = Completer<Result<GeneratedProgram>>();
+    generator.answer = null;
+    final repository = _Deferred(pending.future);
+    final auth = MockAuthRepository();
+    when(() => auth.currentUser).thenReturn(null);
+    final cubit = GeneratorPreviewCubit(
+      given,
+      language: 'tr',
+      analytics: fakeAnalytics(telemetry),
+      catalogue: catalogue,
+      generateProgram: GenerateProgram(repository),
+      saveProgram: SaveProgram(programs),
+      getCurrentUser: GetCurrentUser(auth),
     );
-    await cubit.close();
-  });
+    addTearDown(cubit.close);
+    expect(cubit.state, const GeneratorPreviewState());
 
-  test('generates at once from a library already loaded', () async {
-    when(() => catalogue.state).thenReturn(CatalogueReady(library));
-    final cubit = build();
-    await pumpEventQueue();
-    expect(cubit.state.program, expected(0));
-    await cubit.close();
-  });
-
-  test('keeps the program when the library changes', () async {
-    when(() => catalogue.state).thenReturn(CatalogueReady(library));
-    final cubit = build();
-    await pumpEventQueue();
-    libraries.add(CatalogueReady(library.skip(1).toList()));
-    await pumpEventQueue();
-    expect(cubit.state.program, expected(0));
-    await cubit.close();
-  });
-
-  test('regenerates with the next seed', () async {
-    when(() => catalogue.state).thenReturn(CatalogueReady(library));
-    final cubit = build();
-    await pumpEventQueue();
-    await cubit.regenerate();
-    expect(cubit.state.seed, 1);
-    expect(cubit.state.program, expected(1));
-    await cubit.regenerate();
-    expect(cubit.state.program, expected(2));
-    await cubit.close();
-  });
-
-  test('says why answers give no program', () async {
-    when(() => catalogue.state).thenReturn(CatalogueReady(library));
-    final cubit = build(answers(days: 2, split: TrainingSplit.pushPullLegs));
+    pending.complete(Ok(first));
     await pumpEventQueue();
     expect(
       cubit.state,
-      const GeneratorPreviewState(
-        status: PreviewStatus.impossible,
-        issue: GenerationIssue.splitNeedsMoreDays,
+      GeneratorPreviewState(
+        status: PreviewStatus.ready,
+        program: first,
+        uncovered: const {Muscle.calf, Muscle.biceps},
       ),
     );
-    await cubit.regenerate();
-    expect(cubit.state.status, PreviewStatus.impossible);
-    await cubit.close();
   });
 
-  test('a library that fails is retried', () async {
+  test(
+    'asks with the answers, seed 0, no kept items and the language',
+    () async {
+      await ready();
+      final request = generator.requests.single;
+      expect(request.answers, given);
+      expect(request.seed, 0);
+      expect(request.kept, isEmpty);
+      expect(request.language, 'tr');
+    },
+  );
+
+  test('logs every program the server returns', () async {
+    final cubit = await ready();
+    await cubit.regenerate();
+    expect(telemetry.names, ['program_generate', 'program_generate']);
+  });
+
+  group('a failure', () {
+    for (final (failure, status) in [
+      (const NetworkFailure(), PreviewStatus.offline),
+      (
+        const GenerationRefused(GenerationRefusal.noTemplate, ''),
+        PreviewStatus.noProgram,
+      ),
+      (
+        const GenerationRefused(GenerationRefusal.noExercises, ''),
+        PreviewStatus.noProgram,
+      ),
+      (
+        const GenerationRefused(GenerationRefusal.noRules, ''),
+        PreviewStatus.unavailable,
+      ),
+      (
+        const GenerationRefused(GenerationRefusal.invalidInput, ''),
+        PreviewStatus.failure,
+      ),
+      (const UnknownFailure(), PreviewStatus.failure),
+    ]) {
+      test('${failure.runtimeType} shows ${status.name}', () async {
+        generator.answer = (_) => Err(failure);
+        final cubit = await ready();
+        expect(cubit.state.status, status);
+        expect(cubit.state.program, isNull);
+        expect(telemetry.names, isEmpty);
+      });
+    }
+
+    test('is asked again on Retry', () async {
+      generator.answer = (_) => const Err(NetworkFailure());
+      final cubit = await ready();
+      generator.answer = (_) => Ok(first);
+      await cubit.retry();
+      expect(cubit.state.status, PreviewStatus.ready);
+      expect(generator.requests, hasLength(2));
+    });
+
+    test(
+      'of Regenerate keeps the program, and Regenerate works again',
+      () async {
+        final cubit = await ready();
+        cubit
+          ..toggleKept(1, 0)
+          ..swapItem(0, 0, 'raise');
+        final before = cubit.state;
+        generator.answer = (_) => const Err(NetworkFailure());
+        await cubit.regenerate();
+        expect(cubit.state.status, PreviewStatus.ready);
+        expect(cubit.state.program, before.program);
+        expect(cubit.state.kept, before.kept);
+        expect(cubit.state.uncovered, before.uncovered);
+        expect(cubit.state.seed, 0);
+        expect(cubit.state.regenerateFailure, isA<NetworkFailure>());
+        cubit.regenerateFailureShown();
+        expect(cubit.state.regenerateFailure, isNull);
+
+        generator.answer = (_) => Ok(first);
+        await cubit.regenerate();
+        final request = generator.requests.last;
+        expect(request.seed, 1);
+        expect(request.kept, [
+          <ProgramItem>[],
+          [item('row')],
+        ]);
+        expect(cubit.state.seed, 1);
+      },
+    );
+
+    test('of Regenerate without Premium retries, then keeps the program', () {
+      fakeAsync((async) {
+        final cubit = build();
+        async.flushMicrotasks();
+        generator.answer = (_) =>
+            const Err(GenerationRefused(GenerationRefusal.notPremium, ''));
+        unawaited(cubit.regenerate());
+        async
+          ..flushMicrotasks()
+          ..elapse(const Duration(seconds: 14));
+        expect(generator.requests, hasLength(5));
+        expect(cubit.state.program, first);
+        expect(cubit.state.regenerateFailure, isA<GenerationRefused>());
+        unawaited(cubit.close());
+        async.flushMicrotasks();
+      });
+    });
+  });
+
+  test('without Premium on the server asks again after 2, 4 and 8 s', () {
+    fakeAsync((async) {
+      generator.answer = (_) =>
+          const Err(GenerationRefused(GenerationRefusal.notPremium, ''));
+      final cubit = build();
+      async.flushMicrotasks();
+      expect(generator.requests, hasLength(1));
+      expect(cubit.state.status, PreviewStatus.building);
+
+      for (final (wait, asked) in [(2, 2), (4, 3), (8, 4)]) {
+        async.elapse(Duration(seconds: wait) - const Duration(milliseconds: 1));
+        expect(generator.requests, hasLength(asked - 1));
+        async.elapse(const Duration(milliseconds: 1));
+        expect(generator.requests, hasLength(asked));
+      }
+      expect(cubit.state.status, PreviewStatus.notPremium);
+      async.elapse(const Duration(minutes: 1));
+      expect(generator.requests, hasLength(4));
+
+      // Retry starts over, and the server now sees Premium.
+      generator.answer = (_) => Ok(first);
+      unawaited(cubit.retry());
+      async.flushMicrotasks();
+      expect(cubit.state.status, PreviewStatus.ready);
+      unawaited(cubit.close());
+      async.flushMicrotasks();
+    });
+  });
+
+  test('closing cancels a pending retry', () {
+    fakeAsync((async) {
+      generator.answer = (_) =>
+          const Err(GenerationRefused(GenerationRefusal.notPremium, ''));
+      final cubit = build();
+      async.flushMicrotasks();
+      final states = <GeneratorPreviewState>[];
+      cubit.stream.listen(states.add);
+      unawaited(cubit.close());
+      async
+        ..flushMicrotasks()
+        ..elapse(const Duration(minutes: 1));
+      expect(generator.requests, hasLength(1));
+      expect(states, isEmpty);
+    });
+  });
+
+  test('a library that failed shows so, and Retry loads it again', () async {
     when(() => catalogue.state)
         .thenReturn(const CatalogueFailed(NetworkFailure()));
-    final cubit = build();
-    expect(cubit.state.status, PreviewStatus.libraryFailed);
-    await cubit.retry();
-    verify(() => catalogue.retry()).called(1);
-    libraries.add(const CatalogueLoading());
-    await pumpEventQueue();
-    expect(cubit.state.status, PreviewStatus.loading);
-    libraryArrives();
-    await pumpEventQueue();
+    final cubit = await ready();
+    expect(cubit.state.libraryFailed, true);
     expect(cubit.state.status, PreviewStatus.ready);
-    await cubit.close();
+    await cubit.retryLibrary();
+    verify(() => catalogue.retry()).called(1);
+    when(() => catalogue.state).thenReturn(CatalogueReady(library));
+    libraries.add(CatalogueReady(library));
+    await pumpEventQueue();
+    expect(cubit.state.libraryFailed, false);
   });
 
-  test('saves the program as a generated one of the user', () async {
-    when(() => catalogue.state).thenReturn(CatalogueReady(library));
-    final cubit = build();
-    await pumpEventQueue();
-    await cubit.regenerate();
-    await cubit.save(
-      name: '  Upper/lower, 3 days ',
-      dayName: (day) => '${day.kind.name} ${day.variant}',
-    );
-    expect(cubit.state.saveStatus, SaveStatus.saved);
-    expect(cubit.state.savedId, 'p9');
-    final saved =
-        verify(() => repository.createProgram('u1', captureAny()))
-                .captured
-                .single
-            as Program;
-    expect(
-      saved,
-      expected(1).toProgram(
-        name: 'Upper/lower, 3 days',
-        dayName: (day) => '${day.kind.name} ${day.variant}',
-      ),
-    );
-    expect(saved.origin, ProgramOrigin.generated);
-    expect(saved.days.map((d) => d.name), ['upper 0', 'lower null', 'upper 1']);
-    // Saved once only.
-    await cubit.save(name: 'Again', dayName: (_) => '');
-    verifyNever(() => repository.createProgram(any(), any()));
-    await cubit.close();
-  });
-
-  test('reports a failed save, then lets the user try again', () async {
-    when(() => repository.createProgram('u1', any()))
-        .thenAnswer((_) async => const Err(NetworkFailure()));
-    when(() => catalogue.state).thenReturn(CatalogueReady(library));
-    final cubit = build();
-    await pumpEventQueue();
-    await cubit.save(name: 'Mine', dayName: (_) => '');
-    expect(cubit.state.saveStatus, SaveStatus.failed);
-    expect(cubit.state.saveFailure, isA<NetworkFailure>());
-    cubit.saveFailureShown();
-    expect(cubit.state.saveStatus, SaveStatus.idle);
-    expect(cubit.state.saveFailure, isNull);
-    expect(cubit.state.program, expected(0));
-    await cubit.close();
-  });
-
-  test('refuses to save exercises gone from the library', () async {
-    when(() => catalogue.state).thenReturn(CatalogueReady(library));
-    final cubit = build();
-    await pumpEventQueue();
-    final used = cubit.state.program!.days.first.items.first.exerciseId;
-    when(() => catalogue.state).thenReturn(
-      CatalogueReady([
-        for (final e in library)
-          if (e.id != used) e,
+  test('a kept item keeps its target weight through Regenerate', () async {
+    final cubit = await ready();
+    cubit
+      ..toggleKept(0, 1)
+      ..editItem(0, 1, (item) => item.copyWith(targetKg: () => 60));
+    generator.answer = (_) => Ok(
+      generated([
+        ['row', 'bench'],
+        ['bench'],
       ]),
     );
-    await cubit.save(name: 'Mine', dayName: (_) => '');
-    expect(cubit.state.saveStatus, SaveStatus.failed);
-    expect(cubit.state.saveFailure, isA<ValidationFailure>());
-    verifyNever(() => repository.createProgram(any(), any()));
-    await cubit.close();
+    await cubit.regenerate();
+    final days = cubit.state.program!.days;
+    expect(days[0].items[1], item('bench').copyWith(targetKg: () => 60));
+    // Only the kept one, on its own day.
+    expect(days[1].items.single.targetKg, isNull);
   });
 
-  test('says why it cannot save while nobody is signed in', () async {
-    when(() => catalogue.state).thenReturn(CatalogueReady(library));
-    final cubit = build(null, null);
-    await pumpEventQueue();
-    await cubit.save(name: 'Mine', dayName: (_) => '');
-    expect(cubit.state.saveStatus, SaveStatus.failed);
-    expect(cubit.state.saveFailure, isA<AuthFailure>());
-    verifyNever(() => repository.createProgram(any(), any()));
-    await cubit.close();
-  });
-
-  test('says why it cannot save while the library reloads', () async {
-    when(() => catalogue.state).thenReturn(CatalogueReady(library));
-    final cubit = build();
-    await pumpEventQueue();
-    when(() => catalogue.state).thenReturn(const CatalogueLoading());
-    await cubit.save(name: 'Mine', dayName: (_) => '');
-    expect(cubit.state.saveStatus, SaveStatus.failed);
-    expect(cubit.state.saveFailure, isA<NotFoundFailure>());
-    verifyNever(() => repository.createProgram(any(), any()));
-    await cubit.close();
+  test('Regenerate sends the next seed and the kept items per day', () async {
+    final cubit = await ready();
+    cubit
+      ..toggleKept(0, 1)
+      ..editItem(0, 1, (item) => item.copyWith(sets: 5));
+    final second = generated([
+      ['bench', 'row'],
+      ['squat'],
+    ]);
+    generator.answer = (_) => Ok(second);
+    await cubit.regenerate();
+    final request = generator.requests.last;
+    expect(request.seed, 1);
+    expect(request.kept, [
+      [item('bench', sets: 5)],
+      <ProgramItem>[],
+    ]);
+    expect(cubit.state.seed, 1);
+    expect(cubit.state.program, second);
+    // Still kept where it came back.
+    expect(cubit.state.kept, {(0, 'bench')});
   });
 
   group('editing', () {
-    Future<GeneratorPreviewCubit> ready() async {
-      when(() => catalogue.state).thenReturn(CatalogueReady(library));
-      final cubit = build();
-      await pumpEventQueue();
-      return cubit;
-    }
-
-    test('a kept item stays through Regenerate', () async {
+    test('a swap keeps sets, rest, group and the kept mark', () async {
       final cubit = await ready();
-      final item = cubit.state.program!.days.first.items.first;
       cubit
         ..toggleKept(0, 0)
-        ..editItem(0, 0, (item) => item.copyWith(sets: 5));
-      expect(cubit.state.isKept(0, item), isTrue);
-      await cubit.regenerate();
-      final day = cubit.state.program!.days.first.items;
-      expect(day, contains(item.copyWith(sets: 5)));
-      expect(cubit.state.kept, {(0, item.exerciseId)});
-      cubit.toggleKept(0, day.indexOf(item.copyWith(sets: 5)));
-      expect(cubit.state.kept, isEmpty);
-      await cubit.close();
-    });
-
-    test('a swap keeps sets and rest and the kept mark', () async {
-      final cubit = await ready();
-      final day = cubit.state.program!.days.first.items;
-      final item = day.first;
-      final other = library.firstWhere(
-        (e) =>
-            e.loggingType ==
-                library
-                    .firstWhere((x) => x.id == item.exerciseId)
-                    .loggingType &&
-            day.every((i) => i.exerciseId != e.id),
-      );
-      cubit
-        ..toggleKept(0, 0)
-        ..swapItem(0, 0, other.id);
+        ..swapItem(0, 0, 'raise');
       final swapped = cubit.state.program!.days.first.items.first;
-      expect(swapped.exerciseId, other.id);
-      expect(swapped.sets, item.sets);
-      expect(swapped.restS, item.restS);
-      expect(cubit.state.kept, {(0, other.id)});
+      expect(swapped, item('raise'));
+      expect(cubit.state.kept, {(0, 'raise')});
       // An exercise already on the day is not added again.
-      cubit.swapItem(0, 0, day[1].exerciseId);
-      expect(cubit.state.program!.days.first.items.first.exerciseId, other.id);
-      await cubit.close();
+      cubit.swapItem(0, 0, 'bench');
+      expect(cubit.state.program!.days.first.items.first.exerciseId, 'raise');
     });
 
-    test('a removed item leaves the weekly sets', () async {
+    test('recount the uncovered muscles from the targeted ones', () async {
       final cubit = await ready();
-      final before = cubit.state.program!;
-      final removed = before.days.first.items.first;
-      cubit.removeItem(0, 0);
-      final after = cubit.state.program!;
-      expect(after.days.first.items, isNot(contains(removed)));
-      final main = library
-          .firstWhere((e) => e.id == removed.exerciseId)
-          .mainMuscles
-          .first;
+      expect(cubit.state.uncovered, {Muscle.calf, Muscle.biceps});
+      // The only squat goes: quads join the banner.
+      cubit.swapItem(0, 0, 'raise');
+      expect(cubit.state.uncovered, {Muscle.quads, Muscle.biceps});
+      cubit.removeItem(1, 0);
+      expect(cubit.state.uncovered, {Muscle.quads, Muscle.lat, Muscle.biceps});
+    });
+
+    test('sets and reps that are not valid stay out of the program', () async {
+      final cubit = await ready();
+      cubit.editItem(0, 0, (item) => item.copyWith(sets: 0));
+      expect(cubit.state.program, first);
+      expect(cubit.state.itemAt(0, 0)!.sets, 0);
+      cubit.editItem(0, 0, (item) => item.copyWith(repMax: () => null));
       expect(
-        after.weeklySets[main] ?? 0,
-        (before.weeklySets[main] ?? 0) - removed.sets,
+        cubit.state.itemAt(0, 0),
+        item('squat', sets: 0).copyWith(repMax: () => null),
       );
-      await cubit.close();
+      // Valid again: it enters the program.
+      cubit
+        ..editItem(0, 0, (item) => item.copyWith(sets: 4))
+        ..editItem(0, 0, (item) => item.copyWith(repMax: () => 10));
+      expect(cubit.state.draft, isNull);
+      expect(
+        cubit.state.program!.days.first.items.first,
+        item('squat', sets: 4).copyWith(repMax: () => 10),
+      );
+
+      cubit
+        ..editItem(0, 0, (item) => item.copyWith(sets: 0))
+        ..discardDraft();
+      expect(cubit.state.draft, isNull);
+      expect(cubit.state.itemAt(0, 0)!.sets, 4);
+    });
+
+    test(
+      'a removed item leaves the weekly sets; a day keeps its last',
+      () async {
+        final cubit = await ready();
+        expect(cubit.volume!.sets[Muscle.quads], 3);
+        cubit.removeItem(0, 0);
+        expect(cubit.state.program!.days.first.items, [item('bench')]);
+        expect(cubit.volume!.sets[Muscle.quads], isNull);
+        cubit.removeItem(0, 0);
+        expect(cubit.state.program!.days.first.items, [item('bench')]);
+      },
+    );
+
+    test('a removed item dissolves a group left with one', () async {
+      generator.answer = (_) => Ok(
+        first.withDays([
+          ProgramDay(
+            name: 'A',
+            items: [
+              item('squat').withGroup('A'),
+              item('bench').withGroup('A'),
+              item('row'),
+            ],
+          ),
+        ]),
+      );
+      final cubit = await ready();
+      cubit.removeItem(0, 0);
+      expect(cubit.state.program!.days.first.items, [
+        item('bench'),
+        item('row'),
+      ]);
     });
   });
+
+  group('saving', () {
+    test('stores a generated program with the name given', () async {
+      final cubit = await ready();
+      await cubit.save(name: 'Full body, 2 days');
+      expect(cubit.state.saveStatus, SaveStatus.saved);
+      expect(cubit.state.savedId, 'p9');
+      final saved =
+          verify(() => programs.createProgram('u1', captureAny()))
+                  .captured
+                  .single
+              as Program;
+      expect(saved, first.toProgram(name: 'Full body, 2 days'));
+      // Saved once only.
+      await cubit.save(name: 'Again');
+      verifyNever(() => programs.createProgram(any(), any()));
+    });
+
+    test('reports a failure, then lets the user try again', () async {
+      when(() => programs.createProgram('u1', any()))
+          .thenAnswer((_) async => const Err(NetworkFailure()));
+      final cubit = await ready();
+      await cubit.save(name: 'Mine');
+      expect(cubit.state.saveStatus, SaveStatus.failed);
+      expect(cubit.state.saveFailure, isA<NetworkFailure>());
+      cubit.saveFailureShown();
+      expect(cubit.state.saveStatus, SaveStatus.idle);
+      expect(cubit.state.program, first);
+    });
+
+    test('refuses exercises gone from the library', () async {
+      final cubit = await ready();
+      when(() => catalogue.state).thenReturn(
+        CatalogueReady([
+          for (final e in library)
+            if (e.id != 'squat') e,
+        ]),
+      );
+      await cubit.save(name: 'Mine');
+      expect(cubit.state.saveFailure, isA<ValidationFailure>());
+      verifyNever(() => programs.createProgram(any(), any()));
+    });
+
+    test('says why while nobody is signed in', () async {
+      final cubit = build(user: null);
+      addTearDown(cubit.close);
+      await pumpEventQueue();
+      await cubit.save(name: 'Mine');
+      expect(cubit.state.saveFailure, isA<AuthFailure>());
+    });
+
+    test('says why while the library reloads', () async {
+      final cubit = await ready();
+      when(() => catalogue.state).thenReturn(const CatalogueLoading());
+      await cubit.save(name: 'Mine');
+      expect(cubit.state.saveFailure, isA<NotFoundFailure>());
+    });
+  });
+}
+
+/// A repository whose one answer comes when [_result] completes.
+class _Deferred implements GeneratorRepository {
+  _Deferred(this._result);
+
+  final Future<Result<GeneratedProgram>> _result;
+
+  @override
+  Future<Result<GeneratedProgram>> generate(GenerationRequest request) =>
+      _result;
+
+  @override
+  Stream<Never> watchOptions() => const Stream.empty();
 }

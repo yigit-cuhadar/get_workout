@@ -2,44 +2,27 @@ import 'package:forge_core/forge_core.dart';
 
 import '../../exercises/domain/vocabulary.dart';
 
-/// How a generated week is split into days.
-enum TrainingSplit {
-  fullBody,
-  upperLower,
-  pushPullLegs;
+const _machineKinds = {
+  Equipment.machine,
+  Equipment.cable,
+  Equipment.smithMachine,
+};
 
-  /// The fewest days a week the split can be trained on.
-  int get minDays => this == pushPullLegs ? 3 : GeneratorLimits.minDays;
-}
+const _freeWeightKinds = {
+  Equipment.barbell,
+  Equipment.ezBar,
+  Equipment.trapBar,
+  Equipment.dumbbell,
+  Equipment.kettlebell,
+};
 
-/// What one generated day trains.
-enum DayKind { fullBody, upper, lower, push, pull, legs }
+/// Whether the equipment style question applies to [equipment]: it has a
+/// machine kind and a free-weight kind to choose between.
+bool equipmentStyleApplies(Set<Equipment> equipment) =>
+    equipment.any(_machineKinds.contains) &&
+    equipment.any(_freeWeightKinds.contains);
 
-/// A part of the body to go easy on: none of its muscles is trained
-/// directly, and exercises loading them at all are avoided where another
-/// one does the job.
-enum EasyArea {
-  shoulders({Muscle.frontDelt, Muscle.midDelt, Muscle.rearDelt}),
-  elbows({Muscle.biceps, Muscle.triceps, Muscle.forearm}),
-  lowerBack({Muscle.erector}),
-  hips({Muscle.abductor, Muscle.adductor}),
-  knees({Muscle.quads});
-
-  const EasyArea(this.muscles);
-
-  final Set<Muscle> muscles;
-}
-
-abstract final class GeneratorLimits {
-  /// The days per week onboarding offers.
-  static const minDays = 2;
-  static const maxDays = 6;
-  static const sessionMinutes = [30, 45, 60, 75, 90];
-  static const maxFocusMuscles = 3;
-}
-
-/// The answers the generator works from. [equipment] never holds
-/// [Equipment.bodyweight], which everyone has; empty means bodyweight only.
+/// The answers a program is generated from (SPEC.md, `generateProgram`).
 class GeneratorAnswers extends Equatable {
   const GeneratorAnswers({
     required this.goal,
@@ -48,28 +31,31 @@ class GeneratorAnswers extends Equatable {
     required this.sessionMinutes,
     required this.equipment,
     this.focus = const {},
-    this.excluded = const {},
-    this.easyArea,
-    this.split,
+    this.skip = const {},
+    this.sensitive = const {},
+    this.equipmentStyle = EquipmentStyle.any,
+    this.splitId,
   });
 
   final Goal goal;
   final Level level;
   final int daysPerWeek;
-
-  /// The longest a session may take by the app's estimate.
   final int sessionMinutes;
+
+  /// Never holds [Equipment.bodyweight], which everyone has; empty means
+  /// bodyweight only.
   final Set<Equipment> equipment;
 
-  /// Muscles to give more sets.
-  final Set<Muscle> focus;
+  /// Areas that get more sets.
+  final Set<FocusArea> focus;
 
-  /// Exercise ids never to use.
-  final Set<String> excluded;
-  final EasyArea? easyArea;
+  /// Areas the user does not want to train; never one of [focus].
+  final Set<FocusArea> skip;
+  final Set<SensitiveArea> sensitive;
+  final EquipmentStyle equipmentStyle;
 
-  /// Null picks the split that suits [daysPerWeek] and [level].
-  final TrainingSplit? split;
+  /// A split of the options; null lets the server choose.
+  final String? splitId;
 
   @override
   List<Object?> get props => [
@@ -79,8 +65,9 @@ class GeneratorAnswers extends Equatable {
     sessionMinutes,
     equipment,
     focus,
-    excluded,
-    easyArea,
-    split,
+    skip,
+    sensitive,
+    equipmentStyle,
+    splitId,
   ];
 }
