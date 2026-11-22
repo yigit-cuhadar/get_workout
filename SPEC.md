@@ -1949,9 +1949,11 @@ Decisions (the canvases they were drawn on are deleted):
   Functionality, not tracking (Play Data safety: App activity and App info
   and performance › Crash logs, collected and linked to the user), and
   declare Advertising Data for the Apple Search Ads
-  attribution (Subscription and paywall › Hard paywall for paid traffic); App Store Connect's Privacy Policy URL and custom EULA; KVKK
-  (VERBİS, notifying transfer contracts) and the explicit-consent basis for
-  body data, which the policy claims without an in-app consent step.
+  attribution (Subscription and paywall › Hard paywall for paid traffic); App Store Connect's Privacy Policy URL and custom EULA.
+  The legal basis for body data, the controller's address, KVKK transfers
+  and VERBİS were settled on 2026-11-22 (Account and privacy › Legal pages
+  for review). Still open: the Cloud Storage bucket's region, which the
+  policy states as europe-west1, is not verified.
 - Release blockers for steps: Health Connect's privacy-policy link opens
   `PrivacyPolicyActivity`, which opens `LegalLinks.privacyUrl` (passed in
   by the build, now the live page); Play Console
@@ -2405,6 +2407,40 @@ the feature you are about to touch, and keep it true when you change it.
   address is written; the Android build reads it from that line into
   `R.string.privacy_policy_url` for Health Connect's
   `PrivacyPolicyActivity`.
+- **Legal pages for review** (owner's picks D1–D9, 2026-11-22): `legal/`
+  has privacy, terms, `kvkk.html` (Turkish KVKK aydınlatma metni) and
+  `support.html` (support email, deleting the account, managing,
+  cancelling and restoring the subscription, legal links), served at
+  `/privacy`, `/terms`, `/kvkk` and `/support` through `cleanUrls`; every
+  page's footer links all four, and privacy and terms link the KVKK
+  notice. Effective 2026-11-22. D1: body data (height, weight,
+  measurements, progress photos, heart rate and calories typed into
+  cardio) rests on performance of the contract; there is no consent step.
+  D2: the controller is Yiğit Çuhadar, Özmen Sokak, No:71B, 6. Etap Tip
+  5-6, No 8, Büyükbakkalköy Mh., 34858 Maltepe, İstanbul, Türkiye, in the
+  policy, terms and KVKK notice. D3: Google Analytics retention is stated
+  as 14 months. D4: deleting an account leaves analytics and crash data
+  until they expire (14 months; Crashlytics 90 days), the RevenueCat
+  record, `revenueEvents` without the uid and the support email threads;
+  the deletion section says so. D5: support email goes through Google
+  Gmail (getworkout.support@gmail.com), named as a processor. D6: the
+  Firebase advertising-ID code stays linked; the Info.plist comment says
+  so, and the policy says no advertising identifier is used for tracking.
+  D7: no KVKK standard contracts; the policy and KVKK notice list the
+  transfers abroad (Google/Firebase, RevenueCat, Apple) and claim no
+  transfer contracts. D8: the Terms are the custom EULA, with Apple's
+  minimum terms (Usage Rules and Family Sharing, third-party terms, Apple
+  as third-party beneficiary, the developer handles IP claims and support,
+  the full address). D9: no VERBİS mention. The policy also covers Help &
+  feedback messages, `devices` records, the Google name and photo URL,
+  App Check, the BigQuery crash copies, the admin tools' view of email,
+  devices and workout summaries, what RevenueCat receives (campaign,
+  device, locale, IP) and the scope of the analytics switch.
+  `ios/Runner/PrivacyInfo.xcprivacy` (Runner resources) declares
+  UserDefaults CA92.1, no tracking and the App Privacy answers' sixteen
+  collected types. The app has no KVKK link (Profile › Privacy links only
+  the policy, which links the notice). Not reviewed by a lawyer; not yet
+  deployed.
 - **Deleting an account**: Account → "Delete account" ("Delete my data"
   for a guest), set apart in the error colour, opens a page saying what is
   deleted from the servers right away (profile and settings, programs,

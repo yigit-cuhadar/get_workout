@@ -9,8 +9,10 @@
 	<false/>
 	<key>FirebaseCrashlyticsCollectionEnabled</key>
 	<false/>
-	<!-- When collecting, still no vendor ID or ad personalisation signals; the
-	     app does not link AdSupport, so no advertising ID either. -->
+	<!-- When collecting, still no vendor ID or ad personalisation signals.
+	     FirebaseAnalytics links its advertising-ID code, but the app never
+	     asks for tracking permission, so the advertising ID it can read is
+	     all zeros and nothing tracks. -->
 	<key>GOOGLE_ANALYTICS_IDFV_COLLECTION_ENABLED</key>
 	<false/>
 	<key>GOOGLE_ANALYTICS_DEFAULT_ALLOW_AD_PERSONALIZATION_SIGNALS</key>
