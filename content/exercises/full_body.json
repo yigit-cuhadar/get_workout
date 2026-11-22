@@ -34,6 +34,10 @@
     "defaultRestS": 90,
     "incrementKg": 4,
     "popularity": 47,
+    "generatorTier": "standard",
+    "stressAreas": [
+      "lower_back"
+    ],
     "l10n": {
       "en": {
         "name": "Kettlebell Swing",
@@ -98,6 +102,7 @@
     "defaultRestS": 90,
     "incrementKg": 2,
     "popularity": 73,
+    "generatorTier": "never",
     "l10n": {
       "en": {
         "name": "Farmer's Carry",
@@ -154,6 +159,10 @@
     "excludedAlternatives": [],
     "defaultRestS": 60,
     "popularity": 79,
+    "generatorTier": "never",
+    "stressAreas": [
+      "knees"
+    ],
     "l10n": {
       "en": {
         "name": "Burpee",
@@ -204,6 +213,10 @@
     "excludedAlternatives": [],
     "defaultRestS": 90,
     "popularity": 85,
+    "generatorTier": "never",
+    "stressAreas": [
+      "knees"
+    ],
     "l10n": {
       "en": {
         "name": "Box Jump",
@@ -261,6 +274,10 @@
     "defaultRestS": 180,
     "incrementKg": 2.5,
     "popularity": 91,
+    "generatorTier": "never",
+    "stressAreas": [
+      "knees"
+    ],
     "l10n": {
       "en": {
         "name": "Power Clean",
@@ -316,6 +333,10 @@
     "excludedAlternatives": [],
     "defaultRestS": 60,
     "popularity": 97,
+    "generatorTier": "never",
+    "stressAreas": [
+      "knees"
+    ],
     "l10n": {
       "en": {
         "name": "Jump Squat",
@@ -375,6 +396,11 @@
     "defaultRestS": 120,
     "incrementKg": 2,
     "popularity": 117,
+    "generatorTier": "fallback",
+    "stressAreas": [
+      "lower_back",
+      "knees"
+    ],
     "l10n": {
       "en": {
         "name": "Dumbbell Thruster",
@@ -431,6 +457,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 60,
     "popularity": 134,
+    "generatorTier": "never",
     "l10n": {
       "en": {
         "name": "Medicine Ball Slam",
@@ -488,6 +515,10 @@
     "defaultRestS": 150,
     "incrementKg": 2.5,
     "popularity": 144,
+    "generatorTier": "never",
+    "stressAreas": [
+      "knees"
+    ],
     "l10n": {
       "en": {
         "name": "Hang Power Clean",
@@ -545,6 +576,10 @@
     "defaultRestS": 180,
     "incrementKg": 2.5,
     "popularity": 171,
+    "generatorTier": "never",
+    "stressAreas": [
+      "knees"
+    ],
     "l10n": {
       "en": {
         "name": "Clean and Jerk",
@@ -603,6 +638,7 @@
     "defaultRestS": 90,
     "incrementKg": 4,
     "popularity": 181,
+    "generatorTier": "never",
     "l10n": {
       "en": {
         "name": "Turkish Get-Up",
@@ -659,6 +695,10 @@
     "defaultRestS": 120,
     "incrementKg": 4,
     "popularity": 193,
+    "generatorTier": "never",
+    "stressAreas": [
+      "knees"
+    ],
     "l10n": {
       "en": {
         "name": "Kettlebell Snatch",
@@ -713,6 +753,7 @@
     "defaultRestS": 120,
     "incrementKg": 10,
     "popularity": 206,
+    "generatorTier": "never",
     "l10n": {
       "en": {
         "name": "Sled Push",
@@ -764,6 +805,10 @@
     "excludedAlternatives": [],
     "defaultRestS": 90,
     "popularity": 208,
+    "generatorTier": "never",
+    "stressAreas": [
+      "knees"
+    ],
     "l10n": {
       "en": {
         "name": "Wall Ball",
@@ -816,6 +861,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 60,
     "popularity": 219,
+    "generatorTier": "never",
     "l10n": {
       "en": {
         "name": "Battle Rope Waves",
@@ -874,6 +920,7 @@
     "defaultRestS": 60,
     "incrementKg": 2,
     "popularity": 232,
+    "generatorTier": "never",
     "l10n": {
       "en": {
         "name": "Suitcase Carry",
@@ -925,6 +972,10 @@
     "excludedAlternatives": [],
     "defaultRestS": 90,
     "popularity": 243,
+    "generatorTier": "never",
+    "stressAreas": [
+      "knees"
+    ],
     "l10n": {
       "en": {
         "name": "Broad Jump",
@@ -977,6 +1028,10 @@
     "excludedAlternatives": [],
     "defaultRestS": 75,
     "popularity": 254,
+    "generatorTier": "never",
+    "stressAreas": [
+      "knees"
+    ],
     "l10n": {
       "en": {
         "name": "Tuck Jump",
@@ -1029,6 +1084,10 @@
     "defaultRestS": 90,
     "incrementKg": 2,
     "popularity": 267,
+    "generatorTier": "fallback",
+    "stressAreas": [
+      "lower_back"
+    ],
     "l10n": {
       "en": {
         "name": "Renegade Row",
@@ -1078,6 +1137,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 60,
     "popularity": 280,
+    "generatorTier": "fallback",
     "l10n": {
       "en": {
         "name": "Bear Crawl",
@@ -1130,6 +1190,10 @@
     "defaultRestS": 90,
     "incrementKg": 2,
     "popularity": 292,
+    "generatorTier": "never",
+    "stressAreas": [
+      "knees"
+    ],
     "l10n": {
       "en": {
         "name": "Dumbbell Snatch",
@@ -1182,6 +1246,10 @@
     "excludedAlternatives": [],
     "defaultRestS": 75,
     "popularity": 306,
+    "generatorTier": "never",
+    "stressAreas": [
+      "knees"
+    ],
     "l10n": {
       "en": {
         "name": "Split Jump",
@@ -1236,6 +1304,10 @@
     "excludedAlternatives": [],
     "defaultRestS": 75,
     "popularity": 322,
+    "generatorTier": "never",
+    "stressAreas": [
+      "knees"
+    ],
     "l10n": {
       "en": {
         "name": "Lateral Bound",
@@ -1296,6 +1368,10 @@
     "defaultRestS": 90,
     "incrementKg": 2,
     "popularity": 337,
+    "generatorTier": "never",
+    "stressAreas": [
+      "shoulders"
+    ],
     "l10n": {
       "en": {
         "name": "Dumbbell Overhead Carry",
@@ -1350,6 +1426,7 @@
     "defaultRestS": 90,
     "incrementKg": 5,
     "popularity": 354,
+    "generatorTier": "never",
     "l10n": {
       "en": {
         "name": "Trap Bar Carry",
@@ -1400,6 +1477,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 60,
     "popularity": 362,
+    "generatorTier": "never",
     "l10n": {
       "en": {
         "name": "Medicine Ball Chest Pass",
@@ -1452,6 +1530,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 60,
     "popularity": 370,
+    "generatorTier": "never",
     "l10n": {
       "en": {
         "name": "Medicine Ball Rotational Throw",
@@ -1509,6 +1588,10 @@
     "defaultRestS": 180,
     "incrementKg": 2.5,
     "popularity": 378,
+    "generatorTier": "never",
+    "stressAreas": [
+      "knees"
+    ],
     "l10n": {
       "en": {
         "name": "Power Snatch",
@@ -1564,6 +1647,10 @@
     "defaultRestS": 90,
     "incrementKg": 4,
     "popularity": 384,
+    "generatorTier": "never",
+    "stressAreas": [
+      "knees"
+    ],
     "l10n": {
       "en": {
         "name": "Kettlebell Clean",
@@ -1615,6 +1702,7 @@
     "defaultRestS": 90,
     "incrementKg": 4,
     "popularity": 391,
+    "generatorTier": "never",
     "l10n": {
       "en": {
         "name": "Kettlebell Front Rack Carry",
@@ -1673,6 +1761,7 @@
     "defaultRestS": 75,
     "incrementKg": 4,
     "popularity": 399,
+    "generatorTier": "never",
     "l10n": {
       "en": {
         "name": "Kettlebell Waiter's Walk",
@@ -1724,6 +1813,7 @@
     "defaultRestS": 90,
     "incrementKg": 10,
     "popularity": 401,
+    "generatorTier": "never",
     "l10n": {
       "en": {
         "name": "Backward Sled Drag",
@@ -1776,6 +1866,7 @@
     "defaultRestS": 90,
     "incrementKg": 10,
     "popularity": 402,
+    "generatorTier": "never",
     "l10n": {
       "en": {
         "name": "Forward Sled Drag",
@@ -1829,6 +1920,7 @@
     "defaultRestS": 90,
     "incrementKg": 10,
     "popularity": 403,
+    "generatorTier": "never",
     "l10n": {
       "en": {
         "name": "Sled Rope Pull",
@@ -1886,6 +1978,10 @@
     "defaultRestS": 90,
     "incrementKg": 4,
     "popularity": 310,
+    "generatorTier": "fallback",
+    "stressAreas": [
+      "lower_back"
+    ],
     "l10n": {
       "en": {
         "name": "Single-Arm Kettlebell Swing",
@@ -1940,6 +2036,7 @@
     "defaultRestS": 120,
     "incrementKg": 2.5,
     "popularity": 405,
+    "generatorTier": "never",
     "l10n": {
       "en": {
         "name": "Zercher Carry",
@@ -1989,6 +2086,7 @@
     "defaultRestS": 60,
     "incrementKg": 2.5,
     "popularity": 406,
+    "generatorTier": "never",
     "l10n": {
       "en": {
         "name": "Plate Pinch Carry",
@@ -2040,6 +2138,10 @@
     "defaultRestS": 120,
     "incrementKg": 5,
     "popularity": 407,
+    "generatorTier": "never",
+    "stressAreas": [
+      "knees"
+    ],
     "l10n": {
       "en": {
         "name": "Trap Bar Jump",
@@ -2093,6 +2195,10 @@
     "excludedAlternatives": [],
     "defaultRestS": 45,
     "popularity": 120,
+    "generatorTier": "never",
+    "stressAreas": [
+      "knees"
+    ],
     "l10n": {
       "en": {
         "name": "Jumping Jack",
@@ -2144,6 +2250,10 @@
     "excludedAlternatives": [],
     "defaultRestS": 45,
     "popularity": 160,
+    "generatorTier": "never",
+    "stressAreas": [
+      "knees"
+    ],
     "l10n": {
       "en": {
         "name": "High Knees",

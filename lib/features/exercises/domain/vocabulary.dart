@@ -283,6 +283,35 @@ enum EquipmentProfile implements Coded {
   }
 }
 
+/// How good an exercise is for a generated program, judged among exercises
+/// of its own equipment. Read only by the program generator.
+enum GeneratorTier implements Coded {
+  staple('staple'),
+  standard('standard'),
+
+  /// Only when nothing better fits.
+  fallback('fallback'),
+  never('never');
+
+  const GeneratorTier(this.code);
+  @override
+  final String code;
+}
+
+/// A part of the body a user may mark as sensitive; the generator then
+/// leaves out the exercises that stress it.
+enum SensitiveArea implements Coded {
+  shoulders('shoulders'),
+  elbowsWrists('elbows_wrists'),
+  lowerBack('lower_back'),
+  hips('hips'),
+  knees('knees');
+
+  const SensitiveArea(this.code);
+  @override
+  final String code;
+}
+
 /// Whether users see an exercise. Exercises are never deleted, only retired.
 enum ExerciseStatus implements Coded {
   draft('draft'),

@@ -27,6 +27,8 @@ final positions = _codes(Position.values);
 final grips = _codes(Grip.values);
 final gripWidths = _codes(GripWidth.values);
 final statuses = _codes(ExerciseStatus.values);
+final generatorTiers = _codes(GeneratorTier.values);
+final sensitiveAreas = _codes(SensitiveArea.values);
 const languages = {'en'};
 
 // Per-exercise limits.
@@ -72,6 +74,8 @@ const allowedKeys = {
   'defaultRestS',
   'incrementKg',
   'popularity',
+  'generatorTier',
+  'stressAreas',
   'l10n',
 };
 const allowedTextKeys = {
@@ -229,6 +233,13 @@ List<ContentProblem> exerciseProblems(Map<String, Object?> d) {
   positiveInt('familyRank');
   positiveInt('popularity');
   positiveInt('defaultRestS', min: minRestS, max: maxRestS);
+
+  // The generator's fields: an exercise without them counts as standard
+  // and stresses nothing.
+  code('generatorTier', generatorTiers, optional: true);
+  if (d['stressAreas'] != null) {
+    codeList('stressAreas', sensitiveAreas, 1, sensitiveAreas.length);
+  }
 
   for (final key in ['pinnedAlternatives', 'excludedAlternatives']) {
     final value = d[key];

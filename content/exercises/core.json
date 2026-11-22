@@ -26,6 +26,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 60,
     "popularity": 15,
+    "generatorTier": "staple",
     "l10n": {
       "en": {
         "name": "Plank",
@@ -77,6 +78,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 45,
     "popularity": 16,
+    "generatorTier": "staple",
     "l10n": {
       "en": {
         "name": "Crunch",
@@ -129,6 +131,10 @@
     "excludedAlternatives": [],
     "defaultRestS": 75,
     "popularity": 31,
+    "generatorTier": "staple",
+    "stressAreas": [
+      "hips"
+    ],
     "l10n": {
       "en": {
         "name": "Hanging Leg Raise",
@@ -177,6 +183,10 @@
     "excludedAlternatives": [],
     "defaultRestS": 45,
     "popularity": 35,
+    "generatorTier": "standard",
+    "stressAreas": [
+      "lower_back"
+    ],
     "l10n": {
       "en": {
         "name": "Sit-Up",
@@ -224,6 +234,10 @@
     "excludedAlternatives": [],
     "defaultRestS": 45,
     "popularity": 41,
+    "generatorTier": "standard",
+    "stressAreas": [
+      "lower_back"
+    ],
     "l10n": {
       "en": {
         "name": "Russian Twist",
@@ -271,6 +285,7 @@
     "defaultRestS": 60,
     "incrementKg": 2.5,
     "popularity": 51,
+    "generatorTier": "staple",
     "l10n": {
       "en": {
         "name": "Cable Crunch",
@@ -323,6 +338,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 45,
     "popularity": 55,
+    "generatorTier": "standard",
     "l10n": {
       "en": {
         "name": "Mountain Climber",
@@ -372,6 +388,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 45,
     "popularity": 59,
+    "generatorTier": "staple",
     "l10n": {
       "en": {
         "name": "Side Plank",
@@ -419,6 +436,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 45,
     "popularity": 62,
+    "generatorTier": "staple",
     "l10n": {
       "en": {
         "name": "Bicycle Crunch",
@@ -467,6 +485,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 60,
     "popularity": 68,
+    "generatorTier": "staple",
     "l10n": {
       "en": {
         "name": "Ab Wheel Rollout",
@@ -517,6 +536,10 @@
     "excludedAlternatives": [],
     "defaultRestS": 45,
     "popularity": 74,
+    "generatorTier": "staple",
+    "stressAreas": [
+      "hips"
+    ],
     "l10n": {
       "en": {
         "name": "Lying Leg Raise",
@@ -567,6 +590,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 45,
     "popularity": 86,
+    "generatorTier": "staple",
     "l10n": {
       "en": {
         "name": "Dead Bug",
@@ -618,6 +642,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 45,
     "popularity": 92,
+    "generatorTier": "standard",
     "l10n": {
       "en": {
         "name": "Bird Dog",
@@ -664,6 +689,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 45,
     "popularity": 98,
+    "generatorTier": "staple",
     "l10n": {
       "en": {
         "name": "Reverse Crunch",
@@ -711,6 +737,10 @@
     "excludedAlternatives": [],
     "defaultRestS": 45,
     "popularity": 111,
+    "generatorTier": "standard",
+    "stressAreas": [
+      "hips"
+    ],
     "l10n": {
       "en": {
         "name": "Flutter Kick",
@@ -758,6 +788,10 @@
     "excludedAlternatives": [],
     "defaultRestS": 60,
     "popularity": 118,
+    "generatorTier": "standard",
+    "stressAreas": [
+      "hips"
+    ],
     "l10n": {
       "en": {
         "name": "V-Up",
@@ -809,6 +843,7 @@
     "defaultRestS": 60,
     "incrementKg": 2.5,
     "popularity": 123,
+    "generatorTier": "standard",
     "l10n": {
       "en": {
         "name": "Cable Woodchop",
@@ -860,6 +895,7 @@
     "defaultRestS": 60,
     "incrementKg": 2.5,
     "popularity": 130,
+    "generatorTier": "standard",
     "l10n": {
       "en": {
         "name": "Cable Pallof Press",
@@ -910,6 +946,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 60,
     "popularity": 138,
+    "generatorTier": "staple",
     "l10n": {
       "en": {
         "name": "Hanging Knee Raise",
@@ -955,6 +992,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 60,
     "popularity": 148,
+    "generatorTier": "standard",
     "l10n": {
       "en": {
         "name": "Captain's Chair Knee Raise",
@@ -1005,6 +1043,10 @@
     "excludedAlternatives": [],
     "defaultRestS": 90,
     "popularity": 156,
+    "generatorTier": "standard",
+    "stressAreas": [
+      "hips"
+    ],
     "l10n": {
       "en": {
         "name": "Toes-to-Bar",
@@ -1053,6 +1095,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 60,
     "popularity": 165,
+    "generatorTier": "standard",
     "l10n": {
       "en": {
         "name": "Decline Crunch",
@@ -1098,6 +1141,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 60,
     "popularity": 176,
+    "generatorTier": "standard",
     "l10n": {
       "en": {
         "name": "Hollow Body Hold",
@@ -1146,6 +1190,10 @@
     "defaultRestS": 60,
     "incrementKg": 2.5,
     "popularity": 188,
+    "generatorTier": "standard",
+    "stressAreas": [
+      "lower_back"
+    ],
     "l10n": {
       "en": {
         "name": "Decline Sit-Up",
@@ -1194,6 +1242,7 @@
     "defaultRestS": 60,
     "incrementKg": 5,
     "popularity": 192,
+    "generatorTier": "staple",
     "l10n": {
       "en": {
         "name": "Machine Crunch",
@@ -1245,6 +1294,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 60,
     "popularity": 199,
+    "generatorTier": "standard",
     "l10n": {
       "en": {
         "name": "High Plank",
@@ -1293,6 +1343,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 45,
     "popularity": 215,
+    "generatorTier": "standard",
     "l10n": {
       "en": {
         "name": "Stability Ball Crunch",
@@ -1343,6 +1394,10 @@
     "excludedAlternatives": [],
     "defaultRestS": 60,
     "popularity": 227,
+    "generatorTier": "standard",
+    "stressAreas": [
+      "hips"
+    ],
     "l10n": {
       "en": {
         "name": "L-Sit",
@@ -1393,6 +1448,11 @@
     "excludedAlternatives": [],
     "defaultRestS": 90,
     "popularity": 239,
+    "generatorTier": "standard",
+    "stressAreas": [
+      "lower_back",
+      "hips"
+    ],
     "l10n": {
       "en": {
         "name": "Dragon Flag",
@@ -1446,6 +1506,10 @@
     "defaultRestS": 45,
     "incrementKg": 2,
     "popularity": 249,
+    "generatorTier": "standard",
+    "stressAreas": [
+      "lower_back"
+    ],
     "l10n": {
       "en": {
         "name": "Dumbbell Side Bend",
@@ -1493,6 +1557,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 45,
     "popularity": 262,
+    "generatorTier": "standard",
     "l10n": {
       "en": {
         "name": "Heel Touch",
@@ -1543,6 +1608,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 45,
     "popularity": 266,
+    "generatorTier": "standard",
     "l10n": {
       "en": {
         "name": "Plank Shoulder Tap",
@@ -1592,6 +1658,10 @@
     "defaultRestS": 60,
     "incrementKg": 2.5,
     "popularity": 274,
+    "generatorTier": "standard",
+    "stressAreas": [
+      "lower_back"
+    ],
     "l10n": {
       "en": {
         "name": "Landmine Rotation",
@@ -1643,6 +1713,10 @@
     "excludedAlternatives": [],
     "defaultRestS": 45,
     "popularity": 288,
+    "generatorTier": "standard",
+    "stressAreas": [
+      "lower_back"
+    ],
     "l10n": {
       "en": {
         "name": "Lying Windshield Wiper",
@@ -1691,6 +1765,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 45,
     "popularity": 300,
+    "generatorTier": "standard",
     "l10n": {
       "en": {
         "name": "Side Plank Hip Dip",
@@ -1740,6 +1815,7 @@
     "defaultRestS": 60,
     "incrementKg": 2.5,
     "popularity": 315,
+    "generatorTier": "standard",
     "l10n": {
       "en": {
         "name": "Weighted Plank",
@@ -1787,6 +1863,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 45,
     "popularity": 329,
+    "generatorTier": "standard",
     "l10n": {
       "en": {
         "name": "Kneeling Side Plank",
@@ -1835,6 +1912,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 45,
     "popularity": 336,
+    "generatorTier": "standard",
     "l10n": {
       "en": {
         "name": "Band Pallof Press",
@@ -1883,6 +1961,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 90,
     "popularity": 347,
+    "generatorTier": "standard",
     "l10n": {
       "en": {
         "name": "Standing Ab Wheel Rollout",
@@ -1932,6 +2011,7 @@
     "defaultRestS": 45,
     "incrementKg": 2.5,
     "popularity": 353,
+    "generatorTier": "standard",
     "l10n": {
       "en": {
         "name": "Rotary Torso Machine",
@@ -1983,6 +2063,10 @@
     "excludedAlternatives": [],
     "defaultRestS": 90,
     "popularity": 361,
+    "generatorTier": "standard",
+    "stressAreas": [
+      "lower_back"
+    ],
     "l10n": {
       "en": {
         "name": "Hanging Windshield Wiper",
@@ -2039,6 +2123,10 @@
     "defaultRestS": 60,
     "incrementKg": 2.5,
     "popularity": 369,
+    "generatorTier": "standard",
+    "stressAreas": [
+      "lower_back"
+    ],
     "l10n": {
       "en": {
         "name": "Plate Russian Twist",
@@ -2088,6 +2176,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 45,
     "popularity": 377,
+    "generatorTier": "standard",
     "l10n": {
       "en": {
         "name": "Band Woodchop",
@@ -2138,6 +2227,7 @@
     "defaultRestS": 60,
     "incrementKg": 2.5,
     "popularity": 383,
+    "generatorTier": "standard",
     "l10n": {
       "en": {
         "name": "Low-to-High Cable Woodchop",
@@ -2188,6 +2278,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 45,
     "popularity": 390,
+    "generatorTier": "standard",
     "l10n": {
       "en": {
         "name": "Stability Ball Rollout",
@@ -2237,6 +2328,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 45,
     "popularity": 398,
+    "generatorTier": "standard",
     "l10n": {
       "en": {
         "name": "Ab Wheel Wall Rollout",
@@ -2285,6 +2377,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 60,
     "popularity": 409,
+    "generatorTier": "standard",
     "l10n": {
       "en": {
         "name": "Ab Wheel Diagonal Rollout",
@@ -2335,6 +2428,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 45,
     "popularity": 411,
+    "generatorTier": "standard",
     "l10n": {
       "en": {
         "name": "Stir the Pot",
@@ -2380,6 +2474,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 45,
     "popularity": 412,
+    "generatorTier": "standard",
     "l10n": {
       "en": {
         "name": "Stability Ball Knee Tuck",
@@ -2427,6 +2522,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 45,
     "popularity": 413,
+    "generatorTier": "standard",
     "l10n": {
       "en": {
         "name": "Suspension Trainer Knee Tuck",
@@ -2477,6 +2573,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 60,
     "popularity": 414,
+    "generatorTier": "standard",
     "l10n": {
       "en": {
         "name": "Stability Ball Pike",
@@ -2524,6 +2621,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 60,
     "popularity": 416,
+    "generatorTier": "standard",
     "l10n": {
       "en": {
         "name": "Suspension Trainer Pike",
@@ -2573,6 +2671,10 @@
     "excludedAlternatives": [],
     "defaultRestS": 75,
     "popularity": 289,
+    "generatorTier": "standard",
+    "stressAreas": [
+      "lower_back"
+    ],
     "l10n": {
       "en": {
         "name": "GHD Sit-Up",
@@ -2626,6 +2728,10 @@
     "defaultRestS": 60,
     "incrementKg": 2.5,
     "popularity": 366,
+    "generatorTier": "standard",
+    "stressAreas": [
+      "lower_back"
+    ],
     "l10n": {
       "en": {
         "name": "45-Degree Side Bend",

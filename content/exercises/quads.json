@@ -30,6 +30,11 @@
     "defaultRestS": 180,
     "incrementKg": 5,
     "popularity": 1,
+    "generatorTier": "staple",
+    "stressAreas": [
+      "lower_back",
+      "knees"
+    ],
     "l10n": {
       "en": {
         "name": "Barbell Back Squat",
@@ -90,6 +95,7 @@
     "defaultRestS": 120,
     "incrementKg": 5,
     "popularity": 11,
+    "generatorTier": "staple",
     "l10n": {
       "en": {
         "name": "Leg Press",
@@ -143,6 +149,10 @@
     "defaultRestS": 60,
     "incrementKg": 5,
     "popularity": 18,
+    "generatorTier": "staple",
+    "stressAreas": [
+      "knees"
+    ],
     "l10n": {
       "en": {
         "name": "Leg Extension",
@@ -202,6 +212,10 @@
     "defaultRestS": 90,
     "incrementKg": 2,
     "popularity": 22,
+    "generatorTier": "staple",
+    "stressAreas": [
+      "knees"
+    ],
     "l10n": {
       "en": {
         "name": "Goblet Squat",
@@ -268,6 +282,10 @@
     "defaultRestS": 90,
     "incrementKg": 2,
     "popularity": 27,
+    "generatorTier": "staple",
+    "stressAreas": [
+      "knees"
+    ],
     "l10n": {
       "en": {
         "name": "Bulgarian Split Squat",
@@ -324,6 +342,11 @@
     "defaultRestS": 180,
     "incrementKg": 2.5,
     "popularity": 37,
+    "generatorTier": "staple",
+    "stressAreas": [
+      "elbows_wrists",
+      "knees"
+    ],
     "l10n": {
       "en": {
         "name": "Front Squat",
@@ -378,6 +401,10 @@
     "defaultRestS": 120,
     "incrementKg": 5,
     "popularity": 43,
+    "generatorTier": "staple",
+    "stressAreas": [
+      "knees"
+    ],
     "l10n": {
       "en": {
         "name": "Hack Squat",
@@ -429,6 +456,10 @@
     "excludedAlternatives": [],
     "defaultRestS": 60,
     "popularity": 45,
+    "generatorTier": "staple",
+    "stressAreas": [
+      "knees"
+    ],
     "l10n": {
       "en": {
         "name": "Bodyweight Squat",
@@ -486,6 +517,10 @@
     "defaultRestS": 90,
     "incrementKg": 2,
     "popularity": 57,
+    "generatorTier": "staple",
+    "stressAreas": [
+      "knees"
+    ],
     "l10n": {
       "en": {
         "name": "Dumbbell Walking Lunge",
@@ -537,6 +572,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 60,
     "popularity": 64,
+    "generatorTier": "staple",
     "l10n": {
       "en": {
         "name": "Reverse Lunge",
@@ -589,6 +625,10 @@
     "defaultRestS": 120,
     "incrementKg": 5,
     "popularity": 76,
+    "generatorTier": "staple",
+    "stressAreas": [
+      "knees"
+    ],
     "l10n": {
       "en": {
         "name": "Smith Machine Squat",
@@ -641,6 +681,10 @@
     "excludedAlternatives": [],
     "defaultRestS": 60,
     "popularity": 88,
+    "generatorTier": "standard",
+    "stressAreas": [
+      "knees"
+    ],
     "l10n": {
       "en": {
         "name": "Forward Lunge",
@@ -704,6 +748,7 @@
     "defaultRestS": 90,
     "incrementKg": 2,
     "popularity": 94,
+    "generatorTier": "staple",
     "l10n": {
       "en": {
         "name": "Dumbbell Step-Up",
@@ -754,6 +799,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 60,
     "popularity": 107,
+    "generatorTier": "fallback",
     "l10n": {
       "en": {
         "name": "Wall Sit",
@@ -805,6 +851,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 60,
     "popularity": 114,
+    "generatorTier": "staple",
     "l10n": {
       "en": {
         "name": "Split Squat",
@@ -860,6 +907,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 60,
     "popularity": 121,
+    "generatorTier": "standard",
     "l10n": {
       "en": {
         "name": "Step-Up",
@@ -923,6 +971,10 @@
     "defaultRestS": 150,
     "incrementKg": 5,
     "popularity": 136,
+    "generatorTier": "standard",
+    "stressAreas": [
+      "lower_back"
+    ],
     "l10n": {
       "en": {
         "name": "Box Squat",
@@ -972,6 +1024,11 @@
     "excludedAlternatives": [],
     "defaultRestS": 60,
     "popularity": 146,
+    "generatorTier": "standard",
+    "stressAreas": [
+      "hips",
+      "knees"
+    ],
     "l10n": {
       "en": {
         "name": "Lateral Lunge",
@@ -1029,6 +1086,7 @@
     "defaultRestS": 90,
     "incrementKg": 2,
     "popularity": 152,
+    "generatorTier": "staple",
     "l10n": {
       "en": {
         "name": "Dumbbell Reverse Lunge",
@@ -1078,6 +1136,7 @@
     "defaultRestS": 75,
     "incrementKg": 5,
     "popularity": 163,
+    "generatorTier": "standard",
     "l10n": {
       "en": {
         "name": "Single-Leg Leg Press",
@@ -1127,6 +1186,10 @@
     "defaultRestS": 90,
     "incrementKg": 2.5,
     "popularity": 173,
+    "generatorTier": "standard",
+    "stressAreas": [
+      "knees"
+    ],
     "l10n": {
       "en": {
         "name": "Landmine Squat",
@@ -1176,6 +1239,11 @@
     "excludedAlternatives": [],
     "defaultRestS": 60,
     "popularity": 184,
+    "generatorTier": "standard",
+    "stressAreas": [
+      "hips",
+      "knees"
+    ],
     "l10n": {
       "en": {
         "name": "Curtsy Lunge",
@@ -1228,6 +1296,10 @@
     "defaultRestS": 120,
     "incrementKg": 2.5,
     "popularity": 196,
+    "generatorTier": "standard",
+    "stressAreas": [
+      "knees"
+    ],
     "l10n": {
       "en": {
         "name": "Barbell Reverse Lunge",
@@ -1283,6 +1355,11 @@
     "defaultRestS": 90,
     "incrementKg": 2,
     "popularity": 211,
+    "generatorTier": "standard",
+    "stressAreas": [
+      "hips",
+      "knees"
+    ],
     "l10n": {
       "en": {
         "name": "Dumbbell Sumo Squat",
@@ -1330,6 +1407,10 @@
     "excludedAlternatives": [],
     "defaultRestS": 60,
     "popularity": 223,
+    "generatorTier": "fallback",
+    "stressAreas": [
+      "knees"
+    ],
     "l10n": {
       "en": {
         "name": "Sissy Squat",
@@ -1380,6 +1461,11 @@
     "excludedAlternatives": [],
     "defaultRestS": 90,
     "popularity": 235,
+    "generatorTier": "standard",
+    "stressAreas": [
+      "hips",
+      "knees"
+    ],
     "l10n": {
       "en": {
         "name": "Pistol Squat",
@@ -1435,6 +1521,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 60,
     "popularity": 246,
+    "generatorTier": "standard",
     "l10n": {
       "en": {
         "name": "Lateral Step-Up",
@@ -1489,6 +1576,11 @@
     "defaultRestS": 75,
     "incrementKg": 2,
     "popularity": 259,
+    "generatorTier": "standard",
+    "stressAreas": [
+      "hips",
+      "knees"
+    ],
     "l10n": {
       "en": {
         "name": "Goblet Lateral Lunge",
@@ -1534,6 +1626,10 @@
     "excludedAlternatives": [],
     "defaultRestS": 60,
     "popularity": 270,
+    "generatorTier": "fallback",
+    "stressAreas": [
+      "knees"
+    ],
     "l10n": {
       "en": {
         "name": "Reverse Nordic",
@@ -1582,6 +1678,10 @@
     "excludedAlternatives": [],
     "defaultRestS": 45,
     "popularity": 285,
+    "generatorTier": "standard",
+    "stressAreas": [
+      "knees"
+    ],
     "l10n": {
       "en": {
         "name": "Band Leg Extension",
@@ -1629,6 +1729,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 60,
     "popularity": 296,
+    "generatorTier": "fallback",
     "l10n": {
       "en": {
         "name": "Spanish Squat",
@@ -1677,6 +1778,10 @@
     "excludedAlternatives": [],
     "defaultRestS": 75,
     "popularity": 311,
+    "generatorTier": "standard",
+    "stressAreas": [
+      "knees"
+    ],
     "l10n": {
       "en": {
         "name": "Skater Squat",
@@ -1725,6 +1830,11 @@
     "excludedAlternatives": [],
     "defaultRestS": 75,
     "popularity": 326,
+    "generatorTier": "standard",
+    "stressAreas": [
+      "hips",
+      "knees"
+    ],
     "l10n": {
       "en": {
         "name": "Assisted Pistol Squat",
@@ -1780,6 +1890,13 @@
     "defaultRestS": 150,
     "incrementKg": 2.5,
     "popularity": 342,
+    "generatorTier": "fallback",
+    "stressAreas": [
+      "shoulders",
+      "lower_back",
+      "hips",
+      "knees"
+    ],
     "l10n": {
       "en": {
         "name": "Overhead Squat",
@@ -1835,6 +1952,10 @@
     "defaultRestS": 120,
     "incrementKg": 4,
     "popularity": 358,
+    "generatorTier": "standard",
+    "stressAreas": [
+      "knees"
+    ],
     "l10n": {
       "en": {
         "name": "Kettlebell Front Squat",
@@ -1888,6 +2009,10 @@
     "defaultRestS": 90,
     "incrementKg": 2,
     "popularity": 230,
+    "generatorTier": "standard",
+    "stressAreas": [
+      "knees"
+    ],
     "l10n": {
       "en": {
         "name": "Dumbbell Front Squat",
@@ -1942,6 +2067,10 @@
     "defaultRestS": 90,
     "incrementKg": 2.5,
     "popularity": 210,
+    "generatorTier": "standard",
+    "stressAreas": [
+      "knees"
+    ],
     "l10n": {
       "en": {
         "name": "Smith Machine Split Squat",

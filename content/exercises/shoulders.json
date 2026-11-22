@@ -33,6 +33,11 @@
     "defaultRestS": 180,
     "incrementKg": 2.5,
     "popularity": 5,
+    "generatorTier": "staple",
+    "stressAreas": [
+      "shoulders",
+      "lower_back"
+    ],
     "l10n": {
       "en": {
         "name": "Overhead Press",
@@ -93,6 +98,7 @@
     "defaultRestS": 60,
     "incrementKg": 1,
     "popularity": 9,
+    "generatorTier": "staple",
     "l10n": {
       "en": {
         "name": "Dumbbell Lateral Raise",
@@ -154,6 +160,10 @@
     "defaultRestS": 120,
     "incrementKg": 2,
     "popularity": 21,
+    "generatorTier": "staple",
+    "stressAreas": [
+      "shoulders"
+    ],
     "l10n": {
       "en": {
         "name": "Seated Dumbbell Shoulder Press",
@@ -209,6 +219,7 @@
     "defaultRestS": 60,
     "incrementKg": 2.5,
     "popularity": 32,
+    "generatorTier": "staple",
     "l10n": {
       "en": {
         "name": "Face Pull",
@@ -264,6 +275,7 @@
     "defaultRestS": 60,
     "incrementKg": 1,
     "popularity": 48,
+    "generatorTier": "standard",
     "l10n": {
       "en": {
         "name": "Dumbbell Front Raise",
@@ -322,6 +334,10 @@
     "defaultRestS": 120,
     "incrementKg": 2,
     "popularity": 52,
+    "generatorTier": "standard",
+    "stressAreas": [
+      "shoulders"
+    ],
     "l10n": {
       "en": {
         "name": "Arnold Press",
@@ -372,6 +388,7 @@
     "defaultRestS": 60,
     "incrementKg": 2.5,
     "popularity": 56,
+    "generatorTier": "staple",
     "l10n": {
       "en": {
         "name": "Reverse Pec Deck",
@@ -429,6 +446,10 @@
     "defaultRestS": 90,
     "incrementKg": 5,
     "popularity": 72,
+    "generatorTier": "staple",
+    "stressAreas": [
+      "shoulders"
+    ],
     "l10n": {
       "en": {
         "name": "Machine Shoulder Press",
@@ -481,6 +502,7 @@
     "defaultRestS": 60,
     "incrementKg": 2.5,
     "popularity": 82,
+    "generatorTier": "staple",
     "l10n": {
       "en": {
         "name": "Cable Lateral Raise",
@@ -540,6 +562,10 @@
     "defaultRestS": 90,
     "incrementKg": 2.5,
     "popularity": 102,
+    "generatorTier": "fallback",
+    "stressAreas": [
+      "shoulders"
+    ],
     "l10n": {
       "en": {
         "name": "Barbell Upright Row",
@@ -594,6 +620,10 @@
     "defaultRestS": 60,
     "incrementKg": 1,
     "popularity": 104,
+    "generatorTier": "staple",
+    "stressAreas": [
+      "lower_back"
+    ],
     "l10n": {
       "en": {
         "name": "Bent-Over Dumbbell Reverse Fly",
@@ -647,6 +677,10 @@
     "excludedAlternatives": [],
     "defaultRestS": 90,
     "popularity": 110,
+    "generatorTier": "staple",
+    "stressAreas": [
+      "shoulders"
+    ],
     "l10n": {
       "en": {
         "name": "Pike Push-Up",
@@ -696,6 +730,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 45,
     "popularity": 122,
+    "generatorTier": "staple",
     "l10n": {
       "en": {
         "name": "Band Pull-Apart",
@@ -753,6 +788,11 @@
     "defaultRestS": 150,
     "incrementKg": 2.5,
     "popularity": 133,
+    "generatorTier": "fallback",
+    "stressAreas": [
+      "shoulders",
+      "lower_back"
+    ],
     "l10n": {
       "en": {
         "name": "Push Press",
@@ -810,6 +850,10 @@
     "defaultRestS": 120,
     "incrementKg": 2,
     "popularity": 142,
+    "generatorTier": "standard",
+    "stressAreas": [
+      "shoulders"
+    ],
     "l10n": {
       "en": {
         "name": "Standing Dumbbell Shoulder Press",
@@ -863,6 +907,7 @@
     "defaultRestS": 90,
     "incrementKg": 2.5,
     "popularity": 159,
+    "generatorTier": "standard",
     "l10n": {
       "en": {
         "name": "Landmine Press",
@@ -920,6 +965,10 @@
     "defaultRestS": 120,
     "incrementKg": 2.5,
     "popularity": 168,
+    "generatorTier": "standard",
+    "stressAreas": [
+      "shoulders"
+    ],
     "l10n": {
       "en": {
         "name": "Smith Machine Shoulder Press",
@@ -972,6 +1021,11 @@
     "excludedAlternatives": [],
     "defaultRestS": 150,
     "popularity": 185,
+    "generatorTier": "standard",
+    "stressAreas": [
+      "shoulders",
+      "elbows_wrists"
+    ],
     "l10n": {
       "en": {
         "name": "Handstand Push-Up",
@@ -1025,6 +1079,7 @@
     "defaultRestS": 60,
     "incrementKg": 2.5,
     "popularity": 197,
+    "generatorTier": "standard",
     "l10n": {
       "en": {
         "name": "Plate Front Raise",
@@ -1074,6 +1129,7 @@
     "defaultRestS": 60,
     "incrementKg": 2.5,
     "popularity": 224,
+    "generatorTier": "standard",
     "l10n": {
       "en": {
         "name": "Cable Front Raise",
@@ -1122,6 +1178,7 @@
     "defaultRestS": 60,
     "incrementKg": 2.5,
     "popularity": 231,
+    "generatorTier": "staple",
     "l10n": {
       "en": {
         "name": "Machine Lateral Raise",
@@ -1177,6 +1234,10 @@
     "defaultRestS": 150,
     "incrementKg": 2.5,
     "popularity": 247,
+    "generatorTier": "standard",
+    "stressAreas": [
+      "shoulders"
+    ],
     "l10n": {
       "en": {
         "name": "Seated Barbell Shoulder Press",
@@ -1227,6 +1288,7 @@
     "defaultRestS": 45,
     "incrementKg": 1.25,
     "popularity": 265,
+    "generatorTier": "never",
     "l10n": {
       "en": {
         "name": "Cable External Rotation",
@@ -1288,6 +1350,10 @@
     "defaultRestS": 90,
     "incrementKg": 4,
     "popularity": 271,
+    "generatorTier": "standard",
+    "stressAreas": [
+      "shoulders"
+    ],
     "l10n": {
       "en": {
         "name": "Kettlebell Overhead Press",
@@ -1339,6 +1405,7 @@
     "defaultRestS": 60,
     "incrementKg": 2.5,
     "popularity": 277,
+    "generatorTier": "staple",
     "l10n": {
       "en": {
         "name": "Cable Reverse Fly",
@@ -1387,6 +1454,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 45,
     "popularity": 291,
+    "generatorTier": "never",
     "l10n": {
       "en": {
         "name": "Band External Rotation",
@@ -1440,6 +1508,10 @@
     ],
     "defaultRestS": 75,
     "popularity": 303,
+    "generatorTier": "staple",
+    "stressAreas": [
+      "shoulders"
+    ],
     "l10n": {
       "en": {
         "name": "Band Overhead Press",
@@ -1491,6 +1563,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 45,
     "popularity": 312,
+    "generatorTier": "staple",
     "l10n": {
       "en": {
         "name": "Band Face Pull",
@@ -1545,6 +1618,10 @@
     "excludedAlternatives": [],
     "defaultRestS": 120,
     "popularity": 320,
+    "generatorTier": "standard",
+    "stressAreas": [
+      "shoulders"
+    ],
     "l10n": {
       "en": {
         "name": "Elevated Pike Push-Up",
@@ -1595,6 +1672,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 45,
     "popularity": 327,
+    "generatorTier": "staple",
     "l10n": {
       "en": {
         "name": "Band Lateral Raise",
@@ -1641,6 +1719,7 @@
     "defaultRestS": 45,
     "incrementKg": 1,
     "popularity": 333,
+    "generatorTier": "never",
     "l10n": {
       "en": {
         "name": "Side-Lying Dumbbell External Rotation",
@@ -1695,6 +1774,10 @@
     "defaultRestS": 75,
     "incrementKg": 2.5,
     "popularity": 344,
+    "generatorTier": "fallback",
+    "stressAreas": [
+      "shoulders"
+    ],
     "l10n": {
       "en": {
         "name": "Cable Upright Row",
@@ -1743,6 +1826,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 45,
     "popularity": 351,
+    "generatorTier": "fallback",
     "l10n": {
       "en": {
         "name": "Prone Y Raise",
@@ -1797,6 +1881,11 @@
     "excludedAlternatives": [],
     "defaultRestS": 90,
     "popularity": 359,
+    "generatorTier": "never",
+    "stressAreas": [
+      "shoulders",
+      "elbows_wrists"
+    ],
     "l10n": {
       "en": {
         "name": "Wall Handstand Hold",
@@ -1852,6 +1941,10 @@
     "defaultRestS": 75,
     "incrementKg": 1,
     "popularity": 360,
+    "generatorTier": "fallback",
+    "stressAreas": [
+      "shoulders"
+    ],
     "l10n": {
       "en": {
         "name": "Dumbbell Upright Row",
@@ -1898,6 +1991,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 45,
     "popularity": 367,
+    "generatorTier": "fallback",
     "l10n": {
       "en": {
         "name": "Prone T Raise",
@@ -1955,6 +2049,10 @@
     "defaultRestS": 150,
     "incrementKg": 2.5,
     "popularity": 374,
+    "generatorTier": "fallback",
+    "stressAreas": [
+      "shoulders"
+    ],
     "l10n": {
       "en": {
         "name": "Z Press",
@@ -2003,6 +2101,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 45,
     "popularity": 381,
+    "generatorTier": "fallback",
     "l10n": {
       "en": {
         "name": "Prone W Raise",
@@ -2053,6 +2152,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 45,
     "popularity": 388,
+    "generatorTier": "standard",
     "l10n": {
       "en": {
         "name": "Band Front Raise",
@@ -2104,6 +2204,7 @@
     "defaultRestS": 45,
     "incrementKg": 1,
     "popularity": 387,
+    "generatorTier": "standard",
     "l10n": {
       "en": {
         "name": "Incline Dumbbell Y Raise",
@@ -2156,6 +2257,10 @@
     "excludedAlternatives": [],
     "defaultRestS": 60,
     "popularity": 396,
+    "generatorTier": "fallback",
+    "stressAreas": [
+      "shoulders"
+    ],
     "l10n": {
       "en": {
         "name": "Band Upright Row",
@@ -2204,6 +2309,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 45,
     "popularity": 395,
+    "generatorTier": "standard",
     "l10n": {
       "en": {
         "name": "Suspension Trainer Y Raise",
@@ -2255,6 +2361,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 45,
     "popularity": 404,
+    "generatorTier": "standard",
     "l10n": {
       "en": {
         "name": "Suspension Trainer Reverse Fly",
@@ -2304,6 +2411,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 45,
     "popularity": 410,
+    "generatorTier": "fallback",
     "l10n": {
       "en": {
         "name": "Reverse Snow Angel",
@@ -2351,6 +2459,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 45,
     "popularity": 415,
+    "generatorTier": "never",
     "l10n": {
       "en": {
         "name": "Wall Isometric Shoulder Abduction",
@@ -2404,6 +2513,11 @@
     "excludedAlternatives": [],
     "defaultRestS": 90,
     "popularity": 400,
+    "generatorTier": "never",
+    "stressAreas": [
+      "shoulders",
+      "elbows_wrists"
+    ],
     "l10n": {
       "en": {
         "name": "Freestanding Handstand",

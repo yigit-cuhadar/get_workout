@@ -22,6 +22,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 15,
     "popularity": 190,
+    "generatorTier": "never",
     "l10n": {
       "en": {
         "name": "Kneeling Hip Flexor Stretch",
@@ -72,6 +73,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 15,
     "popularity": 183,
+    "generatorTier": "never",
     "l10n": {
       "en": {
         "name": "Pigeon Stretch",
@@ -122,6 +124,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 15,
     "popularity": 195,
+    "generatorTier": "never",
     "l10n": {
       "en": {
         "name": "Cat-Cow",
@@ -172,6 +175,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 15,
     "popularity": 209,
+    "generatorTier": "never",
     "l10n": {
       "en": {
         "name": "Standing Hamstring Stretch",
@@ -221,6 +225,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 15,
     "popularity": 222,
+    "generatorTier": "never",
     "l10n": {
       "en": {
         "name": "Child's Pose",
@@ -272,6 +277,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 15,
     "popularity": 234,
+    "generatorTier": "never",
     "l10n": {
       "en": {
         "name": "World's Greatest Stretch",
@@ -318,6 +324,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 15,
     "popularity": 245,
+    "generatorTier": "never",
     "l10n": {
       "en": {
         "name": "Butterfly Stretch",
@@ -367,6 +374,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 15,
     "popularity": 258,
+    "generatorTier": "never",
     "l10n": {
       "en": {
         "name": "Doorway Chest Stretch",
@@ -414,6 +422,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 15,
     "popularity": 269,
+    "generatorTier": "never",
     "l10n": {
       "en": {
         "name": "Couch Stretch",
@@ -459,6 +468,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 15,
     "popularity": 284,
+    "generatorTier": "never",
     "l10n": {
       "en": {
         "name": "Wall Calf Stretch",
@@ -509,6 +519,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 15,
     "popularity": 295,
+    "generatorTier": "never",
     "l10n": {
       "en": {
         "name": "90/90 Hip Switch",
@@ -559,6 +570,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 15,
     "popularity": 309,
+    "generatorTier": "never",
     "l10n": {
       "en": {
         "name": "Thoracic Open Book",
@@ -606,6 +618,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 15,
     "popularity": 318,
+    "generatorTier": "never",
     "l10n": {
       "en": {
         "name": "Wrist Flexor Stretch",
@@ -653,6 +666,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 15,
     "popularity": 325,
+    "generatorTier": "never",
     "l10n": {
       "en": {
         "name": "Wrist Extensor Stretch",
@@ -705,6 +719,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 15,
     "popularity": 332,
+    "generatorTier": "never",
     "l10n": {
       "en": {
         "name": "Arm Circles",
@@ -753,6 +768,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 15,
     "popularity": 341,
+    "generatorTier": "never",
     "l10n": {
       "en": {
         "name": "Band Shoulder Pass-Through",
@@ -801,6 +817,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 15,
     "popularity": 350,
+    "generatorTier": "never",
     "l10n": {
       "en": {
         "name": "Frog Stretch",
@@ -848,6 +865,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 15,
     "popularity": 357,
+    "generatorTier": "never",
     "l10n": {
       "en": {
         "name": "Cross-Body Shoulder Stretch",
@@ -895,6 +913,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 15,
     "popularity": 365,
+    "generatorTier": "never",
     "l10n": {
       "en": {
         "name": "Overhead Triceps Stretch",
@@ -949,6 +968,7 @@
     "defaultRestS": 60,
     "incrementKg": 1,
     "popularity": 373,
+    "generatorTier": "never",
     "l10n": {
       "en": {
         "name": "Jefferson Curl",
@@ -999,6 +1019,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 15,
     "popularity": 380,
+    "generatorTier": "never",
     "l10n": {
       "en": {
         "name": "Deep Squat Hold",
@@ -1046,6 +1067,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 15,
     "popularity": 386,
+    "generatorTier": "never",
     "l10n": {
       "en": {
         "name": "Knee-to-Wall Ankle Mobilization",
@@ -1093,6 +1115,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 15,
     "popularity": 394,
+    "generatorTier": "never",
     "l10n": {
       "en": {
         "name": "Cobra Stretch",
@@ -1142,6 +1165,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 15,
     "popularity": 408,
+    "generatorTier": "never",
     "l10n": {
       "en": {
         "name": "Supine Hamstring Band Stretch",
@@ -1190,6 +1214,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 15,
     "popularity": 339,
+    "generatorTier": "never",
     "l10n": {
       "en": {
         "name": "Lying Spinal Twist",
@@ -1240,6 +1265,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 30,
     "popularity": 260,
+    "generatorTier": "never",
     "l10n": {
       "en": {
         "name": "Inchworm",

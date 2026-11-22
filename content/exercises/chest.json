@@ -29,6 +29,7 @@
     "defaultRestS": 180,
     "incrementKg": 2.5,
     "popularity": 2,
+    "generatorTier": "staple",
     "l10n": {
       "en": {
         "name": "Barbell Bench Press",
@@ -87,6 +88,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 90,
     "popularity": 6,
+    "generatorTier": "staple",
     "l10n": {
       "en": {
         "name": "Push-Up",
@@ -146,6 +148,7 @@
     "defaultRestS": 120,
     "incrementKg": 2,
     "popularity": 14,
+    "generatorTier": "staple",
     "l10n": {
       "en": {
         "name": "Dumbbell Bench Press",
@@ -205,6 +208,7 @@
     "defaultRestS": 120,
     "incrementKg": 2,
     "popularity": 19,
+    "generatorTier": "staple",
     "l10n": {
       "en": {
         "name": "Incline Dumbbell Press",
@@ -263,6 +267,7 @@
     "defaultRestS": 150,
     "incrementKg": 2.5,
     "popularity": 26,
+    "generatorTier": "staple",
     "l10n": {
       "en": {
         "name": "Incline Barbell Bench Press",
@@ -320,6 +325,7 @@
     "defaultRestS": 90,
     "incrementKg": 5,
     "popularity": 30,
+    "generatorTier": "staple",
     "l10n": {
       "en": {
         "name": "Machine Chest Press",
@@ -373,6 +379,7 @@
     "defaultRestS": 60,
     "incrementKg": 2.5,
     "popularity": 34,
+    "generatorTier": "staple",
     "l10n": {
       "en": {
         "name": "Cable Crossover",
@@ -430,6 +437,7 @@
     "defaultRestS": 60,
     "incrementKg": 1,
     "popularity": 39,
+    "generatorTier": "staple",
     "l10n": {
       "en": {
         "name": "Dumbbell Fly",
@@ -484,6 +492,7 @@
     "defaultRestS": 60,
     "incrementKg": 5,
     "popularity": 44,
+    "generatorTier": "staple",
     "l10n": {
       "en": {
         "name": "Pec Deck",
@@ -540,6 +549,10 @@
     "defaultRestS": 120,
     "incrementKg": 2.5,
     "popularity": 50,
+    "generatorTier": "staple",
+    "stressAreas": [
+      "shoulders"
+    ],
     "l10n": {
       "en": {
         "name": "Chest Dip",
@@ -597,6 +610,10 @@
     "defaultRestS": 75,
     "incrementKg": 2,
     "popularity": 87,
+    "generatorTier": "standard",
+    "stressAreas": [
+      "shoulders"
+    ],
     "l10n": {
       "en": {
         "name": "Dumbbell Pullover",
@@ -654,6 +671,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 75,
     "popularity": 75,
+    "generatorTier": "standard",
     "l10n": {
       "en": {
         "name": "Incline Push-Up",
@@ -705,6 +723,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 75,
     "popularity": 81,
+    "generatorTier": "standard",
     "l10n": {
       "en": {
         "name": "Knee Push-Up",
@@ -760,6 +779,7 @@
     "defaultRestS": 150,
     "incrementKg": 2.5,
     "popularity": 96,
+    "generatorTier": "standard",
     "l10n": {
       "en": {
         "name": "Smith Machine Bench Press",
@@ -818,6 +838,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 90,
     "popularity": 100,
+    "generatorTier": "standard",
     "l10n": {
       "en": {
         "name": "Decline Push-Up",
@@ -870,6 +891,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 90,
     "popularity": 106,
+    "generatorTier": "standard",
     "l10n": {
       "en": {
         "name": "Wide-Grip Push-Up",
@@ -924,6 +946,7 @@
     "defaultRestS": 150,
     "incrementKg": 2.5,
     "popularity": 112,
+    "generatorTier": "standard",
     "l10n": {
       "en": {
         "name": "Decline Barbell Bench Press",
@@ -978,6 +1001,7 @@
     "defaultRestS": 90,
     "incrementKg": 5,
     "popularity": 119,
+    "generatorTier": "staple",
     "l10n": {
       "en": {
         "name": "Machine Incline Chest Press",
@@ -1030,6 +1054,7 @@
     "defaultRestS": 60,
     "incrementKg": 2.5,
     "popularity": 128,
+    "generatorTier": "standard",
     "l10n": {
       "en": {
         "name": "Low-to-High Cable Fly",
@@ -1085,6 +1110,7 @@
     "defaultRestS": 120,
     "incrementKg": 2.5,
     "popularity": 131,
+    "generatorTier": "standard",
     "l10n": {
       "en": {
         "name": "Incline Smith Machine Press",
@@ -1138,6 +1164,7 @@
     "defaultRestS": 60,
     "incrementKg": 1,
     "popularity": 145,
+    "generatorTier": "standard",
     "l10n": {
       "en": {
         "name": "Incline Dumbbell Fly",
@@ -1189,6 +1216,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 120,
     "popularity": 172,
+    "generatorTier": "never",
     "l10n": {
       "en": {
         "name": "Clap Push-Up",
@@ -1243,6 +1271,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 75,
     "popularity": 177,
+    "generatorTier": "staple",
     "l10n": {
       "en": {
         "name": "Band Chest Press",
@@ -1295,6 +1324,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 120,
     "popularity": 182,
+    "generatorTier": "never",
     "l10n": {
       "en": {
         "name": "Explosive Push-Up",
@@ -1349,6 +1379,7 @@
     "defaultRestS": 90,
     "incrementKg": 2.5,
     "popularity": 194,
+    "generatorTier": "standard",
     "l10n": {
       "en": {
         "name": "Cable Chest Press",
@@ -1400,6 +1431,7 @@
     "defaultRestS": 120,
     "incrementKg": 2.5,
     "popularity": 422,
+    "generatorTier": "standard",
     "l10n": {
       "en": {
         "name": "Weighted Push-Up",
@@ -1455,6 +1487,7 @@
     "defaultRestS": 120,
     "incrementKg": 2,
     "popularity": 212,
+    "generatorTier": "standard",
     "l10n": {
       "en": {
         "name": "Decline Dumbbell Press",
@@ -1507,6 +1540,7 @@
     "defaultRestS": 90,
     "incrementKg": 2,
     "popularity": 221,
+    "generatorTier": "standard",
     "l10n": {
       "en": {
         "name": "Dumbbell Floor Press",
@@ -1560,6 +1594,7 @@
     "defaultRestS": 90,
     "incrementKg": 2,
     "popularity": 233,
+    "generatorTier": "standard",
     "l10n": {
       "en": {
         "name": "Dumbbell Squeeze Press",
@@ -1614,6 +1649,7 @@
     "defaultRestS": 150,
     "incrementKg": 2.5,
     "popularity": 240,
+    "generatorTier": "standard",
     "l10n": {
       "en": {
         "name": "Barbell Floor Press",
@@ -1664,6 +1700,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 45,
     "popularity": 244,
+    "generatorTier": "standard",
     "l10n": {
       "en": {
         "name": "Band Chest Fly",
@@ -1716,6 +1753,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 90,
     "popularity": 255,
+    "generatorTier": "standard",
     "l10n": {
       "en": {
         "name": "Suspension Trainer Chest Press",
@@ -1768,6 +1806,10 @@
     "excludedAlternatives": [],
     "defaultRestS": 90,
     "popularity": 268,
+    "generatorTier": "standard",
+    "stressAreas": [
+      "shoulders"
+    ],
     "l10n": {
       "en": {
         "name": "Archer Push-Up",
@@ -1819,6 +1861,11 @@
     "defaultRestS": 120,
     "incrementKg": 2.5,
     "popularity": 281,
+    "generatorTier": "standard",
+    "stressAreas": [
+      "shoulders",
+      "elbows_wrists"
+    ],
     "l10n": {
       "en": {
         "name": "Ring Dip",
@@ -1867,6 +1914,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 45,
     "popularity": 293,
+    "generatorTier": "never",
     "l10n": {
       "en": {
         "name": "Scapular Push-Up",
@@ -1920,6 +1968,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 90,
     "popularity": 301,
+    "generatorTier": "standard",
     "l10n": {
       "en": {
         "name": "Ring Push-Up",
@@ -1968,6 +2017,7 @@
     "defaultRestS": 45,
     "incrementKg": 1.25,
     "popularity": 307,
+    "generatorTier": "fallback",
     "l10n": {
       "en": {
         "name": "Svend Press",
@@ -2021,6 +2071,11 @@
     "excludedAlternatives": [],
     "defaultRestS": 120,
     "popularity": 323,
+    "generatorTier": "standard",
+    "stressAreas": [
+      "shoulders",
+      "elbows_wrists"
+    ],
     "l10n": {
       "en": {
         "name": "One-Arm Push-Up",
@@ -2071,6 +2126,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 60,
     "popularity": 338,
+    "generatorTier": "standard",
     "l10n": {
       "en": {
         "name": "Suspension Trainer Fly",
@@ -2123,6 +2179,11 @@
     "excludedAlternatives": [],
     "defaultRestS": 120,
     "popularity": 355,
+    "generatorTier": "standard",
+    "stressAreas": [
+      "shoulders",
+      "elbows_wrists"
+    ],
     "l10n": {
       "en": {
         "name": "Pseudo Planche Push-Up",
@@ -2174,6 +2235,7 @@
     "defaultRestS": 60,
     "incrementKg": 2.5,
     "popularity": 200,
+    "generatorTier": "standard",
     "l10n": {
       "en": {
         "name": "Seated Cable Fly",

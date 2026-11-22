@@ -26,6 +26,7 @@
     "defaultRestS": 60,
     "incrementKg": 1,
     "popularity": 8,
+    "generatorTier": "staple",
     "l10n": {
       "en": {
         "name": "Dumbbell Curl",
@@ -80,6 +81,10 @@
     "defaultRestS": 75,
     "incrementKg": 2.5,
     "popularity": 23,
+    "generatorTier": "staple",
+    "stressAreas": [
+      "elbows_wrists"
+    ],
     "l10n": {
       "en": {
         "name": "Barbell Curl",
@@ -132,6 +137,7 @@
     "defaultRestS": 60,
     "incrementKg": 2.5,
     "popularity": 24,
+    "generatorTier": "staple",
     "l10n": {
       "en": {
         "name": "Triceps Pushdown",
@@ -183,6 +189,7 @@
     "defaultRestS": 60,
     "incrementKg": 2.5,
     "popularity": 28,
+    "generatorTier": "staple",
     "l10n": {
       "en": {
         "name": "Rope Triceps Pushdown",
@@ -234,6 +241,7 @@
     "defaultRestS": 60,
     "incrementKg": 1,
     "popularity": 36,
+    "generatorTier": "staple",
     "l10n": {
       "en": {
         "name": "Dumbbell Hammer Curl",
@@ -292,6 +300,10 @@
     "defaultRestS": 75,
     "incrementKg": 2.5,
     "popularity": 42,
+    "generatorTier": "staple",
+    "stressAreas": [
+      "elbows_wrists"
+    ],
     "l10n": {
       "en": {
         "name": "EZ-Bar Skull Crusher",
@@ -347,6 +359,7 @@
     "defaultRestS": 60,
     "incrementKg": 2.5,
     "popularity": 46,
+    "generatorTier": "staple",
     "l10n": {
       "en": {
         "name": "EZ-Bar Curl",
@@ -401,6 +414,10 @@
     "defaultRestS": 150,
     "incrementKg": 2.5,
     "popularity": 65,
+    "generatorTier": "standard",
+    "stressAreas": [
+      "elbows_wrists"
+    ],
     "l10n": {
       "en": {
         "name": "Close-Grip Bench Press",
@@ -456,6 +473,11 @@
     "defaultRestS": 120,
     "incrementKg": 2.5,
     "popularity": 77,
+    "generatorTier": "staple",
+    "stressAreas": [
+      "shoulders",
+      "elbows_wrists"
+    ],
     "l10n": {
       "en": {
         "name": "Triceps Dip",
@@ -508,6 +530,11 @@
     "defaultRestS": 60,
     "incrementKg": 2,
     "popularity": 80,
+    "generatorTier": "staple",
+    "stressAreas": [
+      "shoulders",
+      "elbows_wrists"
+    ],
     "l10n": {
       "en": {
         "name": "Dumbbell Overhead Triceps Extension",
@@ -566,6 +593,10 @@
     "defaultRestS": 60,
     "incrementKg": 2.5,
     "popularity": 89,
+    "generatorTier": "staple",
+    "stressAreas": [
+      "elbows_wrists"
+    ],
     "l10n": {
       "en": {
         "name": "Preacher Curl",
@@ -619,6 +650,7 @@
     "defaultRestS": 60,
     "incrementKg": 2.5,
     "popularity": 95,
+    "generatorTier": "staple",
     "l10n": {
       "en": {
         "name": "Cable Curl",
@@ -669,6 +701,7 @@
     "defaultRestS": 60,
     "incrementKg": 1,
     "popularity": 108,
+    "generatorTier": "staple",
     "l10n": {
       "en": {
         "name": "Incline Dumbbell Curl",
@@ -718,6 +751,7 @@
     "defaultRestS": 45,
     "incrementKg": 1,
     "popularity": 115,
+    "generatorTier": "standard",
     "l10n": {
       "en": {
         "name": "Concentration Curl",
@@ -771,6 +805,11 @@
     "excludedAlternatives": [],
     "defaultRestS": 75,
     "popularity": 126,
+    "generatorTier": "standard",
+    "stressAreas": [
+      "shoulders",
+      "elbows_wrists"
+    ],
     "l10n": {
       "en": {
         "name": "Bench Dip",
@@ -824,6 +863,10 @@
     "excludedAlternatives": [],
     "defaultRestS": 75,
     "popularity": 129,
+    "generatorTier": "standard",
+    "stressAreas": [
+      "elbows_wrists"
+    ],
     "l10n": {
       "en": {
         "name": "Diamond Push-Up",
@@ -874,6 +917,7 @@
     "defaultRestS": 45,
     "incrementKg": 1,
     "popularity": 137,
+    "generatorTier": "standard",
     "l10n": {
       "en": {
         "name": "Dumbbell Kickback",
@@ -923,6 +967,11 @@
     "defaultRestS": 60,
     "incrementKg": 2.5,
     "popularity": 147,
+    "generatorTier": "staple",
+    "stressAreas": [
+      "shoulders",
+      "elbows_wrists"
+    ],
     "l10n": {
       "en": {
         "name": "Cable Overhead Triceps Extension",
@@ -973,6 +1022,10 @@
     "defaultRestS": 45,
     "incrementKg": 1,
     "popularity": 153,
+    "generatorTier": "standard",
+    "stressAreas": [
+      "elbows_wrists"
+    ],
     "l10n": {
       "en": {
         "name": "Dumbbell Wrist Curl",
@@ -1025,6 +1078,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 60,
     "popularity": 155,
+    "generatorTier": "never",
     "l10n": {
       "en": {
         "name": "Dead Hang",
@@ -1076,6 +1130,7 @@
     "defaultRestS": 60,
     "incrementKg": 2.5,
     "popularity": 164,
+    "generatorTier": "standard",
     "l10n": {
       "en": {
         "name": "Rope Hammer Curl",
@@ -1126,6 +1181,7 @@
     "defaultRestS": 60,
     "incrementKg": 1,
     "popularity": 174,
+    "generatorTier": "standard",
     "l10n": {
       "en": {
         "name": "Spider Curl",
@@ -1175,6 +1231,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 75,
     "popularity": 179,
+    "generatorTier": "standard",
     "l10n": {
       "en": {
         "name": "Close-Grip Push-Up",
@@ -1226,6 +1283,10 @@
     "defaultRestS": 60,
     "incrementKg": 1,
     "popularity": 186,
+    "generatorTier": "standard",
+    "stressAreas": [
+      "elbows_wrists"
+    ],
     "l10n": {
       "en": {
         "name": "Dumbbell Lying Triceps Extension",
@@ -1282,6 +1343,10 @@
     "defaultRestS": 60,
     "incrementKg": 2.5,
     "popularity": 204,
+    "generatorTier": "standard",
+    "stressAreas": [
+      "elbows_wrists"
+    ],
     "l10n": {
       "en": {
         "name": "EZ-Bar Reverse Curl",
@@ -1333,6 +1398,10 @@
     "defaultRestS": 45,
     "incrementKg": 1,
     "popularity": 214,
+    "generatorTier": "standard",
+    "stressAreas": [
+      "elbows_wrists"
+    ],
     "l10n": {
       "en": {
         "name": "Dumbbell Reverse Wrist Curl",
@@ -1385,6 +1454,10 @@
     "defaultRestS": 90,
     "incrementKg": 5,
     "popularity": 218,
+    "generatorTier": "standard",
+    "stressAreas": [
+      "shoulders"
+    ],
     "l10n": {
       "en": {
         "name": "Machine-Assisted Dip",
@@ -1437,6 +1510,10 @@
     "defaultRestS": 90,
     "incrementKg": 5,
     "popularity": 226,
+    "generatorTier": "standard",
+    "stressAreas": [
+      "shoulders"
+    ],
     "l10n": {
       "en": {
         "name": "Seated Dip Machine",
@@ -1489,6 +1566,10 @@
     "defaultRestS": 45,
     "incrementKg": 2.5,
     "popularity": 238,
+    "generatorTier": "standard",
+    "stressAreas": [
+      "elbows_wrists"
+    ],
     "l10n": {
       "en": {
         "name": "Barbell Wrist Curl",
@@ -1537,6 +1618,7 @@
     "defaultRestS": 60,
     "incrementKg": 1,
     "popularity": 242,
+    "generatorTier": "standard",
     "l10n": {
       "en": {
         "name": "Cross-Body Hammer Curl",
@@ -1587,6 +1669,10 @@
     "defaultRestS": 45,
     "incrementKg": 1,
     "popularity": 252,
+    "generatorTier": "standard",
+    "stressAreas": [
+      "elbows_wrists"
+    ],
     "l10n": {
       "en": {
         "name": "Dumbbell Preacher Curl",
@@ -1634,6 +1720,7 @@
     "defaultRestS": 60,
     "incrementKg": 2.5,
     "popularity": 170,
+    "generatorTier": "standard",
     "l10n": {
       "en": {
         "name": "Machine Biceps Curl",
@@ -1684,6 +1771,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 45,
     "popularity": 273,
+    "generatorTier": "staple",
     "l10n": {
       "en": {
         "name": "Band Biceps Curl",
@@ -1731,6 +1819,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 45,
     "popularity": 278,
+    "generatorTier": "staple",
     "l10n": {
       "en": {
         "name": "Band Triceps Pushdown",
@@ -1778,6 +1867,11 @@
     "excludedAlternatives": [],
     "defaultRestS": 45,
     "popularity": 287,
+    "generatorTier": "standard",
+    "stressAreas": [
+      "shoulders",
+      "elbows_wrists"
+    ],
     "l10n": {
       "en": {
         "name": "Band Overhead Triceps Extension",
@@ -1825,6 +1919,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 45,
     "popularity": 299,
+    "generatorTier": "standard",
     "l10n": {
       "en": {
         "name": "Band Hammer Curl",
@@ -1872,6 +1967,10 @@
     "excludedAlternatives": [],
     "defaultRestS": 45,
     "popularity": 304,
+    "generatorTier": "standard",
+    "stressAreas": [
+      "elbows_wrists"
+    ],
     "l10n": {
       "en": {
         "name": "Band Reverse Curl",
@@ -1920,6 +2019,10 @@
     "defaultRestS": 60,
     "incrementKg": 1,
     "popularity": 314,
+    "generatorTier": "standard",
+    "stressAreas": [
+      "elbows_wrists"
+    ],
     "l10n": {
       "en": {
         "name": "Zottman Curl",
@@ -1967,6 +2070,7 @@
     "defaultRestS": 45,
     "incrementKg": 2.5,
     "popularity": 321,
+    "generatorTier": "standard",
     "l10n": {
       "en": {
         "name": "Cable Triceps Kickback",
@@ -2016,6 +2120,7 @@
     "defaultRestS": 60,
     "incrementKg": 2.5,
     "popularity": 220,
+    "generatorTier": "standard",
     "l10n": {
       "en": {
         "name": "Bayesian Cable Curl",
@@ -2066,6 +2171,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 60,
     "popularity": 334,
+    "generatorTier": "standard",
     "l10n": {
       "en": {
         "name": "Suspension Trainer Biceps Curl",
@@ -2114,6 +2220,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 60,
     "popularity": 346,
+    "generatorTier": "standard",
     "l10n": {
       "en": {
         "name": "Suspension Trainer Triceps Extension",
@@ -2163,6 +2270,7 @@
     "defaultRestS": 45,
     "incrementKg": 2.5,
     "popularity": 352,
+    "generatorTier": "standard",
     "l10n": {
       "en": {
         "name": "Single-Arm Reverse-Grip Pushdown",
@@ -2212,6 +2320,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 60,
     "popularity": 368,
+    "generatorTier": "never",
     "l10n": {
       "en": {
         "name": "One-Arm Dead Hang",
@@ -2259,6 +2368,10 @@
     "defaultRestS": 60,
     "incrementKg": 2.5,
     "popularity": 376,
+    "generatorTier": "never",
+    "stressAreas": [
+      "elbows_wrists"
+    ],
     "l10n": {
       "en": {
         "name": "Plate Pinch Hold",
@@ -2308,6 +2421,10 @@
     "excludedAlternatives": [],
     "defaultRestS": 60,
     "popularity": 382,
+    "generatorTier": "never",
+    "stressAreas": [
+      "elbows_wrists"
+    ],
     "l10n": {
       "en": {
         "name": "Wrist Roller",
@@ -2358,6 +2475,11 @@
     "defaultRestS": 60,
     "incrementKg": 2.5,
     "popularity": 207,
+    "generatorTier": "standard",
+    "stressAreas": [
+      "shoulders",
+      "elbows_wrists"
+    ],
     "l10n": {
       "en": {
         "name": "EZ-Bar Overhead Triceps Extension",
@@ -2409,6 +2531,10 @@
     "excludedAlternatives": [],
     "defaultRestS": 60,
     "popularity": 397,
+    "generatorTier": "never",
+    "stressAreas": [
+      "shoulders"
+    ],
     "l10n": {
       "en": {
         "name": "Ring Support Hold",
@@ -2459,6 +2585,10 @@
     "excludedAlternatives": [],
     "defaultRestS": 45,
     "popularity": 417,
+    "generatorTier": "standard",
+    "stressAreas": [
+      "elbows_wrists"
+    ],
     "l10n": {
       "en": {
         "name": "Band Wrist Curl",
@@ -2505,6 +2635,10 @@
     "excludedAlternatives": [],
     "defaultRestS": 45,
     "popularity": 418,
+    "generatorTier": "standard",
+    "stressAreas": [
+      "elbows_wrists"
+    ],
     "l10n": {
       "en": {
         "name": "Band Reverse Wrist Curl",
@@ -2560,6 +2694,10 @@
     "excludedAlternatives": [],
     "defaultRestS": 60,
     "popularity": 419,
+    "generatorTier": "never",
+    "stressAreas": [
+      "elbows_wrists"
+    ],
     "l10n": {
       "en": {
         "name": "False Grip Hang",

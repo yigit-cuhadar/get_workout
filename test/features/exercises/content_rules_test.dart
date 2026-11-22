@@ -23,12 +23,41 @@ void main() {
     expect(exerciseProblems(validJson()), isEmpty);
   });
 
+  test('the generator fields are optional and accepted when valid', () {
+    final json = changed((j) {
+      j['generatorTier'] = 'staple';
+      j['stressAreas'] = ['knees', 'lower_back'];
+    });
+    expect(exerciseProblems(json), isEmpty);
+  });
+
   // Each rule of a single exercise: the change that breaks it, and the one
   // problem it reports.
   final cases = <String, (void Function(Map<String, Object?>), ContentProblem)>{
     'unknown field': (
       (j) => j['color'] = 'red',
       const ContentProblem('color', 'unknown field "color"'),
+    ),
+    'generator tier code': (
+      (j) => j['generatorTier'] = 'great',
+      ContentProblem(
+        'generatorTier',
+        'generatorTier "great" is not one of ${generatorTiers.join(', ')}',
+      ),
+    ),
+    'stress area code': (
+      (j) => j['stressAreas'] = ['neck'],
+      const ContentProblem(
+        'stressAreas',
+        'stressAreas has unknown code "neck"',
+      ),
+    ),
+    'stress areas listed but empty': (
+      (j) => j['stressAreas'] = <String>[],
+      const ContentProblem(
+        'stressAreas',
+        'stressAreas must have 1-5 items, has 0',
+      ),
     ),
     'id format': (
       (j) => j['id'] = 'ex_Bad',

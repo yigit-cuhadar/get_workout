@@ -30,6 +30,7 @@
     "defaultRestS": 150,
     "incrementKg": 2.5,
     "popularity": 4,
+    "generatorTier": "staple",
     "l10n": {
       "en": {
         "name": "Pull-Up",
@@ -91,6 +92,10 @@
     "defaultRestS": 150,
     "incrementKg": 2.5,
     "popularity": 7,
+    "generatorTier": "staple",
+    "stressAreas": [
+      "lower_back"
+    ],
     "l10n": {
       "en": {
         "name": "Barbell Row",
@@ -152,6 +157,7 @@
     "defaultRestS": 120,
     "incrementKg": 5,
     "popularity": 10,
+    "generatorTier": "staple",
     "l10n": {
       "en": {
         "name": "Lat Pulldown",
@@ -212,6 +218,7 @@
     "defaultRestS": 120,
     "incrementKg": 5,
     "popularity": 12,
+    "generatorTier": "staple",
     "l10n": {
       "en": {
         "name": "Seated Cable Row",
@@ -271,6 +278,10 @@
     "defaultRestS": 150,
     "incrementKg": 2.5,
     "popularity": 13,
+    "generatorTier": "staple",
+    "stressAreas": [
+      "elbows_wrists"
+    ],
     "l10n": {
       "en": {
         "name": "Chin-Up",
@@ -328,6 +339,7 @@
     "defaultRestS": 90,
     "incrementKg": 2,
     "popularity": 17,
+    "generatorTier": "staple",
     "l10n": {
       "en": {
         "name": "One-Arm Dumbbell Row",
@@ -383,6 +395,7 @@
     "defaultRestS": 60,
     "incrementKg": 2,
     "popularity": 54,
+    "generatorTier": "staple",
     "l10n": {
       "en": {
         "name": "Dumbbell Shrug",
@@ -435,6 +448,7 @@
     "defaultRestS": 60,
     "incrementKg": 5,
     "popularity": 58,
+    "generatorTier": "staple",
     "l10n": {
       "en": {
         "name": "Barbell Shrug",
@@ -486,6 +500,10 @@
     "defaultRestS": 90,
     "incrementKg": 2.5,
     "popularity": 60,
+    "generatorTier": "staple",
+    "stressAreas": [
+      "lower_back"
+    ],
     "l10n": {
       "en": {
         "name": "Back Extension",
@@ -544,6 +562,10 @@
     "defaultRestS": 120,
     "incrementKg": 2.5,
     "popularity": 63,
+    "generatorTier": "staple",
+    "stressAreas": [
+      "lower_back"
+    ],
     "l10n": {
       "en": {
         "name": "T-Bar Row",
@@ -602,6 +624,7 @@
     "defaultRestS": 120,
     "incrementKg": 5,
     "popularity": 66,
+    "generatorTier": "standard",
     "l10n": {
       "en": {
         "name": "Close-Grip Lat Pulldown",
@@ -657,6 +680,7 @@
     "defaultRestS": 90,
     "incrementKg": 5,
     "popularity": 69,
+    "generatorTier": "standard",
     "l10n": {
       "en": {
         "name": "Machine-Assisted Pull-Up",
@@ -712,6 +736,10 @@
     "defaultRestS": 120,
     "incrementKg": 2,
     "popularity": 78,
+    "generatorTier": "standard",
+    "stressAreas": [
+      "lower_back"
+    ],
     "l10n": {
       "en": {
         "name": "Dumbbell Bent-Over Row",
@@ -767,6 +795,7 @@
     "defaultRestS": 90,
     "incrementKg": 5,
     "popularity": 84,
+    "generatorTier": "staple",
     "l10n": {
       "en": {
         "name": "Machine Row",
@@ -823,6 +852,7 @@
     "defaultRestS": 90,
     "incrementKg": 2,
     "popularity": 90,
+    "generatorTier": "staple",
     "l10n": {
       "en": {
         "name": "Chest-Supported Dumbbell Row",
@@ -876,6 +906,7 @@
     "defaultRestS": 60,
     "incrementKg": 2.5,
     "popularity": 93,
+    "generatorTier": "standard",
     "l10n": {
       "en": {
         "name": "Straight-Arm Pulldown",
@@ -937,6 +968,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 90,
     "popularity": 103,
+    "generatorTier": "staple",
     "l10n": {
       "en": {
         "name": "Inverted Row",
@@ -994,6 +1026,7 @@
     "defaultRestS": 150,
     "incrementKg": 2.5,
     "popularity": 109,
+    "generatorTier": "standard",
     "l10n": {
       "en": {
         "name": "Neutral-Grip Pull-Up",
@@ -1049,6 +1082,10 @@
     "defaultRestS": 150,
     "incrementKg": 2.5,
     "popularity": 116,
+    "generatorTier": "standard",
+    "stressAreas": [
+      "shoulders"
+    ],
     "l10n": {
       "en": {
         "name": "Wide-Grip Pull-Up",
@@ -1104,6 +1141,10 @@
     "defaultRestS": 150,
     "incrementKg": 2.5,
     "popularity": 124,
+    "generatorTier": "standard",
+    "stressAreas": [
+      "lower_back"
+    ],
     "l10n": {
       "en": {
         "name": "Pendlay Row",
@@ -1155,6 +1196,10 @@
     "excludedAlternatives": [],
     "defaultRestS": 45,
     "popularity": 135,
+    "generatorTier": "fallback",
+    "stressAreas": [
+      "lower_back"
+    ],
     "l10n": {
       "en": {
         "name": "Superman",
@@ -1211,6 +1256,7 @@
     "defaultRestS": 120,
     "incrementKg": 5,
     "popularity": 139,
+    "generatorTier": "standard",
     "l10n": {
       "en": {
         "name": "Reverse-Grip Lat Pulldown",
@@ -1264,6 +1310,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 90,
     "popularity": 149,
+    "generatorTier": "staple",
     "l10n": {
       "en": {
         "name": "Negative Pull-Up",
@@ -1320,6 +1367,10 @@
     "defaultRestS": 150,
     "incrementKg": 2.5,
     "popularity": 154,
+    "generatorTier": "standard",
+    "stressAreas": [
+      "lower_back"
+    ],
     "l10n": {
       "en": {
         "name": "Underhand Barbell Row",
@@ -1376,6 +1427,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 90,
     "popularity": 157,
+    "generatorTier": "standard",
     "l10n": {
       "en": {
         "name": "Band-Assisted Pull-Up",
@@ -1429,6 +1481,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 75,
     "popularity": 162,
+    "generatorTier": "staple",
     "l10n": {
       "en": {
         "name": "Suspension Trainer Row",
@@ -1480,6 +1533,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 45,
     "popularity": 166,
+    "generatorTier": "never",
     "l10n": {
       "en": {
         "name": "Scapular Pull-Up",
@@ -1532,6 +1586,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 75,
     "popularity": 189,
+    "generatorTier": "standard",
     "l10n": {
       "en": {
         "name": "Ring Row",
@@ -1587,6 +1642,10 @@
     "defaultRestS": 120,
     "incrementKg": 2.5,
     "popularity": 201,
+    "generatorTier": "standard",
+    "stressAreas": [
+      "elbows_wrists"
+    ],
     "l10n": {
       "en": {
         "name": "Close-Grip Chin-Up",
@@ -1642,6 +1701,11 @@
     "excludedAlternatives": [],
     "defaultRestS": 150,
     "popularity": 203,
+    "generatorTier": "never",
+    "stressAreas": [
+      "shoulders",
+      "elbows_wrists"
+    ],
     "l10n": {
       "en": {
         "name": "Bar Muscle-Up",
@@ -1698,6 +1762,7 @@
     "defaultRestS": 75,
     "incrementKg": 2.5,
     "popularity": 216,
+    "generatorTier": "standard",
     "l10n": {
       "en": {
         "name": "Single-Arm Cable Row",
@@ -1750,6 +1815,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 75,
     "popularity": 228,
+    "generatorTier": "staple",
     "l10n": {
       "en": {
         "name": "Band Lat Pulldown",
@@ -1802,6 +1868,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 60,
     "popularity": 236,
+    "generatorTier": "staple",
     "l10n": {
       "en": {
         "name": "Band Seated Row",
@@ -1858,6 +1925,7 @@
     "defaultRestS": 120,
     "incrementKg": 2.5,
     "popularity": 250,
+    "generatorTier": "standard",
     "l10n": {
       "en": {
         "name": "Seal Row",
@@ -1912,6 +1980,7 @@
     "defaultRestS": 90,
     "incrementKg": 5,
     "popularity": 256,
+    "generatorTier": "standard",
     "l10n": {
       "en": {
         "name": "Wide-Grip Seated Cable Row",
@@ -1966,6 +2035,10 @@
     "defaultRestS": 90,
     "incrementKg": 2.5,
     "popularity": 263,
+    "generatorTier": "standard",
+    "stressAreas": [
+      "lower_back"
+    ],
     "l10n": {
       "en": {
         "name": "Meadows Row",
@@ -2022,6 +2095,7 @@
     "defaultRestS": 90,
     "incrementKg": 4,
     "popularity": 275,
+    "generatorTier": "standard",
     "l10n": {
       "en": {
         "name": "Kettlebell Row",
@@ -2073,6 +2147,10 @@
     "defaultRestS": 75,
     "incrementKg": 5,
     "popularity": 282,
+    "generatorTier": "standard",
+    "stressAreas": [
+      "lower_back"
+    ],
     "l10n": {
       "en": {
         "name": "Back Extension Machine",
@@ -2124,6 +2202,7 @@
     "defaultRestS": 75,
     "incrementKg": 2.5,
     "popularity": 290,
+    "generatorTier": "standard",
     "l10n": {
       "en": {
         "name": "Single-Arm Kneeling Lat Pulldown",
@@ -2174,6 +2253,10 @@
     "excludedAlternatives": [],
     "defaultRestS": 60,
     "popularity": 297,
+    "generatorTier": "standard",
+    "stressAreas": [
+      "lower_back"
+    ],
     "l10n": {
       "en": {
         "name": "Stability Ball Back Extension",
@@ -2227,6 +2310,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 60,
     "popularity": 319,
+    "generatorTier": "never",
     "l10n": {
       "en": {
         "name": "Flexed-Arm Hang",
@@ -2279,6 +2363,7 @@
     "defaultRestS": 60,
     "incrementKg": 5,
     "popularity": 316,
+    "generatorTier": "standard",
     "l10n": {
       "en": {
         "name": "Trap Bar Shrug",
@@ -2331,6 +2416,7 @@
     "defaultRestS": 60,
     "incrementKg": 5,
     "popularity": 330,
+    "generatorTier": "standard",
     "l10n": {
       "en": {
         "name": "Cable Shrug",
@@ -2379,6 +2465,10 @@
     "excludedAlternatives": [],
     "defaultRestS": 45,
     "popularity": 343,
+    "generatorTier": "fallback",
+    "stressAreas": [
+      "lower_back"
+    ],
     "l10n": {
       "en": {
         "name": "Swimmer",
@@ -2432,6 +2522,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 60,
     "popularity": 348,
+    "generatorTier": "standard",
     "l10n": {
       "en": {
         "name": "Band Single-Arm Row",
@@ -2479,6 +2570,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 45,
     "popularity": 363,
+    "generatorTier": "standard",
     "l10n": {
       "en": {
         "name": "Band Shrug",
@@ -2527,6 +2619,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 45,
     "popularity": 371,
+    "generatorTier": "standard",
     "l10n": {
       "en": {
         "name": "Band Straight-Arm Pulldown",
@@ -2580,6 +2673,10 @@
     "excludedAlternatives": [],
     "defaultRestS": 120,
     "popularity": 379,
+    "generatorTier": "standard",
+    "stressAreas": [
+      "shoulders"
+    ],
     "l10n": {
       "en": {
         "name": "Archer Pull-Up",
@@ -2632,6 +2729,11 @@
     "excludedAlternatives": [],
     "defaultRestS": 150,
     "popularity": 385,
+    "generatorTier": "never",
+    "stressAreas": [
+      "shoulders",
+      "elbows_wrists"
+    ],
     "l10n": {
       "en": {
         "name": "Ring Muscle-Up",
@@ -2685,6 +2787,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 45,
     "popularity": 392,
+    "generatorTier": "never",
     "l10n": {
       "en": {
         "name": "Dip Shrug",

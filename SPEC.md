@@ -385,9 +385,10 @@ never changed afterwards. Seeded from `content/generator/rules.json`.
   focus muscle's target and cap rise by), `max` (areas a user may pick).
 - `selection`: `tier.<generatorTier>` (score; `never` has none),
   `equipment.<equipmentStyle>.<equipment>` (score of doing it with that
-  equipment), `aboveLevel` (an exercise one level above the user),
-  `repeat` (already used this week), `family` (its family already used
-  this week), `popularity` (the most the popularity order adds),
+  equipment), `goalEquipment.<goal>.<equipment>` (added for that goal;
+  both levels optional), `aboveLevel` (an exercise one level above the
+  user), `repeat` (already used this week), `family` (its family already
+  used this week), `popularity` (the most the popularity order adds),
   `variety` (the most the seed adds).
 - `time`: `setupS` (counted per exercise on top of the app's estimate),
   `sessionMinutes[]` (the lengths offered).
@@ -3448,34 +3449,58 @@ the feature you are about to touch, and keep it true when you change it.
     2. Candidates: live exercises doable with the equipment (through
        `equipment` or an alternative set), at most one level above the
        user, tier not `never`, no stress area the user marked.
-    3. Slots are filled by priority, then order: the best-scoring
-       candidate fitting the slot's `pick` that is not on the day yet and
-       whose family is not either (`selection` scores: tier, the best
-       equipment set the user has, level, repeats in the week,
-       popularity, the seed). Slots sharing a `key` take the first one's
+    3. A slot takes the best-scoring candidate fitting its `pick` that
+       is not on the day yet. The score adds the tier, the best
+       equipment set the user has (a set scores as its first item, plus
+       the goal's extra for it), `aboveLevel`, `repeat` or `family` for
+       what the week's other days already use, the popularity (the cube
+       of its place in the popularity order, so the few best known stand
+       clear) and the seed's share; a second exercise of a family on one
+       day only when nothing else fits. A `fallback` exercise only fills
+       a priority 1 slot. Slots sharing a `key` take the first one's
        exercise. A slot nothing fits is left out.
     4. Dose: each slot starts at its role's fewest sets; reps, rest and
-       hold time from `dosing` by goal, role and logging type.
-    5. Time: a day's cost is the app's estimate (`estimateDay`, rebuilt in
-       TypeScript and held to the Dart one by shared test vectors) plus
-       `setupS` per exercise. Priority 1 slots always stay (down to 3; a
-       day that still does not fit loses sets, then its last slots);
-       priority 2 and 3 slots are added while the day fits.
-    6. Volume: sets are added, one at a time, to the slot whose main
-       muscle is furthest below its weekly target (1 per main, 0.5 per
-       secondary muscle, as the app counts), within the role's most sets,
-       the cap and the session; then extra `accessory` slots for focus
-       muscles on days listing them in `extras`.
-    7. Grouping: the first fitting `grouping` rule joins neighbouring
-       slots of its roles into supersets or circuits (rest only after
-       the round), never two with the same main muscle.
-    8. Kept items (Regenerate) take the first slot of their day they fit,
-       or stand as extra, and are never changed.
+       hold time from `dosing` by goal, role and logging type (reps for
+       exercises logged with a weight, `bodyweightReps` for `reps`,
+       `holdS` for the timed ones).
+    5. Time: a day's cost is the app's estimate (`estimateDay`, rebuilt
+       in TypeScript and held to the Dart one by the vectors in
+       `test/fixtures/estimate_vectors.json`) plus `setupS` per exercise,
+       with the grouping below applied.
+    6. Order of work: priority 1 slots (a session too short for them
+       loses the last, down to three exercises); priority 2 slots while
+       the session and the caps have room; sets added one at a time to
+       the slot whose main muscle is furthest below its weekly target (1
+       per main, 0.5 per secondary muscle, as the app counts), within
+       the role's most sets, the cap and the session; extra `accessory`
+       slots for focus muscles still short, on days listing them in
+       `extras`; priority 3 slots; sets to the targets again, then
+       towards the caps, the muscle lowest against its target first.
+    7. Focus: a focus muscle's target and cap rise by `extraSets`, a slot
+       picking it counts one priority higher, its sets are added before
+       the priority 2 slots, and inside a role it comes first.
+    8. A day runs primary, secondary, accessory, core; inside a role the
+       template's order. The first fitting `grouping` rule joins
+       neighbouring slots of its roles into supersets or circuits (rest
+       only after the round), never two with the same first main muscle.
+    9. Kept items (Regenerate) take the first slot of their day they fit,
+       or stand as extra; their exercise, sets and reps stay.
     The result names the muscles with a target and no direct work
-    (`uncovered`).
-  - Exercise data: `generatorTier` and `stressAreas` on every exercise,
-    first rated by the Architect from the exercise's facts and reviewed
-    by the owner in the admin panel.
+    (`uncovered`); with `explain`, each item's slot, score parts and the
+    next best candidates.
+  - Seed (`content/generator/rules.json`): eight templates over five
+    splits (full body for 2 and 3 days, a strength full body repeating
+    its squat and press, push/pull/legs for 3 and 6, upper/lower for 4,
+    upper/lower + push/pull/legs and a body part split for 5); fat loss
+    runs accessories and core as circuits of three, sessions of 30
+    minutes pair them as supersets.
+  - Exercise data: `generatorTier` on every exercise and `stressAreas`
+    where there are any, first rated by the Architect from the
+    exercise's facts (2026-11-22: 103 staple, 202 standard, 31 fallback,
+    86 never, among them every mobility, explosive and carry exercise)
+    and reviewed by the owner in the admin panel. The content rules
+    accept both as optional; the panel's draft carries them until its
+    editor has the fields.
   - Rules: one document, versioned (`generator/rules`, Data model); the
     panel edits a draft, checks it on the server and publishes it, as App
     settings does; the validator lives only in the function

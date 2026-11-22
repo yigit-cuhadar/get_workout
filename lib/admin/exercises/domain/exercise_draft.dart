@@ -30,6 +30,8 @@ class ExerciseDraft extends Equatable {
     this.defaultRestS,
     this.incrementKg,
     this.popularity,
+    this.generatorTier,
+    this.stressAreas = const [],
     this.name = '',
     this.aliases = const [],
     this.setup = const [],
@@ -76,6 +78,8 @@ class ExerciseDraft extends Equatable {
         _ => null,
       },
       popularity: _int(json['popularity']),
+      generatorTier: GeneratorTier.values.byCode(json['generatorTier']),
+      stressAreas: _codes(json['stressAreas'], SensitiveArea.values),
       name: _string(text['name']),
       aliases: _strings(text['aliases']),
       setup: _strings(text['setup']),
@@ -113,6 +117,10 @@ class ExerciseDraft extends Equatable {
   final int? defaultRestS;
   final double? incrementKg;
   final int? popularity;
+
+  /// The generator's fields; the panel carries them until it edits them.
+  final GeneratorTier? generatorTier;
+  final List<SensitiveArea> stressAreas;
   final String name;
   final List<String> aliases;
   final List<String> setup;
@@ -153,6 +161,8 @@ class ExerciseDraft extends Equatable {
     'defaultRestS': defaultRestS,
     if (incrementKg != null) 'incrementKg': incrementKg,
     'popularity': popularity,
+    if (generatorTier != null) 'generatorTier': generatorTier!.code,
+    if (stressAreas.isNotEmpty) 'stressAreas': _codesOf(stressAreas),
     'l10n': {
       _language: {
         'name': name,
@@ -192,6 +202,8 @@ class ExerciseDraft extends Equatable {
     Object? defaultRestS = _unset,
     Object? incrementKg = _unset,
     Object? popularity = _unset,
+    Object? generatorTier = _unset,
+    List<SensitiveArea>? stressAreas,
     String? name,
     List<String>? aliases,
     List<String>? setup,
@@ -226,6 +238,8 @@ class ExerciseDraft extends Equatable {
       defaultRestS: pick(defaultRestS, this.defaultRestS),
       incrementKg: pick(incrementKg, this.incrementKg),
       popularity: pick(popularity, this.popularity),
+      generatorTier: pick(generatorTier, this.generatorTier),
+      stressAreas: stressAreas ?? this.stressAreas,
       name: name ?? this.name,
       aliases: aliases ?? this.aliases,
       setup: setup ?? this.setup,
@@ -276,6 +290,8 @@ class ExerciseDraft extends Equatable {
     defaultRestS,
     incrementKg,
     popularity,
+    generatorTier,
+    stressAreas,
     name,
     aliases,
     setup,

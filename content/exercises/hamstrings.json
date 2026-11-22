@@ -31,6 +31,10 @@
     "defaultRestS": 180,
     "incrementKg": 5,
     "popularity": 3,
+    "generatorTier": "staple",
+    "stressAreas": [
+      "lower_back"
+    ],
     "l10n": {
       "en": {
         "name": "Barbell Deadlift",
@@ -92,6 +96,10 @@
     "defaultRestS": 150,
     "incrementKg": 2.5,
     "popularity": 20,
+    "generatorTier": "staple",
+    "stressAreas": [
+      "lower_back"
+    ],
     "l10n": {
       "en": {
         "name": "Romanian Deadlift",
@@ -146,6 +154,7 @@
     "defaultRestS": 60,
     "incrementKg": 5,
     "popularity": 33,
+    "generatorTier": "staple",
     "l10n": {
       "en": {
         "name": "Lying Leg Curl",
@@ -198,6 +207,7 @@
     "defaultRestS": 60,
     "incrementKg": 5,
     "popularity": 40,
+    "generatorTier": "staple",
     "l10n": {
       "en": {
         "name": "Seated Leg Curl",
@@ -256,6 +266,10 @@
     "defaultRestS": 90,
     "incrementKg": 2,
     "popularity": 61,
+    "generatorTier": "staple",
+    "stressAreas": [
+      "lower_back"
+    ],
     "l10n": {
       "en": {
         "name": "Dumbbell Romanian Deadlift",
@@ -312,6 +326,10 @@
     "defaultRestS": 180,
     "incrementKg": 5,
     "popularity": 70,
+    "generatorTier": "staple",
+    "stressAreas": [
+      "lower_back"
+    ],
     "l10n": {
       "en": {
         "name": "Trap Bar Deadlift",
@@ -370,6 +388,11 @@
     "defaultRestS": 180,
     "incrementKg": 5,
     "popularity": 101,
+    "generatorTier": "standard",
+    "stressAreas": [
+      "lower_back",
+      "hips"
+    ],
     "l10n": {
       "en": {
         "name": "Sumo Deadlift",
@@ -424,6 +447,10 @@
     "defaultRestS": 120,
     "incrementKg": 2.5,
     "popularity": 175,
+    "generatorTier": "standard",
+    "stressAreas": [
+      "lower_back"
+    ],
     "l10n": {
       "en": {
         "name": "Good Morning",
@@ -480,6 +507,10 @@
     "defaultRestS": 150,
     "incrementKg": 5,
     "popularity": 187,
+    "generatorTier": "fallback",
+    "stressAreas": [
+      "lower_back"
+    ],
     "l10n": {
       "en": {
         "name": "Rack Pull",
@@ -537,6 +568,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 120,
     "popularity": 198,
+    "generatorTier": "standard",
     "l10n": {
       "en": {
         "name": "Nordic Hamstring Curl",
@@ -590,6 +622,10 @@
     "excludedAlternatives": [],
     "defaultRestS": 60,
     "popularity": 213,
+    "generatorTier": "standard",
+    "stressAreas": [
+      "lower_back"
+    ],
     "l10n": {
       "en": {
         "name": "Bodyweight Single-Leg Romanian Deadlift",
@@ -648,6 +684,10 @@
     "defaultRestS": 75,
     "incrementKg": 2,
     "popularity": 225,
+    "generatorTier": "standard",
+    "stressAreas": [
+      "lower_back"
+    ],
     "l10n": {
       "en": {
         "name": "Dumbbell Single-Leg Romanian Deadlift",
@@ -697,6 +737,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 60,
     "popularity": 237,
+    "generatorTier": "standard",
     "l10n": {
       "en": {
         "name": "Stability Ball Leg Curl",
@@ -755,6 +796,10 @@
     "defaultRestS": 90,
     "incrementKg": 4,
     "popularity": 248,
+    "generatorTier": "standard",
+    "stressAreas": [
+      "lower_back"
+    ],
     "l10n": {
       "en": {
         "name": "Kettlebell Deadlift",
@@ -804,6 +849,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 120,
     "popularity": 261,
+    "generatorTier": "standard",
     "l10n": {
       "en": {
         "name": "Glute-Ham Raise",
@@ -854,6 +900,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 60,
     "popularity": 272,
+    "generatorTier": "fallback",
     "l10n": {
       "en": {
         "name": "Hamstring Walkout",
@@ -905,6 +952,10 @@
     "excludedAlternatives": [],
     "defaultRestS": 45,
     "popularity": 286,
+    "generatorTier": "fallback",
+    "stressAreas": [
+      "lower_back"
+    ],
     "l10n": {
       "en": {
         "name": "Bodyweight Good Morning",
@@ -953,6 +1004,10 @@
     "excludedAlternatives": [],
     "defaultRestS": 60,
     "popularity": 298,
+    "generatorTier": "standard",
+    "stressAreas": [
+      "lower_back"
+    ],
     "l10n": {
       "en": {
         "name": "Band Good Morning",
@@ -1000,6 +1055,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 45,
     "popularity": 313,
+    "generatorTier": "staple",
     "l10n": {
       "en": {
         "name": "Band Leg Curl",
@@ -1049,6 +1105,7 @@
     "defaultRestS": 60,
     "incrementKg": 1,
     "popularity": 328,
+    "generatorTier": "standard",
     "l10n": {
       "en": {
         "name": "Dumbbell Leg Curl",
@@ -1098,6 +1155,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 60,
     "popularity": 345,
+    "generatorTier": "standard",
     "l10n": {
       "en": {
         "name": "Suspension Trainer Leg Curl",
@@ -1152,6 +1210,10 @@
     "defaultRestS": 120,
     "incrementKg": 2.5,
     "popularity": 180,
+    "generatorTier": "standard",
+    "stressAreas": [
+      "lower_back"
+    ],
     "l10n": {
       "en": {
         "name": "Stiff-Leg Deadlift",
@@ -1209,6 +1271,10 @@
     "defaultRestS": 75,
     "incrementKg": 2,
     "popularity": 375,
+    "generatorTier": "standard",
+    "stressAreas": [
+      "lower_back"
+    ],
     "l10n": {
       "en": {
         "name": "Kickstand Romanian Deadlift",
@@ -1261,6 +1327,10 @@
     "defaultRestS": 90,
     "incrementKg": 2.5,
     "popularity": 389,
+    "generatorTier": "standard",
+    "stressAreas": [
+      "lower_back"
+    ],
     "l10n": {
       "en": {
         "name": "Landmine Romanian Deadlift",

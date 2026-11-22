@@ -28,6 +28,7 @@
     "defaultRestS": 120,
     "incrementKg": 5,
     "popularity": 25,
+    "generatorTier": "staple",
     "l10n": {
       "en": {
         "name": "Barbell Hip Thrust",
@@ -81,6 +82,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 60,
     "popularity": 38,
+    "generatorTier": "staple",
     "l10n": {
       "en": {
         "name": "Glute Bridge",
@@ -132,6 +134,7 @@
     "defaultRestS": 60,
     "incrementKg": 5,
     "popularity": 49,
+    "generatorTier": "staple",
     "l10n": {
       "en": {
         "name": "Hip Abduction Machine",
@@ -181,6 +184,10 @@
     "defaultRestS": 60,
     "incrementKg": 5,
     "popularity": 53,
+    "generatorTier": "staple",
+    "stressAreas": [
+      "hips"
+    ],
     "l10n": {
       "en": {
         "name": "Hip Adduction Machine",
@@ -232,6 +239,7 @@
     "defaultRestS": 45,
     "incrementKg": 2.5,
     "popularity": 71,
+    "generatorTier": "standard",
     "l10n": {
       "en": {
         "name": "Cable Glute Kickback",
@@ -281,6 +289,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 60,
     "popularity": 83,
+    "generatorTier": "standard",
     "l10n": {
       "en": {
         "name": "Single-Leg Glute Bridge",
@@ -328,6 +337,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 45,
     "popularity": 99,
+    "generatorTier": "standard",
     "l10n": {
       "en": {
         "name": "Band Lateral Walk",
@@ -378,6 +388,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 45,
     "popularity": 105,
+    "generatorTier": "fallback",
     "l10n": {
       "en": {
         "name": "Clamshell",
@@ -427,6 +438,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 45,
     "popularity": 113,
+    "generatorTier": "fallback",
     "l10n": {
       "en": {
         "name": "Donkey Kick",
@@ -476,6 +488,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 45,
     "popularity": 125,
+    "generatorTier": "fallback",
     "l10n": {
       "en": {
         "name": "Fire Hydrant",
@@ -526,6 +539,7 @@
     "defaultRestS": 90,
     "incrementKg": 2,
     "popularity": 132,
+    "generatorTier": "staple",
     "l10n": {
       "en": {
         "name": "Dumbbell Hip Thrust",
@@ -575,6 +589,7 @@
     "defaultRestS": 45,
     "incrementKg": 2.5,
     "popularity": 141,
+    "generatorTier": "standard",
     "l10n": {
       "en": {
         "name": "Glute Kickback Machine",
@@ -624,6 +639,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 45,
     "popularity": 151,
+    "generatorTier": "fallback",
     "l10n": {
       "en": {
         "name": "Side-Lying Leg Raise",
@@ -676,6 +692,7 @@
     "defaultRestS": 75,
     "incrementKg": 5,
     "popularity": 158,
+    "generatorTier": "standard",
     "l10n": {
       "en": {
         "name": "Cable Pull-Through",
@@ -725,6 +742,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 45,
     "popularity": 167,
+    "generatorTier": "standard",
     "l10n": {
       "en": {
         "name": "Monster Walk",
@@ -778,6 +796,10 @@
     "excludedAlternatives": [],
     "defaultRestS": 60,
     "popularity": 178,
+    "generatorTier": "standard",
+    "stressAreas": [
+      "hips"
+    ],
     "l10n": {
       "en": {
         "name": "Copenhagen Plank",
@@ -830,6 +852,11 @@
     "excludedAlternatives": [],
     "defaultRestS": 60,
     "popularity": 191,
+    "generatorTier": "standard",
+    "stressAreas": [
+      "hips",
+      "knees"
+    ],
     "l10n": {
       "en": {
         "name": "Cossack Squat",
@@ -881,6 +908,7 @@
     "defaultRestS": 90,
     "incrementKg": 5,
     "popularity": 202,
+    "generatorTier": "standard",
     "l10n": {
       "en": {
         "name": "Smith Machine Hip Thrust",
@@ -929,6 +957,7 @@
     "defaultRestS": 90,
     "incrementKg": 5,
     "popularity": 217,
+    "generatorTier": "staple",
     "l10n": {
       "en": {
         "name": "Hip Thrust Machine",
@@ -978,6 +1007,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 45,
     "popularity": 229,
+    "generatorTier": "fallback",
     "l10n": {
       "en": {
         "name": "Frog Pump",
@@ -1026,6 +1056,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 60,
     "popularity": 241,
+    "generatorTier": "standard",
     "l10n": {
       "en": {
         "name": "Banded Glute Bridge",
@@ -1074,6 +1105,7 @@
     "defaultRestS": 45,
     "incrementKg": 2.5,
     "popularity": 251,
+    "generatorTier": "standard",
     "l10n": {
       "en": {
         "name": "Cable Hip Abduction",
@@ -1122,6 +1154,10 @@
     "defaultRestS": 45,
     "incrementKg": 2.5,
     "popularity": 257,
+    "generatorTier": "standard",
+    "stressAreas": [
+      "hips"
+    ],
     "l10n": {
       "en": {
         "name": "Cable Hip Adduction",
@@ -1173,6 +1209,7 @@
     "defaultRestS": 75,
     "incrementKg": 5,
     "popularity": 264,
+    "generatorTier": "standard",
     "l10n": {
       "en": {
         "name": "Reverse Hyperextension Machine",
@@ -1222,6 +1259,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 45,
     "popularity": 276,
+    "generatorTier": "standard",
     "l10n": {
       "en": {
         "name": "Band Glute Kickback",
@@ -1270,6 +1308,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 60,
     "popularity": 283,
+    "generatorTier": "standard",
     "l10n": {
       "en": {
         "name": "Single-Leg Hip Thrust",
@@ -1324,6 +1363,11 @@
     "defaultRestS": 75,
     "incrementKg": 4,
     "popularity": 294,
+    "generatorTier": "standard",
+    "stressAreas": [
+      "hips",
+      "knees"
+    ],
     "l10n": {
       "en": {
         "name": "Goblet Cossack Squat",
@@ -1376,6 +1420,10 @@
     "excludedAlternatives": [],
     "defaultRestS": 60,
     "popularity": 302,
+    "generatorTier": "standard",
+    "stressAreas": [
+      "hips"
+    ],
     "l10n": {
       "en": {
         "name": "Short-Lever Copenhagen Plank",
@@ -1423,6 +1471,10 @@
     "excludedAlternatives": [],
     "defaultRestS": 45,
     "popularity": 308,
+    "generatorTier": "standard",
+    "stressAreas": [
+      "hips"
+    ],
     "l10n": {
       "en": {
         "name": "Side-Lying Hip Adduction",
@@ -1472,6 +1524,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 45,
     "popularity": 317,
+    "generatorTier": "standard",
     "l10n": {
       "en": {
         "name": "Standing Band Hip Abduction",
@@ -1519,6 +1572,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 45,
     "popularity": 324,
+    "generatorTier": "standard",
     "l10n": {
       "en": {
         "name": "Seated Band Abduction",
@@ -1566,6 +1620,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 45,
     "popularity": 331,
+    "generatorTier": "standard",
     "l10n": {
       "en": {
         "name": "Banded Clamshell",
@@ -1614,6 +1669,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 45,
     "popularity": 340,
+    "generatorTier": "standard",
     "l10n": {
       "en": {
         "name": "Side Plank Leg Raise",
@@ -1664,6 +1720,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 60,
     "popularity": 349,
+    "generatorTier": "fallback",
     "l10n": {
       "en": {
         "name": "Bench Reverse Hyperextension",
@@ -1712,6 +1769,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 60,
     "popularity": 356,
+    "generatorTier": "staple",
     "l10n": {
       "en": {
         "name": "Band Pull-Through",
@@ -1757,6 +1815,10 @@
     "excludedAlternatives": [],
     "defaultRestS": 45,
     "popularity": 364,
+    "generatorTier": "standard",
+    "stressAreas": [
+      "hips"
+    ],
     "l10n": {
       "en": {
         "name": "Band Hip Adduction",
@@ -1802,6 +1864,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 45,
     "popularity": 372,
+    "generatorTier": "never",
     "l10n": {
       "en": {
         "name": "Medicine Ball Adductor Squeeze",
@@ -1850,6 +1913,7 @@
     "defaultRestS": 45,
     "incrementKg": 2.5,
     "popularity": 420,
+    "generatorTier": "standard",
     "l10n": {
       "en": {
         "name": "Cable Hip Flexion",
@@ -1899,6 +1963,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 45,
     "popularity": 421,
+    "generatorTier": "standard",
     "l10n": {
       "en": {
         "name": "Band Supine March",
@@ -1948,6 +2013,7 @@
     "excludedAlternatives": [],
     "defaultRestS": 45,
     "popularity": 393,
+    "generatorTier": "never",
     "l10n": {
       "en": {
         "name": "Glute Medius Wall Press",
@@ -1998,6 +2064,7 @@
     "defaultRestS": 90,
     "incrementKg": 5,
     "popularity": 140,
+    "generatorTier": "standard",
     "l10n": {
       "en": {
         "name": "Barbell Glute Bridge",

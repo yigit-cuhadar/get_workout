@@ -1,0 +1,130 @@
+[
+  {
+    "items": [
+      {
+        "exerciseId": "a",
+        "sets": 3,
+        "repMin": 8,
+        "repMax": 12,
+        "restS": 90
+      }
+    ],
+    "seconds": 360
+  },
+  {
+    "items": [
+      {
+        "exerciseId": "a",
+        "sets": 4,
+        "repMin": 8,
+        "repMax": 15,
+        "restS": 60
+      }
+    ],
+    "seconds": 380
+  },
+  {
+    "items": [
+      {
+        "exerciseId": "a",
+        "sets": 3,
+        "durationS": 45,
+        "restS": 30
+      }
+    ],
+    "seconds": 225
+  },
+  {
+    "items": [
+      {
+        "exerciseId": "a",
+        "sets": 2,
+        "repMin": 5,
+        "restS": 120
+      }
+    ],
+    "seconds": 270
+  },
+  {
+    "items": [
+      {
+        "exerciseId": "a",
+        "sets": 3,
+        "repMin": 10,
+        "repMax": 12,
+        "restS": 0,
+        "group": "A"
+      },
+      {
+        "exerciseId": "b",
+        "sets": 4,
+        "repMin": 12,
+        "repMax": 15,
+        "restS": 0,
+        "group": "A"
+      },
+      {
+        "exerciseId": "c",
+        "sets": 2,
+        "durationS": 30,
+        "restS": 75,
+        "group": "A"
+      }
+    ],
+    "seconds": 623
+  },
+  {
+    "items": [
+      {
+        "exerciseId": "a",
+        "sets": 3,
+        "repMin": 6,
+        "repMax": 10,
+        "restS": 150
+      },
+      {
+        "exerciseId": "b",
+        "sets": 3,
+        "repMin": 10,
+        "repMax": 15,
+        "restS": 0,
+        "group": "A"
+      },
+      {
+        "exerciseId": "c",
+        "sets": 3,
+        "repMin": 10,
+        "repMax": 15,
+        "restS": 60,
+        "group": "A"
+      },
+      {
+        "exerciseId": "d",
+        "sets": 2,
+        "repMin": 12,
+        "repMax": 20,
+        "restS": 0,
+        "group": "B"
+      },
+      {
+        "exerciseId": "e",
+        "sets": 2,
+        "durationS": 40,
+        "restS": 60,
+        "group": "B"
+      },
+      {
+        "exerciseId": "f",
+        "sets": 3,
+        "repMin": 10,
+        "repMax": 15,
+        "restS": 45
+      }
+    ],
+    "seconds": 1475
+  },
+  {
+    "items": [],
+    "seconds": 0
+  }
+]
