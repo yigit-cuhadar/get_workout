@@ -535,12 +535,19 @@ only, JPEG, max 5 MB.
   focus[], skip[], sensitive[], equipmentStyle, split?}, seed?, kept?,
   lang?}` →
   `{program: {name, lengthWeeks, days[]}, split, template, weeklySets,
-  uncovered[], rulesVersion, trace?}`. The published rules are cached in the instance's
-  memory for 60 s, the live exercises for 5 minutes. Signed-in users with
-  an active entitlement only
-  (`permission-denied`, `details.reason` `not-premium`); an admin always
-  may, and may also send `rules` (unpublished rules to try) and
-  `explain: true` (adds why each exercise was picked). See Feature notes ›
+  uncovered[], rulesVersion, trace?}`; `null` counts as absent for every
+  optional field. Signed-in users with an active entitlement only; an
+  admin always may, and may also send `rules` (unpublished rules to try)
+  and `explain: true` (adds why each exercise was picked). The published
+  rules are cached in the instance's memory for 60 s (checked with the
+  validator on every read; invalid ones count as none and are logged), the
+  live exercises for 5 minutes; a `split` or `sessionMinutes` the cached
+  rules do not offer reads them again once before refusing. Refusals:
+  `unauthenticated`; `invalid-argument` with `details.reason`
+  `invalid-input` and `details.field`; `permission-denied` with
+  `details.reason` `not-premium`, or `not-admin` for a non-admin sending
+  `rules` or `explain`; `failed-precondition` with `details.reason`
+  `no-rules`, `no-template` or `no-exercises`. See Feature notes ›
   Programs.
 - `generatorRulesGet`, `generatorRulesCheck`, `generatorRulesPublish`,
   `generatorRulesHistory` (callables, `functions/src/generator`), admin
@@ -549,9 +556,11 @@ only, JPEG, max 5 MB.
   `findings`: refusals, uncovered muscles and days under half the session
   over every goal × level × 2-6 days × the five equipment presets, at 60
   minutes, style `any`, seed 0), publish (refused as `stale` when `base` is no
-  longer the current version, as `invalid-input` with the problems;
-  writes `generator/rules`, its version copy and `generator/options` in
-  one transaction), list the last 20 versions.
+  longer the current version, as `invalid-input` with the problems, or
+  with `details.field` `restores` when `restores` names no earlier
+  version; writes `generator/rules`, its write-once version copy and
+  `generator/options` in one transaction), list the last 20 versions.
+  `null` counts as absent for `version`, `note` and `restores`.
 - `appSettingsGet`, `appSettingsPublish`, `appSettingsHistory`
   (callables, `functions/src/app_settings`), admin claim only, the app's
   Remote Config template through the Admin SDK. Only the keys of the app's

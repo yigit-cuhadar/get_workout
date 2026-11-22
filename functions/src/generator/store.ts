@@ -12,7 +12,13 @@ import { CallableRequest, HttpsError } from "firebase-functions/v2/https";
 import { requireAdmin } from "../dashboard/run";
 import { Exercise, estimateDayS, generate } from "./engine";
 import { Options, Rules, optionsOf, rulesProblems } from "./rules";
-import { EQUIPMENT, GOALS, LEVELS, MAX_DAYS, MIN_DAYS } from "./vocabulary";
+import {
+  EQUIPMENT_PRESETS,
+  GOALS,
+  LEVELS,
+  MAX_DAYS,
+  MIN_DAYS,
+} from "./vocabulary";
 
 /**
  * `details.reason` of a refusal, which the panel and the app map on (never
@@ -64,10 +70,13 @@ export interface RulesStore {
   history(limit: number): Promise<RulesSummary[]>;
   /**
    * In one transaction: reads the current version (0 when none) and
-   * writes what [decide] returns for it, if anything.
+   * whether version [restores] exists, and writes what [decide] returns
+   * for them, if anything; the version copy only if it does not exist.
+   * What [decide] throws aborts the transaction.
    */
   publish(
-    decide: (current: number) => Publication | null,
+    restores: number | undefined,
+    decide: (current: number, restoredExists: boolean) => Publication | null,
   ): Promise<Publication | null>;
 }
 
@@ -76,6 +85,10 @@ type Json = { [key: string]: unknown };
 
 export const isObject = (value: unknown): value is Json =>
   typeof value === "object" && value !== null && !Array.isArray(value);
+
+/** [value] without its null fields: a client may send null for absent. */
+export const withoutNulls = (value: Json): Json =>
+  Object.fromEntries(Object.entries(value).filter(([, v]) => v !== null));
 
 export const invalid = (field: string, message: string) =>
   new HttpsError("invalid-argument", message, {
@@ -130,15 +143,6 @@ const summaryOf = (stored: RulesSummary) => ({
   restores: stored.restores ?? null,
 });
 
-/** The app's equipment presets (`EquipmentProfile`). */
-export const PRESETS: { [name: string]: string[] } = {
-  full_gym: EQUIPMENT.filter((code) => code !== "bodyweight"),
-  home_gym: ["barbell", "plate", "dumbbell", "bench", "pull_up_bar"],
-  dumbbells: ["dumbbell", "bench"],
-  bodyweight: ["pull_up_bar", "dip_station"],
-  bands: ["resistance_band"],
-};
-
 /** The session length the check runs at. */
 const CHECK_MINUTES = 60;
 
@@ -171,7 +175,7 @@ export async function checkRules(
   for (const goal of GOALS) {
     for (const level of LEVELS) {
       for (let daysPerWeek = MIN_DAYS; daysPerWeek <= MAX_DAYS; daysPerWeek++) {
-        for (const [preset, equipment] of Object.entries(PRESETS)) {
+        for (const [preset, equipment] of Object.entries(EQUIPMENT_PRESETS)) {
           const at = { goal, level, daysPerWeek, equipment: preset };
           const result = generate({
             answers: {
@@ -179,7 +183,7 @@ export async function checkRules(
               level,
               daysPerWeek,
               sessionMinutes: CHECK_MINUTES,
-              equipment,
+              equipment: [...equipment],
               focus: [],
               skip: [],
               sensitive: [],
@@ -227,7 +231,7 @@ export async function publishRules(
   store: RulesStore,
 ) {
   requireAdmin(auth);
-  const input = isObject(data) ? data : {};
+  const input = isObject(data) ? withoutNulls(data) : {};
   const { base, note, restores } = input;
   if (!isInt(base, 0)) throw invalid("base", "base must be a version number.");
   if (
@@ -242,21 +246,23 @@ export async function publishRules(
   const rules = validRules(input.rules);
   const uid = auth?.uid ?? "";
   const version = base + 1;
-  const published = await store.publish((current) =>
-    current !== base
-      ? null
-      : {
-          document: {
-            version,
-            publishedBy: uid,
-            publishedByEmail: auth?.token.email ?? null,
-            ...(note ? { note } : {}),
-            ...(restores !== undefined ? { restores } : {}),
-            rules,
-          },
-          options: { version, ...optionsOf(rules) },
-        },
-  );
+  const published = await store.publish(restores, (current, restoredExists) => {
+    if (current !== base) return null;
+    if (restores !== undefined && (!restoredExists || restores >= version)) {
+      throw invalid("restores", `There is no version ${restores} to restore.`);
+    }
+    return {
+      document: {
+        version,
+        publishedBy: uid,
+        publishedByEmail: auth?.token.email ?? null,
+        ...(note ? { note } : {}),
+        ...(restores !== undefined ? { restores } : {}),
+        rules,
+      },
+      options: { version, ...optionsOf(rules) },
+    };
+  });
   if (!published) {
     throw new HttpsError(
       "failed-precondition",
@@ -316,11 +322,16 @@ export const firestoreRulesStore = (db: Firestore): RulesStore => {
         .get();
       return snapshot.docs.map((doc) => toStored(doc.data()));
     },
-    publish: (decide) =>
+    publish: (restores, decide) =>
       db.runTransaction(async (transaction) => {
         const current = (await transaction.get(rules)).data();
+        const restored =
+          restores === undefined
+            ? false
+            : (await transaction.get(versions.doc(`${restores}`))).exists;
         const publication = decide(
           typeof current?.version === "number" ? current.version : 0,
+          restored,
         );
         if (!publication) return null;
         const { document, options } = publication;
@@ -329,7 +340,7 @@ export const firestoreRulesStore = (db: Firestore): RulesStore => {
           publishedAt: FieldValue.serverTimestamp(),
         };
         transaction.set(rules, stored);
-        transaction.set(versions.doc(`${document.version}`), stored);
+        transaction.create(versions.doc(`${document.version}`), stored);
         transaction.set(db.doc("generator/options"), options);
         return publication;
       }),

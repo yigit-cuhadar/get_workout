@@ -43,11 +43,32 @@ Future<RulesVerdict> validateRulesWithNode(String path) async {
       '$rulesCliPath failed (exit ${result.exitCode}): ${result.stderr}',
     );
   }
-  final json = jsonDecode(result.stdout as String) as Map<String, Object?>;
-  return (
-    problems: (json['problems']! as List<Object?>).cast<String>(),
-    options: json['options'] as Map<String, Object?>?,
+  return parseRulesVerdict(result.stdout as String);
+}
+
+/// The validator's output line as a [RulesVerdict].
+RulesVerdict parseRulesVerdict(String output) {
+  Never unexpected(String why) => throw RulesValidatorException(
+    '$rulesCliPath gave unexpected output ($why); rebuild it with '
+    '`npm run build` in functions/: $output',
   );
+  final Object? json;
+  try {
+    json = jsonDecode(output);
+  } on FormatException {
+    unexpected('not JSON');
+  }
+  if (json is! Map<String, Object?>) unexpected('not an object');
+  final problems = json['problems'];
+  if (problems is! List<Object?> || problems.any((p) => p is! String)) {
+    unexpected('problems is not a list of texts');
+  }
+  final options = json['options'];
+  if (options is! Map<String, Object?>?) unexpected('options is not an object');
+  if (problems.isEmpty && options == null) {
+    unexpected('no problems and no options');
+  }
+  return (problems: problems.cast<String>(), options: options);
 }
 
 /// Valid rules and the options they give, ready to be written as version 1.
@@ -110,28 +131,37 @@ Future<({RulesSeed? seed, List<String> problems})> loadRulesSeed(
       problems: [for (final problem in problems) '$name: $problem'],
     );
   }
-  if (options == null) {
-    throw RulesValidatorException('The validator gave no options.');
-  }
   return (
-    seed: RulesSeed(rules! as Map<String, Object?>, options),
+    seed: RulesSeed(rules! as Map<String, Object?>, options!),
     problems: const <String>[],
   );
 }
 
-/// Writes [seed] as version 1 in one commit unless rules exist (the admin
-/// panel owns them from then on); the line for the summary.
+/// What the import does with the rules [file]: nothing when rules exist
+/// (the admin panel owns them; the validator is not run), else the seed or
+/// the problems that refuse it.
+Future<({bool exist, RulesSeed? seed, List<String> problems})> checkRulesSeed(
+  File file, {
+  required Future<bool> Function() rulesExist,
+  required RulesValidator validate,
+}) async {
+  if (await rulesExist()) {
+    return (exist: true, seed: null, problems: const <String>[]);
+  }
+  final (:seed, :problems) = await loadRulesSeed(file, validate);
+  return (exist: false, seed: seed, problems: problems);
+}
+
+/// The summary line when rules exist.
+const rulesExistLine = 'Generator rules exist, left to the panel.';
+
+/// Writes [seed] as version 1 in one commit; the line for the summary.
 Future<String> seedRules(
   RulesSeed seed, {
   required String databasePath,
-  required Future<bool> Function() rulesExist,
   required Future<void> Function(List<Map<String, Object?>> writes) commit,
   required bool dryRun,
 }) async {
-  if (await rulesExist()) {
-    return 'Generator rules exist; left as they are (the admin panel owns '
-        'them).';
-  }
   if (!dryRun) await commit(seed.writes(databasePath));
   return '${dryRun ? 'Would write' : 'Wrote'} generator rules version 1 '
       '(generator/rules, generator/rules/versions/1, generator/options).';

@@ -59,23 +59,108 @@ void main() {
     });
   });
 
+  group('checkRulesSeed', () {
+    test('runs no validator when rules exist', () async {
+      var ran = false;
+      final check = await checkRulesSeed(
+        file,
+        rulesExist: () async => true,
+        validate: (path) {
+          ran = true;
+          return valid(path);
+        },
+      );
+      expect(ran, isFalse);
+      expect(check.exist, isTrue);
+      expect(check.seed, isNull);
+      expect(check.problems, isEmpty);
+    });
+
+    test('gives the seed when no rules exist', () async {
+      final check = await checkRulesSeed(
+        file,
+        rulesExist: () async => false,
+        validate: valid,
+      );
+      expect(check.exist, isFalse);
+      expect(check.seed?.rules, rules);
+    });
+
+    test('refuses rules with problems when no rules exist', () async {
+      final check = await checkRulesSeed(
+        file,
+        rulesExist: () async => false,
+        validate: (_) async => (problems: ['splits: bad'], options: null),
+      );
+      expect(check.seed, isNull);
+      expect(check.problems, ['generator/rules.json: splits: bad']);
+    });
+
+    test('lets a validator failure through', () {
+      expect(
+        checkRulesSeed(
+          file,
+          rulesExist: () async => false,
+          validate: (_) async => throw RulesValidatorException('no node'),
+        ),
+        throwsA(isA<RulesValidatorException>()),
+      );
+    });
+  });
+
+  group('parseRulesVerdict', () {
+    test('reads problems and options', () {
+      final verdict = parseRulesVerdict(
+        jsonEncode({'problems': <String>[], 'options': options}),
+      );
+      expect(verdict.problems, isEmpty);
+      expect(verdict.options, options);
+      expect(
+        parseRulesVerdict('{"problems": ["a: b"], "options": null}').problems,
+        ['a: b'],
+      );
+    });
+
+    test('refuses unexpected output clearly', () {
+      for (final output in [
+        'Segmentation fault',
+        '[]',
+        '{"options": {}}',
+        '{"problems": "a", "options": {}}',
+        '{"problems": [1], "options": {}}',
+        '{"problems": [], "options": []}',
+        '{"problems": []}',
+      ]) {
+        expect(
+          () => parseRulesVerdict(output),
+          throwsA(
+            isA<RulesValidatorException>().having(
+              (e) => e.message,
+              'message',
+              contains('unexpected output'),
+            ),
+          ),
+          reason: output,
+        );
+      }
+    });
+  });
+
   group('seedRules', () {
     late List<List<Map<String, Object?>>> commits;
     final seed = RulesSeed(rules, options);
 
-    Future<String> run({required bool exists, bool dryRun = false}) =>
-        seedRules(
-          seed,
-          databasePath: _db,
-          rulesExist: () async => exists,
-          commit: (writes) async => commits.add(writes),
-          dryRun: dryRun,
-        );
+    Future<String> run({bool dryRun = false}) => seedRules(
+      seed,
+      databasePath: _db,
+      commit: (writes) async => commits.add(writes),
+      dryRun: dryRun,
+    );
 
     setUp(() => commits = []);
 
     test('writes version 1 in one commit when no rules exist', () async {
-      expect(await run(exists: false), startsWith('Wrote'));
+      expect(await run(), startsWith('Wrote'));
       expect(commits, hasLength(1));
       final writes = commits.single;
       expect(
@@ -117,13 +202,8 @@ void main() {
       );
     });
 
-    test('writes nothing when rules exist', () async {
-      expect(await run(exists: true), contains('left as they are'));
-      expect(commits, isEmpty);
-    });
-
     test('a dry run writes nothing', () async {
-      expect(await run(exists: false, dryRun: true), startsWith('Would write'));
+      expect(await run(dryRun: true), startsWith('Would write'));
       expect(commits, isEmpty);
     });
   });

@@ -55,6 +55,28 @@ void main() {
     ]);
   });
 
+  test('its equipment presets are the app\'s', () {
+    final block = RegExp(
+      r'export const EQUIPMENT_PRESETS[^=]*= \{(.*?)\n\};',
+      dotAll: true,
+    ).firstMatch(source);
+    expect(block, isNotNull);
+    final presets = {
+      for (final entry in RegExp(
+        r'(\w+): \[(.*?)\]',
+        dotAll: true,
+      ).allMatches(block!.group(1)!))
+        entry.group(1)!: {
+          for (final item in RegExp('"([^"]+)"').allMatches(entry.group(2)!))
+            item.group(1)!,
+        },
+    };
+    expect(presets, {
+      for (final profile in EquipmentProfile.values)
+        profile.code: {for (final e in profile.equipment) e.code},
+    });
+  });
+
   test('its days per week are onboarding\'s', () {
     expect(tsInt(source, 'MIN_DAYS'), ProfileLimits.minDaysPerWeek);
     expect(tsInt(source, 'MAX_DAYS'), ProfileLimits.maxDaysPerWeek);

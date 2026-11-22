@@ -1,17 +1,22 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { describe, test } from "node:test";
+import { describe, mock, test } from "node:test";
 
+import { DocumentData, Timestamp } from "firebase-admin/firestore";
+import { logger } from "firebase-functions/v2";
 import { HttpsError } from "firebase-functions/v2/https";
 
 import { Exercise } from "./engine";
+import { fakeFirestore } from "./firestore.fake";
 import {
   Entitlement,
   GenerateDeps,
   cached,
+  cachedGenerateDeps,
   exerciseOf,
   exercisesOf,
+  firestoreGenerateDeps,
   generateFor,
 } from "./generation";
 import { Rules } from "./rules";
@@ -456,5 +461,302 @@ describe("cached", () => {
     await Promise.all([assert.rejects(get()), assert.rejects(get())]);
     assert.equal(loads, 1);
     assert.equal(await get(), 2);
+  });
+});
+
+/** Every exercise id of [result]'s week. */
+const idsOf = (result: {
+  program: { days: { items: { exerciseId: string }[] }[] };
+}) =>
+  new Set(
+    result.program.days.flatMap((d) => d.items.map((i) => i.exerciseId)),
+  );
+
+describe("the answers reach the engine", () => {
+  const run = (
+    changes: { [key: string]: unknown },
+    exercises: Exercise[] = library,
+    more: { [key: string]: unknown } = {},
+    rules: Rules = seed,
+  ) =>
+    generateFor(
+      user,
+      { answers: answers(changes), ...more },
+      deps({
+        exercises: async () => exercises,
+        publishedRules: async () => ({ version: 3, rules }),
+      }),
+    );
+
+  test("sensitive leaves out exercises that stress the area", async () => {
+    const lib = library.map((e) =>
+      e.id === "squat" ? { ...e, stressAreas: ["knees"] } : e,
+    );
+    assert.ok(idsOf(await run({}, lib)).has("squat"));
+    assert.ok(!idsOf(await run({ sensitive: ["knees"] }, lib)).has("squat"));
+  });
+
+  test("skip leaves out the area's muscles", async () => {
+    assert.ok(idsOf(await run({})).has("squat"));
+    const skipped = await run({ skip: ["legs"] });
+    assert.ok(!idsOf(skipped).has("squat"));
+    assert.ok(!idsOf(skipped).has("hinge"));
+  });
+
+  test("focus gives the area more sets", async () => {
+    const lib = [
+      ...library,
+      ex("curl", {
+        mechanic: "isolation",
+        movementPattern: "isolation",
+        mainMuscles: ["biceps"],
+      }),
+    ];
+    const plain = await run({}, lib);
+    const focused = await run({ focus: ["arms"] }, lib);
+    assert.ok(focused.weeklySets.biceps > plain.weeklySets.biceps);
+  });
+
+  test("equipmentStyle picks between equipment", async () => {
+    const lib = [
+      ...library,
+      ex("press_machine", {
+        movementPattern: "horizontal_push",
+        mainMuscles: ["pec"],
+        equipment: ["machine"],
+      }),
+      ex("press_dumbbell", {
+        movementPattern: "horizontal_push",
+        mainMuscles: ["pec"],
+        equipment: ["dumbbell"],
+      }),
+    ];
+    const firstDay = async (equipmentStyle: string) =>
+      (
+        await run(
+          { equipmentStyle, equipment: ["pull_up_bar", "machine", "dumbbell"] },
+          lib,
+        )
+      ).program.days[0].items.map((i) => i.exerciseId);
+    assert.ok((await firstDay("machines")).includes("press_machine"));
+    assert.ok((await firstDay("free_weights")).includes("press_dumbbell"));
+  });
+
+  test("seed varies the pick between equals", async () => {
+    const lib = [...library, ex("squat_twin")];
+    const picks = new Set<string>();
+    for (let seed = 0; seed < 20; seed++) {
+      const result = await run({}, lib, { seed });
+      const first = result.program.days[0].items.map((i) => i.exerciseId);
+      picks.add(first.includes("squat") ? "squat" : "squat_twin");
+    }
+    assert.equal(picks.size, 2);
+  });
+
+  test("lang names the program and its days", async () => {
+    const rules = structuredClone(seed);
+    for (const split of rules.splits) {
+      split.l10n.tr = { ...split.l10n.en, name: `TR ${split.l10n.en.name}` };
+    }
+    for (const template of rules.templates) {
+      for (const day of template.dayList) {
+        day.l10n.tr = { name: `TR ${day.l10n.en.name}` };
+      }
+    }
+    const english = await run({}, library, {}, rules);
+    assert.ok(!english.program.name.startsWith("TR "));
+    const turkish = await run({}, library, { lang: "tr" }, rules);
+    assert.ok(turkish.program.name.startsWith("TR "));
+    assert.ok(turkish.program.days.every((d) => d.name.startsWith("TR ")));
+  });
+});
+
+describe("null counts as absent", () => {
+  test("for a user's optional fields", async () => {
+    const result = await generateFor(
+      user,
+      {
+        answers: answers({ split: null }),
+        kept: null,
+        seed: null,
+        lang: null,
+        rules: null,
+        explain: null,
+      },
+      deps(),
+    );
+    assert.equal(result.rulesVersion, 3);
+    assert.equal(result.program.days.length, 3);
+  });
+
+  test("for an admin's rules and explain, and in kept items", async () => {
+    const result = await generateFor(
+      admin,
+      {
+        answers: answers(),
+        rules: null,
+        explain: null,
+        kept: [
+          [
+            {
+              exerciseId: "squat",
+              sets: 3,
+              repMin: 8,
+              repMax: 12,
+              durationS: null,
+              restS: 90,
+            },
+          ],
+        ],
+      },
+      deps(),
+    );
+    assert.equal(result.rulesVersion, 3);
+    assert.ok(!("trace" in result));
+  });
+});
+
+/** An exercise as the import stores it. */
+const stored = (e: Exercise, status = "live"): DocumentData => {
+  const document: DocumentData = {
+    ...e,
+    equipmentAlternatives: e.equipmentAlternatives.map((items) => ({ items })),
+    status,
+  };
+  delete document.id;
+  return document;
+};
+
+describe("firestoreGenerateDeps", () => {
+  const HOUR = 3_600_000;
+  // Its clock is the real one.
+  const always = async () => ({
+    premium: true,
+    expiresAtMs: Number.MAX_SAFE_INTEGER,
+  });
+  const project = (more: { [path: string]: DocumentData } = {}) =>
+    fakeFirestore({
+      "generator/rules": { version: 1, rules: seed },
+      ...Object.fromEntries(
+        library.map((e) => [`exercises/${e.id}`, stored(e)]),
+      ),
+      ...more,
+    });
+  const generateWith = (more: { [path: string]: DocumentData }) =>
+    generateFor(
+      user,
+      { answers: answers() },
+      firestoreGenerateDeps(project(more).db),
+    );
+
+  test("takes only an unexpired timestamped entitlement", async () => {
+    for (const entitlement of [
+      { premium: true },
+      { premium: true, expiresAt: "2999-01-01" },
+      { premium: true, expiresAt: Date.now() + HOUR },
+      { premium: true, expiresAt: Timestamp.fromMillis(Date.now() - HOUR) },
+      { premium: false, expiresAt: Timestamp.fromMillis(Date.now() + HOUR) },
+    ]) {
+      await assert.rejects(
+        generateWith({ "entitlements/user-uid": entitlement }),
+        refused("permission-denied", Reason.notPremium),
+        JSON.stringify(entitlement),
+      );
+    }
+    const result = await generateWith({
+      "entitlements/user-uid": {
+        premium: true,
+        expiresAt: Timestamp.fromMillis(Date.now() + HOUR),
+      },
+    });
+    assert.equal(result.rulesVersion, 1);
+  });
+
+  test("reads only live exercises, alternative sets as lists", async () => {
+    const { db } = project({
+      "exercises/draft": stored(ex("draft"), "draft"),
+      "exercises/retired": stored(ex("retired"), "retired"),
+      "exercises/alt": stored(
+        ex("alt", { equipmentAlternatives: [["dumbbell", "bench"]] }),
+      ),
+    });
+    const exercises = await firestoreGenerateDeps(db).exercises();
+    assert.deepEqual(
+      exercises.map((e) => e.id).sort(),
+      [...library.map((e) => e.id), "alt"].sort(),
+    );
+    assert.deepEqual(
+      exercises.find((e) => e.id === "alt")?.equipmentAlternatives,
+      [["dumbbell", "bench"]],
+    );
+  });
+
+  test("takes invalid stored rules as none, logged per load", async () => {
+    const errors = mock.method(logger, "error", () => {});
+    try {
+      let now = 0;
+      const { db } = project({
+        "generator/rules": { version: 4, rules: { ...seed, templates: [] } },
+      });
+      const live = cachedGenerateDeps(
+        { ...firestoreGenerateDeps(db), entitlement: always },
+        () => now,
+      );
+      for (const at of [0, 1000, 61_000]) {
+        now = at;
+        await assert.rejects(
+          generateFor(user, { answers: answers() }, live),
+          refused("failed-precondition", Reason.noRules),
+        );
+      }
+      assert.equal(errors.mock.callCount(), 2);
+    } finally {
+      errors.mock.restore();
+    }
+  });
+
+  test("a warm instance takes a split published since at once", async () => {
+    let now = 0;
+    let reads = 0;
+    const fake = project();
+    const backing = firestoreGenerateDeps(fake.db);
+    const live = cachedGenerateDeps(
+      {
+        ...backing,
+        entitlement: always,
+        publishedRules: () => {
+          reads++;
+          return backing.publishedRules();
+        },
+      },
+      () => now,
+    );
+    const generateAt = (changes: { [key: string]: unknown } = {}) =>
+      generateFor(user, { answers: answers(changes) }, live);
+
+    assert.equal((await generateAt()).rulesVersion, 1);
+    const rules = structuredClone(seed);
+    rules.splits.push({
+      id: "new_split",
+      l10n: { en: { name: "New", info: "A new split." } },
+    });
+    rules.templates.push({
+      ...structuredClone(rules.templates[1]),
+      id: "new_split_3",
+      split: "new_split",
+    });
+    fake.set("generator/rules", { version: 2, rules });
+    now = 1000;
+    assert.equal((await generateAt()).rulesVersion, 1);
+    const fresh = await generateAt({ split: "new_split" });
+    assert.equal(fresh.rulesVersion, 2);
+    assert.equal(fresh.split, "new_split");
+    assert.equal((await generateAt()).rulesVersion, 2);
+    assert.equal(reads, 2);
+    await assert.rejects(
+      generateAt({ split: "bro" }),
+      (e) => detailsOf(e).field === "answers.split",
+    );
+    assert.equal(reads, 3);
   });
 });

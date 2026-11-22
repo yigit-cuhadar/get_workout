@@ -3,24 +3,25 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { beforeEach, describe, test } from "node:test";
 
+import { DocumentData, Timestamp } from "firebase-admin/firestore";
 import { HttpsError } from "firebase-functions/v2/https";
 
 import { Exercise } from "./engine";
+import { fakeFirestore } from "./firestore.fake";
 import { Rules, optionsOf } from "./rules";
 import {
   HISTORY_LENGTH,
   MAX_NOTE,
-  PRESETS,
-  Publication,
   Reason,
   RulesStore,
   StoredRules,
   checkRules,
+  firestoreRulesStore,
   getRules,
   publishRules,
   rulesHistory,
 } from "./store";
-import { GOALS, LEVELS } from "./vocabulary";
+import { EQUIPMENT_PRESETS, GOALS, LEVELS } from "./vocabulary";
 
 type Auth = Parameters<typeof getRules>[0];
 
@@ -41,48 +42,43 @@ const seed: Rules = JSON.parse(
 );
 
 /**
- * `generator/rules`, its versions and `generator/options` in memory. A
- * publish writes everything [decide] returns at once, or nothing.
+ * [firestoreRulesStore] over an in-memory Firestore, with what it holds:
+ * the stored versions, oldest first, and the options.
  */
 class FakeStore implements RulesStore {
-  versions: StoredRules[] = [];
-  options: Publication["options"] | null = null;
+  fake = fakeFirestore();
+  private store = firestoreRulesStore(this.fake.db);
 
-  async current() {
-    return structuredClone(this.versions.at(-1) ?? null);
+  current = () => this.store.current();
+  version = (version: number) => this.store.version(version);
+  history = (limit: number) => this.store.history(limit);
+  publish: RulesStore["publish"] = (restores, decide) =>
+    this.store.publish(restores, decide);
+
+  get versions(): StoredRules[] {
+    return [...this.fake.data.entries()]
+      .filter(([path]) => path.startsWith("generator/rules/versions/"))
+      .map(([, document]) => storedOf(document))
+      .sort((a, b) => a.version - b.version);
   }
 
-  async version(version: number) {
-    return structuredClone(
-      this.versions.find((v) => v.version === version) ?? null,
-    );
+  get rulesDocument() {
+    const document = this.fake.data.get("generator/rules");
+    return document && storedOf(document);
   }
 
-  async history(limit: number) {
-    return [...this.versions]
-      .reverse()
-      .slice(0, limit)
-      .map((v) => ({
-        version: v.version,
-        publishedAtMs: v.publishedAtMs,
-        publishedByEmail: v.publishedByEmail,
-        note: v.note,
-        restores: v.restores,
-      }));
-  }
-
-  async publish(decide: (current: number) => Publication | null) {
-    const publication = decide(this.versions.at(-1)?.version ?? 0);
-    if (publication) {
-      this.versions.push({
-        ...structuredClone(publication.document),
-        publishedAtMs: Date.UTC(2026, 10, publication.document.version),
-      });
-      this.options = structuredClone(publication.options);
-    }
-    return publication;
+  get options() {
+    return this.fake.data.get("generator/options") ?? null;
   }
 }
+
+const storedOf = (document: DocumentData): StoredRules => {
+  const { publishedAt, ...rest } = document;
+  return {
+    ...(rest as Omit<StoredRules, "publishedAtMs">),
+    publishedAtMs: (publishedAt as Timestamp).toMillis(),
+  };
+};
 
 const reasonOf = (error: unknown) =>
   ((error as HttpsError).details as { reason: string } | undefined)?.reason;
@@ -107,10 +103,12 @@ describe("getRules", () => {
   });
 
   test("gives version 0 when nothing was published", async () => {
-    assert.deepEqual(await getRules(admin, {}, store), {
-      version: 0,
-      rules: null,
-    });
+    for (const data of [{}, { version: null }]) {
+      assert.deepEqual(await getRules(admin, data, store), {
+        version: 0,
+        rules: null,
+      });
+    }
   });
 
   test("gives the current rules or a version of them", async () => {
@@ -177,12 +175,56 @@ describe("publishRules", () => {
         rules: seed,
       },
     ]);
+    assert.deepEqual(store.rulesDocument, store.versions[0]);
     assert.deepEqual(store.options, { version: 1, ...optionsOf(seed) });
     assert.deepEqual(
       await publishRules(admin, { base: 1, rules: seed }, store),
       { version: 2 },
     );
     assert.equal(store.options?.version, 2);
+    assert.equal(store.rulesDocument?.version, 2);
+  });
+
+  test("takes null as absent for note and restores", async () => {
+    await publishRules(
+      admin,
+      { base: 0, rules: seed, note: null, restores: null },
+      store,
+    );
+    assert.equal(store.versions[0].note, undefined);
+    assert.equal(store.versions[0].restores, undefined);
+  });
+
+  test("restores only an existing, earlier version", async () => {
+    await publishRules(admin, { base: 0, rules: seed }, store);
+    await publishRules(admin, { base: 1, rules: seed }, store);
+    for (const restores of [3, 4]) {
+      await assert.rejects(
+        publishRules(admin, { base: 2, rules: seed, restores }, store),
+        (e: HttpsError) =>
+          e.code === "invalid-argument" &&
+          reasonOf(e) === Reason.invalidInput &&
+          (e.details as { field: string }).field === "restores",
+        `${restores}`,
+      );
+    }
+    assert.equal(store.versions.length, 2);
+    await publishRules(admin, { base: 2, rules: seed, restores: 1 }, store);
+    assert.equal(store.versions[2].restores, 1);
+  });
+
+  test("never overwrites a version copy", async () => {
+    await publishRules(admin, { base: 0, rules: seed, note: "One" }, store);
+    // A copy left by a publish whose rules document was later restored.
+    store.fake.set("generator/rules/versions/2", {
+      ...store.fake.data.get("generator/rules/versions/1"),
+      version: 2,
+      note: "Kept",
+    });
+    await assert.rejects(publishRules(admin, { base: 1, rules: seed }, store));
+    assert.equal(store.versions[1].note, "Kept");
+    assert.equal(store.rulesDocument?.version, 1);
+    assert.equal(store.options?.version, 1);
   });
 
   test("an admin without an email is stored as null", async () => {
@@ -320,7 +362,7 @@ describe("checkRules", () => {
     const uncovered = findings.filter((f) => f.kind === "uncovered");
     assert.equal(
       uncovered.length,
-      GOALS.length * LEVELS.length * 5 * Object.keys(PRESETS).length,
+      GOALS.length * LEVELS.length * 5 * Object.keys(EQUIPMENT_PRESETS).length,
     );
     assert.ok(findings.every((f) => f.kind !== "refused"));
     const short = findings.find((f) => f.kind === "short");
@@ -337,7 +379,7 @@ describe("checkRules", () => {
     const refused = findings.filter((f) => f.kind === "refused");
     assert.equal(
       refused.length,
-      GOALS.length * LEVELS.length * Object.keys(PRESETS).length,
+      GOALS.length * LEVELS.length * Object.keys(EQUIPMENT_PRESETS).length,
     );
     assert.ok(
       refused.every((f) => f.daysPerWeek === 2 && f.detail === "no-template"),

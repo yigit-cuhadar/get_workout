@@ -5,8 +5,8 @@ import { logger } from "firebase-functions/v2";
 import { CallableRequest, HttpsError } from "firebase-functions/v2/https";
 
 import { Answers, Exercise, Item, generate } from "./engine";
-import { Rules } from "./rules";
-import { Reason, invalid, isObject, validRules } from "./store";
+import { Rules, rulesProblems } from "./rules";
+import { Reason, invalid, isObject, validRules, withoutNulls } from "./store";
 import {
   EQUIPMENT,
   EQUIPMENT_STYLES,
@@ -29,23 +29,28 @@ export interface Entitlement {
 
 export interface GenerateDeps {
   entitlement(uid: string): Promise<Entitlement | null>;
-  /** `generator/rules`, null when nothing was published. */
-  publishedRules(): Promise<{ version: number; rules: Rules } | null>;
+  /**
+   * `generator/rules`, null when nothing valid was published; [fresh]
+   * reads past a cache.
+   */
+  publishedRules(
+    fresh?: boolean,
+  ): Promise<{ version: number; rules: Rules } | null>;
   exercises(): Promise<Exercise[]>;
   nowMs(): number;
 }
 
-/** [load]'s value, loaded again once it is [ttlMs] old; a failed load is
- * not kept. */
+/** [load]'s value, loaded again once it is [ttlMs] old or when asked
+ * [fresh]; a failed load is not kept. */
 export function cached<T>(
   load: () => Promise<T>,
   ttlMs: number,
   nowMs: () => number = Date.now,
-): () => Promise<T> {
+): (fresh?: boolean) => Promise<T> {
   let value: { promise: Promise<T>; atMs: number } | undefined;
-  return () => {
+  return (fresh = false) => {
     const now = nowMs();
-    if (!value || now - value.atMs >= ttlMs) {
+    if (fresh || !value || now - value.atMs >= ttlMs) {
       const promise = load();
       const entry = { promise, atMs: now };
       value = entry;
@@ -108,7 +113,8 @@ const code = <T extends string>(
 /** A kept item with only the fields a program item has. */
 function keptItem(field: string, value: unknown): Item {
   if (!isObject(value)) throw invalid(field, `${field} must be an item.`);
-  const { exerciseId, sets, repMin, repMax, durationS, restS } = value;
+  const { exerciseId, sets, repMin, repMax, durationS, restS } =
+    withoutNulls(value);
   const bad = (name: string) =>
     invalid(`${field}.${name}`, `${field}.${name} is invalid.`);
   if (typeof exerciseId !== "string" || exerciseId === "") {
@@ -133,9 +139,11 @@ function keptItem(field: string, value: unknown): Item {
 /** The request in [data], checked against [rules]; `invalid-input` with
  * the first wrong field. */
 export function parseGenerate(data: unknown, rules: Rules): GenerateRequest {
-  const input: Json = isObject(data) ? data : {};
-  const a = input.answers;
-  if (!isObject(a)) throw invalid("answers", "answers must be an object.");
+  const input: Json = isObject(data) ? withoutNulls(data) : {};
+  if (!isObject(input.answers)) {
+    throw invalid("answers", "answers must be an object.");
+  }
+  const a = withoutNulls(input.answers);
   const daysPerWeek = a.daysPerWeek;
   if (!isInt(daysPerWeek, MIN_DAYS, MAX_DAYS)) {
     throw invalid("answers.daysPerWeek", "daysPerWeek is out of range.");
@@ -209,6 +217,43 @@ const hasPremium = (entitlement: Entitlement | null, nowMs: number) =>
   entitlement.expiresAtMs !== null &&
   entitlement.expiresAtMs > nowMs;
 
+/** An admin's unpublished rules and the request parsed against them. */
+const ownRules = (input: Json) => {
+  const rules = validRules(input.rules);
+  return { rules, rulesVersion: 0, request: parseGenerate(input, rules) };
+};
+
+/**
+ * The published rules and the request parsed against them. A split or a
+ * session length they do not offer may come from options newer than the
+ * cached rules, so those are read once more before refusing.
+ */
+async function publishedRules(input: Json, deps: GenerateDeps) {
+  const parse = async (fresh: boolean) => {
+    const published = await deps.publishedRules(fresh);
+    if (!published) {
+      throw new HttpsError("failed-precondition", "No rules are published.", {
+        reason: Reason.noRules,
+      });
+    }
+    return {
+      rules: published.rules,
+      rulesVersion: published.version,
+      request: parseGenerate(input, published.rules),
+    };
+  };
+  try {
+    return await parse(false);
+  } catch (error) {
+    const field = ((error as HttpsError).details as { field?: string })
+      ?.field;
+    if (field !== "answers.split" && field !== "answers.sessionMinutes") {
+      throw error;
+    }
+    return parse(true);
+  }
+}
+
 /** A program for the caller's answers; see SPEC.md, `generateProgram`. */
 export async function generateFor(
   auth: CallableRequest["auth"],
@@ -217,7 +262,7 @@ export async function generateFor(
 ) {
   if (!auth) throw new HttpsError("unauthenticated", "Sign in first.");
   const admin = auth.token.admin === true;
-  const input: Json = isObject(data) ? data : {};
+  const input: Json = isObject(data) ? withoutNulls(data) : {};
   if (!admin && (input.rules !== undefined || input.explain !== undefined)) {
     throw new HttpsError("permission-denied", "Admins only.", {
       reason: Reason.notAdmin,
@@ -232,21 +277,10 @@ export async function generateFor(
     });
   }
 
-  let rules: Rules;
-  let rulesVersion = 0;
-  if (input.rules !== undefined) {
-    rules = validRules(input.rules);
-  } else {
-    const published = await deps.publishedRules();
-    if (!published) {
-      throw new HttpsError("failed-precondition", "No rules are published.", {
-        reason: Reason.noRules,
-      });
-    }
-    rules = published.rules;
-    rulesVersion = published.version;
-  }
-  const request = parseGenerate(data, rules);
+  const { rules, rulesVersion, request } =
+    input.rules !== undefined
+      ? ownRules(input)
+      : await publishedRules(input, deps);
   const result = generate({
     ...request,
     rules,
@@ -355,9 +389,16 @@ export const firestoreGenerateDeps = (db: Firestore): GenerateDeps => ({
   },
   async publishedRules() {
     const data = (await db.doc("generator/rules").get()).data();
-    return data === undefined
-      ? null
-      : { version: data.version as number, rules: data.rules as Rules };
+    if (data === undefined) return null;
+    const problems = rulesProblems(data.rules);
+    if (problems.length > 0) {
+      logger.error("generator rules unusable", {
+        version: data.version,
+        problems,
+      });
+      return null;
+    }
+    return { version: data.version as number, rules: data.rules as Rules };
   },
   async exercises() {
     const snapshot = await db
@@ -371,18 +412,19 @@ export const firestoreGenerateDeps = (db: Firestore): GenerateDeps => ({
   nowMs: Date.now,
 });
 
+/** [deps] with the rules and the exercises cached in the instance's
+ * memory. */
+export const cachedGenerateDeps = (
+  deps: GenerateDeps,
+  nowMs: () => number = Date.now,
+): GenerateDeps => ({
+  ...deps,
+  publishedRules: cached(() => deps.publishedRules(), RULES_TTL_MS, nowMs),
+  exercises: cached(() => deps.exercises(), EXERCISES_TTL_MS, nowMs),
+});
+
 let live: GenerateDeps | undefined;
 
-/** [GenerateDeps] on this project, the rules and the exercises cached in
- * the instance's memory. */
-export const liveGenerateDeps = (): GenerateDeps => {
-  if (!live) {
-    const deps = firestoreGenerateDeps(getFirestore());
-    live = {
-      ...deps,
-      publishedRules: cached(deps.publishedRules, RULES_TTL_MS),
-      exercises: cached(deps.exercises, EXERCISES_TTL_MS),
-    };
-  }
-  return live;
-};
+/** [GenerateDeps] on this project, cached. */
+export const liveGenerateDeps = (): GenerateDeps =>
+  (live ??= cachedGenerateDeps(firestoreGenerateDeps(getFirestore())));

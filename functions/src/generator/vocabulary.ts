@@ -106,6 +106,43 @@ export const FOCUS_AREAS = [
 
 export const EQUIPMENT_STYLES = ["any", "machines", "free_weights"] as const;
 
+/**
+ * The app's equipment presets (`EquipmentProfile`), by code. Like the app's,
+ * they never list bodyweight, which every user has.
+ */
+export const EQUIPMENT_PRESETS: { [preset: string]: readonly string[] } = {
+  full_gym: [
+    "barbell",
+    "ez_bar",
+    "trap_bar",
+    "dumbbell",
+    "kettlebell",
+    "plate",
+    "cable",
+    "machine",
+    "smith_machine",
+    "bench",
+    "box",
+    "back_extension_bench",
+    "pull_up_bar",
+    "dip_station",
+    "resistance_band",
+    "suspension_trainer",
+    "rings",
+    "medicine_ball",
+    "stability_ball",
+    "ab_wheel",
+    "landmine",
+    "sled",
+    "jump_rope",
+    "other",
+  ],
+  home_gym: ["barbell", "plate", "dumbbell", "bench", "pull_up_bar"],
+  dumbbells: ["dumbbell", "bench"],
+  bodyweight: ["pull_up_bar", "dip_station"],
+  bands: ["resistance_band"],
+};
+
 export const SLOT_ROLES = ["primary", "secondary", "accessory", "core"] as const;
 
 /** Logging types whose sets are held for a time. */

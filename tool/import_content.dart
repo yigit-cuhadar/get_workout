@@ -35,13 +35,15 @@ or "does not exist" for a new one), so a concurrent edit fails the commit
 instead of being lost. Nothing is ever deleted; documents missing from the
 files are listed as warnings (retire one by setting its status in its file).
 
-content/generator/rules.json, when present, is checked by the functions'
-validator (functions/lib/generator/cli.js, built by `npm run build` in
-functions/; needs node) and refuses the import like any other error. It is
-written as version 1 of the generator rules (generator/rules, its version
-copy and generator/options, in one commit) only when the project has no
-rules yet; once it has, the admin panel owns them and the file is not
-written.
+content/generator/rules.json seeds the generator rules once: when the
+project has none yet, the file is checked by the functions' validator
+(functions/lib/generator/cli.js, built by `npm run build` in functions/;
+needs node), refuses the import like any other error, and is written as
+version 1 (generator/rules, its version copy and generator/options, in one
+commit, after the content). Once the project has rules, the admin panel owns
+them: the file is neither checked nor written, and node is not needed. If
+the rules commit fails after the content was written, the run says so and
+exits non-zero.
 
 --dry-run prints the same summary without writing.''';
 
@@ -70,37 +72,44 @@ Future<void> main(List<String> args) async {
     if (!dir.existsSync()) _fail('No such directory: ${dir.path}');
   }
   final report = validateContent(exercises, programs: programs);
-  final rulesFile = File('content/generator/rules.json');
-  RulesSeed? rulesSeed;
-  if (rulesFile.existsSync()) {
-    try {
-      final loaded = await loadRulesSeed(rulesFile, validateRulesWithNode);
-      report.errors.addAll(loaded.problems);
-      rulesSeed = loaded.seed;
-    } on RulesValidatorException catch (e) {
-      _fail('$e');
-    }
-  }
-  if (report.errors.isNotEmpty) {
-    printReport(report);
-    _fail('Validation failed; nothing imported.');
-  }
-  stdout.writeln(
-    'Validation OK: ${report.exercises.length} exercises, '
-    '${report.programs.length} programs.',
-  );
-
-  final docs = {
-    for (final doc in [
-      for (final e in report.exercises) ContentDoc.exercise(e.data),
-      for (final (:card, :detail) in report.programs.map(
-        (p) => programDocs(p.data),
-      )) ...[card, detail],
-    ])
-      doc.path: doc,
-  };
   final firestore = FirestoreRest(project, token);
   try {
+    final rulesFile = File('content/generator/rules.json');
+    var rulesExist = false;
+    RulesSeed? rulesSeed;
+    if (rulesFile.existsSync()) {
+      try {
+        final rules = await checkRulesSeed(
+          rulesFile,
+          rulesExist: () async =>
+              await firestore.getDocument('generator/rules') != null,
+          validate: validateRulesWithNode,
+        );
+        report.errors.addAll(rules.problems);
+        rulesExist = rules.exist;
+        rulesSeed = rules.seed;
+      } on RulesValidatorException catch (e) {
+        _fail('$e');
+      }
+    }
+    if (report.errors.isNotEmpty) {
+      printReport(report);
+      _fail('Validation failed; nothing imported.');
+    }
+    stdout.writeln(
+      'Validation OK: ${report.exercises.length} exercises, '
+      '${report.programs.length} programs.',
+    );
+
+    final docs = {
+      for (final doc in [
+        for (final e in report.exercises) ContentDoc.exercise(e.data),
+        for (final (:card, :detail) in report.programs.map(
+          (p) => programDocs(p.data),
+        )) ...[card, detail],
+      ])
+        doc.path: doc,
+    };
     final remote = <String, RemoteDocument>{};
     Future<void> read(String collection) async {
       for (final d in await firestore.listDocuments(collection)) {
@@ -141,25 +150,33 @@ Future<void> main(List<String> args) async {
       ]);
     }
     _printPlan(plan, project: project, dryRun: dryRun);
+    final failures = <String>[];
+    if (rulesExist) stdout.writeln(rulesExistLine);
     if (rulesSeed != null) {
-      stdout.writeln(
-        await seedRules(
-          rulesSeed,
-          databasePath: firestore.databasePath,
-          rulesExist: () async =>
-              await firestore.getDocument('generator/rules') != null,
-          commit: firestore.commit,
-          dryRun: dryRun,
-        ),
-      );
+      try {
+        stdout.writeln(
+          await seedRules(
+            rulesSeed,
+            databasePath: firestore.databasePath,
+            commit: firestore.commit,
+            dryRun: dryRun,
+          ),
+        );
+      } on FirestoreException catch (e) {
+        failures.add(
+          'The content was written, but the generator rules were not: $e\n'
+          'Run the import again to seed them.',
+        );
+      }
     }
     if (plan.skipped.isNotEmpty) {
-      _fail(
+      failures.add(
         '${plan.skipped.length} document(s) were edited elsewhere and skipped, '
         'with ${plan.held.length} more of the same program(s). Bring the edit '
         'into the file, or run with --force to overwrite.',
       );
     }
+    if (failures.isNotEmpty) _fail(failures.join('\n\n'));
   } on PartialCommitException catch (e) {
     final cause = e.cause;
     final why = cause is FirestoreApiException && cause.preconditionFailed
