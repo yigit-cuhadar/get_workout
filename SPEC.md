@@ -688,7 +688,7 @@ Where it stands (2026-11-18, end of Group 11):
 Group 12, analytics (owner's plan, 2026-11-20; before the admin panel rework)
 - [x] Opt-out collection — analytics and crash reports on by default for every user, the Profile → Privacy switch turns them off; the onboarding and over-the-tabs consent page removed; privacy policy and labels updated
 - [x] Event plan in code — one typed analytics API in the app, screen views from the router, user properties and the user id, every event of the catalog (Feature notes › Analytics) — each event seen in DebugView on dev
-- [ ] BigQuery export — Firebase Analytics linked to BigQuery daily on prod (and dev for checks) — raw events queryable
+- [x] BigQuery export — Firebase Analytics linked to BigQuery daily on prod (and dev for checks) — raw events queryable (prod dataset `analytics_565341735` appeared 2026-11-22; 425-day default table expiration as on dev)
 - [x] Admin dashboard — a Dashboard page in the admin panel (drawn first) fed by an admin-only function over BigQuery and RevenueCat's metrics — funnel, retention, conversion and revenue at a glance
 
 Group 13, admin panel rework (owner's picks, 2026-11-21; each project keeps
