@@ -67,7 +67,10 @@ App-wide decisions only. How each feature behaves is under Feature notes.
   Until store accounts exist, purchases run against a fake gateway.
 - **Backend**: Blaze plan. Cloud Functions are used only where a client cannot
   be trusted or cannot do the job: RevenueCat webhook, account deletion,
-  sending push announcements. The program generator runs on device.
+  sending push announcements. The program generator runs on the server
+  (owner's pick, 2026-11-22, replacing the on-device one): a rule-based
+  engine in a Cloud Function, no LLM, so its rules change from the admin
+  panel without an app update; generating needs a connection.
 - **Offline**: Firestore's persistent cache is the local database. The workout
   in progress is also kept in a local file so a crash never loses sets.
   Derived numbers are computed from workouts on read wherever the query is
@@ -156,6 +159,15 @@ Stored as these string codes.
   **gripWidth** (optional): `narrow`, `shoulder`, `wide`
 - **setType**: `normal`, `warmup`, `drop`
 - **goal**: `build_muscle`, `get_stronger`, `lose_fat`, `general_fitness`
+- **generatorTier** (how good an exercise is for a generated program,
+  judged among exercises of its own equipment): `staple`, `standard`,
+  `fallback` (only when nothing better fits), `never`
+- **sensitiveArea**: `shoulders`, `elbows_wrists`, `lower_back`, `hips`,
+  `knees`
+- **focusArea**: `chest`, `back`, `shoulders`, `arms`, `core`, `glutes`,
+  `legs`
+- **equipmentStyle**: `any`, `machines`, `free_weights`
+- **slotRole**: `primary`, `secondary`, `accessory`, `core`
 
 ## Data model
 
@@ -180,6 +192,8 @@ Firestore. Timestamps are server timestamps; ids are generated on the client.
 | `defaultRestS` | int | |
 | `incrementKg` | number? | Step for "add weight"; the import stores a double, but a web client (the admin panel) stores a whole number as an integer, so readers accept int or double and hashing treats `2` and `2.0` alike |
 | `popularity` | int | Lower sorts first |
+| `generatorTier` | code | Read only by the program generator; a document without it counts as `standard` |
+| `stressAreas` | code[] | 0-5 sensitiveArea codes: the generator never gives this exercise to a user who marked one of them. Absent is none |
 | `l10n.<lang>` | map | `name`, `aliases[]`, `setup[]`, `execution[]`, `mistakes[]`, `safety?`, `cues[]` |
 | `updatedAt` | timestamp | Clients sync incrementally on this |
 | `contentHash` | string | SHA-256 of the stored content, written by the import; a mismatch marks a document edited elsewhere |
@@ -332,6 +346,58 @@ redelivery). Written only by the RevenueCat webhook (and
 sent `sentAt` and `messageId` (FCM's). Written only by `sendAnnouncement`;
 readable by admins.
 
+**`generator/rules`** (the program generator's rules; Admin SDK only, no
+client reads or writes it): `version` (int, from 1), `publishedAt`,
+`publishedBy` (uid), `publishedByEmail`, `note?`, `rules` (below). Every
+publish also stores the same document as `generator/rules/versions/{n}`,
+never changed afterwards. Seeded from `content/generator/rules.json`.
+
+`rules`:
+
+- `splits[]`: `id`, `l10n.<lang>.{name, info}`. What the split question
+  offers, in this order.
+- `templates[]`: `id`, `split` (a split id), `days` (2-6, the days per
+  week it is for), `levels[]`, `goals[]?` (absent: every goal), `priority`
+  (int; the highest fitting one is used), `dayList[]` (exactly `days`
+  entries).
+  - `dayList[]`: `l10n.<lang>.name` ("Upper A"), `slots[]` (1-20, in
+    training order), `extras[]` (muscles extra focus work may be added
+    for on this day).
+  - `slots[]`: `role` (slotRole), `pick` (`patterns[]?`, `muscles[]?`,
+    `mechanic?`; an exercise fits when its pattern is one of `patterns`,
+    one of its main muscles is in `muscles` and its mechanic is
+    `mechanic`, each only when given; one of `patterns` and `muscles` is
+    required), `priority` (1 always, 2 when the session has room, 3 only
+    in long sessions), `key?` (slots of one week sharing a key get the
+    same exercise).
+- `dosing.<goal>.<slotRole>`: `sets.<level>` (`[min, max]`), `reps`
+  (`[min, max]`, exercises logged with a weight), `bodyweightReps`
+  (`[min, max]`, those logged without), `holdS.<level>` (timed ones),
+  `restS`.
+- `grouping[]`: `goals[]?`, `sessionMax?` (minutes; applies to sessions
+  up to it), `style` (`superset` \| `circuit`), `roles[]`, `size` (2-4),
+  `restS` (after each round). The first entry fitting the answers
+  applies; none means straight sets.
+- `volume.targets.<level>.<muscle>`: weekly direct sets aimed for (0 or
+  absent: the muscle is only trained through other exercises);
+  `volume.cap.<level>`: added sets never take a muscle above it.
+- `focus`: `areas.<focusArea>` (muscle[]), `extraSets` (weekly sets a
+  focus muscle's target and cap rise by), `max` (areas a user may pick).
+- `selection`: `tier.<generatorTier>` (score; `never` has none),
+  `equipment.<equipmentStyle>.<equipment>` (score of doing it with that
+  equipment), `aboveLevel` (an exercise one level above the user),
+  `repeat` (already used this week), `family` (its family already used
+  this week), `popularity` (the most the popularity order adds),
+  `variety` (the most the seed adds).
+- `time`: `setupS` (counted per exercise on top of the app's estimate),
+  `sessionMinutes[]` (the lengths offered).
+- `lengthWeeks.<level>`: the length the program is saved with.
+
+**`generator/options`** (read: any signed-in user; written with every
+publish): `version`, `splits[]` (`id`, `l10n`, `fits[]` of `{days,
+levels[], goals[]?}` from the templates), `sessionMinutes[]`,
+`maxFocusAreas`. What the app needs to ask the questions.
+
 ### Storage
 
 `users/{uid}/photos/{entryId}/{pose}-{revision}.jpg`, revision the capture
@@ -455,6 +521,24 @@ only, JPEG, max 5 MB.
   - The password reset email is not a callable: the panel sends Firebase
     Auth's own (forge_auth `SendPasswordReset`), offered only for an
     account with email and password.
+- `generateProgram` (callable, `functions/src/generator`) → a program
+  from the user's answers, the published rules and the live exercises.
+  `{answers: {goal, level, daysPerWeek, sessionMinutes, equipment[],
+  focus[], sensitive[], equipmentStyle, split?}, seed?, kept?}` →
+  `{program: {name, lengthWeeks, days[]}, weeklySets, uncovered[],
+  rulesVersion}`. Signed-in users with an active entitlement only
+  (`permission-denied`, `details.reason` `not-premium`); an admin always
+  may, and may also send `rules` (unpublished rules to try) and
+  `explain: true` (adds why each exercise was picked). See Feature notes ›
+  Programs.
+- `generatorRulesGet`, `generatorRulesCheck`, `generatorRulesPublish`,
+  `generatorRulesHistory` (callables, `functions/src/generator`), admin
+  claim only: read the rules (the current ones or a version), check
+  unpublished rules (the validator's problems, and what a set of standard
+  answers gives with them), publish (refused as `stale` when `base` is no
+  longer the current version, as `invalid-input` with the problems;
+  writes `generator/rules`, its version copy and `generator/options` in
+  one transaction), list the last 20 versions.
 - `appSettingsGet`, `appSettingsPublish`, `appSettingsHistory`
   (callables, `functions/src/app_settings`), admin claim only, the app's
   Remote Config template through the Admin SDK. Only the keys of the app's
@@ -706,6 +790,15 @@ its own panel; every page drawn on a canvas and picked before it is built)
 - [x] Users — find a user by email or uid; Premium state, sign-up date, last workout, devices; grant or revoke promotional Premium through RevenueCat (a week, a month, a year, lifetime), delete the account (confirmed, as the app does), send a password reset email, grant or revoke admin — every action works on dev
 - [x] Support inbox — feedback as threads with a status; a reply is emailed from getworkout.support@gmail.com (Gmail SMTP, app password in the Functions secret) and kept on the thread — a reply reaches the sender's inbox
 - [x] App settings — the app's Remote Config keys (paywall layout, app gate) shown and edited; saving shows old and new side by side, publishing needs a confirm, an earlier version can be restored — a change reaches the app after its next fetch
+
+Group 14, program generator rebuild (owner's picks, 2026-11-22; see Feature notes › Programs, "Program generator, rebuild")
+- [ ] Generator engine and rules — the engine in `functions/src/generator`, the rules seed `content/generator/rules.json`, `generatorTier` and `stressAreas` on every exercise — standard answers give programs the owner accepts from a printed set
+- [ ] Generator callables — `generateProgram`, the rules callables, `generator/options`, Firestore rules, deployed to dev — a Premium user gets a program, a free one is refused
+- [ ] Generator in the app — the nine questions, the server call, preview, save; the on-device engine and the leave-out picker go — a program is generated, edited and saved on the simulator; offline says so
+- [ ] Admin, exercise fields — generator tier and stress areas in the exercise editor, as table columns and filters
+- [ ] Admin, generator rules — splits and templates, dosing, volume, selection, focus; review and publish, version history and restore — a published change shows in the next generated program
+- [ ] Admin, generator simulator — answers in, the program out with why each exercise was picked, with the published or the unpublished rules
+- [ ] Generator on prod — functions, rules and content deployed, checked with a Premium account
 
 After release (owner's list, 2026-11-19; not before the first release):
 - Health improvements.
@@ -3331,6 +3424,67 @@ the feature you are about to touch, and keep it true when you change it.
   is dropped. Edits recount the weekly sets and uncovered muscles. While
   building, a "Building your program" card and both buttons off; Save
   reads "Save program".
+- **Program generator, rebuild** (owner's picks, 2026-11-22; Group 14.
+  Until its app feature is merged the note above describes the app; this
+  one replaces it then):
+  - Decisions: a rule-based engine on the server, no LLM; every rule
+    editable in the admin panel, with a simulator; the entry stays on the
+    Programs tab, Premium only, and onboarding keeps suggesting a
+    ready-made program; a generated program is one repeating week, saved
+    as today (`origin: generated`, never `premium`), progression stays the
+    workout's hint.
+  - Questions (nine): goal, level, days per week (2-6), session length,
+    equipment, focus areas (up to `focus.max`, may be none), sensitive
+    areas (any number, may be none), equipment style, split ("Let the app
+    choose" first). Goal, level, days and equipment are prefilled from
+    the profile. There is no leave-out question: an exercise is swapped
+    or removed on the preview.
+  - Engine (`functions/src/generator/engine.ts`, pure: answers, rules,
+    exercises, seed and kept items in; the same inputs give the same
+    program):
+    1. Template: the fitting template (days, level, goal) of the chosen
+       split, or of any split, with the highest `priority`. None fitting
+       is a typed refusal (`no-template`).
+    2. Candidates: live exercises doable with the equipment (through
+       `equipment` or an alternative set), at most one level above the
+       user, tier not `never`, no stress area the user marked.
+    3. Slots are filled by priority, then order: the best-scoring
+       candidate fitting the slot's `pick` that is not on the day yet and
+       whose family is not either (`selection` scores: tier, the best
+       equipment set the user has, level, repeats in the week,
+       popularity, the seed). Slots sharing a `key` take the first one's
+       exercise. A slot nothing fits is left out.
+    4. Dose: each slot starts at its role's fewest sets; reps, rest and
+       hold time from `dosing` by goal, role and logging type.
+    5. Time: a day's cost is the app's estimate (`estimateDay`, rebuilt in
+       TypeScript and held to the Dart one by shared test vectors) plus
+       `setupS` per exercise. Priority 1 slots always stay (down to 3; a
+       day that still does not fit loses sets, then its last slots);
+       priority 2 and 3 slots are added while the day fits.
+    6. Volume: sets are added, one at a time, to the slot whose main
+       muscle is furthest below its weekly target (1 per main, 0.5 per
+       secondary muscle, as the app counts), within the role's most sets,
+       the cap and the session; then extra `accessory` slots for focus
+       muscles on days listing them in `extras`.
+    7. Grouping: the first fitting `grouping` rule joins neighbouring
+       slots of its roles into supersets or circuits (rest only after
+       the round), never two with the same main muscle.
+    8. Kept items (Regenerate) take the first slot of their day they fit,
+       or stand as extra, and are never changed.
+    The result names the muscles with a target and no direct work
+    (`uncovered`).
+  - Exercise data: `generatorTier` and `stressAreas` on every exercise,
+    first rated by the Architect from the exercise's facts and reviewed
+    by the owner in the admin panel.
+  - Rules: one document, versioned (`generator/rules`, Data model); the
+    panel edits a draft, checks it on the server and publishes it, as App
+    settings does; the validator lives only in the function
+    (`functions/src/generator/rules.ts`), so the panel and the seed
+    import (`tool/import_content.dart`, which calls the publish with the
+    seed when no rules exist) share it.
+  - The exercise and muscle codes the engine needs are in
+    `functions/src/generator/vocabulary.ts`; a Dart test holds them equal
+    to `vocabulary.dart`.
 - **Admin program editor**: edits `programs/{id}` and its `detail/main` in
   one transaction, so both are written or neither; a save is refused when
   either changed since the editor loaded them, and keeps `contentHash` and
