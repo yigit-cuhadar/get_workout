@@ -8,9 +8,10 @@ import 'data/callable_generator_rules_repository.dart';
 import 'domain/generator_rules_repository.dart';
 import 'domain/generator_rules_usecases.dart';
 import 'presentation/generator_rules_cubit.dart';
+import 'presentation/generator_simulator_cubit.dart';
 
 /// Registers the panel's Generator page. Needs the access module's
-/// `CheckAdminAccess`.
+/// `CheckAdminAccess` and the exercise module's `WatchExerciseRecords`.
 class GeneratorAdminModule implements FeatureModule {
   const GeneratorAdminModule();
 
@@ -27,6 +28,7 @@ class GeneratorAdminModule implements FeatureModule {
       ..registerFactory(() => CheckGeneratorRules(sl()))
       ..registerFactory(() => PublishGeneratorRules(sl()))
       ..registerFactory(() => LoadGeneratorRulesHistory(sl()))
+      ..registerFactory(() => SimulateGenerator(sl()))
       ..registerFactory(
         () => GeneratorRulesCubit(
           loadGeneratorRules: sl(),
@@ -34,6 +36,12 @@ class GeneratorAdminModule implements FeatureModule {
           publishGeneratorRules: sl(),
           loadGeneratorRulesHistory: sl(),
           checkAdminAccess: sl(),
+        ),
+      )
+      ..registerFactory(
+        () => GeneratorSimulatorCubit(
+          simulateGenerator: sl(),
+          watchExerciseRecords: sl(),
         ),
       );
   }

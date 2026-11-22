@@ -14,15 +14,18 @@ import '../domain/rules_changes.dart';
 import 'dosing_tab.dart';
 import 'generator_rules_cubit.dart';
 import 'history_panel.dart';
+import 'generator_simulator_cubit.dart';
 import 'review_dialog.dart';
 import 'rules_text.dart';
+import 'simulator_tab.dart';
 import 'templates_tab.dart';
 import 'value_tabs.dart';
 
 final _date = DateFormat('d MMM y');
 
 /// The generator's rules: the version line, the unpublished-changes bar and
-/// a tab per part of the rules, all editing one draft (AG1 A). Its state
+/// a tab per part of the rules, all editing one draft (AG1 A), and the
+/// simulator (AG4). Its state
 /// answers whether the page may be left ([mayLeave]), and the browser asks
 /// before the tab closes while there are unpublished changes.
 class GeneratorPage extends StatefulWidget {
@@ -72,8 +75,12 @@ class GeneratorPageState extends State<GeneratorPage> {
   }
 
   @override
-  Widget build(BuildContext context) => BlocProvider.value(
-    value: _cubit,
+  Widget build(BuildContext context) => MultiBlocProvider(
+    providers: [
+      BlocProvider.value(value: _cubit),
+      // Lives with the page, so its answers outlast switching tabs.
+      BlocProvider(create: (_) => sl<GeneratorSimulatorCubit>()),
+    ],
     child: BlocListener<GeneratorRulesCubit, GeneratorRulesState>(
       listenWhen: (previous, state) => previous.hasChanges != state.hasChanges,
       listener: (_, state) => _unloadGuard.active = state.hasChanges,
@@ -368,6 +375,7 @@ class _TabsState extends State<_Tabs> with SingleTickerProviderStateMixin {
                     RulesTab.volume => const VolumeTab(),
                     RulesTab.selection => const SelectionTab(),
                     RulesTab.areas => const AreasTab(),
+                    RulesTab.simulator => const SimulatorTab(),
                   },
               ],
             ),

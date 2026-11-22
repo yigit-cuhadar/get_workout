@@ -2,12 +2,17 @@ import 'package:cloud_functions/cloud_functions.dart' hide Result;
 import 'package:forge_core/forge_core.dart';
 import 'package:forge_firebase/forge_firebase.dart';
 
+import '../../../features/exercises/domain/vocabulary.dart';
+import '../../../features/generator/data/server_generator_repository.dart';
+import '../../../features/generator/domain/generator_repository.dart';
 import '../domain/generator_rules.dart';
 import '../domain/generator_rules_repository.dart';
+import '../domain/simulation.dart';
 
 /// [GeneratorRulesRepository] on the callables `generatorRulesGet`,
 /// `generatorRulesCheck`, `generatorRulesPublish` and
-/// `generatorRulesHistory` (`functions/src/generator/store.ts`).
+/// `generatorRulesHistory` (`functions/src/generator/store.ts`), and
+/// `generateProgram` (`generation.ts`) for the simulator.
 class CallableGeneratorRulesRepository implements GeneratorRulesRepository {
   const CallableGeneratorRulesRepository(this._functions);
 
@@ -17,11 +22,17 @@ class CallableGeneratorRulesRepository implements GeneratorRulesRepository {
   static const checkFunction = 'generatorRulesCheck';
   static const publishFunction = 'generatorRulesPublish';
   static const historyFunction = 'generatorRulesHistory';
+  static const generateFunction = ServerGeneratorRepository.function;
 
   /// `details.reason` values of the functions' refusals.
   static const _notAdmin = 'not-admin';
   static const _invalidInput = 'invalid-input';
   static const _stale = 'stale';
+  static const _refusals = {
+    'no-rules': GenerationRefusal.noRules,
+    'no-template': GenerationRefusal.noTemplate,
+    'no-exercises': GenerationRefusal.noExercises,
+  };
 
   @override
   Future<Result<StoredRules>> load({int? version}) => guard(
@@ -70,6 +81,63 @@ class CallableGeneratorRulesRepository implements GeneratorRulesRepository {
     final data = await _call(historyFunction);
     return [for (final item in _list(data)) _stored(_map(item))];
   }, mapper: _mapError);
+
+  @override
+  Future<Result<Simulation>> simulate(SimulationRequest request) =>
+      guard(() async {
+        final data = await _call(generateFunction, {
+          ...ServerGeneratorRepository.requestData((
+            answers: request.answers,
+            seed: request.seed,
+            kept: const [],
+            language: 'en',
+          )),
+          'rules': ?request.rules?.json,
+          'explain': true,
+        });
+        final result = _map(data);
+        return Simulation(
+          program: ServerGeneratorRepository.programFrom(data),
+          template: '${result['template']}',
+          weeklySets: {
+            for (final MapEntry(:key, :value) in _map(
+              result['weeklySets'],
+            ).entries)
+              if ((Muscle.values.byCode(key), value) case (
+                final muscle?,
+                final num sets,
+              ))
+                muscle: sets.toDouble(),
+          },
+          rulesVersion: (result['rulesVersion'] as num).toInt(),
+          trace: [
+            for (final day in _list(result['trace']))
+              [for (final why in _list(day)) _reason(_map(why))],
+          ],
+        );
+      }, mapper: _mapError);
+
+  static PickReason _reason(Map<Object?, Object?> why) => PickReason(
+    exerciseId: '${why['exerciseId']}',
+    role:
+        SlotRole.values.byCode(why['role']) ??
+        (throw UnknownFailure('unexpected role: ${why['role']}')),
+    priority: (why['priority'] as num).toInt(),
+    source: PickSource.values.byName('${why['source']}'),
+    score: {
+      if (why['score'] case final Map<Object?, Object?> score)
+        for (final MapEntry(:key, :value) in score.entries)
+          '$key': (value! as num).toDouble(),
+    },
+    others: [
+      for (final other in _list(why['others'] ?? const <Object?>[]))
+        if (_map(other) case final other)
+          (
+            exerciseId: '${other['exerciseId']}',
+            score: (other['score'] as num).toDouble(),
+          ),
+    ],
+  );
 
   Future<Object?> _call(String name, [Object? data]) async =>
       (await _functions.httpsCallable(name).call<Object?>(data)).data;
@@ -122,6 +190,8 @@ class CallableGeneratorRulesRepository implements GeneratorRulesRepository {
         for (final problem in problems) '$problem',
       ], error),
       (_, _invalidInput) => ValidationFailure(message),
+      (_, final String reason) when _refusals.containsKey(reason) =>
+        GenerationRefused(_refusals[reason]!, message, cause: error),
       // Not deployed (404), or deployed without permission to call it.
       ('not-found' || 'permission-denied', _) =>
         GeneratorRulesUnavailableFailure(message, error),

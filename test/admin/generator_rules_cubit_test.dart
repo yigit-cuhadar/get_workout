@@ -472,4 +472,32 @@ void main() {
       verify(() => repository.publish(any())).called(1);
     });
   });
+
+  test('the draft check says when the simulator may run the draft', () async {
+    final cubit = await loadedCubit();
+    expect(cubit.state.draftCheck, DraftCheck.unchanged);
+
+    cubit.setValue(_rest, 165);
+    expect(cubit.state.draftCheck, DraftCheck.checking);
+    await cubit.checkDraft();
+    expect(cubit.state.draftCheck, DraftCheck.ready);
+
+    when(() => repository.check(any())).thenAnswer(
+      (_) async => const Ok(
+        RulesCheck(problems: ['dosing.build_muscle.primary.restS: too long']),
+      ),
+    );
+    cubit.setValue(_rest, 900);
+    await cubit.checkDraft();
+    expect(cubit.state.draftCheck, DraftCheck.problems);
+
+    when(() => repository.check(any()))
+        .thenAnswer((_) async => const Err(NetworkFailure('offline')));
+    cubit.setValue(_rest, 170);
+    await cubit.checkDraft();
+    expect(cubit.state.draftCheck, DraftCheck.unchecked);
+
+    cubit.discard();
+    expect(cubit.state.draftCheck, DraftCheck.unchanged);
+  });
 }

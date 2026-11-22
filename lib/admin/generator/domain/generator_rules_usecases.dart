@@ -2,6 +2,7 @@ import 'package:forge_core/forge_core.dart';
 
 import 'generator_rules.dart';
 import 'generator_rules_repository.dart';
+import 'simulation.dart';
 
 /// The current rules, or the version given.
 class LoadGeneratorRules implements UseCase<StoredRules, int?> {
@@ -39,4 +40,13 @@ class LoadGeneratorRulesHistory
   @override
   Future<Result<List<StoredRules>>> call(NoParams params) =>
       _repository.history();
+}
+
+class SimulateGenerator implements UseCase<Simulation, SimulationRequest> {
+  const SimulateGenerator(this._repository);
+  final GeneratorRulesRepository _repository;
+
+  @override
+  Future<Result<Simulation>> call(SimulationRequest request) =>
+      _repository.simulate(request);
 }

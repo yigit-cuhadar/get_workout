@@ -20,6 +20,9 @@ abstract final class GeneratorSizes {
   /// The split dropdown.
   static const split = 240.0;
 
+  /// The simulator's answers.
+  static const answers = 250.0;
+
   /// The template list, and the most a slot's pick chips take.
   static const list = 260.0;
 

@@ -3,6 +3,10 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:forge_core/forge_core.dart';
 import 'package:get_workout/admin/generator/data/callable_generator_rules_repository.dart';
 import 'package:get_workout/admin/generator/domain/generator_rules.dart';
+import 'package:get_workout/admin/generator/domain/simulation.dart';
+import 'package:get_workout/features/exercises/domain/vocabulary.dart';
+import 'package:get_workout/features/generator/domain/generator_answers.dart';
+import 'package:get_workout/features/generator/domain/generator_repository.dart';
 import 'package:mocktail/mocktail.dart';
 
 import 'generator_fixtures.dart';
@@ -197,5 +201,118 @@ void main() {
     expect(history, const [StoredRules(version: 2, note: 'Seed')]);
     verify(() => functions.httpsCallable('generatorRulesHistory')).called(1);
     verify(() => callable.call<Object?>(null)).called(1);
+  });
+
+  group('simulate', () {
+    const answers = GeneratorAnswers(
+      goal: Goal.buildMuscle,
+      level: Level.intermediate,
+      daysPerWeek: 4,
+      sessionMinutes: 60,
+      equipment: {Equipment.dumbbell, Equipment.bench},
+      focus: {FocusArea.chest},
+      sensitive: {SensitiveArea.knees},
+      splitId: 'upper_lower',
+    );
+    const sentAnswers = {
+      'goal': 'build_muscle',
+      'level': 'intermediate',
+      'daysPerWeek': 4,
+      'sessionMinutes': 60,
+      'equipment': ['dumbbell', 'bench'],
+      'focus': ['chest'],
+      'skip': <String>[],
+      'sensitive': ['knees'],
+      'equipmentStyle': 'any',
+      'split': 'upper_lower',
+    };
+
+    setUp(() => when(() => result.data).thenReturn(simulationData()));
+
+    test('asks for the published rules with explain and reads the '
+        'answer', () async {
+      final simulated = await repository.simulate(
+        const SimulationRequest(answers: answers, seed: 7),
+      );
+      expect(simulated.valueOrNull, simulation());
+      verify(() => functions.httpsCallable('generateProgram')).called(1);
+      verify(
+        () => callable.call<Object?>({
+          'answers': sentAnswers,
+          'seed': 7,
+          'lang': 'en',
+          'explain': true,
+        }),
+      ).called(1);
+    });
+
+    test('sends unpublished rules', () async {
+      await repository.simulate(
+        SimulationRequest(answers: answers, seed: 0, rules: seed),
+      );
+      verify(
+        () => callable.call<Object?>({
+          'answers': sentAnswers,
+          'seed': 0,
+          'lang': 'en',
+          'rules': seed.json,
+          'explain': true,
+        }),
+      ).called(1);
+    });
+
+    Future<Failure?> refused(FirebaseFunctionsException error) async {
+      refuse(error);
+      return (await repository.simulate(
+        const SimulationRequest(answers: answers, seed: 0),
+      )).failureOrNull;
+    }
+
+    test('maps each refusal to its failure', () async {
+      for (final (reason, refusal) in [
+        ('no-template', GenerationRefusal.noTemplate),
+        ('no-exercises', GenerationRefusal.noExercises),
+        ('no-rules', GenerationRefusal.noRules),
+      ]) {
+        expect(
+          await refused(
+            FunctionsError('failed-precondition', details: {'reason': reason}),
+          ),
+          isA<GenerationRefused>().having((f) => f.refusal, 'refusal', refusal),
+        );
+      }
+      expect(
+        await refused(
+          FunctionsError('permission-denied', details: {'reason': 'not-admin'}),
+        ),
+        isA<PermissionFailure>(),
+      );
+      expect(
+        await refused(
+          FunctionsError(
+            'invalid-argument',
+            details: {
+              'reason': 'invalid-input',
+              'field': 'rules',
+              'problems': ['focus.max: must be a whole number'],
+            },
+          ),
+        ),
+        isA<GeneratorRulesInvalidFailure>(),
+      );
+      expect(
+        await refused(
+          FunctionsError(
+            'invalid-argument',
+            details: {'reason': 'invalid-input', 'field': 'answers.split'},
+          ),
+        ),
+        isA<ValidationFailure>(),
+      );
+      expect(
+        await refused(FunctionsError('unavailable')),
+        isA<NetworkFailure>(),
+      );
+    });
   });
 }

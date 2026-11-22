@@ -823,7 +823,7 @@ Group 14, program generator rebuild (owner's picks, 2026-11-22; see Feature note
 - [ ] Generator in the app — the profile page plus one page per new question (five to seven pages), the server call, preview, save; the on-device engine and the leave-out picker go — a program is generated, edited and saved on the simulator; offline says so
 - [x] Admin, exercise fields — generator tier and stress areas in the exercise editor, as table columns and filters
 - [x] Admin, generator rules — splits and templates, dosing, volume, selection, focus; review and publish, version history and restore — a published change shows in the next generated program
-- [ ] Admin, generator simulator — answers in, the program out with why each exercise was picked, with the published or the unpublished rules
+- [x] Admin, generator simulator — answers in, the program out with why each exercise was picked, with the published or the unpublished rules
 - [ ] Generator on prod — functions, rules and content deployed, checked with a Premium account
 
 After release (owner's list, 2026-11-19; not before the first release):
@@ -5172,11 +5172,10 @@ not in a separate dashboard tool.
   query would need a new rule); the Programs list also reads the exercise
   library for the rules. The Programs subtitle says "by catalogue order"
   only while no header sorts it.
-- **Generator** (`lib/admin/generator`; AG1 A, AG2 A, AG5 picks under
+- **Generator** (`lib/admin/generator`; AG1 A, AG2 A, AG4, AG5 picks under
   Programs › "Program generator, rebuild"): one draft of `generator/rules`
-  edited over five tabs, Templates, Dosing, Volume, Selection and Areas
-  (the Simulator tab comes with the simulator feature); switching tabs
-  keeps the edits. The header reads "Version N · published <date> by
+  edited over five tabs, Templates, Dosing, Volume, Selection and Areas,
+  and a sixth, Simulator; switching tabs keeps the edits. The header reads "Version N · published <date> by
   <email>"; with changes a bar says "n unpublished changes · <tabs>" with
   Discard, History and Review and publish (History sits in the header
   without changes). A changed field shows its old value under it ("was
@@ -5210,3 +5209,31 @@ not in a separate dashboard tool.
   reads as a number; scores take negative numbers; chip lists keep their
   stored order. App settings shares the publish bar, the change table
   and the history pane (`lib/admin/shell/publishing.dart`).
+  The Simulator (AG4) runs `generateProgram` with `explain: true`. Its
+  answers are its own (kept while switching tabs, never part of the
+  draft): Rules ("Published vN" / "My changes", sent as `rules`; My
+  changes stays chosen while the draft is being checked, with Generate
+  disabled and "Checking…", and falls back to Published, saying why,
+  only when the draft has no changes any more or has problems), goal, level, days 2-6, the session lengths of the chosen
+  rules (60 when offered, else the middle one), the five equipment
+  presets, style, focus (at most `focus.max`; picking a left-out area
+  takes it out), leave out (at most `skip.max`, never an area in focus),
+  sensitive areas, split ("Let the rules choose" or a split of the chosen
+  rules) and seed (0); a change of rules drops what they do not offer.
+  Defaults: build muscle, intermediate, 4 days, full gym, no preference.
+  The result: the split name, the rules the run used ("Published vN" from
+  the answer's `rulesVersion`, or "My changes"), "template <id> · <n>
+  weeks" and the uncovered muscles; when a published run's version is not
+  the loaded one (the server caches the rules for 60 s) a line says so
+  and the weekly sets show without targets; a tab per day with its
+  minutes as the engine counts them (`estimateDay` plus `time.setupS` per
+  exercise); a
+  table of exercise (English name from the exercise records, read from
+  the first run on; the id when unknown), slot ("Primary · 1", plus kept,
+  key or extra), sets × reps or hold, rest and score (the sum of its
+  parts, one decimal; "—" when not scored); a scored row opens to its
+  parts and the next candidates; under it the weekly sets, each targeted
+  muscle as "sets / target" (the level's `volume.targets` plus
+  `focus.extraSets` for focus muscles), then the other trained muscles.
+  A refusal (no template, no exercises, not admin, offline) says so in
+  words and keeps the answers; a new run replaces the result.

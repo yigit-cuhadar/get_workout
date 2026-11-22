@@ -9,6 +9,24 @@ import '../domain/generator_rules_usecases.dart';
 import '../domain/rules_changes.dart';
 import 'rules_text.dart';
 
+/// Where the draft stands for the simulator.
+enum DraftCheck {
+  /// No changes against the loaded rules.
+  unchanged,
+
+  /// Changed, and its check is still to come or under way.
+  checking,
+
+  /// Changed, and its check failed.
+  unchecked,
+
+  /// Checked, with problems.
+  problems,
+
+  /// Checked without problems: it may be run.
+  ready,
+}
+
 enum PublishStatus {
   idle,
 
@@ -154,6 +172,18 @@ class GeneratorRulesState extends Equatable {
   };
 
   bool get publishing => publishStatus == PublishStatus.publishing;
+
+  /// Whether the simulator may run the draft: it differs from the loaded
+  /// rules and the server checked it without problems.
+  DraftCheck get draftCheck => switch (this) {
+    _ when !hasChanges => DraftCheck.unchanged,
+    _ when checking || !draftChecked =>
+      checkFailure != null && !checking
+          ? DraftCheck.unchecked
+          : DraftCheck.checking,
+    _ when problems.isNotEmpty => DraftCheck.problems,
+    _ => DraftCheck.ready,
+  };
 
   /// Whether the changes may be reviewed and published: the server checked
   /// this very draft and found no problem.
