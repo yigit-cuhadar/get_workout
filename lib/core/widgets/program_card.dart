@@ -103,17 +103,13 @@ class ProgramCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   spacing: 1,
                   children: [
+                    // A long name wraps beside its tags, which stay on its
+                    // first line.
                     Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       spacing: Gap.xs,
                       children: [
-                        Flexible(
-                          child: Text(
-                            name,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: text.titleMedium,
-                          ),
-                        ),
+                        Flexible(child: Text(name, style: text.titleMedium)),
                         if (active)
                           ForgeTag(
                             l10n.programStateActive,

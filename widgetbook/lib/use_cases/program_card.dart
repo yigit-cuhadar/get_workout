@@ -53,6 +53,21 @@ Widget programRows(BuildContext context) => _page([
   ),
 ]);
 
+@widgetbook.UseCase(name: 'Row · long name', type: ProgramCard)
+Widget programRowLongName(BuildContext context) => _page([
+  ListRowCard(
+    children: [
+      ProgramCard.row(
+        name: 'Shoulders and Back Focus 4-Day',
+        facts: '4 days · Intermediate · 8 weeks',
+        fits: true,
+        locked: true,
+        onTap: () {},
+      ),
+    ],
+  ),
+]);
+
 @widgetbook.UseCase(name: 'Recommended for you · card', type: ProgramCard)
 Widget programRecommended(BuildContext context) => _page([
   ProgramCard(
