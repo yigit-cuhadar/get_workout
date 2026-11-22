@@ -46,6 +46,7 @@ const answers = (changes: Partial<Answers> = {}): Answers => ({
   sessionMinutes: 60,
   equipment: presets.fullGym,
   focus: [],
+  skip: [],
   sensitive: [],
   equipmentStyle: "any",
   ...changes,
@@ -180,6 +181,49 @@ describe("the seed rules with the content library", () => {
         );
       }
     }
+  });
+
+  test("an area left out is not trained, and its days go to the others", () => {
+    const noLegs = program({ skip: ["legs"] });
+    for (const muscle of seed.skip.areas.legs) {
+      for (const day of noLegs.days) {
+        for (const item of day.items) {
+          assert.ok(!exercise(item.exerciseId).mainMuscles.includes(muscle));
+        }
+      }
+    }
+    assert.deepEqual(
+      noLegs.days.map((day) => day.name),
+      ["Upper A", "Upper B", "Upper A 2", "Upper B 2"],
+    );
+    assert.ok(!noLegs.uncovered.includes("quads"));
+    // Full-body days stay, without their leg work.
+    const fullBody = program({ daysPerWeek: 3, skip: ["legs"] });
+    assert.deepEqual(
+      fullBody.days.map((day) => day.name),
+      ["Full Body A", "Full Body B", "Full Body C"],
+    );
+    assert.ok(
+      fullBody.days.every((day) =>
+        day.items.every(
+          (item) => !exercise(item.exerciseId).mainMuscles.includes("quads"),
+        ),
+      ),
+    );
+  });
+
+  test("leaving out every area a template trains is refused", () => {
+    const r: Rules = { ...seed, skip: { ...seed.skip, max: 6 } };
+    assert.deepEqual(
+      generate({
+        answers: answers({
+          skip: ["chest", "back", "shoulders", "arms", "legs", "glutes"],
+        }),
+        rules: r,
+        exercises: library,
+      }),
+      { ok: false, refusal: "no-exercises" },
+    );
   });
 
   test("a focus area gets more weekly sets", () => {

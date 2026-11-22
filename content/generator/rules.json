@@ -4209,6 +4209,42 @@
     "extraSets": 4,
     "max": 2
   },
+  "skip": {
+    "areas": {
+      "chest": [
+        "pec"
+      ],
+      "back": [
+        "lat",
+        "trap"
+      ],
+      "shoulders": [
+        "front_delt",
+        "mid_delt",
+        "rear_delt"
+      ],
+      "arms": [
+        "biceps",
+        "triceps",
+        "forearm"
+      ],
+      "core": [
+        "abdominal",
+        "oblique"
+      ],
+      "glutes": [
+        "glute"
+      ],
+      "legs": [
+        "quads",
+        "hamstring",
+        "calf",
+        "adductor",
+        "abductor"
+      ]
+    },
+    "max": 3
+  },
   "selection": {
     "tier": {
       "staple": 30,

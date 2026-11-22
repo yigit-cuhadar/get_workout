@@ -43,6 +43,8 @@ export interface Answers {
   sessionMinutes: number;
   equipment: string[];
   focus: string[];
+  /** Areas the user does not want to train. */
+  skip: string[];
   sensitive: string[];
   equipmentStyle: EquipmentStyle;
   /** A split id; absent lets the rules choose. */
@@ -224,6 +226,9 @@ export function generate(input: Input): Result {
   const equipmentScores = selection.equipment[answers.equipmentStyle];
   const goalScores = selection.goalEquipment[answers.goal] ?? {};
 
+  const skipped = new Set(
+    answers.skip.flatMap((area) => rules.skip.areas[area] ?? []),
+  );
   const library = new Map(input.exercises.map((e) => [e.id, e]));
   /** The best score among the equipment sets the user can do it with; a
    * set scores as its first, main item. */
@@ -243,6 +248,7 @@ export function generate(input: Input): Result {
         LEVELS.indexOf(e.level as Level) >= 0 &&
         LEVELS.indexOf(e.level as Level) <= levelIndex + 1 &&
         !e.stressAreas.some((area) => sensitive.has(area)) &&
+        !e.mainMuscles.some((m) => skipped.has(m)) &&
         equipmentScore(e) !== undefined,
     )
     .sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
@@ -258,8 +264,10 @@ export function generate(input: Input): Result {
     answers.focus.flatMap((area) => rules.focus.areas[area] ?? []),
   );
   const target = (muscle: string) =>
-    (rules.volume.targets[answers.level][muscle] ?? 0) +
-    (focusMuscles.has(muscle) ? rules.focus.extraSets : 0);
+    skipped.has(muscle)
+      ? 0
+      : (rules.volume.targets[answers.level][muscle] ?? 0) +
+        (focusMuscles.has(muscle) ? rules.focus.extraSets : 0);
   const cap = (muscle: string) =>
     rules.volume.cap[answers.level] +
     (focusMuscles.has(muscle) ? rules.focus.extraSets : 0);
@@ -270,11 +278,27 @@ export function generate(input: Input): Result {
       (g.sessionMax === undefined || answers.sessionMinutes <= g.sessionMax),
   );
 
-  const days: Day[] = template.dayList.map((day) => ({
-    template: day,
-    placed: [],
-    tried: new Set<number>(),
-  }));
+  // A day none of whose priority 1 slots has a candidate (a leg day for a
+  // user leaving legs out) gives its place to the other days, in turn.
+  const usable = template.dayList.filter((day) =>
+    day.slots.some(
+      (slot) =>
+        slot.priority === 1 && pool.some((e) => fitsPick(slot.pick, e)),
+    ),
+  );
+  if (usable.length === 0) return { ok: false, refusal: "no-exercises" };
+  const whole = usable.length === template.dayList.length;
+  const days: (Day & { name: string })[] = template.dayList.map((_, i) => {
+    const day = usable[i % usable.length];
+    const round = Math.floor(i / usable.length) + 1;
+    const name = Object.hasOwn(day.l10n, lang) ? day.l10n[lang].name : day.l10n.en.name;
+    return {
+      template: day,
+      name: whole || round === 1 ? name : `${name} ${round}`.slice(0, 40),
+      placed: [],
+      tried: new Set<number>(),
+    };
+  });
   /** The exercise the slots sharing a key take. */
   const keyed = new Map<string, Exercise>();
 
@@ -633,8 +657,6 @@ export function generate(input: Input): Result {
   }
 
   const split = rules.splits.find((s) => s.id === template.split);
-  const text = <T>(l10n: { [lang: string]: T }) =>
-    Object.hasOwn(l10n, lang) ? l10n[lang] : l10n.en;
   const weeklySets = weekly();
   const trained = new Set(
     days.flatMap((day) => day.placed.flatMap((p) => p.exercise.mainMuscles)),
@@ -642,12 +664,11 @@ export function generate(input: Input): Result {
   const value: Generated = {
     split: template.split,
     template: template.id,
-    splitName: split ? text(split.l10n).name : template.split,
+    splitName: split
+      ? (Object.hasOwn(split.l10n, lang) ? split.l10n[lang] : split.l10n.en).name
+      : template.split,
     lengthWeeks: rules.lengthWeeks[answers.level],
-    days: days.map((day) => ({
-      name: text(day.template.l10n).name,
-      items: layout(day),
-    })),
+    days: days.map((day) => ({ name: day.name, items: layout(day) })),
     weeklySets,
     uncovered: MUSCLES.filter((m) => target(m) > 0 && !trained.has(m)),
   };

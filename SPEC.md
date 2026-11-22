@@ -386,6 +386,8 @@ never changed afterwards. Seeded from `content/generator/rules.json`.
   it.
 - `focus`: `areas.<focusArea>` (muscle[]), `extraSets` (weekly sets a
   focus muscle's target and cap rise by), `max` (areas a user may pick).
+- `skip`: `areas.<focusArea>` (the muscles left out with that area),
+  `max` (areas a user may leave out).
 - `selection`: `tier.<generatorTier>` (score; `never` has none),
   `equipment.<equipmentStyle>.<equipment>` (score of doing it with that
   equipment), `goalEquipment.<goal>.<equipment>` (added for that goal;
@@ -400,7 +402,7 @@ never changed afterwards. Seeded from `content/generator/rules.json`.
 **`generator/options`** (read: any signed-in user; written with every
 publish): `version`, `splits[]` (`id`, `l10n`, `fits[]` of `{days,
 levels[], goals[]?}` from the templates), `sessionMinutes[]`,
-`maxFocusAreas`. What the app needs to ask the questions.
+`maxFocusAreas`, `maxSkipAreas`. What the app needs to ask the questions.
 
 ### Storage
 
@@ -528,7 +530,8 @@ only, JPEG, max 5 MB.
 - `generateProgram` (callable, `functions/src/generator`) → a program
   from the user's answers, the published rules and the live exercises.
   `{answers: {goal, level, daysPerWeek, sessionMinutes, equipment[],
-  focus[], sensitive[], equipmentStyle, split?}, seed?, kept?}` →
+  focus[], skip[], sensitive[], equipmentStyle, split?}, seed?, kept?,
+  lang?}` →
   `{program: {name, lengthWeeks, days[]}, weeklySets, uncovered[],
   rulesVersion}`. Signed-in users with an active entitlement only
   (`permission-denied`, `details.reason` `not-premium`); an admin always
@@ -3437,12 +3440,22 @@ the feature you are about to touch, and keep it true when you change it.
     ready-made program; a generated program is one repeating week, saved
     as today (`origin: generated`, never `premium`), progression stays the
     workout's hint.
-  - Questions (nine): goal, level, days per week (2-6), session length,
-    equipment, focus areas (up to `focus.max`, may be none), sensitive
+  - Questions: goal, level, days per week (2-6) and equipment from the
+    profile, then session length, focus areas (up to `focus.max`, may be
+    none), areas to leave out (up to `skip.max`, may be none; the owner's
+    addition, 2026-11-22: areas the user does not want to train), sensitive
     areas (any number, may be none), equipment style, split ("Let the app
-    choose" first). Goal, level, days and equipment are prefilled from
-    the profile. There is no leave-out question: an exercise is swapped
-    or removed on the preview.
+    choose" first). There is no leave-out question for exercises: one is
+    swapped or removed on the preview.
+  - Design picks (owner, 2026-11-22, canvas
+    https://claude.ai/artifact/UsusNzFfYt5unjbC8gf7vb): the four profile
+    answers show on the first page as one card, a row opening its
+    question to change it, so the flow has a page per new question
+    instead of nine (G1 A); focus areas are picked on the body model,
+    with a switch to a list (G2, the owner's own answer; drawn as a new
+    row before it is built, with the leave-out question, G4); the
+    sensitive areas question opens with a "No sensitive areas" row,
+    selected until an area is ticked (G3 A).
   - Engine (`functions/src/generator/engine.ts`, pure: answers, rules,
     exercises, seed and kept items in; the same inputs give the same
     program):
@@ -3451,7 +3464,12 @@ the feature you are about to touch, and keep it true when you change it.
        is a typed refusal (`no-template`).
     2. Candidates: live exercises doable with the equipment (through
        `equipment` or an alternative set), at most one level above the
-       user, tier not `never`, no stress area the user marked.
+       user, tier not `never`, no stress area the user marked, no main
+       muscle of an area the user leaves out (those muscles have no
+       target either). A day none of whose priority 1 slots has a
+       candidate (a leg day without legs) gives its place to the
+       template's other days, taken in turn and numbered ("Upper A 2");
+       when no day is left the answers are refused (`no-exercises`).
     3. A slot takes the best-scoring candidate fitting its `pick` that
        is not on the day yet. The score adds the tier, the best
        equipment set the user has (a set scores as its first item, plus

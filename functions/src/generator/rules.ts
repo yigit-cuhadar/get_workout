@@ -86,6 +86,10 @@ export interface Rules {
     extraSets: number;
     max: number;
   };
+  skip: {
+    areas: { [area: string]: string[] };
+    max: number;
+  };
   selection: {
     tier: { [tier: string]: number };
     equipment: Record<EquipmentStyle, { [equipment: string]: number }>;
@@ -109,6 +113,7 @@ export interface Options {
   }[];
   sessionMinutes: number[];
   maxFocusAreas: number;
+  maxSkipAreas: number;
 }
 
 export const optionsOf = (rules: Rules): Options => ({
@@ -125,6 +130,7 @@ export const optionsOf = (rules: Rules): Options => ({
   })),
   sessionMinutes: rules.time.sessionMinutes,
   maxFocusAreas: rules.focus.max,
+  maxSkipAreas: rules.skip.max,
 });
 
 const ID = /^[a-z][a-z0-9_]{0,39}$/;
@@ -261,6 +267,7 @@ export function rulesProblems(value: unknown): string[] {
     "grouping",
     "volume",
     "focus",
+    "skip",
     "selection",
     "time",
     "lengthWeeks",
@@ -411,6 +418,14 @@ export function rulesProblems(value: unknown): string[] {
     );
     int("focus.extraSets", focus.extraSets, 0, 20);
     int("focus.max", focus.max, 1, FOCUS_AREAS.length);
+  }
+
+  const skip = object("skip", rules.skip, ["areas", "max"]);
+  if (skip) {
+    table("skip.areas", skip.areas, FOCUS_AREAS, (p, v) =>
+      codes(p, v, MUSCLES, 1),
+    );
+    int("skip.max", skip.max, 1, FOCUS_AREAS.length - 1);
   }
 
   const selection = object("selection", rules.selection, [
