@@ -2,13 +2,15 @@ import '../../shell/admin_text.dart';
 import '../domain/generator_rules.dart';
 import '../domain/rules_changes.dart';
 
-/// The parts of the rules page, each editing some of the rules' sections.
+/// The parts of the rules page, each editing some of the rules' sections,
+/// and the simulator, which edits none.
 enum RulesTab {
   templates('Templates', {'splits', 'templates'}),
   dosing('Dosing', {'dosing', 'grouping'}),
   volume('Volume', {'volume'}),
   selection('Selection', {'selection'}),
-  areas('Areas', {'focus', 'skip', 'time', 'lengthWeeks'});
+  areas('Areas', {'focus', 'skip', 'time', 'lengthWeeks'}),
+  simulator('Simulator', {});
 
   const RulesTab(this.label, this.sections);
 

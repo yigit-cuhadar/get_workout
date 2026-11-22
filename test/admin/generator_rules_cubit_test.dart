@@ -472,4 +472,27 @@ void main() {
       verify(() => repository.publish(any())).called(1);
     });
   });
+
+  test('the simulator may run the draft once it is changed and checked '
+      'without problems', () async {
+    final cubit = await loadedCubit();
+    expect(cubit.state.runnableDraft, isNull, reason: 'no changes');
+
+    cubit.setValue(_rest, 165);
+    expect(cubit.state.runnableDraft, isNull, reason: 'not checked yet');
+    await cubit.checkDraft();
+    expect(cubit.state.runnableDraft, cubit.state.draft);
+
+    when(() => repository.check(any())).thenAnswer(
+      (_) async => const Ok(
+        RulesCheck(problems: ['dosing.build_muscle.primary.restS: too long']),
+      ),
+    );
+    cubit.setValue(_rest, 900);
+    await cubit.checkDraft();
+    expect(cubit.state.runnableDraft, isNull, reason: 'has problems');
+
+    cubit.discard();
+    expect(cubit.state.runnableDraft, isNull);
+  });
 }

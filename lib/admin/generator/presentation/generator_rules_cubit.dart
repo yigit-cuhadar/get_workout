@@ -155,6 +155,13 @@ class GeneratorRulesState extends Equatable {
 
   bool get publishing => publishStatus == PublishStatus.publishing;
 
+  /// The draft while the simulator may run it: it differs from the loaded
+  /// rules and the server checked it without problems.
+  GeneratorRules? get runnableDraft =>
+      hasChanges && draftChecked && !checking && problems.isEmpty
+      ? draft
+      : null;
+
   /// Whether the changes may be reviewed and published: the server checked
   /// this very draft and found no problem.
   bool get canPublish =>

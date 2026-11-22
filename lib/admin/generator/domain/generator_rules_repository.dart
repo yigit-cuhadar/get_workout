@@ -1,9 +1,11 @@
 import 'package:forge_core/forge_core.dart';
 
 import 'generator_rules.dart';
+import 'simulation.dart';
 
 /// The generator's rules, through the admin-only callables of
-/// `functions/src/generator`. Every call fails with [PermissionFailure]
+/// `functions/src/generator`, and the generator itself as an admin calls
+/// it. Every call fails with [PermissionFailure]
 /// without the admin claim, [GeneratorRulesUnavailableFailure] when the
 /// functions cannot be called and [NetworkFailure] offline.
 abstract interface class GeneratorRulesRepository {
@@ -23,4 +25,11 @@ abstract interface class GeneratorRulesRepository {
 
   /// The latest versions, newest first, without their rules.
   Future<Result<List<StoredRules>>> history();
+
+  /// A program for [request] with why each exercise was picked. Fails with
+  /// `GenerationRefused` when no template or no exercises fit the answers
+  /// (or nothing is published), [GeneratorRulesInvalidFailure] when the
+  /// sent rules have problems and [ValidationFailure] for an answer the
+  /// rules do not offer.
+  Future<Result<Simulation>> simulate(SimulationRequest request);
 }
