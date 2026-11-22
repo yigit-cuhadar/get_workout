@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:forge_ui/forge_ui.dart';
 import 'package:get_workout/core/widgets/plate_calculator.dart';
 import 'package:widgetbook_annotation/widgetbook_annotation.dart' as widgetbook;

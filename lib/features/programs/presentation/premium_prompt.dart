@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// What a premium call to action does: the subscription feature's paywall.
 class PremiumPrompt {

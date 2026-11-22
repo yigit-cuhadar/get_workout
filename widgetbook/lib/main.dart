@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:get_workout/app/theme.dart';
 import 'package:widgetbook/widgetbook.dart';
 import 'package:widgetbook_annotation/widgetbook_annotation.dart' as widgetbook;
@@ -16,10 +16,26 @@ class GetWorkoutWidgetbook extends StatelessWidget {
   const GetWorkoutWidgetbook({super.key});
 
   @override
-  Widget build(BuildContext context) => Widgetbook.material(
+  Widget build(BuildContext context) => Widgetbook(
     directories: withAllForms(directories),
+    // Widgetbook's material builder and theme addon still use the
+    // deprecated package:flutter/material.dart types; these use material_ui.
+    appBuilder: (context, child) => MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: Material(child: child),
+    ),
     addons: [
-      MaterialThemeAddon(
+      ThemeAddon<ThemeData>(
+        themeBuilder: (context, theme, child) => Theme(
+          data: theme,
+          child: ColoredBox(
+            color: theme.scaffoldBackgroundColor,
+            child: DefaultTextStyle(
+              style: theme.textTheme.bodyMedium!,
+              child: child,
+            ),
+          ),
+        ),
         themes: [
           for (final preset in AppPreset.values) ...[
             WidgetbookTheme(
