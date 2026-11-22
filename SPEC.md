@@ -1845,9 +1845,15 @@ Decisions (the canvases they were drawn on are deleted):
   a placeholder (an old Profile screen): replace it with the paywall before
   submission. RevenueCat: iOS app with the In-App Purchase key, entitlement
   `premium`, offering `default` ($rc_monthly, $rc_annual, metadata
-  `dismissible: true`). Webhooks: sandbox → dev, production → prod, each
-  with its own REVENUECAT_WEBHOOK_AUTHORIZATION; both deployed and answer
-  401 without the header. Device builds use the real store only with
+  `dismissible: true`). Webhooks: sandbox → dev, sandbox and production →
+  prod (since 2026-11-22: TestFlight and App Review buy in the sandbox
+  with prod builds, so prod must see sandbox events; each project skips
+  uids it does not know), each with its own
+  REVENUECAT_WEBHOOK_AUTHORIZATION; both deployed and answer 401 without
+  the header. First TestFlight build 1.0.0 (1) uploaded 2026-11-21
+  (internal group "Team"); on 2026-11-22 the owner bought the monthly plan
+  in it and Premium unlocked. Its first event reached only dev (before the
+  webhook change); prod gets the entitlement at the sandbox renewal. Device builds use the real store only with
   `--dart-define=REVENUECAT_IOS_KEY=...`. On the owner's iPhone both plans
   load. Not done yet: a completed sandbox purchase (the sandbox tester's
   sign-in loops after the verification code), then `entitlements/<uid>` on
