@@ -473,15 +473,14 @@ void main() {
     });
   });
 
-  test('the simulator may run the draft once it is changed and checked '
-      'without problems', () async {
+  test('the draft check says when the simulator may run the draft', () async {
     final cubit = await loadedCubit();
-    expect(cubit.state.runnableDraft, isNull, reason: 'no changes');
+    expect(cubit.state.draftCheck, DraftCheck.unchanged);
 
     cubit.setValue(_rest, 165);
-    expect(cubit.state.runnableDraft, isNull, reason: 'not checked yet');
+    expect(cubit.state.draftCheck, DraftCheck.checking);
     await cubit.checkDraft();
-    expect(cubit.state.runnableDraft, cubit.state.draft);
+    expect(cubit.state.draftCheck, DraftCheck.ready);
 
     when(() => repository.check(any())).thenAnswer(
       (_) async => const Ok(
@@ -490,9 +489,15 @@ void main() {
     );
     cubit.setValue(_rest, 900);
     await cubit.checkDraft();
-    expect(cubit.state.runnableDraft, isNull, reason: 'has problems');
+    expect(cubit.state.draftCheck, DraftCheck.problems);
+
+    when(() => repository.check(any()))
+        .thenAnswer((_) async => const Err(NetworkFailure('offline')));
+    cubit.setValue(_rest, 170);
+    await cubit.checkDraft();
+    expect(cubit.state.draftCheck, DraftCheck.unchecked);
 
     cubit.discard();
-    expect(cubit.state.runnableDraft, isNull);
+    expect(cubit.state.draftCheck, DraftCheck.unchanged);
   });
 }

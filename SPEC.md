@@ -5211,17 +5211,23 @@ not in a separate dashboard tool.
   and the history pane (`lib/admin/shell/publishing.dart`).
   The Simulator (AG4) runs `generateProgram` with `explain: true`. Its
   answers are its own (kept while switching tabs, never part of the
-  draft): Rules ("Published vN" / "My changes", the latter only while the
-  draft has changes the server checked without problems, sent as
-  `rules`), goal, level, days 2-6, the session lengths of the chosen
+  draft): Rules ("Published vN" / "My changes", sent as `rules`; My
+  changes stays chosen while the draft is being checked, with Generate
+  disabled and "Checking…", and falls back to Published, saying why,
+  only when the draft has no changes any more or has problems), goal, level, days 2-6, the session lengths of the chosen
   rules (60 when offered, else the middle one), the five equipment
   presets, style, focus (at most `focus.max`; picking a left-out area
   takes it out), leave out (at most `skip.max`, never an area in focus),
   sensitive areas, split ("Let the rules choose" or a split of the chosen
   rules) and seed (0); a change of rules drops what they do not offer.
   Defaults: build muscle, intermediate, 4 days, full gym, no preference.
-  The result: the split name, "template <id> · <n> weeks" and the
-  uncovered muscles; a tab per day with its minutes by `estimateDay`; a
+  The result: the split name, the rules the run used ("Published vN" from
+  the answer's `rulesVersion`, or "My changes"), "template <id> · <n>
+  weeks" and the uncovered muscles; when a published run's version is not
+  the loaded one (the server caches the rules for 60 s) a line says so
+  and the weekly sets show without targets; a tab per day with its
+  minutes as the engine counts them (`estimateDay` plus `time.setupS` per
+  exercise); a
   table of exercise (English name from the exercise records, read from
   the first run on; the id when unknown), slot ("Primary · 1", plus kept,
   key or extra), sets × reps or hold, rest and score (the sum of its

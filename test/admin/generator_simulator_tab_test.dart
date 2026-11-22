@@ -126,10 +126,13 @@ void main() {
 
     expect(find.text('Upper / Lower'), findsOneWidget);
     expect(
-      find.text('template upper_lower_4 · 10 weeks · uncovered: abdominal'),
+      find.text(
+        'Published v3 · template upper_lower_4 · 10 weeks · uncovered: '
+        'abdominal',
+      ),
       findsOneWidget,
     );
-    expect(find.widgetWithText(Tab, 'Upper A · 15 min'), findsOneWidget);
+    expect(find.widgetWithText(Tab, 'Upper A · 17 min'), findsOneWidget);
     expect(find.widgetWithText(Tab, 'Lower A · 8 min'), findsOneWidget);
     for (final text in [
       'Bench Press',
@@ -206,9 +209,59 @@ void main() {
 
     await tester.tap(find.text('My changes'));
     await tester.pumpAndSettle();
-    await tester.tap(find.widgetWithText(FilledButton, 'Generate'));
+
+    // Another edit: My changes stays chosen while it is checked.
+    cubit.setValue(['dosing', 'build_muscle', 'primary', 'restS'], 170);
+    // Twice: the cubit's stream delivers after the first frame.
+    await tester.pump();
+    await tester.pump();
+    // In the page header and under the rules choice.
+    expect(find.text('Checking…'), findsNWidgets(2));
+    Finder generate() => find.widgetWithText(FilledButton, 'Generate');
+    expect(tester.widget<FilledButton>(generate()).onPressed, isNull);
+    await tester.pump(GeneratorRulesCubit.checkDelay);
+    await tester.pumpAndSettle();
+    expect(find.text('Checking…'), findsNothing);
+
+    await tester.tap(generate());
     await tester.pumpAndSettle();
     expect(sent().rules, cubit.state.draft);
+    expect(find.textContaining('My changes · template'), findsOneWidget);
+
+    // Problems: the published rules run, and the tab says why.
+    when(() => repository.check(any())).thenAnswer(
+      (_) async => const Ok(
+        RulesCheck(problems: ['dosing.build_muscle.primary.restS: too long']),
+      ),
+    );
+    cubit.setValue(['dosing', 'build_muscle', 'primary', 'restS'], 900);
+    await tester.pump(GeneratorRulesCubit.checkDelay);
+    await tester.pumpAndSettle();
+    expect(find.text('My changes'), findsNothing);
+    expect(
+      find.text('Your changes have problems, so the published rules run.'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('a run of another published version says so, without '
+      'targets', (tester) async {
+    when(() => repository.simulate(any()))
+        .thenAnswer((_) async => Ok(simulation(rulesVersion: 2)));
+    await openSimulator(tester);
+    await tester.tap(find.widgetWithText(FilledButton, 'Generate'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('Published v2 · template'), findsOneWidget);
+    expect(
+      find.text(
+        'Built with version 2; version 3 is published, try again in a minute',
+      ),
+      findsOneWidget,
+    );
+    expect(
+      find.text('Weekly sets: pec 4 · triceps 2 · abdominal 1.5 · quads 3'),
+      findsOneWidget,
+    );
   });
 
   testWidgets('a refusal says so in words and keeps the answers', (

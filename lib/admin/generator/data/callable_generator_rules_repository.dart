@@ -98,7 +98,6 @@ class CallableGeneratorRulesRepository implements GeneratorRulesRepository {
         final result = _map(data);
         return Simulation(
           program: ServerGeneratorRepository.programFrom(data),
-          split: '${result['split']}',
           template: '${result['template']}',
           weeklySets: {
             for (final MapEntry(:key, :value) in _map(

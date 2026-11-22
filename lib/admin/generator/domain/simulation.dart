@@ -1,8 +1,12 @@
+import 'dart:math' as math;
+
 import 'package:forge_core/forge_core.dart';
 
 import '../../../features/exercises/domain/vocabulary.dart';
 import '../../../features/generator/domain/generated_program.dart';
 import '../../../features/generator/domain/generator_answers.dart';
+import '../../../features/programs/domain/program.dart';
+import '../../../features/programs/domain/program_editing.dart';
 import 'generator_rules.dart';
 
 /// A simulator run: a program for [answers] and [seed], from [rules] (an
@@ -80,7 +84,6 @@ class PickReason extends Equatable {
 class Simulation extends Equatable {
   const Simulation({
     required this.program,
-    required this.split,
     required this.template,
     required this.weeklySets,
     required this.rulesVersion,
@@ -89,8 +92,7 @@ class Simulation extends Equatable {
 
   final GeneratedProgram program;
 
-  /// The ids of the split and the template used.
-  final String split;
+  /// The id of the template used.
   final String template;
 
   /// Sets a week per muscle, 1 per set for a main and 0.5 for a secondary
@@ -106,7 +108,6 @@ class Simulation extends Equatable {
   @override
   List<Object?> get props => [
     program,
-    split,
     template,
     weeklySets,
     rulesVersion,
@@ -145,4 +146,16 @@ Map<Muscle, double> weeklyTargets(
               ? extraSets.toDouble()
               : 0),
   };
+}
+
+/// [day]'s length in whole minutes (at least 1) as the engine counts it
+/// against the session: the app's [estimateDay] plus [rules]'
+/// `time.setupS` for each exercise.
+int dayMinutes(ProgramDay day, GeneratorRules rules) {
+  final setupS = switch (rules.at(['time', 'setupS'])) {
+    final num seconds => seconds.toInt(),
+    _ => 0,
+  };
+  final seconds = estimateDay(day).inSeconds + setupS * day.items.length;
+  return math.max(1, (seconds / 60).round());
 }

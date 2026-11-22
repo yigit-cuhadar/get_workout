@@ -1,5 +1,3 @@
-import 'dart:math' as math;
-
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:forge_core/forge_core.dart';
@@ -10,7 +8,6 @@ import 'package:material_ui/material_ui.dart';
 import '../../../features/exercises/domain/vocabulary.dart';
 import '../../../features/generator/domain/generator_repository.dart';
 import '../../../features/programs/domain/program.dart';
-import '../../../features/programs/domain/program_editing.dart';
 import '../../shell/admin_text.dart';
 import '../domain/generator_rules.dart';
 import '../domain/simulation.dart';
@@ -29,6 +26,24 @@ String _muscle(Muscle muscle) => muscle.code.replaceAll('_', ' ');
 String _part(String key) => key
     .replaceAllMapped(RegExp('[A-Z]'), (m) => ' ${m[0]!.toLowerCase()}')
     .trim();
+
+/// A line under the rules choice: why "My changes" cannot run now, or why
+/// the published rules run instead.
+String? _sourceNote(GeneratorSimulatorState state) => switch (state) {
+  GeneratorSimulatorState(source: RulesSource.draft, :final draftCheck) =>
+    switch (draftCheck) {
+      DraftCheck.checking => 'Checking…',
+      DraftCheck.unchecked =>
+        'Your changes could not be checked. Retry the check above.',
+      _ => null,
+    },
+  GeneratorSimulatorState(fallback: DraftCheck.problems) =>
+    'Your changes have problems, so the published rules run.',
+  GeneratorSimulatorState(fallback: DraftCheck.unchanged) =>
+    'There are no unpublished changes any more, so the published rules '
+        'run.',
+  _ => null,
+};
 
 /// What the simulator says about a failed run.
 String _failureText(Failure failure) => switch (failure) {
@@ -66,16 +81,20 @@ class _SimulatorTabState extends State<SimulatorTab> {
     _offerRules(context.read<GeneratorRulesCubit>().state);
   }
 
-  void _offerRules(GeneratorRulesState rules) => context
-      .read<GeneratorSimulatorCubit>()
-      .setRules(published: rules.loaded, draft: rules.runnableDraft);
+  void _offerRules(GeneratorRulesState rules) =>
+      context.read<GeneratorSimulatorCubit>().setRules(
+        published: rules.loaded,
+        draft: rules.hasChanges ? rules.draft : null,
+        draftCheck: rules.draftCheck,
+      );
 
   @override
   Widget build(BuildContext context) =>
       BlocListener<GeneratorRulesCubit, GeneratorRulesState>(
         listenWhen: (previous, state) =>
             previous.loaded != state.loaded ||
-            previous.runnableDraft != state.runnableDraft,
+            previous.draft != state.draft ||
+            previous.draftCheck != state.draftCheck,
         listener: (_, state) => _offerRules(state),
         child: const Row(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -118,10 +137,11 @@ class _Answers extends StatelessWidget {
                       }),
                     ),
                 ],
-                selected: {state.source},
+                selected: {?state.source},
                 onSelectionChanged: (picked) =>
                     cubit.selectSource(picked.single),
               ),
+            if (_sourceNote(state) case final note?) Hint(note),
             _Dropdown<Goal>(
               label: 'Goal',
               value: state.goal,
@@ -365,6 +385,11 @@ class _Program extends StatelessWidget {
     final simulation = run.simulation;
     final program = simulation.program;
     final muted = ForgeStyle.of(context).colors.inkMuted;
+    // Set when the server's cached published rules were not the loaded ones.
+    final loadedVersion = context.select(
+      (GeneratorSimulatorCubit cubit) =>
+          cubit.state.runVersionDiffers ? cubit.state.published?.version : null,
+    );
     final uncovered = [
       for (final muscle in Muscle.values)
         if (program.uncovered.contains(muscle)) _muscle(muscle),
@@ -383,6 +408,10 @@ class _Program extends StatelessWidget {
             ),
             Text(
               [
+                if (run.request.rules == null)
+                  'Published v${simulation.rulesVersion}'
+                else
+                  'My changes',
                 'template ${simulation.template}',
                 '${program.lengthWeeks} weeks',
                 if (uncovered.isEmpty)
@@ -394,10 +423,15 @@ class _Program extends StatelessWidget {
             ),
           ],
         ),
-        _DayTabs(key: ValueKey(run), days: program.days),
+        if (loadedVersion != null)
+          Text(
+            'Built with version ${simulation.rulesVersion}; version '
+            '$loadedVersion is published, try again in a minute',
+          ),
+        _DayTabs(key: ValueKey(run), run: run),
         _DayTable(run),
         Text(
-          'Weekly sets: ${_weeklyLine(run)}',
+          'Weekly sets: ${_weeklyLine(run, targets: loadedVersion == null)}',
           style: Theme.of(context).textTheme.bodySmall?.copyWith(color: muted),
         ),
       ],
@@ -406,19 +440,21 @@ class _Program extends StatelessWidget {
 }
 
 /// Each targeted muscle as "muscle sets / target", then the other muscles
-/// the week trains.
-String _weeklyLine(SimulationRun run) {
+/// the week trains; without [targets] (unknown rules) every muscle the week
+/// trains with its sets alone.
+String _weeklyLine(SimulationRun run, {required bool targets}) {
   final simulation = run.simulation;
   final targeted = [
-    for (final muscle in Muscle.values)
-      if (simulation.program.targeted.contains(muscle)) muscle,
+    if (targets)
+      for (final muscle in Muscle.values)
+        if (simulation.program.targeted.contains(muscle)) muscle,
   ];
-  final targets = weeklyTargets(run.rules, run.request.answers, targeted);
+  final aims = weeklyTargets(run.rules, run.request.answers, targeted);
   String sets(Muscle muscle) =>
       _number.format(simulation.weeklySets[muscle] ?? 0);
   return [
     for (final muscle in targeted)
-      '${_muscle(muscle)} ${sets(muscle)} / ${_number.format(targets[muscle])}',
+      '${_muscle(muscle)} ${sets(muscle)} / ${_number.format(aims[muscle])}',
     for (final muscle in Muscle.values)
       if (!targeted.contains(muscle) &&
           (simulation.weeklySets[muscle] ?? 0) > 0)
@@ -426,11 +462,13 @@ String _weeklyLine(SimulationRun run) {
   ].join(' · ');
 }
 
-/// "Upper A · 53 min" per day, by the app's estimate.
+/// "Upper A · 53 min" per day, as the engine counts it ([dayMinutes]).
 class _DayTabs extends StatefulWidget {
-  const _DayTabs({super.key, required this.days});
+  const _DayTabs({super.key, required this.run});
 
-  final List<ProgramDay> days;
+  final SimulationRun run;
+
+  List<ProgramDay> get days => run.simulation.program.days;
 
   @override
   State<_DayTabs> createState() => _DayTabsState();
@@ -465,7 +503,7 @@ class _DayTabsState extends State<_DayTabs>
           Tab(
             text:
                 '${day.name} · '
-                '${math.max(1, (estimateDay(day).inSeconds / 60).round())} min',
+                '${dayMinutes(day, widget.run.rules)} min',
           ),
       ],
     );

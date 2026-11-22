@@ -130,9 +130,10 @@ Map<Object?, Object?> simulationData() => {
   ],
 };
 
-/// [simulationData] as the repository reads it.
-Simulation simulation() => const Simulation(
-  program: GeneratedProgram(
+/// [simulationData] as the repository reads it, made with
+/// [rulesVersion].
+Simulation simulation({int rulesVersion = 3}) => Simulation(
+  program: const GeneratedProgram(
     splitName: 'Upper / Lower',
     lengthWeeks: 10,
     days: [
@@ -165,16 +166,15 @@ Simulation simulation() => const Simulation(
     targeted: {Muscle.pec, Muscle.quads, Muscle.abdominal},
     uncovered: {Muscle.abdominal},
   ),
-  split: 'upper_lower',
   template: 'upper_lower_4',
-  weeklySets: {
+  weeklySets: const {
     Muscle.pec: 4,
     Muscle.triceps: 2,
     Muscle.quads: 3,
     Muscle.abdominal: 1.5,
   },
-  rulesVersion: 3,
-  trace: [
+  rulesVersion: rulesVersion,
+  trace: const [
     [
       PickReason(
         exerciseId: 'bench_press',

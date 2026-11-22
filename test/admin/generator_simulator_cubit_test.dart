@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:forge_core/forge_core.dart';
 import 'package:get_workout/admin/exercises/domain/admin_exercise_repository.dart';
@@ -5,10 +7,12 @@ import 'package:get_workout/admin/exercises/domain/exercise_admin_usecases.dart'
 import 'package:get_workout/admin/generator/domain/generator_rules.dart';
 import 'package:get_workout/admin/generator/domain/generator_rules_usecases.dart';
 import 'package:get_workout/admin/generator/domain/simulation.dart';
+import 'package:get_workout/admin/generator/presentation/generator_rules_cubit.dart';
 import 'package:get_workout/admin/generator/presentation/generator_simulator_cubit.dart';
 import 'package:get_workout/features/exercises/domain/vocabulary.dart';
 import 'package:get_workout/features/generator/domain/generator_answers.dart';
 import 'package:get_workout/features/generator/domain/generator_repository.dart';
+import 'package:get_workout/features/programs/domain/program.dart';
 import 'package:mocktail/mocktail.dart';
 
 import 'fixtures.dart';
@@ -49,7 +53,12 @@ void main() {
   );
 
   GeneratorSimulatorCubit withRules({GeneratorRules? draft}) {
-    final cubit = build()..setRules(published: published, draft: draft);
+    final cubit = build()
+      ..setRules(
+        published: published,
+        draft: draft,
+        draftCheck: draft == null ? DraftCheck.unchanged : DraftCheck.ready,
+      );
     addTearDown(cubit.close);
     return cubit;
   }
@@ -129,18 +138,57 @@ void main() {
             verify(() => repository.simulate(captureAny())).captured.single
                 as SimulationRequest;
         expect(again.rules, isNull);
-
-        cubit
-          ..selectSource(RulesSource.draft)
-          ..setRules(published: published);
-        expect(cubit.state.sources, [RulesSource.published]);
-        expect(cubit.state.source, RulesSource.published);
       },
     );
 
+    test('My changes stays chosen while the draft is checked, and falls '
+        'back only without changes or with problems', () async {
+      final cubit = withRules(draft: draft)
+        ..selectSource(RulesSource.draft)
+        ..setRules(
+          published: published,
+          draft: draft,
+          draftCheck: DraftCheck.checking,
+        );
+      expect(cubit.state.source, RulesSource.draft);
+      expect(cubit.state.requested, RulesSource.draft);
+      expect(cubit.state.canGenerate, isFalse);
+      await cubit.generate();
+      verifyNever(() => repository.simulate(any()));
+
+      cubit.setRules(
+        published: published,
+        draft: draft,
+        draftCheck: DraftCheck.unchecked,
+      );
+      expect(cubit.state.source, RulesSource.draft);
+      expect(cubit.state.canGenerate, isFalse);
+
+      cubit.setRules(
+        published: published,
+        draft: draft,
+        draftCheck: DraftCheck.problems,
+      );
+      expect(cubit.state.sources, [RulesSource.published]);
+      expect(cubit.state.source, RulesSource.published);
+      expect(cubit.state.fallback, DraftCheck.problems);
+      expect(cubit.state.canGenerate, isTrue);
+
+      cubit.setRules(published: published);
+      expect(cubit.state.source, RulesSource.published);
+      expect(cubit.state.fallback, DraftCheck.unchanged);
+
+      cubit.selectSource(RulesSource.published);
+      expect(cubit.state.fallback, isNull);
+    });
+
     test('with no rules published only My changes exists', () {
       final cubit = build()
-        ..setRules(published: const StoredRules(version: 0), draft: draft);
+        ..setRules(
+          published: const StoredRules(version: 0),
+          draft: draft,
+          draftCheck: DraftCheck.ready,
+        );
       addTearDown(cubit.close);
       expect(cubit.state.sources, [RulesSource.draft]);
       expect(cubit.state.source, RulesSource.draft);
@@ -243,6 +291,51 @@ void main() {
       await cubit.generate();
       verifyNever(() => repository.simulate(any()));
     });
+  });
+
+  test('closing during a run emits nothing more', () async {
+    final answer = Completer<Result<Simulation>>();
+    when(() => repository.simulate(any())).thenAnswer((_) => answer.future);
+    final cubit = build()..setRules(published: published);
+    final statuses = <SimulationStatus>[];
+    final listening = cubit.stream.listen((s) => statuses.add(s.status));
+    addTearDown(listening.cancel);
+    final run = cubit.generate();
+    await pumpEventQueue();
+    expect(statuses.last, SimulationStatus.running);
+    final before = statuses.length;
+    await cubit.close();
+    answer.complete(Ok(simulation()));
+    await run;
+    expect(statuses, hasLength(before));
+  });
+
+  test('a published run of another version than the loaded one says so', () {
+    final cubit = withRules();
+    expect(cubit.state.runVersionDiffers, isFalse);
+    when(() => repository.simulate(any()))
+        .thenAnswer((_) async => Ok(simulation(rulesVersion: 2)));
+    return cubit.generate().then((_) {
+      expect(cubit.state.runVersionDiffers, isTrue);
+    });
+  });
+
+  test('a day lasts the app estimate plus the setup time per exercise', () {
+    const day = ProgramDay(
+      items: [
+        ProgramItem(
+          exerciseId: 'a',
+          sets: 4,
+          repMin: 6,
+          repMax: 10,
+          restS: 150,
+        ),
+        ProgramItem(exerciseId: 'b', sets: 3, durationS: 30, restS: 45),
+      ],
+    );
+    // 696 s + 225 s, plus 45 s setup for each of two: 1011 s.
+    expect(dayMinutes(day, seed), 17);
+    expect(dayMinutes(day, seed.set(['time', 'setupS'], 0)), 15);
   });
 
   test('weekly targets add the focus extra sets for focus muscles', () {

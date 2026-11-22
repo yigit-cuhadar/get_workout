@@ -10,6 +10,7 @@ import '../../exercises/domain/exercise_draft.dart';
 import '../domain/generator_rules.dart';
 import '../domain/generator_rules_usecases.dart';
 import '../domain/simulation.dart';
+import 'generator_rules_cubit.dart';
 
 /// Which rules the simulator runs: the published ones, or the admin's
 /// unpublished changes.
@@ -41,7 +42,8 @@ class GeneratorSimulatorState extends Equatable {
   const GeneratorSimulatorState({
     this.published,
     this.draft,
-    this.source = RulesSource.published,
+    this.draftCheck = DraftCheck.unchanged,
+    this.requested = RulesSource.published,
     this.goal = Goal.buildMuscle,
     this.level = Level.intermediate,
     this.daysPerWeek = 4,
@@ -69,11 +71,12 @@ class GeneratorSimulatorState extends Equatable {
   /// The loaded version, when it has rules.
   final StoredRules? published;
 
-  /// The unpublished changes, while they may be run: they differ from the
-  /// loaded rules and the server found no problem in them.
+  /// The unpublished changes, while there are any, and their check.
   final GeneratorRules? draft;
+  final DraftCheck draftCheck;
 
-  final RulesSource source;
+  /// The rules the admin picked; [source] says which run.
+  final RulesSource requested;
   final Goal goal;
   final Level level;
   final int daysPerWeek;
@@ -103,17 +106,49 @@ class GeneratorSimulatorState extends Equatable {
   /// English exercise names by id, once loaded.
   final Map<String, String> names;
 
+  /// Whether "My changes" is offered: the draft has changes without
+  /// known problems. Only a [DraftCheck.ready] one runs.
+  bool get draftOffered =>
+      draft != null &&
+      draftCheck != DraftCheck.unchanged &&
+      draftCheck != DraftCheck.problems;
+
+  /// The rules shown as chosen: [requested] while it is offered, else the
+  /// other; null with neither.
+  RulesSource? get source => switch (requested) {
+    RulesSource.draft when draftOffered => RulesSource.draft,
+    _ when published?.rules != null => RulesSource.published,
+    _ when draftOffered => RulesSource.draft,
+    _ => null,
+  };
+
+  /// Why "My changes" was asked for but the published rules are chosen:
+  /// [DraftCheck.unchanged] or [DraftCheck.problems]; null otherwise.
+  DraftCheck? get fallback =>
+      requested == RulesSource.draft && source == RulesSource.published
+      ? draftCheck
+      : null;
+
   /// The rules a run uses now.
   GeneratorRules? get rules => switch (source) {
     RulesSource.published => published?.rules,
     RulesSource.draft => draft,
+    null => null,
   };
 
   /// The sources there are to choose from, in the order shown.
   List<RulesSource> get sources => [
     if (published?.rules != null) RulesSource.published,
-    if (draft != null) RulesSource.draft,
+    if (draftOffered) RulesSource.draft,
   ];
+
+  /// Whether the last run was made with published rules other than the
+  /// loaded version: the server caches them for a minute.
+  bool get runVersionDiffers => switch (run) {
+    SimulationRun(:final request, :final simulation) =>
+      request.rules == null && simulation.rulesVersion != published?.version,
+    null => false,
+  };
 
   List<int> get sessionOptions => _sessionOptions(rules);
 
@@ -125,7 +160,10 @@ class GeneratorSimulatorState extends Equatable {
 
   bool get running => status == SimulationStatus.running;
 
-  bool get canGenerate => rules != null && !running;
+  bool get canGenerate =>
+      rules != null &&
+      !running &&
+      (source != RulesSource.draft || draftCheck == DraftCheck.ready);
 
   GeneratorAnswers get answers => GeneratorAnswers(
     goal: goal,
@@ -143,7 +181,8 @@ class GeneratorSimulatorState extends Equatable {
   GeneratorSimulatorState copyWith({
     StoredRules? Function()? published,
     GeneratorRules? Function()? draft,
-    RulesSource? source,
+    DraftCheck? draftCheck,
+    RulesSource? requested,
     Goal? goal,
     Level? level,
     int? daysPerWeek,
@@ -164,7 +203,8 @@ class GeneratorSimulatorState extends Equatable {
   }) => GeneratorSimulatorState(
     published: published != null ? published() : this.published,
     draft: draft != null ? draft() : this.draft,
-    source: source ?? this.source,
+    draftCheck: draftCheck ?? this.draftCheck,
+    requested: requested ?? this.requested,
     goal: goal ?? this.goal,
     level: level ?? this.level,
     daysPerWeek: daysPerWeek ?? this.daysPerWeek,
@@ -188,7 +228,8 @@ class GeneratorSimulatorState extends Equatable {
   List<Object?> get props => [
     published,
     draft,
-    source,
+    draftCheck,
+    requested,
     goal,
     level,
     daysPerWeek,
@@ -229,9 +270,6 @@ class GeneratorSimulatorCubit extends Cubit<GeneratorSimulatorState> {
   final WatchExerciseRecords _watchExerciseRecords;
   StreamSubscription<List<ExerciseRecord>>? _exercises;
 
-  /// Counts the runs: only the latest one's answer counts.
-  int _turn = 0;
-
   @override
   Future<void> close() async {
     await _exercises?.cancel();
@@ -239,25 +277,22 @@ class GeneratorSimulatorCubit extends Cubit<GeneratorSimulatorState> {
   }
 
   /// The rules there are to run: [published] (the loaded version) and the
-  /// [draft] while it may be run. The answers follow the chosen rules.
-  void setRules({StoredRules? published, GeneratorRules? draft}) {
-    final next = state.copyWith(
+  /// [draft] with its [draftCheck]. The answers follow the chosen rules.
+  void setRules({
+    StoredRules? published,
+    GeneratorRules? draft,
+    DraftCheck draftCheck = DraftCheck.unchanged,
+  }) => _emitFitted(
+    state.copyWith(
       published: () => published?.rules == null ? null : published,
       draft: () => draft,
-    );
-    final sources = next.sources;
-    _emitFitted(
-      next.copyWith(
-        source: sources.contains(state.source)
-            ? state.source
-            : sources.firstOrNull,
-      ),
-    );
-  }
+      draftCheck: draftCheck,
+    ),
+  );
 
   void selectSource(RulesSource source) {
     if (!state.sources.contains(source)) return;
-    _emitFitted(state.copyWith(source: source));
+    _emitFitted(state.copyWith(requested: source));
   }
 
   void setGoal(Goal goal) => emit(state.copyWith(goal: goal));
@@ -339,17 +374,16 @@ class GeneratorSimulatorCubit extends Cubit<GeneratorSimulatorState> {
   /// last one.
   Future<void> generate() async {
     final rules = state.rules;
-    if (rules == null || state.running) return;
+    if (!state.canGenerate || rules == null) return;
     _watchNames();
     final request = SimulationRequest(
       answers: state.answers,
       seed: state.seed,
       rules: state.source == RulesSource.draft ? rules : null,
     );
-    final turn = ++_turn;
     emit(state.copyWith(status: SimulationStatus.running, failure: () => null));
     final result = await _simulateGenerator(request);
-    if (isClosed || turn != _turn) return;
+    if (isClosed) return;
     switch (result) {
       case Ok(value: final simulation):
         emit(
