@@ -207,7 +207,8 @@ void main() {
     expect(find.text('Fri, Nov 13'), findsOneWidget);
     expect(find.text('Start empty workout'), findsOneWidget);
     expect(find.text('Pick exercises as you go'), findsOneWidget);
-    expect(find.widgetWithText(ForgeChip, 'Calories'), findsOneWidget);
+    expect(find.text('Calculators'), findsOneWidget);
+    expect(find.widgetWithText(ForgeChip, 'Calories'), findsNothing);
     expect(find.text('This week'), findsNothing);
     expect(find.text('Sets this week'), findsNothing);
     expect(find.text('3,760 to go'), findsNothing);
@@ -458,6 +459,6 @@ void main() {
     expect(find.byType(SkeletonBar), findsWidgets);
     expect(find.text('Next workout'), findsOneWidget);
     expect(find.text('Start empty workout'), findsOneWidget);
-    expect(find.widgetWithText(ForgeChip, 'Plates'), findsOneWidget);
+    expect(find.text('Calculators'), findsOneWidget);
   });
 }

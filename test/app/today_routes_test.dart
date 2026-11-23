@@ -355,7 +355,7 @@ void main() {
     expectAt(Routes.workout);
   });
 
-  testWidgets('the calculators card opens the calculators', (tester) async {
+  testWidgets('the calculators row opens the calculators', (tester) async {
     await start(tester, programs: planned);
 
     await tap(tester, find.text('Calculators'));
