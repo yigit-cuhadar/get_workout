@@ -72,6 +72,7 @@ class ActiveWorkoutState extends Equatable implements EditedWorkout {
     this.weightUnit,
     this.warmupSteps = const [],
     this.selfEnded = false,
+    this.workoutCount,
   });
 
   final WorkoutStatus status;
@@ -151,6 +152,10 @@ class ActiveWorkoutState extends Equatable implements EditedWorkout {
   /// [workoutIdleLimit]: its summary opens by itself and offers Edit.
   final bool selfEnded;
 
+  /// The user's finished workouts with the one just finished; null while
+  /// none is or when the server could not count them.
+  final int? workoutCount;
+
   /// A workout is in progress (or being finished), so another cannot start.
   /// An empty one is not ([Workout.isEmpty]): it is not kept, shows nowhere
   /// and another simply replaces it.
@@ -206,6 +211,7 @@ class ActiveWorkoutState extends Equatable implements EditedWorkout {
     WeightUnit? Function()? weightUnit,
     List<WarmupStep>? warmupSteps,
     bool? selfEnded,
+    int? Function()? workoutCount,
   }) => ActiveWorkoutState(
     status: status ?? this.status,
     workout: workout != null ? workout() : this.workout,
@@ -232,6 +238,7 @@ class ActiveWorkoutState extends Equatable implements EditedWorkout {
     weightUnit: weightUnit != null ? weightUnit() : this.weightUnit,
     warmupSteps: warmupSteps ?? this.warmupSteps,
     selfEnded: selfEnded ?? this.selfEnded,
+    workoutCount: workoutCount != null ? workoutCount() : this.workoutCount,
   );
 
   @override
@@ -259,6 +266,7 @@ class ActiveWorkoutState extends Equatable implements EditedWorkout {
     weightUnit,
     warmupSteps,
     selfEnded,
+    workoutCount,
   ];
 }
 
@@ -765,6 +773,7 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState>
             dayChanges: () => dayChanges,
             invalidSet: () => null,
             selfEnded: selfEnded,
+            workoutCount: () => _countOf(value),
           ),
         );
         _lastSetAt = null;
@@ -774,6 +783,11 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState>
         _logFinished(value);
     }
   }
+
+  /// The user's finished workouts with [finished]; 1 for the first one
+  /// even when the server could not count them.
+  int? _countOf(FinishedWorkout finished) =>
+      finished.workoutCount ?? (finished.summary.firstEver ? 1 : null);
 
   /// `workout_complete`, `first_workout_complete` with the user's first
   /// one, and a `personal_record` for each record it set.
@@ -789,7 +803,7 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState>
         exercises: summary.exerciseCount,
         sets: summary.setCount,
         records: summary.records.length,
-        workoutCount: count ?? (summary.firstEver ? 1 : null),
+        workoutCount: _countOf(finished),
       ),
     );
     if (count == 1 || (count == null && summary.firstEver)) {

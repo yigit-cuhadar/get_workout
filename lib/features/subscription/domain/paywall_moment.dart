@@ -5,8 +5,9 @@ enum PaywallMoment {
   /// After onboarding's program suggestion.
   onboarding(Tip.onboardingPaywall),
 
-  /// Every time a free user leaves a workout's summary (Done, back or
-  /// Open programs; not Edit).
+  /// A free user leaving the summary (Done, back or Open programs; not
+  /// Edit) of every [workoutPaywallEvery]th workout, from their first
+  /// ([workoutPaywallDue]).
   workoutDone(null),
 
   /// Every app open of a free user while the offering is hard, until they
@@ -32,6 +33,15 @@ bool paywallMomentDue(
   required bool? premium,
   required Set<Tip>? seen,
 }) => premium == false && seen != null && !seen.contains(moment.tip);
+
+/// How many finished workouts apart [PaywallMoment.workoutDone] shows.
+const workoutPaywallEvery = 3;
+
+/// Whether the summary of the user's [count]th finished workout offers the
+/// paywall: the 1st, 4th, 7th and so on; never when the count is not known
+/// (offline).
+bool workoutPaywallDue(int? count) =>
+    count != null && count % workoutPaywallEvery == 1;
 
 /// The store setup's offering metadata key that makes the paywall hard.
 const dismissibleKey = 'dismissible';

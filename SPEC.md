@@ -33,9 +33,9 @@ App-wide decisions only. How each feature behaves is under Feature notes.
 - **Monetization** (owner's picks, 2026-11-19): freemium via RevenueCat with
   a soft paywall. Monthly 7.99 USD and yearly 39.99 USD (regional prices per
   store), a 7-day trial on yearly only. The paywall shows once at the end of
-  onboarding (after the program suggestion), after every workout's summary
-  of a free user (owner's pick, 2026-11-20; it was once, after the first
-  workout), and whenever a Premium feature is touched or from Profile; it can
+  onboarding (after the program suggestion), after the summary of a free
+  user's 1st, 4th, 7th … workout (owner's pick, 2026-11-24; it was every
+  workout from 2026-11-20, once after the first before), and whenever a Premium feature is touched or from Profile; it can
   always be closed. Which paywall shows comes from RevenueCat offerings, not
   from app code, so that later, once ads run, installs attributed to ads
   (Apple Search Ads via AdServices, Play Install Referrer; an MMP only by a
@@ -2345,11 +2345,13 @@ the feature you are about to touch, and keep it true when you change it.
   paywall by itself at two moments: once per user, `onboarding` when the
   program suggestion is left (whichever way: Start, See other programs,
   or nothing to suggest; the router passes it to `ProgramSuggestionPage`
-  so programs never imports subscription); and every time, `workoutDone`
-  when any workout's summary is left by Done, back or Open programs (not
-  Edit, which goes on to fix the workout; owner's pick, 2026-11-20; it was
-  `firstWorkout`, once, after the first workout ever). The paywall first,
-  then the summary goes.
+  so programs never imports subscription); and `workoutDone` when the
+  summary of every third workout from the first (`workoutPaywallDue`: the
+  user's finished-workout count, from `countWorkouts`, is 1, 4, 7 …; 1 for
+  a `firstEver` one offline, otherwise an unknown count never shows it) is
+  left by Done, back or Open programs (not Edit, which goes on to fix the
+  workout; owner's pick, 2026-11-24). The paywall first, then the summary
+  goes.
   `FinishWorkout` marks a summary `firstEver` when none of its exercises
   had stats and `hasWorkouts` (server, else cache) finds no stored
   workout; unreadable is not first. A moment shows only to a user known
