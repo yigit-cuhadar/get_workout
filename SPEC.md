@@ -702,126 +702,40 @@ screenshot next to the studio board, every state) that the owner approves
 or sends back. A look the studio does not draw is a question for the owner
 and is drawn in the studio first.
 
-Where it stands (2026-11-18, end of Group 11):
-- Ana sekmeler: done and merged (#105–#107).
-- Antrenman ve programlar: done, checked on the iOS simulator and approved
-  by the owner (2026-11-15); merged as #108–#111, studio #113, Forge
-  v0.21.1 (search-field border). The device check's picks K1–K3 are under
-  Design. The approval page and its canvases were local HTML, not kept.
-- GetWorkout Studio's published link matches `design/studio.html` on main
-  again (published 2026-11-16 from the owner's account).
-- Sheets open on the root navigator over the tab bar (#114, Forge v0.21.2);
-  checked on the simulator with a direct sheet (exercise filters) and a
-  Forge sheet (Profile › Weight).
-- Every ForgeMenu item in the app has an icon (checked 2026-11-16); menus
-  built later get theirs as they are built.
-- Content: both projects hold the same 480 documents (422 exercises, 29
-  programs, after the review in #204); the first prod import ran on
-  2026-11-21 at the owner's ask, with prod's rules from #185.
-- İlerleme: done, checked on the iOS simulator and approved by the owner
-  (2026-11-16); merged as #116 (Weekly volume, Strength, Strength list,
-  with the stats data change), #117 (Body overview, Body compare,
-  Measurement summary), #118 (Calendar, Workout detail, Cardio, Steps,
-  health cardio sessions), studio #119; Forge v0.22.0–v0.22.2. Every answer
-  is a row of the canvas https://claude.ai/artifact/UdSCdEHtjQ17AMTiDD9qAR
-  (codes in each PR body) and is written into the Design bullets.
-- Health access is one system prompt for steps, workouts and heart rate
-  (Forge v0.50.0): asking for workouts right after the steps sheet closed
-  never answered on iOS and hung onboarding's health step (2026-11-21).
-  Checked on a fresh simulator: one sheet, Allow moves on.
-- Owner to do: the Play Console Health apps declaration must list
-  exercise, distance, total calories burned and heart rate (#118 reads
-  cardio from Health Connect).
-- To check on a device with fuller data (the dev account has one weigh-in,
-  no measurement day, no steps): Body with several weigh-ins and
+Open after Group 11 (the per-group build history is in git and the PRs
+#105–#139; each group's picks are under Design):
+- Owner to do: the Play Console Health apps declaration must list steps,
+  exercise, distance, total calories burned and heart rate.
+- To check on a device with fuller data: Body with several weigh-ins,
   measurement days and photos; the past-workout band's four figures with a
-  large volume ("12,400 kg" may be cut); the Cardio session's distance
-  tile ("18.4 km" may wrap); health cardio sessions on a real device;
-  users who allowed steps before #118 are asked for workouts only through
-  Allow access again.
-- Formlar: done, checked on the iOS simulator and approved by the owner
-  (2026-11-16); merged as #122 (Custom exercise, filters sheet, Bar and
-  plates), #123 (Your profile, Profile question, Warm-up sets, Onboarding
-  number questions), #124 (Log weight, Measurement day, Log cardio),
-  studio #128; Forge v0.23.0–v0.24.3. The picks are under Design ›
-  "Formlar, before the build" and "during the build"; the device check's
-  own pick: Log cardio asks "Discard this cardio session?" when left with
-  changes.
-- Kurulum, hesap ve abonelik: done, checked on the iOS simulator and
-  approved by the owner (2026-11-17); merged as #136 (the check branch
-  joining #133 splash, onboarding, sign-in, guest sheet; #132 calculators;
-  #134 account, delete account, paywall, generator preview; and the
-  device-check fixes), studio #135; Forge v0.25.0–v0.25.6. The picks are
-  under Design › "Kurulum, hesap ve abonelik, before the build", "during
-  the build" and "Device check of Kurulum".
-- Not checked on a device: Account and Delete account (need a real
-  account; covered by #138's flow tests), the real Apple Health / Health
-  Connect prompts, Android, large text.
-- Sign in with Apple: done (#137), checked on the owner's iPhone.
-- Critical-flow widget tests: done (#138 first run, guest to account,
-  Account and Delete account, Premium, calculators; #139 logging a
-  workout, programs and missed days, the builder, the generator, body
-  logging), through the real router over fakes; no production bug found.
-  Not covered: dragging the weight ruler, taking a measurement photo.
-- Done: the final preset is picked (Slate, 2026-11-17); Measure, Graphite
-  and the dev picker are removed. Next phase: Release (AGENTS.md › Phases).
-- Next, in this order (2026-11-18 handoff):
-  1. Subscription (the last unticked feature): the owner opens RevenueCat;
-     App Store products first (the paid team A8J42TV74R is ready), then
-     deploy `revenueCatWebhook` with its secret and try purchase and
-     restore on the phone. Google Play waits for the Play Console.
-  2. Deploy `deleteAccount` to dev, check deletion on the phone, then prod.
-     (2026-11-18: live on dev; a Google-only account was deleted from the
-     owner's iPhone with the provider re-sign-in (#145); deployed to prod the same
-     day.)
-  3. Photo backup: create the default bucket, deploy `storage.rules`, check
-     the camera and backup on the phone.
-  4. iOS push and the workout Live Activity on the phone (paid team).
-     (2026-11-18: the Live Activity and an announcement push both arrive
-     on the owner's iPhone.)
-  5. An Android round: Google sign-in, Health Connect, the launch screen.
-  6. Release: the first prod content import, then the store automation.
-- App Store listing (2026-11-22, owner's picks; screenshot canvas
-  https://claude.ai/artifact/EbzyhQps5J6xmubwaEjA48, copy from an ASO study of
-  Strong, Hevy, Fitbod, JEFIT and others):
-  - Name "GetWorkout: Gym & Fitness Log", subtitle "Workout tracker &
-    programs", keywords "fitness,workout,exercise,lifting,training,
-    bodybuilding,muscle,body,plan,strength,weight,planner,log", promotional
-    text with "workout plan", description led by exercises and programs
-    (the 3D body is one line). Health & Fitness, Lifestyle; age 13+ (the
-    terms' minimum); copyright "2026 Yiğit Çuhadar"; release type manual.
-  - Screenshots: 7 at 1320x2868, dark band with a white two-line caption over
-    a framed phone (SS1 C, layout kept over alternating/tilted/frameless in
-    SS5): Exercises model, Workout logger, Programs, Weekly volume, Body,
-    Today, Strength. Captured from the dev app over `tool/seed_demo.dart`
-    data (plus six months of weigh-ins) with the debug banner hidden locally.
-    The paywall capture is both subscriptions' review screenshot.
-  - App Privacy published: 16 types, all linked, none tracking (data
-    inventory in the legal review). Custom EULA = the Terms text, all
-    territories. Review notes: guest sign-in, no demo account.
-  - Sold only in English-first countries (US, UK, Canada, Australia, New
-    Zealand, Ireland), not in new territories; others open as the app gets
-    their language. iPhone only (#216); iPads use compatibility mode.
-  - TestFlight builds: 1.0.0 (1), 1.0.0 (2) (privacy manifest, iPhone only,
-    23 programs), 1.0.0 (3) and (4) (test fixes), (5) (the owner's logo as
-    icon and launch screen), (6) (the workout summary redesign). Version
-    1.0.0 has build 6 attached (2026-11-23); the seven store screenshots
-    were checked against it and still match (none shows the summary or the
-    removed keyboard bar). Still to do before submission: the prod
-    entitlement after the sandbox renewal, restore, renewal and expiry on
-    TestFlight; then submit the version with both subscriptions, manual
-    release.
-- Both studios' links match main again (published 2026-11-18 from a
-  session: they belong to the owner's account, so a session publishes
-  them directly). Owner to do: the Play Console Health declaration
-  (above).
-- Android round (2026-11-22, emulator): onboarding, the 3D sex cards,
-  notifications, Health Connect, the suggestion, the paywall and the muscle
-  tap work. Google sign-in uses Firebase's web flow in Chrome (email and
+  large volume ("12,400 kg" may be cut); the Cardio session's distance tile
+  ("18.4 km" may wrap); health cardio sessions on a real device; users who
+  allowed steps before #118 are asked for workouts only through Allow
+  access again; the real Apple Health / Health Connect prompts; large text.
+- Not covered by the flow tests: dragging the weight ruler, taking a
+  measurement photo.
+- Android: Google sign-in uses Firebase's web flow in Chrome (email and
   password, no device account picker, broken by Chrome's first-run
   screens); open decision for the owner: native Credential Manager
   (recommended) or keep the web flow.
-- Cloud Functions run on Node 24 on dev and prod (deployed 2026-11-22).
+- Release: version 1.0.0 has TestFlight build 6 attached (builds 1–6 since
+  2026-11-21); the seven store screenshots match it. Before submission:
+  the prod entitlement after the sandbox renewal, restore, renewal and
+  expiry on TestFlight; then submit the version with both subscriptions,
+  manual release.
+- App Store listing (2026-11-22, owner's picks; screenshot canvas
+  https://claude.ai/artifact/EbzyhQps5J6xmubwaEjA48): name "GetWorkout:
+  Gym & Fitness Log", subtitle "Workout tracker & programs", keywords
+  "fitness,workout,exercise,lifting,training,bodybuilding,muscle,body,plan,
+  strength,weight,planner,log", description led by exercises and
+  programs; Health & Fitness, Lifestyle; age 13+; copyright "2026 Yiğit
+  Çuhadar"; release type manual. Seven 1320x2868 screenshots (Exercises
+  model, Workout logger, Programs, Weekly volume, Body, Today, Strength)
+  captured from the dev app over `tool/seed_demo.dart` data; the paywall
+  capture is both subscriptions' review screenshot. App Privacy: 16 types,
+  all linked, none tracking; custom EULA = the Terms; review notes: guest
+  sign-in, no demo account. Sold in the US, UK, Canada, Australia, New
+  Zealand and Ireland only; iPhone only (#216).
 
 Group 12, analytics (owner's plan, 2026-11-20; before the admin panel rework)
 - [x] Opt-out collection — analytics and crash reports on by default for every user, the Profile → Privacy switch turns them off; the onboarding and over-the-tabs consent page removed; privacy policy and labels updated
@@ -845,14 +759,20 @@ Group 14, program generator rebuild (owner's picks, 2026-11-22; see Feature note
 - [x] Admin, generator simulator — answers in, the program out with why each exercise was picked, with the published or the unpublished rules
 - [x] Generator on prod — functions, rules and content deployed, checked with a Premium account
 
-Where Group 14 stands (2026-11-22): everything is merged (#221, #222, #224-#230). Dev and prod both have the five generator functions, the Firestore rule, the admin panel, the rated exercises and rules version 1 (seeded by the import). Left:
-- Generator on prod checked 2026-11-22 through the panel's Simulator (published v1, intermediate build-muscle 4 days 60 min, full gym): Upper / Lower, 10 weeks, nothing uncovered. The call passed as an admin, so a Premium non-admin user on prod is first seen with the next store build, which carries the new flow (the current store build still has the on-device engine).
-- Checked 2026-11-22 on dev: the Volume, Selection and Areas tabs open and render; an edit shows "was 8" and blocks saving when out of range; Review and publish lists the change and the standard-answer warnings; version 2 published, History listed both, version 1 restored into the draft and published as version 3 (dev now runs version 1's rules); the tab-close listener cancels `beforeunload` while there are changes (the in-app browser shows no dialog, so the browser's own question is still unseen). The app on the simulator generated a 4-day Upper/Lower program in about 10 s.
-- Not yet tried: the app's offline state on a device (the simulator shares the Mac's network).
-- Panel at about 800 px wide: with History open the main column is squeezed so the draft banner wraps one letter per line and the title breaks; an out-of-range error widens its whole column.
-- For the owner: even the seed rules leave 69 of the 140 standard answers with a target muscle without direct work and 83 with a day under half the session (the publish dialog's warnings); the simulator's intermediate Upper/Lower gave glutes 21 sets, above the 20 band.
-- GetWorkout Studio's published link does not yet match `design/studio.html` (the generator boards and the AreaPicker card): publish it from the owner's account (a session on another account cannot open the artifact).
-- The first rating of the exercises and the seed rules are the Architect's; the owner tunes them in the panel.
+Open after Group 14 (merged as #221–#230, live on dev and prod with
+rules version 1):
+- The app's generator offline state is not tried on a device.
+- Panel at about 800 px wide: with History open the draft banner wraps one
+  letter per line and the title breaks; an out-of-range error widens its
+  whole column.
+- For the owner to tune in the panel: the seed rules leave 69 of the 140
+  standard answers with a target muscle without direct work and 83 with a
+  day under half the session; the intermediate Upper/Lower gives glutes 21
+  sets, above the 20 band. The exercise ratings and seed rules are the
+  Architect's first pass.
+- GetWorkout Studio's published link does not yet match
+  `design/studio.html` (the generator boards and the AreaPicker card):
+  publish it from the owner's account.
 
 After release (owner's list, 2026-11-19; not before the first release):
 - Health improvements.
@@ -1995,11 +1915,9 @@ Decisions (the canvases they were drawn on are deleted):
   registered on dev. Still open: the release (Play app signing) SHA on
   prod once the Play Console exists, and a completed sign-in on a device
   (the emulator check stopped at the browser opening).
-- Sign in with Apple is offered first on iOS (2026-11-17, the owner's paid
-  Apple Developer team A8J42TV74R, which now signs the app; the Sign in
-  with Apple entitlement is in Runner.entitlements). Android offers Google
-  alone: Apple there would need a Services ID. Checked on the owner's
-  iPhone the same day: a guest linked with Apple and kept their data.
+- Sign in with Apple is offered first on iOS (Runner.entitlements, team
+  A8J42TV74R); Android offers Google alone (Apple there would need a
+  Services ID).
 - Photo backup: the default bucket and `storage.rules` are live in both
   projects (since 2026-11-12). On the owner's iPhone (2026-11-18) a
   measurement day's four photos uploaded to the dev bucket. `deleteAccount`
@@ -2031,11 +1949,8 @@ Decisions (the canvases they were drawn on are deleted):
   `none`. The 4-view drawings the Tripo models were generated from are in
   `design/body_models/{male,female}/{front,right,back,left}.png`.
   `body_female.glb` (2026-11-21) is the owner's hand-corrected female
-  model with the same 36 part names; it ships in the assets but the app
-  still always loads the male model: picking the model by the profile's
-  sex is not built. The
-  exercise import and `firestore.rules` (without `hip_flexor`) still have
-  to be run and deployed on dev and prod.
+  model with the same 36 part names; the app loads it for a profile whose
+  sex is female (`exercises_module.dart`).
 - Subscriptions (2026-11-20). App Store: group "GetWorkout Premium" with
   `getworkout.premium.monthly` (7.99 USD) and `getworkout.premium.yearly`
   (39.99 USD, 7-day free trial), 175 territories, equalized prices; the
@@ -2074,18 +1989,11 @@ Decisions (the canvases they were drawn on are deleted):
   (compileSdk, for flutter_local_notifications 23) and AGP 9.1.1
   downloaded; the disk is nearly full, so free space first. CI does not
   build Android, so nothing has compiled the Android changes yet.
-- Lock-screen rest, not built yet: the `RestTimer` widget extension
-  target (hand-added to `project.pbxproj`; bundle id
-  `com.getworkout.app.RestTimer`, iOS 16.2, embedded before Thin Binary),
-  `NSSupportsLiveActivities`, ActivityKit weak-linked in the Runner, and
-  `POST_PROMOTED_NOTIFICATIONS` on Android. Shows on the owner's iPhone
-  since 2026-11-18. It did not at first: the extension still carried a
-  7-day profile from the free team, so iOS refused to launch it (amfid
-  "not valid", seen only in the device log) and ended each activity at
-  once; an `xcodebuild -allowProvisioningUpdates` build after deleting that
-  profile fetched a paid-team one. Signing problems of the extension show
-  only in the device log (`sudo log collect --device-udid …`).
-- Workout on the lock screen (iOS), not built yet: the two widget files
+- Lock-screen rest: signing problems of the `RestTimer` extension show
+  only in the device log (`sudo log collect --device-udid …`); a stale
+  free-team profile once made iOS end each activity at once, fixed by an
+  `xcodebuild -allowProvisioningUpdates` build after deleting it.
+- Workout on the lock screen (iOS), not yet checked in full on a device: the two widget files
   were renamed (`WorkoutActivityAttributes.swift`,
   `WorkoutLiveActivity.swift`, same entries in `project.pbxproj`), and the
   Swift was only type-checked with `swiftc` against the simulator SDK and
@@ -2114,15 +2022,10 @@ Decisions (the canvases they were drawn on are deleted):
   workout; a Live Activity started by the build before stays undrawable
   until the app updates it (its content state changed); "All sets done"
   with "Finish in the app" once the last set is ticked (LA5).
-- `ForgeGrabber` is on Forge branch `feat/forge-grabber` (PR #75, not
-  merged or tagged); `feat/live-activity` uses it through a local
-  `pubspec_overrides.yaml` only. Merge and tag it, then move every forge
-  `ref` (app and `widgetbook/`) to the tag before this app's PR. An activity started by an older build (`RestActivityAttributes`)
+- An activity started by an older build (`RestActivityAttributes`)
   is no longer seen by the app and stays until iOS ends it; only matters
   for a device that had one running across the update.
-- Workout on the lock screen (Android), not built yet; it needs
-  `forge_notifications`' `showStopwatch` / `scheduleStopwatch` (forge
-  branch `feat/ongoing-stopwatch-notification`, to be tagged and pinned).
+- Workout on the lock screen (Android), not yet checked on a device.
   Check on the emulator: the notification appears with the first exercise
   and counts up from the start; a rest replaces it with the countdown and
   the next set, and the workout comes back at the end with the app in
@@ -2174,9 +2077,8 @@ Decisions (the canvases they were drawn on are deleted):
   run end to end on the Android emulator: a non-admin is refused, an admin
   send arrives on channel `workout`, the same request id is not sent twice,
   the record reads `sent`, and tapping it from the background opens Today.
-  Still open: the admin panel's Announcements page has not been opened in a
-  browser (the function was called directly), and prod has none of the
-  functions or the newer Firestore rules. iOS push: `aps-environment` is
+  The panel's Announcements page lists the sends on dev (opened
+  2026-11-24); prod has every function and the current rules. iOS push: `aps-environment` is
   in `Runner.entitlements` and `remote-notification` in the background
   modes (2026-11-18, signs with the paid team). The APNs key W3KP8AP8K2
   is uploaded to both Firebase projects (development and production). An
