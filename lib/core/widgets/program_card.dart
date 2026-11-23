@@ -23,8 +23,7 @@ class ProgramCard extends StatelessWidget {
        _row = false;
 
   /// The catalogue's list row: the [name] with an Active tag when it is
-  /// [active] and a Fits you or Premium tag, the [facts] under it and a
-  /// recommended row's [match] (its section names it, so no eyebrow); a
+  /// [active] and a Fits you or Premium tag, the [facts] under it; a
   /// chevron unless [locked]. Put rows in a ListRowCard.
   const ProgramCard.row({
     super.key,
@@ -33,9 +32,9 @@ class ProgramCard extends StatelessWidget {
     this.fits = false,
     this.active = false,
     this.locked = false,
-    this.match,
     required this.onTap,
   }) : tags = const [],
+       match = null,
        recommended = false,
        _row = true;
 
@@ -130,7 +129,6 @@ class ProgramCard extends StatelessWidget {
                         color: p.inkMuted,
                       ),
                     ),
-                    ?matchRow,
                   ],
                 ),
               ),

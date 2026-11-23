@@ -241,11 +241,20 @@ class _DetailActions {
 
   ProgramDetailCubit get _cubit => context.read<ProgramDetailCubit>();
 
+  /// Running ones first, then editing, then the two that end something.
   Future<void> menu({required bool isActive}) {
     final l10n = AppLocalizations.of(context);
+    final running = isActive && !list.finished;
     return showForgeMenu(
       context: context,
       items: [
+        // A locked copy cannot be rescheduled.
+        if (running && list.access(program) != ProgramAccess.locked)
+          ForgeMenuItem(
+            label: l10n.programChangeDays,
+            icon: ForgeIcons.editCalendar,
+            onTap: changeDays,
+          ),
         ForgeMenuItem(
           label: l10n.programEdit,
           icon: ForgeIcons.edit,
@@ -258,6 +267,13 @@ class _DetailActions {
             _cubit.duplicate(l10n.programCopyName);
           },
         ),
+        if (running)
+          ForgeMenuItem(
+            label: l10n.programStopConfirm,
+            icon: ForgeIcons.stopCircle,
+            destructive: true,
+            onTap: stop,
+          ),
         ForgeMenuItem(
           label: l10n.programDelete,
           icon: ForgeIcons.delete,
@@ -457,17 +473,6 @@ class _Band extends StatelessWidget {
         active.schedule.values.any((day) => day >= program.days.length)
         ? l10n.programDaysMismatch(program.days.length)
         : null;
-    final stop = FeaturedAction(
-      l10n.programStop,
-      unlessBusy(actions.stop),
-      danger: true,
-    );
-    final footActions = [
-      // A locked copy cannot be rescheduled.
-      if (!locked)
-        FeaturedAction(l10n.programChangeDays, unlessBusy(actions.changeDays)),
-      stop,
-    ];
 
     // A locked copy keeps its next day, not a missed one.
     final missed = locked ? null : list.missed;
@@ -497,7 +502,6 @@ class _Band extends StatelessWidget {
           ),
           FeaturedAction(l10n.programMissedSkip, resolve(MissedDayChoice.skip)),
         ],
-        footActions: footActions,
       );
     }
 
@@ -529,7 +533,6 @@ class _Band extends StatelessWidget {
       progressDetail: list.weekPlan.isEmpty
           ? null
           : l10n.programDaysThisWeek(list.weekDaysDone, list.weekPlan.length),
-      footActions: footActions,
     );
   }
 

@@ -77,28 +77,6 @@ extension CatalogueTextLabels on AppLocalizations {
     if (program.minutes case final minutes?) sessionMinutesText(minutes),
   ];
 
-  /// "Matches your goal and level", "Matches your goal, level and days per
-  /// week".
-  String matchText(List<MatchReason> reasons) {
-    final names = [
-      for (final reason in reasons)
-        switch (reason) {
-          MatchReason.goal => catalogueReasonGoal,
-          MatchReason.level => catalogueReasonLevel,
-          MatchReason.days => catalogueReasonDays,
-          MatchReason.equipment => catalogueReasonEquipment,
-        },
-    ];
-    return catalogueMatches(
-      names.length < 2
-          ? names.join()
-          : catalogueReasonsAnd(
-              inlineList(names.take(names.length - 1)),
-              names.last,
-            ),
-    );
-  }
-
   String sessionMinutesText(SessionMinutes minutes) =>
       minutes.min == minutes.max
       ? catalogueMinutes(minutes.min)

@@ -132,11 +132,12 @@ void main() {
     await pump(tester, ready());
 
     expect(find.text('Recommended for you'), findsOneWidget);
+    // Why they are recommended is said once, not on each row.
     expect(
-      find.text('Matches your goal, level, days per week and equipment'),
+      find.text('Picked for your goal, level, days per week and equipment'),
       findsOneWidget,
     );
-    expect(find.text('Matches your equipment'), findsOneWidget);
+    expect(find.textContaining('Matches your'), findsNothing);
     expect(find.text('3 programs · 2 free'), findsOneWidget);
     expect(find.text('All programs'), findsOneWidget);
     // Each program once: the two recommended are not repeated below.
