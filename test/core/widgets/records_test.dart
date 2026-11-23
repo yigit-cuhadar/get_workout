@@ -1,5 +1,6 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:forge_ui/forge_ui.dart';
 import 'package:get_workout/core/widgets/records.dart';
 
 import '../../component_harness.dart';
@@ -20,30 +21,57 @@ void main() {
     expect(find.text('82.5 kg × 8'), findsOneWidget);
   });
 
-  testWidgets('other records are rows with their gain', (tester) async {
+  testWidgets('records are counted over rows with their set and gain tag', (
+    tester,
+  ) async {
     await pumpComponent(
       tester,
       const RecordList(
         records: [
           RecordItem(
             name: 'Overhead Press',
-            detail: 'Best weight for 8 reps',
+            detail: 'Heaviest weight · Best e1RM',
             value: '50 kg × 8',
             gain: '+2.5 kg',
           ),
           RecordItem(
+            name: 'Pull-up',
+            detail: 'Most reps',
+            value: '12 reps',
+            gain: '+2 reps',
+          ),
+        ],
+      ),
+    );
+
+    expect(find.text('2 new records'), findsOneWidget);
+    expect(find.text('Overhead Press'), findsOneWidget);
+    expect(
+      find.text('Heaviest weight · Best e1RM · 50 kg × 8', findRichText: true),
+      findsOneWidget,
+    );
+    final gain = tester.widget<ForgeTag>(
+      find.widgetWithText(ForgeTag, '+2 reps'),
+    );
+    expect(gain.kind, ForgeTagKind.record);
+  });
+
+  testWidgets('one record says 1 new record', (tester) async {
+    await pumpComponent(
+      tester,
+      const RecordList(
+        records: [
+          RecordItem(
             name: 'Bench Press',
             detail: 'Best e1RM',
-            value: '104 kg',
+            value: '82.5 kg × 6',
             gain: '+1 kg',
           ),
         ],
       ),
     );
 
-    expect(find.text('Overhead Press'), findsOneWidget);
-    expect(find.text('+2.5 kg'), findsOneWidget);
-    expect(find.text('+1 kg'), findsOneWidget);
+    expect(find.text('1 new record'), findsOneWidget);
   });
 
   testWidgets('no record after the first workout says records start now', (

@@ -68,16 +68,19 @@ class RecordItem {
   /// The exercise.
   final String name;
 
-  /// Which record ("Best weight for 8 reps").
+  /// Which records it beat ("Heaviest weight · Best e1RM").
   final String detail;
+
+  /// The set that beat them ("82.5 kg × 6").
   final String value;
 
   /// The gain with its unit ("+2.5 kg").
   final String gain;
 }
 
-/// Records as rows in a card, each with a trophy, its value and its gain
-/// in success.
+/// Records as one card: a trophy in success over "2 new records", then a
+/// row per record with its kinds and set ("Heaviest weight · 82.5 kg × 6")
+/// and its gain as a record tag.
 class RecordList extends StatelessWidget {
   const RecordList({super.key, required List<RecordItem> this.records})
     : closest = null,
@@ -110,30 +113,17 @@ class RecordList extends StatelessWidget {
     final records = this.records;
     final closest = this.closest;
     final message = this.message;
-    Widget trophy({required bool muted}) => Container(
+    final trophy = Container(
       width: _trophy,
       height: _trophy,
       alignment: Alignment.center,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: muted ? p.surfaceSunken : p.accentSoft,
-      ),
-      child: ForgeIcon(
-        ForgeIcons.emojiEvents,
-        size: 18,
-        color: muted ? p.inkMuted : p.onAccentSoft,
-      ),
+      decoration: BoxDecoration(shape: BoxShape.circle, color: p.surfaceSunken),
+      child: ForgeIcon(ForgeIcons.emojiEvents, size: 18, color: p.inkMuted),
     );
     final name = text.bodyLarge!.copyWith(fontWeight: FontWeight.w500);
     final small = text.labelMedium!.copyWith(
       fontWeight: FontWeight.w400,
       color: p.inkMuted,
-    );
-    final mono = style.data.copyWith(
-      fontSize: 15,
-      height: 20 / 15,
-      fontWeight: FontWeight.w500,
-      color: p.ink,
     );
     return Container(
       width: double.infinity,
@@ -151,7 +141,7 @@ class RecordList extends StatelessWidget {
           ? Row(
               spacing: 12,
               children: [
-                trophy(muted: true),
+                trophy,
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -170,14 +160,38 @@ class RecordList extends StatelessWidget {
               ],
             )
           : Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                for (final record in records)
-                  Padding(
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: Gap.xs),
+                  child: Row(
+                    spacing: Gap.sm,
+                    children: [
+                      ForgeIcon(
+                        ForgeIcons.emojiEvents,
+                        size: 18,
+                        color: p.success,
+                      ),
+                      Expanded(
+                        child: Text(
+                          l10n.recordNewCount(records.length),
+                          style: text.titleMedium,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                for (final (i, record) in records.indexed)
+                  Container(
                     padding: const EdgeInsets.symmetric(vertical: 10),
+                    decoration: i == 0
+                        ? null
+                        : BoxDecoration(
+                            border: Border(top: BorderSide(color: p.line)),
+                          ),
                     child: Row(
-                      spacing: 12,
+                      spacing: 10,
                       children: [
-                        trophy(muted: false),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -189,21 +203,25 @@ class RecordList extends StatelessWidget {
                                 overflow: TextOverflow.ellipsis,
                                 style: name,
                               ),
-                              Text(record.detail, style: small),
+                              Text.rich(
+                                TextSpan(
+                                  children: [
+                                    TextSpan(text: '${record.detail} · '),
+                                    TextSpan(
+                                      text: record.value,
+                                      style: style.data.copyWith(
+                                        fontSize: small.fontSize,
+                                        color: p.inkMuted,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                style: small,
+                              ),
                             ],
                           ),
                         ),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          spacing: 2,
-                          children: [
-                            Text(record.value, style: mono),
-                            Text(
-                              record.gain,
-                              style: style.data.copyWith(color: p.success),
-                            ),
-                          ],
-                        ),
+                        ForgeTag(record.gain, kind: ForgeTagKind.record),
                       ],
                     ),
                   ),

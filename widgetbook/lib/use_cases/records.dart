@@ -9,23 +9,44 @@ Widget _page(List<Widget> children) => SingleChildScrollView(
   child: Column(spacing: 10, children: children),
 );
 
-@widgetbook.UseCase(name: 'Biggest record and the rest', type: RecordHighlight)
+@widgetbook.UseCase(name: 'Biggest record', type: RecordHighlight)
 Widget biggestRecord(BuildContext context) => _page([
   RecordHighlight(
     value: context.knobs.string(label: 'Value', initialValue: '82.5 kg × 8'),
     line: 'Bench Press · e1RM 104 kg · +2.5 kg',
   ),
-  const RecordList(
-    records: [
-      RecordItem(
-        name: 'Overhead Press',
-        detail: 'Best weight for 8 reps',
-        value: '50 kg × 8',
-        gain: '+2.5 kg',
-      ),
-    ],
-  ),
 ]);
+
+@widgetbook.UseCase(name: 'New records', type: RecordList)
+Widget newRecords(BuildContext context) {
+  final count = context.knobs.int.slider(
+    label: 'Records',
+    initialValue: 2,
+    min: 1,
+    max: 3,
+  );
+  const records = [
+    RecordItem(
+      name: 'Barbell Bench Press',
+      detail: 'Heaviest weight · Best e1RM',
+      value: '82.5 kg × 6',
+      gain: '+2.5 kg',
+    ),
+    RecordItem(
+      name: 'Barbell Row',
+      detail: 'Most reps',
+      value: '70 kg × 10',
+      gain: '+2 reps',
+    ),
+    RecordItem(
+      name: 'Plank',
+      detail: 'Longest time',
+      value: '75 s',
+      gain: '+5 s',
+    ),
+  ];
+  return _page([RecordList(records: records.take(count).toList())]);
+}
 
 @widgetbook.UseCase(name: 'No records · first workout', type: RecordList)
 Widget firstRecords(BuildContext context) => _page([const RecordList.none()]);
