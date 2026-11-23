@@ -59,11 +59,7 @@ class _FreeCard extends StatelessWidget {
       tag: trial == null
           ? null
           : l10n.paywallCardTrial(l10n.offerPeriod(trial)),
-      benefits: [
-        l10n.paywallBenefitGenerator,
-        l10n.paywallBenefitPrograms,
-        l10n.paywallBenefitCharts,
-      ],
+      benefits: [l10n.paywallBenefitGenerator, l10n.paywallBenefitPrograms],
       actionLabel: l10n.premiumGet,
       onAction: context.openPaywall,
     );

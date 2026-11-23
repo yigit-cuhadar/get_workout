@@ -325,7 +325,6 @@ void main() {
       expect(tester.widget<BenefitList>(find.byType(BenefitList)).lines, [
         'Program generator',
         '23 more ready-made programs',
-        'Charts beyond 2 weeks',
       ]);
       expect(find.widgetWithText(ForgeButton, 'Get Premium'), findsOneWidget);
     });

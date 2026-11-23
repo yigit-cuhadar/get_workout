@@ -11,8 +11,6 @@ import 'package:get_workout/features/body/presentation/body_chart_cubit.dart';
 import 'package:get_workout/features/body/presentation/body_list_cubit.dart';
 import 'package:get_workout/features/body/domain/body_usecases.dart';
 import 'package:get_workout/features/programs/domain/calendar_date.dart';
-import 'package:get_workout/features/programs/domain/premium_status.dart';
-import 'package:get_workout/features/programs/domain/program_usecases.dart';
 import 'package:get_workout/features/steps/domain/steps_prompt.dart';
 import 'package:get_workout/features/steps/domain/steps_usecases.dart';
 import 'package:get_workout/features/strength/domain/strength.dart';
@@ -46,13 +44,6 @@ class MemoryChartStore implements BodyChartStore {
     saved.add(choice);
     return const Ok(null);
   }
-}
-
-class FakePremium implements PremiumStatus {
-  final controller = StreamController<bool?>.broadcast();
-
-  @override
-  Stream<bool?> watch() => controller.stream;
 }
 
 /// Counts the reads of daily steps; each waits for [gate] when set.
@@ -112,7 +103,6 @@ void main() {
   late MockBodyList body;
   late StreamController<BodyListState> bodyStates;
   late MemoryChartStore stored;
-  late FakePremium premium;
   late MockWatchVolume volume;
   late StreamController<List<WeekVolume>> weeks;
   late CountingHealth health;
@@ -135,7 +125,6 @@ void main() {
     bodyStates = StreamController<BodyListState>.broadcast();
     whenListen(body, bodyStates.stream, initialState: ready);
     stored = MemoryChartStore();
-    premium = FakePremium();
     volume = MockWatchVolume();
     weeks = StreamController<List<WeekVolume>>.broadcast();
     when(() => volume(any())).thenAnswer((_) => weeks.stream);
@@ -144,12 +133,11 @@ void main() {
 
   tearDown(() => cubit.close());
 
-  Future<void> start({bool? isPremium = true}) async {
+  Future<void> start() async {
     cubit = BodyChartCubit(
       firstWeekday: DateTime.monday,
       body: body,
       watchAuthUser: WatchAuthUser(auth),
-      watchPremium: WatchPremium(premium),
       loadChoice: LoadBodyChart(stored),
       saveChoice: SaveBodyChart(stored),
       watchVolume: volume,
@@ -158,7 +146,6 @@ void main() {
       clock: () => now,
     );
     users.add(user);
-    premium.controller.add(isPremium);
     await pumpEventQueue();
   }
 
@@ -367,115 +354,20 @@ void main() {
     });
   });
 
-  group('Premium', () {
-    test(
-      'while unknown, training series are neither locked nor read',
-      () async {
-        stored.choices['u1'] = const BodyChartChoice(
-          series: [BodySeries.weeklySets, BodySeries.waist],
-        );
-
-        await start(isPremium: null);
-
-        expect(cubit.state.premium, isNull);
-        expect(cubit.state.locked(BodySeries.weeklySets), isFalse);
-        expect(cubit.state.shown, [BodySeries.waist]);
-        verifyNever(() => volume(any()));
-      },
+  test('stored training series show and are read for everyone', () async {
+    stored.choices['u1'] = const BodyChartChoice(
+      series: [BodySeries.weeklySets, BodySeries.dailySteps, BodySeries.waist],
     );
 
-    test('unlocking only adds, also when Premium came first', () async {
-      stored.choices['u1'] = const BodyChartChoice(
-        series: [BodySeries.weeklySets, BodySeries.weight],
-      );
-      await start(isPremium: false);
-      expect(cubit.state.shown, [BodySeries.weight]);
+    await start();
 
-      // The purchase arrives before the paywall closes.
-      premium.controller.add(true);
-      await pumpEventQueue();
-      await cubit.add(BodySeries.weeklySets);
-
-      expect(cubit.state.shown, [BodySeries.weeklySets, BodySeries.weight]);
-      expect(stored.saved, isEmpty);
-
-      await cubit.add(BodySeries.dailySteps);
-      expect(cubit.state.shown, [
-        BodySeries.weeklySets,
-        BodySeries.weight,
-        BodySeries.dailySteps,
-      ]);
-    });
-
-    test(
-      'with only hidden series stored, a change builds on the default',
-      () async {
-        stored.choices['u1'] = const BodyChartChoice(
-          series: [BodySeries.weeklySets],
-        );
-        await bodyIs(
-          BodyListState(
-            status: BodyListStatus.ready,
-            entries: [recent, old],
-            bodyFat: const {'r': 18},
-          ),
-        );
-        await start(isPremium: false);
-        expect(cubit.state.shown, [BodySeries.weight, BodySeries.bodyFat]);
-
-        await cubit.toggle(BodySeries.bodyFat);
-
-        expect(cubit.state.shown, [BodySeries.weight]);
-        // The hidden one stays stored.
-        expect(stored.choices['u1']!.series, [
-          BodySeries.weeklySets,
-          BodySeries.weight,
-        ]);
-      },
-    );
-    test(
-      'a free user sees the training series locked and never reads them',
-      () async {
-        stored.choices['u1'] = const BodyChartChoice(
-          series: [
-            BodySeries.weeklySets,
-            BodySeries.dailySteps,
-            BodySeries.waist,
-          ],
-        );
-
-        await start(isPremium: false);
-
-        expect(cubit.state.locked(BodySeries.weeklySets), isTrue);
-        expect(cubit.state.locked(BodySeries.waist), isFalse);
-        expect(cubit.state.shown, [BodySeries.waist]);
-        verifyNever(() => volume(any()));
-        expect(health.reads, isEmpty);
-        // Kept, not deleted.
-        expect(stored.saved, isEmpty);
-
-        premium.controller.add(true);
-        await pumpEventQueue();
-        expect(cubit.state.shown, [
-          BodySeries.weeklySets,
-          BodySeries.dailySteps,
-          BodySeries.waist,
-        ]);
-        verify(() => volume(any())).called(1);
-        expect(health.reads, isNotEmpty);
-      },
-    );
-
-    test('a picked training series shows once Premium comes', () async {
-      await start(isPremium: false);
-
-      await cubit.toggle(BodySeries.weeklySets);
-      expect(cubit.state.shown, [BodySeries.weight]);
-
-      premium.controller.add(true);
-      await pumpEventQueue();
-      expect(cubit.state.shown, [BodySeries.weight, BodySeries.weeklySets]);
-    });
+    expect(cubit.state.shown, [
+      BodySeries.weeklySets,
+      BodySeries.dailySteps,
+      BodySeries.waist,
+    ]);
+    verify(() => volume(any())).called(1);
+    expect(health.reads, isNotEmpty);
   });
 
   group('the choice', () {
@@ -512,6 +404,37 @@ void main() {
       ]);
       access.complete();
     });
+
+    test(
+      'with only hidden series stored, a change builds on the default',
+      () async {
+        stored.choices['u1'] = const BodyChartChoice(
+          series: [BodySeries.dailySteps],
+        );
+        await bodyIs(
+          BodyListState(
+            status: BodyListStatus.ready,
+            entries: [recent, old],
+            bodyFat: const {'r': 18},
+          ),
+        );
+        // Access is still being checked: steps do not show yet.
+        final access = Completer<void>();
+        health.accessGate = access;
+        await start();
+        expect(cubit.state.shown, [BodySeries.weight, BodySeries.bodyFat]);
+
+        await cubit.toggle(BodySeries.bodyFat);
+
+        expect(cubit.state.shown, [BodySeries.weight]);
+        // The hidden one stays stored.
+        expect(stored.choices['u1']!.series, [
+          BodySeries.dailySteps,
+          BodySeries.weight,
+        ]);
+        access.complete();
+      },
+    );
 
     test('is never written before the stored one is read', () async {
       stored.loadGate = Completer<void>();

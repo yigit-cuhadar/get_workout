@@ -261,7 +261,7 @@ Widget featuredPromptState(BuildContext context) {
           'Payment problem. Update your payment method',
       },
       titleTone: tone,
-      note: 'Program generator, 23 more programs and charts beyond 2 weeks.',
+      note: 'Program generator and 23 more ready-made programs.',
       moreActions: [
         if (tone != FeaturedTitleTone.muted)
           FeaturedAction('Manage subscription', () {}),

@@ -51,11 +51,7 @@ enum Calculator {
 /// What a free user tapped that needs Premium.
 enum PremiumFeature {
   generator('generator'),
-  premiumProgram('premium_program'),
-  bodyHistory('body_history'),
-  bodySeries('body_series'),
-  bodyRange('body_range'),
-  strengthRange('strength_range');
+  premiumProgram('premium_program');
 
   const PremiumFeature(this.code);
   final String code;

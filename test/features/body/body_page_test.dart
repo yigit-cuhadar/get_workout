@@ -5,7 +5,6 @@ import 'package:material_ui/material_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:forge_core/forge_core.dart';
-import 'package:forge_purchases/forge_purchases.dart';
 import 'package:forge_ui/forge_ui.dart';
 import 'package:get_workout/app/theme.dart';
 import 'package:get_workout/core/widgets/featured_card.dart';
@@ -42,9 +41,6 @@ class _ProfileCubit extends MockCubit<ProfileState> implements ProfileCubit {}
 
 class _WeightFormCubit extends MockCubit<WeightFormState>
     implements WeightFormCubit {}
-
-class _EntitlementCubit extends MockCubit<EntitlementState>
-    implements EntitlementCubit {}
 
 void main() {
   final year = DateTime.now().year;
@@ -86,7 +82,6 @@ void main() {
   late _ChartCubit chart;
   late _SummaryCubit summary;
   late _ProfileCubit profile;
-  late _EntitlementCubit entitlement;
 
   setUp(() {
     list = _BodyListCubit();
@@ -131,8 +126,6 @@ void main() {
         profile: UserProfile(targetWeightKg: 78),
       ),
     );
-    entitlement = _EntitlementCubit();
-    when(() => entitlement.state).thenReturn(const EntitlementUnknown());
     sl
       ..registerSingleton<BodyListCubit>(list)
       ..registerFactoryParam<BodyChartCubit, int, void>((_, _) => chart)
@@ -183,7 +176,6 @@ void main() {
         providers: [
           BlocProvider<SettingsCubit>.value(value: settings),
           BlocProvider<ProfileCubit>.value(value: profile),
-          BlocProvider<EntitlementCubit>.value(value: entitlement),
         ],
         child: MaterialApp.router(
           theme: AppPreset.slate.lightTheme(),
@@ -231,7 +223,6 @@ void main() {
     expect(card.series!.single.targetLabel, 'Target');
     // No older entries: no range control.
     expect(card.range, isNull);
-    expect(card.lockedCaption, isNull);
 
     expect(find.text('Log weight'), findsOneWidget);
     expect(find.text('Measurement day'), findsOneWidget);
@@ -253,22 +244,18 @@ void main() {
     expect(find.text('at /progress/body/nov10'), findsOneWidget);
   });
 
-  testWidgets('a free user with older entries sees the locked ranges', (
-    tester,
-  ) async {
+  testWidgets('older entries show the range control', (tester) async {
     when(() => list.state).thenReturn(
       BodyListState(
         status: BodyListStatus.ready,
         entries: entries,
         hasOlder: true,
-        olderLocked: true,
       ),
     );
     await pump(tester, const BodyPage());
 
     final card = tester.widget<MultiSeriesChart>(find.byType(MultiSeriesChart));
     expect(card.range, isNotNull);
-    expect(card.lockedCaption, 'See your older results with Premium');
   });
 
   testWidgets('no entries: the empty view and both buttons under it', (
@@ -595,15 +582,12 @@ void main() {
     expect(tester.widget<ErrorView>(find.byType(ErrorView)).card, isTrue);
   });
 
-  testWidgets('an empty range keeps the range control and locked caption', (
-    tester,
-  ) async {
+  testWidgets('an empty range keeps the range control', (tester) async {
     when(() => list.state).thenReturn(
       BodyListState(
         status: BodyListStatus.ready,
         entries: entries,
         hasOlder: true,
-        olderLocked: true,
       ),
     );
     when(() => chart.state).thenReturn(const BodyChartState());
@@ -612,7 +596,6 @@ void main() {
     final card = tester.widget<MultiSeriesChart>(find.byType(MultiSeriesChart));
     expect(card.series, isNull);
     expect(card.range, isNotNull);
-    expect(card.lockedCaption, 'See your older results with Premium');
     expect(find.text('Nothing in this range'), findsOneWidget);
     expect(find.text('Nothing to show in this range yet.'), findsOneWidget);
   });

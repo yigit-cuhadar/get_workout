@@ -15,15 +15,14 @@ import '../../exercises/presentation/exercise_catalogue_cubit.dart';
 import '../../exercises/presentation/vocabulary_labels.dart';
 import '../../programs/domain/calendar_date.dart';
 import '../../settings/presentation/first_weekday.dart';
-import '../../subscription/presentation/premium.dart';
 import '../domain/weekly_volume.dart';
 import 'volume_charts.dart';
 import 'volume_cubit.dart';
 import 'volume_text.dart';
 
 /// A week's sets per muscle on the body model and as bars against the
-/// reference band, with the 12-week trend of the total (Premium); a muscle
-/// opens where its sets came from and, with Premium, its 12-week trend.
+/// reference band, with the 12-week trend of the total; a muscle opens
+/// where its sets came from and its 12-week trend.
 class VolumePage extends StatelessWidget {
   const VolumePage({super.key});
 
@@ -146,8 +145,7 @@ class _WeekSelector extends StatelessWidget {
 }
 
 /// The total sets of each of the [trendWeeks] weeks ending with the one
-/// shown, for Premium; a locked card opening the paywall for everyone
-/// else, and while that is unknown.
+/// shown.
 class _TotalTrend extends StatelessWidget {
   const _TotalTrend(this.state);
   final VolumeState state;
@@ -157,14 +155,6 @@ class _TotalTrend extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final dates = MaterialLocalizations.of(context);
     final title = l10n.volumeTrendCard(trendWeeks);
-    if (context.watchPremium() != PremiumStatus.premium) {
-      return SectionCard.locked(
-        title: title,
-        onTap: context.openPaywall,
-        tag: ForgeTag(l10n.cataloguePremium, kind: ForgeTagKind.premium),
-        message: l10n.volumeTrendCardLocked(trendWeeks),
-      );
-    }
     if (!state.hasTrend) return Chart.loading(title: title);
     final weeks = state.weeks;
     String start(WeekVolume week) =>
@@ -410,8 +400,8 @@ class _MuscleSheet extends StatelessWidget {
   }
 }
 
-/// The muscle's sets per week, for Premium; a locked row that opens the
-/// paywall for everyone else, nothing while that is unknown.
+/// The muscle's sets per week; their title over a stand-in while they
+/// load.
 class _Trend extends StatelessWidget {
   const _Trend({required this.muscle, required this.state});
 
@@ -426,8 +416,6 @@ class _Trend extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final text = Theme.of(context).textTheme;
     final dates = MaterialLocalizations.of(context);
-    final premium = context.watchPremium();
-    if (premium == PremiumStatus.unknown) return const SizedBox.shrink();
     final weeks = state.weeks;
     final title = state.isThisWeek
         ? l10n.volumeTrendTitle(trendWeeks)
@@ -437,7 +425,7 @@ class _Trend extends StatelessWidget {
               state.week.addDays(DateTime.daysPerWeek - 1).toLocalDateTime(),
             ),
           );
-    if (premium == PremiumStatus.premium && state.hasTrend) {
+    if (state.hasTrend) {
       final numbers = NumberFormat.decimalPattern(l10n.localeName);
       final sets = [for (final week in weeks) week.setsOf(muscle)];
       return Chart.bar(
@@ -470,19 +458,7 @@ class _Trend extends StatelessWidget {
       spacing: 10,
       children: [
         Semantics(header: true, child: Text(title, style: text.titleMedium)),
-        if (premium == PremiumStatus.free)
-          ListRow(
-            leading: ForgeIcon(
-              ForgeIcons.lock,
-              size: 18,
-              color: ForgeStyle.of(context).colors.inkMuted,
-            ),
-            title: l10n.volumeTrendLocked(trendWeeks),
-            end: ListRowEnd.chevron,
-            onTap: context.openPaywall,
-          )
-        else
-          const SkeletonBar(widthFactor: 1, height: _height, radius: Gap.sm),
+        const SkeletonBar(widthFactor: 1, height: _height, radius: Gap.sm),
       ],
     );
   }

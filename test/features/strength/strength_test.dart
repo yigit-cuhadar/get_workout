@@ -39,21 +39,6 @@ void main() {
         DateTime(2025, 9, 30),
       );
     });
-
-    test('only the 2 weeks are free', () {
-      expect(StrengthRange.free, StrengthRange.weeks2);
-      expect(
-        [for (final range in StrengthRange.values) range.premium],
-        [false, true, true, true],
-      );
-    });
-
-    test('a Premium range falls back to the free one unless known Premium', () {
-      expect(StrengthRange.year1.allowed(true), StrengthRange.year1);
-      expect(StrengthRange.year1.allowed(false), StrengthRange.free);
-      expect(StrengthRange.all.allowed(null), StrengthRange.free);
-      expect(StrengthRange.weeks2.allowed(false), StrengthRange.weeks2);
-    });
   });
 
   group('e1rmSeries', () {
@@ -107,41 +92,6 @@ void main() {
           unit: WeightUnit.kg,
         ),
         isEmpty,
-      );
-    });
-  });
-
-  group('hasResultsBefore', () {
-    test('a workout before the range starts, with an e1RM or not', () {
-      expect(
-        hasResultsBefore(
-          [point(DateTime(2026, 10, 28, 23, 59), null)],
-          range: StrengthRange.weeks2,
-          now: now,
-        ),
-        isTrue,
-      );
-    });
-
-    test('not for workouts inside the range', () {
-      expect(
-        hasResultsBefore(
-          [point(DateTime(2026, 10, 29), 99)],
-          range: StrengthRange.weeks2,
-          now: now,
-        ),
-        isFalse,
-      );
-    });
-
-    test('never before all', () {
-      expect(
-        hasResultsBefore(
-          [point(DateTime(2000, 1, 1), 50)],
-          range: StrengthRange.all,
-          now: now,
-        ),
-        isFalse,
       );
     });
   });

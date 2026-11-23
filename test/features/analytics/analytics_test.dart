@@ -188,7 +188,7 @@ void main() {
     await analytics.exerciseView('ex_squat', ExerciseViewSource.catalogue);
     await analytics.cardioLog(CardioType.outdoorRun);
     await analytics.calculatorUse(Calculator.oneRepMax);
-    await analytics.premiumLockTap(PremiumFeature.strengthRange);
+    await analytics.premiumLockTap(PremiumFeature.premiumProgram);
     await analytics.notificationOpen(NotificationKind.activeWorkout);
     expect(telemetry.logged, [
       [
@@ -213,7 +213,7 @@ void main() {
       ],
       [
         'premium_lock_tap',
-        {'feature': 'strength_range'},
+        {'feature': 'premium_program'},
       ],
       [
         'notification_tap',

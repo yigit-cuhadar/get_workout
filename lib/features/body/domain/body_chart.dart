@@ -99,9 +99,8 @@ final earliestDate = DateTime(2000);
 
 /// What the chart shows under [choice], null until the user picks: weight,
 /// with body fat once [hasBodyFat]. Only the series [visible] now (daily
-/// steps where they can be read, the training series with Premium); the
-/// others stay chosen. At most [BodySeries.maxShown]; a choice showing
-/// none gives the default.
+/// steps where they can be read); the others stay chosen. At most
+/// [BodySeries.maxShown]; a choice showing none gives the default.
 List<BodySeries> shownSeries(
   BodyChartChoice? choice, {
   required bool hasBodyFat,

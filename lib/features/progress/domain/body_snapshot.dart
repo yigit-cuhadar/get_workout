@@ -2,7 +2,6 @@ import 'package:forge_core/forge_core.dart';
 
 import '../../body/domain/body_entry.dart';
 import '../../body/domain/body_stats.dart';
-import '../../strength/domain/strength.dart';
 import 'progress_usecases.dart';
 
 /// One entry's body fat.
@@ -19,7 +18,7 @@ class BodySnapshot extends Equatable {
   /// The newest weigh-in.
   final WeightPoint? latest;
 
-  /// The weights of the free charts' window, oldest first.
+  /// The weights of [progressCardRange], oldest first.
   final List<WeightPoint> weights;
 
   /// The newest entry's body fat that has one, with that entry's date.
@@ -55,7 +54,7 @@ BodySnapshot bodySnapshot(
   final latest = entries.where((entry) => entry.weightKg != null).firstOrNull;
   return BodySnapshot(
     latest: latest == null ? null : (date: latest.date, kg: latest.weightKg!),
-    weights: weightSeries(entries, range: StrengthRange.free, now: now),
+    weights: weightSeries(entries, range: progressCardRange, now: now),
     latestBodyFat: latestBodyFat,
   );
 }

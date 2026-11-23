@@ -161,12 +161,7 @@ class _PaywallViewState extends State<_PaywallView> {
     return SubscriptionPlans(
       onClose: cubit.closable ? () => _close(null, premium: false) : null,
       title: l10n.premiumTitle,
-      benefits: [
-        l10n.paywallBenefitGenerator,
-        l10n.paywallBenefitPrograms,
-        l10n.paywallBenefitCharts,
-        l10n.paywallBenefitVolume,
-      ],
+      benefits: [l10n.paywallBenefitGenerator, l10n.paywallBenefitPrograms],
       layout: switch (layout) {
         PaywallLayout.list => SubscriptionLayout.rows,
         PaywallLayout.cards => SubscriptionLayout.tiles,

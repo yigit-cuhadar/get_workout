@@ -6,7 +6,6 @@ import 'package:forge_core/forge_core.dart';
 
 import '../../exercises/presentation/exercise_catalogue_cubit.dart';
 import '../../programs/domain/calendar_date.dart';
-import '../../programs/domain/program_usecases.dart';
 import '../domain/volume_usecases.dart';
 import '../domain/weekly_volume.dart';
 
@@ -28,8 +27,8 @@ class VolumeState extends Equatable {
   final CalendarDate thisWeek;
   final VolumeStatus status;
 
-  /// The weeks on screen, oldest first: [week] alone, or with Premium the
-  /// [trendWeeks] ending with it. While loading, those of the week shown
+  /// The weeks on screen, oldest first: the [trendWeeks] ending with
+  /// [week]. While loading, those of the week shown
   /// before, if any, so the page keeps them until the new ones arrive.
   final List<WeekVolume> weeks;
   final Failure? failure;
@@ -48,10 +47,10 @@ class VolumeState extends Equatable {
   List<Object?> get props => [week, thisWeek, status, weeks, failure];
 }
 
-/// The weekly sets per muscle of whoever is signed in, one week at a time,
-/// with Premium together with the [trendWeeks] ending with it (read again
-/// when Premium comes or goes). Weeks start on ISO weekday [firstWeekday],
-/// the app's. Starts at the current week and never goes past it.
+/// The weekly sets per muscle of whoever is signed in, one week at a time
+/// together with the [trendWeeks] ending with it. Weeks start on ISO
+/// weekday [firstWeekday], the app's. Starts at the current week and never
+/// goes past it.
 /// Follows the library, so muscles changed there count at once; drops
 /// everything on a user change.
 class VolumeCubit extends Cubit<VolumeState> {
@@ -60,7 +59,6 @@ class VolumeCubit extends Cubit<VolumeState> {
     required WatchAuthUser watchAuthUser,
     required this._watchVolume,
     required ExerciseCatalogueCubit catalogue,
-    required WatchPremium watchPremium,
     DateTime Function()? clock,
   }) : _firstWeekday = firstWeekday,
        _clock = clock ?? DateTime.now,
@@ -70,14 +68,6 @@ class VolumeCubit extends Cubit<VolumeState> {
       _muscles = _musclesOf(state);
       _follow();
     });
-    _premiumSubscription = watchPremium()
-        .map((premium) => premium ?? false)
-        .distinct()
-        .listen((premium) {
-          if (premium == _premium) return;
-          _premium = premium;
-          _follow();
-        });
     _userSubscription = watchAuthUser()
         .map((user) => user?.id)
         .distinct()
@@ -92,13 +82,9 @@ class VolumeCubit extends Cubit<VolumeState> {
   final DateTime Function() _clock;
   late final StreamSubscription<ExerciseCatalogueState> _catalogueSubscription;
   late final StreamSubscription<String?> _userSubscription;
-  late final StreamSubscription<bool> _premiumSubscription;
   StreamSubscription<List<WeekVolume>>? _volumeSubscription;
   Map<String, ExerciseMuscles> _muscles = const {};
   String? _uid;
-
-  /// Only Premium reads the trend; everyone else reads the week alone.
-  bool _premium = false;
   int _generation = 0;
 
   static VolumeState _initial(int firstWeekday, DateTime Function() clock) {
@@ -177,7 +163,7 @@ class VolumeCubit extends Cubit<VolumeState> {
         _watchVolume((
           uid: uid,
           lastWeek: shown,
-          weeks: _premium ? trendWeeks : 1,
+          weeks: trendWeeks,
           muscles: _muscles,
         )).listen(
           (weeks) {
@@ -212,7 +198,6 @@ class VolumeCubit extends Cubit<VolumeState> {
   Future<void> close() async {
     await _userSubscription.cancel();
     await _catalogueSubscription.cancel();
-    await _premiumSubscription.cancel();
     await _volumeSubscription?.cancel();
     return super.close();
   }

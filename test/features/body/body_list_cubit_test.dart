@@ -12,8 +12,6 @@ import 'package:get_workout/features/body/presentation/body_list_cubit.dart';
 import 'package:get_workout/features/profile/domain/profile_repository.dart';
 import 'package:get_workout/features/profile/domain/profile_usecases.dart';
 import 'package:get_workout/features/profile/domain/user_profile.dart';
-import 'package:get_workout/features/programs/domain/premium_status.dart';
-import 'package:get_workout/features/programs/domain/program_usecases.dart';
 import 'package:get_workout/features/strength/domain/strength.dart';
 import 'package:mocktail/mocktail.dart';
 
@@ -24,13 +22,6 @@ class MockAuthRepository extends Mock implements AuthRepository {}
 class MockBodyRepository extends Mock implements BodyRepository {}
 
 class MockProfileRepository extends Mock implements ProfileRepository {}
-
-class FakePremium implements PremiumStatus {
-  final controller = StreamController<bool?>.broadcast();
-
-  @override
-  Stream<bool?> watch() => controller.stream;
-}
 
 void main() {
   const user = AuthUser(id: 'u1', isAnonymous: true);
@@ -49,7 +40,6 @@ void main() {
   late FakePhotoStore store;
   late FakeBackup backup;
   late FakeBackupQueue queue;
-  late FakePremium premium;
   late StreamController<AuthUser?> users;
   late StreamController<List<BodyEntry>> entries;
   late StreamController<Failure> rejected;
@@ -67,7 +57,6 @@ void main() {
     repository = MockBodyRepository();
     store = FakePhotoStore();
     backup = FakeBackup();
-    premium = FakePremium();
     users = StreamController<AuthUser?>.broadcast();
     entries = StreamController<List<BodyEntry>>.broadcast();
     rejected = StreamController<Failure>.broadcast();
@@ -92,7 +81,6 @@ void main() {
       watchAuthUser: WatchAuthUser(auth),
       watchEntries: WatchBodyEntries(repository),
       watchRejectedWrites: WatchRejectedBodyWrites(repository),
-      watchPremium: WatchPremium(premium),
       watchProfile: WatchProfile(profileRepository),
       findPhotos: FindBodyPhotos(store),
       restorePhoto: RestoreBodyPhoto(sync),
@@ -129,26 +117,15 @@ void main() {
     expect(cubit.state.range, StrengthRange.weeks2);
   });
 
-  test(
-    'a free user is told of older entries; Premium widens the range',
-    () async {
-      await signIn();
-      await receive([recent, old]);
-      premium.controller.add(false);
-      await pumpEventQueue();
-      expect(cubit.state.olderLocked, isTrue);
+  test('older entries offer the ranges, each free to pick', () async {
+    await signIn();
+    await receive([recent, old]);
+    expect(cubit.state.hasOlder, isTrue);
 
-      cubit.selectRange(StrengthRange.all);
-      expect(cubit.state.range, StrengthRange.weeks2);
-
-      premium.controller.add(true);
-      await pumpEventQueue();
-      expect(cubit.state.range, StrengthRange.all);
-      expect(cubit.state.olderLocked, isFalse);
-      // The range control stays for Premium too.
-      expect(cubit.state.hasOlder, isTrue);
-    },
-  );
+    cubit.selectRange(StrengthRange.all);
+    expect(cubit.state.range, StrengthRange.all);
+    expect(cubit.state.hasOlder, isTrue);
+  });
 
   group('body fat', () {
     BodyEntry measured(String id, DateTime date, double abdomen) => BodyEntry(

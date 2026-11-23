@@ -5,7 +5,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:forge_auth/forge_auth.dart';
 import 'package:forge_core/forge_core.dart';
 import 'package:get_workout/features/exercises/domain/vocabulary.dart';
-import 'package:get_workout/features/programs/domain/program_usecases.dart';
 import 'package:get_workout/features/settings/domain/user_settings.dart';
 import 'package:get_workout/features/strength/domain/strength.dart';
 import 'package:get_workout/features/strength/presentation/exercise_strength_cubit.dart';
@@ -14,8 +13,6 @@ import 'package:get_workout/features/workout/domain/workout.dart';
 import 'package:get_workout/features/workout/domain/workout_repository.dart';
 import 'package:get_workout/features/workout/domain/workout_usecases.dart';
 import 'package:mocktail/mocktail.dart';
-
-import '../programs/fixtures.dart';
 
 class MockAuthRepository extends Mock implements AuthRepository {}
 
@@ -61,13 +58,11 @@ void main() {
 
   late StreamController<AuthUser?> users;
   late StreamController<ExerciseStats?> stats;
-  late FakePremium premium;
   late MockWorkoutRepository repository;
 
   setUp(() {
     users = StreamController<AuthUser?>.broadcast();
     stats = StreamController<ExerciseStats?>.broadcast();
-    premium = FakePremium();
     repository = MockWorkoutRepository();
     when(() => repository.watchStats(any(), 'squat'))
         .thenAnswer((_) => stats.stream);
@@ -79,7 +74,6 @@ void main() {
   tearDown(() async {
     await users.close();
     await stats.close();
-    await premium.controller.close();
   });
 
   ExerciseStrengthCubit build({WeightUnit unit = WeightUnit.kg}) {
@@ -89,23 +83,20 @@ void main() {
       exerciseId: 'squat',
       watchAuthUser: WatchAuthUser(auth),
       watchStats: WatchExerciseStats(repository),
-      watchPremium: WatchPremium(premium),
       rebuildStats: RebuildExerciseStats(repository),
       unit: unit,
       clock: () => now,
     );
   }
 
-  /// Signs in [user], then shows [value] and [premium] status [hasPremium].
+  /// Signs in [alice], then shows [value].
   Future<ExerciseStrengthCubit> opened({
     ExerciseStats? value,
-    bool? hasPremium = false,
     WeightUnit unit = WeightUnit.kg,
   }) async {
     final cubit = build(unit: unit);
     users.add(alice);
     await pumpEventQueue();
-    premium.controller.add(hasPremium);
     stats.add(value);
     await pumpEventQueue();
     return cubit;
@@ -133,48 +124,13 @@ void main() {
     await cubit.close();
   });
 
-  test('a free user is told older results exist', () async {
+  test('a longer range shows everything, without Premium', () async {
     final cubit = await opened(value: squat);
-    expect(cubit.state.olderLocked, isTrue);
-    await cubit.close();
-  });
-
-  test('nothing is locked while Premium is unknown or owned', () async {
-    final unknown = await opened(value: squat, hasPremium: null);
-    expect(unknown.state.olderLocked, isFalse);
-    await unknown.close();
-
-    final owned = await opened(value: squat, hasPremium: true);
-    expect(owned.state.olderLocked, isFalse);
-    await owned.close();
-  });
-
-  test('a Premium range shows everything to a Premium user', () async {
-    final cubit = await opened(value: squat, hasPremium: true);
     cubit.selectRange(StrengthRange.all);
     expect(cubit.state.range, StrengthRange.all);
     expect(values(cubit.state), [90, 116.5]);
     expect(cubit.state.sessions, [recentPoint, oldPoint]);
     expect(cubit.state.rangeStart, old);
-    await cubit.close();
-  });
-
-  test('a Premium range waits for Premium to arrive', () async {
-    final cubit = await opened(value: squat);
-    cubit.selectRange(StrengthRange.year1);
-    expect(cubit.state.range, StrengthRange.weeks2);
-    expect(values(cubit.state), [116.5]);
-
-    // The paywall closed before the status caught up.
-    premium.controller.add(true);
-    await pumpEventQueue();
-    expect(cubit.state.range, StrengthRange.year1);
-    expect(values(cubit.state), [90, 116.5]);
-
-    // Premium ending falls back to the free range.
-    premium.controller.add(false);
-    await pumpEventQueue();
-    expect(cubit.state.range, StrengthRange.weeks2);
     await cubit.close();
   });
 
@@ -221,9 +177,8 @@ void main() {
     expect(cubit.state.charted, isFalse);
     expect(cubit.state.records.single.kind, RecordKind.longestDuration);
     expect(cubit.state.points, isEmpty);
-    // Every session, however old, and nothing locked.
+    // Every session, however old.
     expect(cubit.state.sessions.length, 2);
-    expect(cubit.state.olderLocked, isFalse);
     expect(cubit.state.loggingType, LoggingType.duration);
     await cubit.close();
   });
@@ -248,8 +203,8 @@ void main() {
     await cubit.close();
   });
 
-  test('another user starts over at loading and the free range', () async {
-    final cubit = await opened(value: squat, hasPremium: true);
+  test('another user starts over at loading and 2 weeks', () async {
+    final cubit = await opened(value: squat);
     cubit.selectRange(StrengthRange.all);
     users.add(bob);
     await pumpEventQueue();
@@ -292,10 +247,7 @@ void main() {
   blocTest<ExerciseStrengthCubit, ExerciseStrengthState>(
     'stays loading until the stats arrive',
     build: build,
-    act: (cubit) async {
-      premium.controller.add(true);
-      cubit.selectRange(StrengthRange.all);
-    },
+    act: (cubit) => cubit.selectRange(StrengthRange.all),
     expect: () => <ExerciseStrengthState>[],
   );
 }

@@ -21,7 +21,7 @@ class ProgressBodyState extends Equatable {
 }
 
 /// The [bodySnapshot] of the app's body list, for the Progress tab. Its
-/// 2 weeks (the free charts' window) end today: [refreshNow] moves them on, e.g. after the app
+/// 2 weeks end today: [refreshNow] moves them on, e.g. after the app
 /// slept over midnight.
 class ProgressBodyCubit extends Cubit<ProgressBodyState> {
   ProgressBodyCubit({

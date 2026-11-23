@@ -13,8 +13,6 @@ import '../../settings/presentation/first_weekday.dart';
 import '../../settings/presentation/settings_cubit.dart';
 import '../../strength/domain/strength.dart';
 import '../../strength/presentation/strength_text.dart';
-import '../../analytics/domain/analytics.dart';
-import '../../subscription/presentation/premium.dart';
 import '../domain/body_chart.dart';
 import '../domain/body_entry.dart';
 import '../domain/body_stats.dart';
@@ -234,7 +232,7 @@ class _OverviewLoading extends StatelessWidget {
           ],
         ),
         _rowGap,
-        MultiSeriesChart.loading(title: l10n.rangeName(StrengthRange.free)),
+        MultiSeriesChart.loading(title: l10n.rangeName(StrengthRange.weeks2)),
         _rowGap,
         const Padding(
           padding: EdgeInsets.fromLTRB(Gap.xs, Gap.sm, Gap.xs, 0),
@@ -418,9 +416,8 @@ class _SeriesLook {
   ];
 }
 
-/// The chosen series over the chart's range, the range control while
-/// there are older entries, and the way to older results for a free
-/// user.
+/// The chosen series over the chart's range, and the range control while
+/// there are older entries.
 class _ChartCard extends StatefulWidget {
   const _ChartCard(this.state);
   final BodyListState state;
@@ -462,10 +459,6 @@ class _ChartCardState extends State<_ChartCard> {
         final to = chart.to;
         final waiting = chart.shown.every(chart.loading.contains);
         final range = state.hasOlder ? _RangePicker(state.range) : null;
-        final lockedCaption = state.olderLocked ? l10n.bodyOlderLocked : null;
-        final VoidCallback? onLockedCaptionTap = state.olderLocked
-            ? () => context.requirePremium(PremiumFeature.bodyHistory)
-            : null;
         if (from == null || to == null || waiting) {
           return waiting
               ? MultiSeriesChart.loading(title: title)
@@ -474,8 +467,6 @@ class _ChartCardState extends State<_ChartCard> {
                   emptyTitle: l10n.bodyChartEmptyTitle,
                   message: l10n.bodyChartEmpty,
                   range: range,
-                  lockedCaption: lockedCaption,
-                  onLockedCaptionTap: onLockedCaptionTap,
                 );
         }
         final target =
@@ -543,8 +534,6 @@ class _ChartCardState extends State<_ChartCard> {
           onAdd: _add,
           adding: _adding,
           range: range,
-          lockedCaption: lockedCaption,
-          onLockedCaptionTap: onLockedCaptionTap,
           semanticLabel: l10n.bodyChartSemantics(title),
         );
       },
@@ -556,29 +545,18 @@ class _ChartCardState extends State<_ChartCard> {
 /// whether the target weight shows. Every change applies at once.
 Future<void> _showAddSheet(BuildContext context) {
   final cubit = context.read<BodyChartCubit>();
-  final premium = context.read<BodyListCubit>();
   return showForgeBottomSheet<void>(
     context: context,
-    builder: (_) => MultiBlocProvider(
-      providers: [
-        BlocProvider.value(value: cubit),
-        BlocProvider.value(value: premium),
-      ],
-      child: _AddSheet(gate: context),
-    ),
+    builder: (_) => BlocProvider.value(value: cubit, child: const _AddSheet()),
   );
 }
 
 class _AddSheet extends StatelessWidget {
-  const _AddSheet({required this.gate});
-
-  /// Below the root navigator, where the paywall gate's providers are.
-  final BuildContext gate;
+  const _AddSheet();
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final colors = ForgeStyle.of(context).colors;
     return BlocBuilder<BodyChartCubit, BodyChartState>(
       builder: (context, state) {
         final cubit = context.read<BodyChartCubit>();
@@ -591,19 +569,6 @@ class _AddSheet extends StatelessWidget {
             _ => null,
           };
           final picked = shown.contains(series);
-          if (state.locked(series)) {
-            return ListRow(
-              title: l10n.seriesName(series),
-              detail: detail,
-              trailing: ForgeIcon(
-                ForgeIcons.lock,
-                size: 18,
-                color: colors.inkMuted,
-              ),
-              disabled: full,
-              onTap: () => _unlock(cubit, series),
-            );
-          }
           return ListRow(
             title: l10n.seriesName(series),
             detail: detail,
@@ -650,17 +615,9 @@ class _AddSheet extends StatelessWidget {
       },
     );
   }
-
-  /// A training series asks for Premium first, as the ranges do.
-  Future<void> _unlock(BodyChartCubit cubit, BodySeries series) async {
-    if (await gate.requirePremium(PremiumFeature.bodySeries)) {
-      await cubit.add(series);
-    }
-  }
 }
 
-/// The chart's ranges; a Premium one is locked for a free user and opens
-/// the paywall.
+/// The chart's ranges.
 class _RangePicker extends StatelessWidget {
   const _RangePicker(this.range);
   final StrengthRange range;
@@ -668,24 +625,13 @@ class _RangePicker extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final locked = context.watchPremium() == PremiumStatus.free;
-    final cubit = context.read<BodyListCubit>();
     return ForgeSegmentedControl<StrengthRange>(
       segments: [
         for (final option in StrengthRange.values)
-          ForgeSegment(
-            value: option,
-            label: l10n.rangeName(option),
-            locked: locked && option.premium,
-          ),
+          ForgeSegment(value: option, label: l10n.rangeName(option)),
       ],
       selected: range,
-      onChanged: cubit.selectRange,
-      onLocked: (option) async {
-        if (await context.requirePremium(PremiumFeature.bodyRange)) {
-          cubit.selectRange(option);
-        }
-      },
+      onChanged: context.read<BodyListCubit>().selectRange,
     );
   }
 }

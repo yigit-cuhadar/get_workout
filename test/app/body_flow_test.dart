@@ -23,13 +23,11 @@ import 'package:get_workout/features/progress/domain/measurement_prompt.dart';
 import 'package:get_workout/features/progress/presentation/measurement_prompt_cubit.dart';
 import 'package:get_workout/features/progress/presentation/progress_body_cubit.dart';
 import 'package:get_workout/features/progress/presentation/progress_strength_cubit.dart';
-import 'package:get_workout/features/programs/domain/program_usecases.dart';
 import 'package:get_workout/features/settings/domain/user_settings.dart';
 import 'package:mocktail/mocktail.dart';
 
 import '../features/body/body_fakes.dart';
 import '../features/body/fake_camera.dart';
-import '../features/programs/fixtures.dart' show FixedPremium;
 import 'training_world.dart';
 import '../fake_analytics.dart';
 
@@ -94,7 +92,6 @@ void main() {
       watchAuthUser: world.watchUser,
       watchEntries: WatchBodyEntries(entries),
       watchRejectedWrites: WatchRejectedBodyWrites(entries),
-      watchPremium: const WatchPremium(FixedPremium(false)),
       watchProfile: WatchProfile(world.profiles),
       findPhotos: FindBodyPhotos(store),
       restorePhoto: RestoreBodyPhoto(sync),

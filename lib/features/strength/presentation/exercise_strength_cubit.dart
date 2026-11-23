@@ -6,7 +6,6 @@ import 'package:forge_core/forge_core.dart';
 
 import '../../../core/user_stream_follower.dart';
 import '../../exercises/domain/vocabulary.dart';
-import '../../programs/domain/program_usecases.dart';
 import '../../settings/domain/user_settings.dart';
 import '../../workout/domain/exercise_stats.dart';
 import '../../workout/domain/workout_usecases.dart';
@@ -22,9 +21,8 @@ class ExerciseStrengthState extends Equatable {
     this.sessions = const [],
     this.trained = false,
     this.charted = false,
-    this.range = StrengthRange.free,
+    this.range = StrengthRange.weeks2,
     this.rangeStart,
-    this.olderLocked = false,
     this.loggingType,
   });
 
@@ -44,15 +42,11 @@ class ExerciseStrengthState extends Equatable {
   /// (bodyweight, timed) it never has, and there is no chart.
   final bool charted;
 
-  /// The range shown: the one chosen, as far as Premium allows.
+  /// The range shown.
   final StrengthRange range;
 
   /// The first day of [range]; for all of it, the first workout's date.
   final DateTime? rangeStart;
-
-  /// A free user has results from before [StrengthRange.free]; tell them
-  /// Premium shows those.
-  final bool olderLocked;
 
   /// How the stats were kept, guessed from them (see [loggingTypeOf]) for
   /// an exercise no longer in the library; null without stats.
@@ -68,23 +62,19 @@ class ExerciseStrengthState extends Equatable {
     charted,
     range,
     rangeStart,
-    olderLocked,
     loggingType,
   ];
 }
 
 /// The records, e1RM chart and sessions of exercise [exerciseId] for
-/// whoever is signed in, followed live. Ranges beyond [StrengthRange.free]
-/// show only while the user is known to have Premium; the page asks for
-/// Premium before choosing one. Stats stored before records kept their set
-/// and sessions their best set ([ExerciseStats.outdated]) show at once and
-/// are rebuilt from the workouts, once per page.
+/// whoever is signed in, followed live. Stats stored before records kept
+/// their set and sessions their best set ([ExerciseStats.outdated]) show at
+/// once and are rebuilt from the workouts, once per page.
 class ExerciseStrengthCubit extends Cubit<ExerciseStrengthState> {
   ExerciseStrengthCubit({
     required this.exerciseId,
     required WatchAuthUser watchAuthUser,
     required WatchExerciseStats watchStats,
-    required WatchPremium watchPremium,
     required this._rebuildStats,
     required this._unit,
     DateTime Function()? clock,
@@ -98,7 +88,7 @@ class ExerciseStrengthCubit extends Cubit<ExerciseStrengthState> {
         _loaded = false;
         _stats = null;
         _rebuilt = false;
-        _chosen = StrengthRange.free;
+        _chosen = StrengthRange.weeks2;
         emit(const ExerciseStrengthState());
       },
       onData: (stats) {
@@ -115,27 +105,19 @@ class ExerciseStrengthCubit extends Cubit<ExerciseStrengthState> {
       },
       logTag: 'strength',
     );
-    _premiumSubscription = watchPremium().listen((premium) {
-      _premium = premium;
-      _publish();
-    });
   }
 
   final String exerciseId;
   final RebuildExerciseStats _rebuildStats;
   final DateTime Function() _clock;
   late final UserStreamFollower<ExerciseStats?> _follower;
-  late final StreamSubscription<bool?> _premiumSubscription;
   WeightUnit _unit;
   String? _uid;
   bool _loaded = false;
   bool _rebuilt = false;
   ExerciseStats? _stats;
-  bool? _premium;
-  StrengthRange _chosen = StrengthRange.free;
+  StrengthRange _chosen = StrengthRange.weeks2;
 
-  /// Shows [range]; a Premium one only once the user is known to have
-  /// Premium, which may be after the paywall closed.
   void selectRange(StrengthRange range) {
     _chosen = range;
     _publish();
@@ -165,7 +147,7 @@ class ExerciseStrengthCubit extends Cubit<ExerciseStrengthState> {
   void _publish() {
     if (!_loaded) return;
     final stats = _stats;
-    final range = _chosen.allowed(_premium);
+    final range = _chosen;
     if (stats == null) {
       emit(
         ExerciseStrengthState(
@@ -188,14 +170,6 @@ class ExerciseStrengthCubit extends Cubit<ExerciseStrengthState> {
         charted: charted,
         range: range,
         rangeStart: start ?? stats.history.firstOrNull?.date,
-        olderLocked:
-            charted &&
-            _premium == false &&
-            hasResultsBefore(
-              stats.history,
-              range: StrengthRange.free,
-              now: now,
-            ),
         loggingType: loggingTypeOf(stats),
       ),
     );
@@ -204,7 +178,6 @@ class ExerciseStrengthCubit extends Cubit<ExerciseStrengthState> {
   @override
   Future<void> close() async {
     await _follower.cancel();
-    await _premiumSubscription.cancel();
     return super.close();
   }
 }
