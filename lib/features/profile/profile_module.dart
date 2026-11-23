@@ -8,7 +8,8 @@ import 'domain/profile_usecases.dart';
 import 'presentation/profile_cubit.dart';
 
 /// Registers the profile and onboarding. Needs `AuthModule` for the current
-/// user and `ExercisesModule`, whose use case saves the equipment.
+/// user, `ExercisesModule`, whose use case saves the equipment, and
+/// `BodyModule`, which logs the weight given as the first weigh-in.
 class ProfileModule implements FeatureModule {
   const ProfileModule();
 
@@ -32,7 +33,7 @@ class ProfileModule implements FeatureModule {
       )
       ..registerFactory(() => WatchProfile(sl()))
       ..registerFactory(() => UpdateProfile(sl(), sl()))
-      ..registerFactory(() => CompleteOnboarding(sl(), sl()))
+      ..registerFactory(() => CompleteOnboarding(sl(), sl(), sl()))
       ..registerLazySingleton(
         () => ProfileCubit(
           watchAuthUser: sl(),

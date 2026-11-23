@@ -101,6 +101,31 @@ WorkoutSet? lastTimeSet(
   return lastSets.elementAtOrNull(position);
 }
 
+/// The weight logging set [index] of [exercise] at [kg] is checked
+/// against, returned when [kg] is more than double it and so likely
+/// mistyped: the closest done set of the same type before it that has a
+/// weight (as hints follow, so a working set is never held against a
+/// warm-up), else the same set last time ([lastTime], see [lastTimeSet]).
+/// Null when [kg] is plausible or there is no positive weight to compare.
+double? implausibleWeightReference(
+  WorkoutExercise exercise,
+  int index,
+  double kg, {
+  WorkoutSet? lastTime,
+}) {
+  final set = exercise.sets.elementAtOrNull(index);
+  if (set == null) return null;
+  final previous = exercise.sets
+      .take(index)
+      .lastWhere(
+        (s) => s.done && s.type == set.type && s.weightKg != null,
+        orElse: () => _none,
+      );
+  final reference = previous.weightKg ?? lastTime?.weightKg;
+  if (reference == null || !(reference > 0)) return null;
+  return kg > 2 * reference ? reference : null;
+}
+
 /// The values shown as hints in the empty fields of set [index] of
 /// [exercise], and logged when it is ticked with them still empty. Each
 /// value comes from the first that has it: the closest done set of the same

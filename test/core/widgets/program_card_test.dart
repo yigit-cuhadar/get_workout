@@ -1,4 +1,6 @@
+import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:forge_ui/forge_ui.dart';
 import 'package:get_workout/core/widgets/program_card.dart';
 
@@ -118,5 +120,34 @@ void main() {
     );
 
     expect(find.text('Active'), findsNothing);
+  });
+
+  testWidgets('a long row name wraps beside its tags, which keep to its '
+      'first line', (tester) async {
+    const name = 'Shoulders and Back Focus 4-Day Split for Intermediates';
+    await pumpComponent(
+      tester,
+      SizedBox(
+        width: 320,
+        child: ProgramCard.row(
+          name: name,
+          facts: '4 days · Intermediate · 8 weeks',
+          fits: true,
+          locked: true,
+          onTap: () {},
+        ),
+      ),
+    );
+
+    final text = tester.renderObject<RenderParagraph>(find.text(name));
+    expect(text.didExceedMaxLines, isFalse);
+    final nameBox = tester.getRect(find.text(name));
+    final lineHeight = text.text.style!.fontSize! * text.text.style!.height!;
+    expect(nameBox.height, greaterThan(lineHeight * 1.5));
+    for (final tag in ['Fits you', 'Premium']) {
+      final box = tester.getRect(find.widgetWithText(ForgeTag, tag));
+      expect(box.left, greaterThanOrEqualTo(nameBox.right));
+      expect(box.top, lessThan(nameBox.top + lineHeight));
+    }
   });
 }

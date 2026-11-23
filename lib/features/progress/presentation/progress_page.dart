@@ -485,6 +485,15 @@ class _CardioCard extends StatelessWidget {
         retryLabel: l10n.retry,
         onRetry: context.read<CardioListCubit>().retry,
       ),
+      (CardioListStatus.ready, _)
+          when state.sessions.isEmpty && state.healthConnected =>
+        StatTile.empty(
+          title: title,
+          onTap: open,
+          message: l10n.progressCardioNoneConnected,
+          actionLabel: l10n.cardioLog,
+          onAction: () => context.go(Routes.cardioNew),
+        ),
       (CardioListStatus.ready, _) when state.sessions.isEmpty => StatTile.empty(
         title: title,
         onTap: open,

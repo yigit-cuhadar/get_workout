@@ -259,4 +259,67 @@ void main() {
       expect(steppedCount(1000, null, 1, 1000), 1000);
     });
   });
+
+  group('implausibleWeightReference', () {
+    const open = WorkoutSet(reps: 10);
+
+    test('more than double the previous done set of the type is held '
+        'against it', () {
+      final squat = exercise('squat', [lift(40, 10), open]);
+      expect(implausibleWeightReference(squat, 1, 403), 40);
+      expect(implausibleWeightReference(squat, 1, 80.5), 40);
+    });
+
+    test('double or less is plausible', () {
+      final squat = exercise('squat', [lift(40, 10), open]);
+      expect(implausibleWeightReference(squat, 1, 80), isNull);
+      expect(implausibleWeightReference(squat, 1, 20), isNull);
+    });
+
+    test('the closest done set before it counts; undone ones and sets of '
+        'another type do not', () {
+      final squat = exercise('squat', [
+        lift(100, 5),
+        lift(40, 5, done: false),
+        lift(20, 8, type: SetType.warmup),
+        open,
+      ]);
+      expect(implausibleWeightReference(squat, 3, 190), isNull);
+      expect(implausibleWeightReference(squat, 3, 201), 100);
+    });
+
+    test('a working set after warm-ups only is held against last time', () {
+      final squat = exercise('squat', [
+        lift(20, 10, type: SetType.warmup),
+        lift(50, 5, type: SetType.warmup),
+        open,
+      ]);
+      expect(implausibleWeightReference(squat, 2, 100), isNull);
+      expect(
+        implausibleWeightReference(squat, 2, 100, lastTime: lift(45, 5)),
+        45,
+      );
+    });
+
+    test('this workout comes before last time', () {
+      final squat = exercise('squat', [lift(100, 5), open]);
+      expect(
+        implausibleWeightReference(squat, 1, 150, lastTime: lift(50, 5)),
+        isNull,
+      );
+    });
+
+    test('nothing to compare with, or no weight, checks nothing', () {
+      expect(
+        implausibleWeightReference(exercise('squat', [open]), 0, 403),
+        isNull,
+      );
+      final bodyweight = exercise('pull-up', [
+        const WorkoutSet(reps: 8, done: true),
+        lift(0, 8),
+        open,
+      ]);
+      expect(implausibleWeightReference(bodyweight, 2, 10), isNull);
+    });
+  });
 }

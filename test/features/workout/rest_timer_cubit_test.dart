@@ -1249,6 +1249,7 @@ void main() {
     test('is asked as the first workout starts, once', () {
       setWish(null);
       askedHere = false;
+      allowed = false;
       run((async, cubit) {
         expect(asks(async, cubit), isTrue);
         verifyNever(notifications.request);
@@ -1331,6 +1332,30 @@ void main() {
       askedHere = false;
       run((async, cubit) {
         expect(asks(async, cubit), isTrue);
+        verifyNever(notifications.request);
+      });
+    });
+
+    test('with no wish, a device that allows it already is a yes without '
+        'asking', () {
+      setWish(null);
+      askedHere = false;
+      run((async, cubit) {
+        expect(asks(async, cubit), isFalse);
+        expect(wish(), isTrue);
+        verify(notifications.markAskedHere).called(1);
+        expect(asks(async, cubit), isFalse);
+      });
+    });
+
+    test('with no wish, a device that does not allow it is asked in the '
+        'app', () {
+      setWish(null);
+      askedHere = false;
+      allowed = false;
+      run((async, cubit) {
+        expect(asks(async, cubit), isTrue);
+        expect(wish(), isNull);
         verifyNever(notifications.request);
       });
     });

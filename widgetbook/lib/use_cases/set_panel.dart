@@ -8,7 +8,6 @@ import 'package:widgetbook_annotation/widgetbook_annotation.dart' as widgetbook;
 const _labels = SetPanelLabels(
   log: 'Log set',
   done: 'Done',
-  next: 'Next',
   options: 'Set options',
   addDrop: 'Add drop',
   removeDrop: 'Remove drop',

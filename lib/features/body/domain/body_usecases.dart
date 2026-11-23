@@ -261,6 +261,50 @@ class SaveBodyEntry implements UseCase<void, BodySave> {
   }
 }
 
+typedef WeighIn = ({String uid, double kg});
+
+/// Logs [WeighIn.kg] as a quick weigh-in dated now, through [SaveBodyEntry];
+/// for a weight the user gave elsewhere, such as in onboarding. Nothing is
+/// logged when the user already has a weigh-in today, so a retry never
+/// adds a second one.
+class LogWeighIn implements UseCase<void, WeighIn> {
+  LogWeighIn(this._repository, this._saveEntry, {DateTime Function()? clock})
+    : _clock = clock ?? DateTime.now;
+  final BodyRepository _repository;
+  final SaveBodyEntry _saveEntry;
+  final DateTime Function() _clock;
+
+  @override
+  Future<Result<void>> call(WeighIn params) async {
+    final (:uid, :kg) = params;
+    final now = _clock();
+    final List<BodyEntry> entries;
+    try {
+      // Firestore's cache answers at once, also offline.
+      entries = await _repository.watchEntries(uid).first;
+    } on Failure catch (failure) {
+      return Err(failure);
+    }
+    final today = CalendarDate.of(now.toLocal());
+    final weighedToday = entries.any(
+      (entry) =>
+          entry.weightKg != null &&
+          CalendarDate.of(entry.date.toLocal()) == today,
+    );
+    if (weighedToday) return const Ok(null);
+    return _saveEntry((
+      uid: uid,
+      entry: BodyEntry(
+        id: _repository.newEntryId(uid),
+        date: now,
+        weightKg: kg,
+      ),
+      newPhotos: const {},
+      isNew: true,
+    ));
+  }
+}
+
 /// Deletes the entry. Its photos, here and in the backup, are removed only
 /// once the server confirms, so a refused delete, which brings the entry
 /// back, still has them.

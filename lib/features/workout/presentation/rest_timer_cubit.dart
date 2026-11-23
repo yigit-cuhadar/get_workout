@@ -428,10 +428,21 @@ class RestTimerCubit extends Cubit<RestTimerState> {
 
   /// Whether to ask, as a workout starts, to notify when a rest is over:
   /// the rest timer is on and this device has not been asked (see
-  /// [ShouldAskRestNotifications]). Answer with [answerNotify].
+  /// [ShouldAskRestNotifications]). Answer with [answerNotify]. A device
+  /// that already allows notifications, for a user who never answered,
+  /// is answered yes here instead of asking.
   Future<bool> shouldAskNotify() async {
     final rest = _settings.state.settings.restTimer;
-    return rest.enabled && await _shouldAsk(rest.notify);
+    if (!rest.enabled) return false;
+    switch (await _shouldAsk(rest.notify)) {
+      case RestNotifyAsk.none:
+        return false;
+      case RestNotifyAsk.ask:
+        return true;
+      case RestNotifyAsk.allow:
+        await answerNotify(allow: true);
+        return false;
+    }
   }
 
   /// The user's answer to [shouldAskNotify]. "Not now" is remembered on

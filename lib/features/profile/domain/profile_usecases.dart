@@ -1,5 +1,6 @@
 import 'package:forge_core/forge_core.dart';
 
+import '../../body/domain/body_usecases.dart';
 import '../../exercises/domain/exercise_usecases.dart';
 import 'profile_repository.dart';
 import 'user_profile.dart';
@@ -41,11 +42,17 @@ class UpdateProfile implements UseCase<void, ProfileFieldsUpdate> {
 }
 
 /// Stores the answers given, the equipment through the library as in
-/// [UpdateProfile], and marks onboarding completed.
+/// [UpdateProfile], and marks onboarding completed. The weight given is
+/// also the user's first weigh-in, logged through the body feature.
 class CompleteOnboarding implements UseCase<void, OnboardingAnswers> {
-  const CompleteOnboarding(this._repository, this._saveEquipment);
+  const CompleteOnboarding(
+    this._repository,
+    this._saveEquipment,
+    this._logWeighIn,
+  );
   final ProfileRepository _repository;
   final SaveOwnedEquipment _saveEquipment;
+  final LogWeighIn _logWeighIn;
 
   @override
   Future<Result<void>> call(OnboardingAnswers params) {
@@ -53,6 +60,7 @@ class CompleteOnboarding implements UseCase<void, OnboardingAnswers> {
     return _all([
       if (answers.equipment case final owned?)
         _saveEquipment((uid: uid, equipment: owned)),
+      if (answers.weightKg case final kg?) _logWeighIn((uid: uid, kg: kg)),
       _repository.completeOnboarding(uid, answers),
     ]);
   }

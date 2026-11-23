@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:forge_core/forge_core.dart';
 import 'package:get_workout/features/body/domain/body_entry.dart';
 import 'package:get_workout/features/body/domain/body_photos.dart';
+import 'package:get_workout/features/body/domain/body_usecases.dart';
 import 'package:get_workout/features/profile/domain/user_profile.dart';
 
 import 'body_fakes.dart';
@@ -239,6 +240,54 @@ void main() {
       await world.delete()((uid: 'u1', entry: entry));
 
       expect(world.profiles.profile.weightKg, 84);
+    });
+  });
+
+  group('log weigh-in', () {
+    LogWeighIn log() =>
+        LogWeighIn(world.repository, world.save(() => now), clock: () => now);
+
+    test('logs the weight as a quick weigh-in dated now and keeps the '
+        'profile weight', () async {
+      final result = await log()((uid: 'u1', kg: 73.2));
+
+      expect(result.isOk, isTrue);
+      expect(world.repository.entries.values, [
+        BodyEntry(id: 'id1', date: now, weightKg: 73.2),
+      ]);
+      expect(world.profiles.profile.weightKg, 73.2);
+    });
+
+    test('logs nothing when there is a weigh-in today already', () async {
+      world.repository.entries['e1'] = BodyEntry(
+        id: 'e1',
+        date: DateTime(2026, 11, 12, 7),
+        weightKg: 80,
+      );
+
+      final result = await log()((uid: 'u1', kg: 73.2));
+
+      expect(result.isOk, isTrue);
+      expect(world.repository.calls, isEmpty);
+    });
+
+    test('a measurement day without a weight or an earlier weigh-in does not '
+        'count', () async {
+      world.repository.entries
+        ..['e1'] = BodyEntry(
+          id: 'e1',
+          date: DateTime(2026, 11, 12, 7),
+          measurements: const {BodyMeasurement.waist: 80},
+        )
+        ..['e2'] = BodyEntry(
+          id: 'e2',
+          date: DateTime(2026, 11, 11, 20),
+          weightKg: 80,
+        );
+
+      await log()((uid: 'u1', kg: 73.2));
+
+      expect(world.repository.calls, ['add id1']);
     });
   });
 }

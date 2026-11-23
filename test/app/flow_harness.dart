@@ -70,6 +70,7 @@ import '../fake_analytics.dart';
 import 'package:get_workout/features/analytics/domain/analytics.dart';
 
 import '../fake_body_model.dart';
+import '../features/body/body_fakes.dart';
 
 class MockAuth extends Mock implements AuthRepository {}
 
@@ -331,7 +332,11 @@ class FlowApp {
       return Future.value(const Ok(null));
     });
     sl.registerFactory(
-      () => CompleteOnboarding(profiles, SaveOwnedEquipment(userLibrary)),
+      () => CompleteOnboarding(
+        profiles,
+        SaveOwnedEquipment(userLibrary),
+        FakeLogWeighIn(),
+      ),
     );
     profile = ProfileCubit(
       watchAuthUser: WatchAuthUser(repository),

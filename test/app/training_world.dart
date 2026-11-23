@@ -446,6 +446,12 @@ class TrainingWorld {
   /// Whether this device was asked to notify when a rest is over.
   bool notificationsAskedHere = true;
 
+  /// Whether this device lets the app notify.
+  bool notificationsAllowed = false;
+
+  /// The settings last saved.
+  UserSettings? savedSettings;
+
   final programs = FakeProgramRepository();
   late final workouts = FakeWorkoutRepository(programs);
   final local = FakeLocalWorkoutStore();
@@ -499,7 +505,10 @@ class TrainingWorld {
     when(() => settingsRepository.watchSettings(any()))
         .thenAnswer((_) => Stream.value(settings));
     when(() => settingsRepository.saveSettings(any(), any()))
-        .thenAnswer((_) async => const Ok(null));
+        .thenAnswer((call) async {
+          savedSettings = call.positionalArguments[1] as UserSettings;
+          return const Ok(null);
+        });
     when(() => settingsRepository.markTipSeen(any(), any()))
         .thenAnswer((_) async => const Ok(null));
     final settingsCubit = SettingsCubit(
@@ -597,6 +606,10 @@ class TrainingWorld {
       notificationsAskedHere = true;
       return const Ok(null);
     });
+    when(notifications.allowed)
+        .thenAnswer((_) async => Ok(notificationsAllowed));
+    when(notifications.request)
+        .thenAnswer((_) async => Ok(notificationsAllowed));
     when(notifications.cancel).thenAnswer((_) async => const Ok(null));
     when(
       () => notifications.schedule(
