@@ -1976,6 +1976,40 @@ Decisions (the canvases they were drawn on are deleted):
   the light logo alone, 240 square, on on-featured, the native launch
   screen identical and both centred on the whole screen, so the handover
   does not move it (Forge SplashScreen logo form).
+- Screen review (owner's picks, 2026-11-24, canvas
+  https://claude.ai/artifact/TzXAmphdUeRWsqFSZ5Cym4): T1 A (Today's
+  calculators card becomes one row opening Calculators); G1 A (mono only
+  for counters and table values; phrases such as "1 of 4 days this week"
+  are plain text with tabular figures); O1 unchanged (the nine onboarding
+  questions stay mandatory); P1 A (a program's weekly sets list the major
+  muscles first in a fixed order, smaller muscles such as traps on the
+  detail page); P2 unchanged (the weekly sets card stays above the days);
+  P3: the owner's own answer, Change days and Stop both move from the card
+  into the ⋯ menu (how the menu orders them is P3b); C1 A (in
+  Recommended for you a row carries only its Premium tag, the match line
+  shows once, muted, under the section title); C2 unchanged; W1 B (the
+  workout's Finish is a text button, Log set the one filled button); PR1 A
+  (an empty Cardio card has no "—", only its line and Log cardio); PR2 A
+  (Steps without Apple Health says "Connect Apple Health to count your
+  steps." with an outline Connect button); PF1 A (Profile: Your profile
+  alone under "You" after the Premium card; Help & feedback in a last
+  "Help and privacy" section with the privacy rows); PF2 A (the
+  Appearance section shows Light / Dark / System with no row title); PF3 A
+  (Rest timer, Default rest, Notify when rest is over and Rest sound and
+  vibration move to a Rest timer page, one row in Workout showing "On ·
+  1:30 · chime and vibrate"); PW1 A (with two benefits the paywall gives
+  each an icon tile and a one-line explanation, under "Logging, history
+  and charts stay free."); PW2 A (Yearly adds "$3.33 a month" from the
+  store price as a second line and its tag reads "Save 58%", computed
+  against the monthly price; the yearly price stays the largest); P3b A
+  (the program ⋯ menu reads Change days, Edit, Duplicate, a divider, then
+  Stop program and Delete in danger; the card keeps no buttons); AD1 A
+  (every admin page uses PageHeader: large left title, muted summary
+  line, the page's button at the right; no centred app-bar titles); AD2
+  A (the admin Exercises table drops its Id column and shows the id as a
+  muted mono line under the name). Not asked, a stale fact to fix with
+  AD1: the Announcements page still says iOS gets no pushes.
+
 ## Open questions
 
 - Google sign-in is offered next to email (`socialProviders` in
