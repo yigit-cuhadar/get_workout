@@ -8,7 +8,6 @@ import 'package:get_workout/features/exercises/domain/exercise.dart';
 import 'package:get_workout/features/exercises/domain/vocabulary.dart';
 import 'package:get_workout/features/exercises/presentation/exercise_catalogue_cubit.dart';
 import 'package:get_workout/features/programs/domain/calendar_date.dart';
-import 'package:get_workout/features/programs/domain/program_usecases.dart';
 import 'package:get_workout/features/volume/domain/volume_usecases.dart';
 import 'package:get_workout/features/volume/domain/weekly_volume.dart';
 import 'package:get_workout/features/volume/presentation/volume_cubit.dart';
@@ -17,7 +16,6 @@ import 'package:get_workout/features/workout/domain/workout.dart';
 import 'package:get_workout/features/workout/domain/workout_repository.dart';
 import 'package:mocktail/mocktail.dart';
 
-import '../programs/fixtures.dart' show FakePremium;
 import '../workout/fixtures.dart';
 
 class MockAuthRepository extends Mock implements AuthRepository {}
@@ -45,7 +43,6 @@ void main() {
   late MockAuthRepository auth;
   late MockWorkoutRepository workouts;
   late MockCatalogueCubit catalogue;
-  late FakePremium premium;
   late StreamController<AuthUser?> users;
   late StreamController<ExerciseCatalogueState> catalogueStates;
 
@@ -59,7 +56,6 @@ void main() {
     auth = MockAuthRepository();
     workouts = MockWorkoutRepository();
     catalogue = MockCatalogueCubit();
-    premium = FakePremium();
     users = StreamController<AuthUser?>.broadcast();
     catalogueStates = StreamController<ExerciseCatalogueState>.broadcast();
     ranges = {};
@@ -90,7 +86,6 @@ void main() {
     watchAuthUser: WatchAuthUser(auth),
     watchVolume: WatchWeeklyVolume(WatchWorkoutsBetween(workouts)),
     catalogue: catalogue,
-    watchPremium: WatchPremium(premium),
     clock: () => now,
   );
 
@@ -102,13 +97,13 @@ void main() {
   StreamController<List<Workout>> range(
     String uid,
     CalendarDate week, {
-    int count = 1,
+    int count = trendWeeks,
   }) => ranges['$uid ${start(week, count)} ${week.addDays(6)}']!;
 
   List<WeekVolume> weeksOf(
     CalendarDate week,
     List<Workout> done, {
-    int count = 1,
+    int count = trendWeeks,
     Map<String, ExerciseMuscles> muscles = const {},
   }) => volumeWeeks(
     done,
@@ -120,7 +115,7 @@ void main() {
   VolumeState ready(
     CalendarDate week,
     List<Workout> done, {
-    int count = 1,
+    int count = trendWeeks,
     Map<String, ExerciseMuscles> muscles = const {},
   }) => VolumeState(
     week: week,
@@ -138,7 +133,7 @@ void main() {
   });
 
   blocTest<VolumeCubit, VolumeState>(
-    'without Premium reads the week shown alone',
+    'reads the 12 weeks ending with the week shown, without Premium',
     build: build,
     act: (cubit) async {
       users.add(member);
@@ -152,67 +147,13 @@ void main() {
       verify(
         () => workouts.watchWorkoutsBetween(
           'u1',
-          from: thisMonday,
+          from: d(2026, 8, 24),
           to: d(2026, 11, 15),
         ),
       ).called(1);
       expect(cubit.state.shown!.setsOf(Muscle.quads), 2);
-      expect(cubit.state.hasTrend, isFalse);
+      expect(cubit.state.hasTrend, isTrue);
     },
-  );
-
-  blocTest<VolumeCubit, VolumeState>(
-    'with Premium reads the 12 weeks ending with it, and the week alone '
-    'again once Premium ends',
-    build: build,
-    act: (cubit) async {
-      users.add(member);
-      await pumpEventQueue();
-      range('u1', thisMonday).add([squats]);
-      await pumpEventQueue();
-      premium.controller.add(true);
-      await pumpEventQueue();
-      range('u1', thisMonday, count: trendWeeks).add([squats]);
-      await pumpEventQueue();
-      premium.controller.add(false);
-      await pumpEventQueue();
-      range('u1', thisMonday).add([squats]);
-    },
-    expect: () => [
-      ready(thisMonday, [squats]),
-      // The week stays on screen while the trend loads.
-      VolumeState(
-        week: thisMonday,
-        thisWeek: thisMonday,
-        weeks: weeksOf(thisMonday, [squats]),
-      ),
-      ready(thisMonday, [squats], count: trendWeeks),
-      VolumeState(
-        week: thisMonday,
-        thisWeek: thisMonday,
-        weeks: weeksOf(thisMonday, [squats], count: trendWeeks),
-      ),
-      ready(thisMonday, [squats]),
-    ],
-    verify: (_) => verify(
-      () => workouts.watchWorkoutsBetween(
-        'u1',
-        from: d(2026, 8, 24),
-        to: d(2026, 11, 15),
-      ),
-    ).called(1),
-  );
-
-  blocTest<VolumeCubit, VolumeState>(
-    'an unknown Premium status reads the week alone',
-    build: build,
-    act: (cubit) async {
-      premium.controller.add(null);
-      users.add(member);
-      await pumpEventQueue();
-      range('u1', thisMonday).add(const []);
-    },
-    expect: () => [ready(thisMonday, const [])],
   );
 
   blocTest<VolumeCubit, VolumeState>(
@@ -225,7 +166,7 @@ void main() {
     verify: (cubit) => verify(
       () => workouts.watchWorkoutsBetween(
         'u1',
-        from: thisSunday,
+        from: start(thisSunday, trendWeeks),
         to: d(2026, 11, 14),
       ),
     ).called(1),
@@ -441,7 +382,7 @@ void main() {
         verify(
           () => workouts.watchWorkoutsBetween(
             'u1',
-            from: d(2026, 10, 31),
+            from: start(d(2026, 10, 31), trendWeeks),
             to: d(2026, 11, 6),
           ),
         ).called(1);

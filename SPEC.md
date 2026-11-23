@@ -52,16 +52,16 @@ App-wide decisions only. How each feature behaves is under Feature notes.
   subscribe, and again if Premium lapses; Restore stays on it. Anything
   not known (the entitlement or the offering: loading, offline, an
   error) lets the user in until it is known or the next open.
-  Premium = the program generator, 23 of 29 ready-made programs, history
-  in charts beyond 2 weeks (every window that was 12 weeks free is now 2
-  weeks: the strength and body charts; the Progress cards' lines show 2
-  weeks for everyone, Premium too, longer history living on the chart
-  pages), the weekly volume trend (earlier weeks stay free to browse one
-  by one), and later progressive overload suggestions. There is no limit
-  on programs (the "more than 3 own programs" rule was dropped,
+  Premium = the program generator, 23 of 29 ready-made programs, and
+  later progressive overload suggestions (owner's pick, 2026-11-24: every
+  chart, its whole history and the weekly volume trend are free; they
+  were Premium beyond 2 weeks before). The Progress cards' lines show 2
+  weeks for everyone, longer history living on the chart pages. There is
+  no limit on programs (the "more than 3 own programs" rule was dropped,
   2026-11-19). A hard paywall (from the offering) stays open while a
   purchase awaits approval. Free forever: logging, history and calendar,
-  exercises and custom exercises, the 3D model, the summary's comparison, body measurements
+  exercises and custom exercises, the 3D model, the summary's comparison,
+  every chart and its history, the weekly volume trend, body measurements
   and progress photos with compare, cardio and steps, calculators, the Live
   Activity, and later the Watch app, home screen widgets and exercise videos.
   Until store accounts exist, purchases run against a fake gateway.
@@ -630,8 +630,8 @@ Group 5, workout
 
 Group 6, progress
 - [x] Calendar — month view of planned and done workouts and cardio
-- [x] Weekly volume — model coloring and bar list against the 10-20 band; 12-week trend (Premium)
-- [x] Strength — per-exercise records and e1RM chart (beyond 2 weeks Premium)
+- [x] Weekly volume — model coloring and bar list against the 10-20 band; 12-week trend
+- [x] Strength — per-exercise records and e1RM chart (every range free since 2026-11-24)
 - [x] Today tab — next workout and week strip, quick actions, volume card, steps card
 
 Group 7, programs for everyone
@@ -4316,8 +4316,8 @@ the feature you are about to touch, and keep it true when you change it.
   your steps"; no card without a health store. Each card reads
   through its own cubit and shows its own failure, so one area failing
   leaves the others. The Body and Strength cards' lines cover the free
-  charts' 2 weeks (`StrengthRange.free`) for everyone, Premium too
-  (owner's call, 2026-11-19); longer history is on the chart pages.
+  last 2 weeks (`progressCardRange`) for everyone (owner's call,
+  2026-11-19); longer history is on the chart pages.
 - **Calendar**: Progress → Calendar is one scrolling page (see Design ›
   Calendar): the month card and the month's list, both from one
   `CalendarCubit` that follows the month's dates plus six days on each side
@@ -4362,10 +4362,9 @@ the feature you are about to touch, and keep it true when you change it.
   outline; Design › Renkler · 6); a muscle with no sets keeps the body's
   colour. Tapping a muscle
   lists the exercises and workouts that gave it sets. The 12-week trend
-  (the week shown and the 11 before it) is Premium, a locked row opening
-  the paywall otherwise. Only Premium reads those 12 weeks (again when
-  Premium comes or goes); everyone else reads the week alone. They are the
-  user's own workouts, so the gate is client-side only. Changing week
+  (the week shown and the 11 before it) is free for everyone (owner's
+  pick, 2026-11-24; it was Premium), so the page always reads those 12
+  weeks. Changing week
   keeps the week before on screen until the next arrives, so the model
   keeps its camera. `WatchWeeklyVolume` with one week is what the Today
   tab's card calls. Layout: see Design, "Weekly volume" (2026-11-16); the
@@ -4389,15 +4388,10 @@ the feature you are about to touch, and keep it true when you change it.
   the longest time, or the heaviest timed set (then the longer); a
   record's set among equal values is the heavier one (for the heaviest
   weight the one with more reps).
-  Ranges: 2 weeks free (12 until the Monetization pick of 2026-11-19); 6
-  months, 1 year and all Premium; a range starts
-  at local midnight of the same day that many months back, or that
-  month's last day when it is shorter. Records are all-time and free (the
-  workout summary shows them too); only the chart beyond 2 weeks is
-  Premium, and a free user with older results (any workout before the
-  last 2 weeks) is told so and offered the paywall. The gate is client-side: one stats document holds the whole
-  history, so the rules cannot withhold old points without splitting it,
-  and no server refusal can occur here.
+  Ranges: 2 weeks (the default), 6 months, 1 year and all, every one free
+  (owner's pick, 2026-11-24; longer than 2 weeks was Premium before); a
+  range starts at local midnight of the same day that many months back, or
+  that month's last day when it is shorter. Records are all-time.
 - **Charts**: `lib/core/line_chart.dart` is a small `CustomPainter` line
   chart (points and formatters only; scaling and ticks are the pure
   functions of `lib/core/chart_geometry.dart`), since neither the app nor
@@ -4493,11 +4487,9 @@ the feature you are about to touch, and keep it true when you change it.
   in the 7 days ending on each, within the range). Each series keeps
   its own scale; tapping a day shows the values of that date (a pair of
   measurements as the mean of its sides). Weekly
-  sets and daily steps are Premium (owner, 2026-11-13): locked in the
-  sheet, never read for a free user, and a stored choice of them is hidden,
-  not deleted. Hidden series do not count toward the three; when Premium
-  returns, the first three in stored order show. While Premium is not yet
-  known they are neither locked nor read. The choice is kept on the device only (owner, 2026-11-13),
+  sets and daily steps are free like every series (owner's pick,
+  2026-11-24; they were Premium); daily steps show only where the health
+  store can be read. The choice is kept on the device only (owner, 2026-11-13),
   one JSON file per user in the app support directory, so there is no
   data model field and a new device starts from the default (weight, and
   body fat once an entry has one). An unreadable choice file counts as not
@@ -4540,8 +4532,8 @@ the feature you are about to touch, and keep it true when you change it.
   weight as the profile (30-300 kg), measurements 10-250 cm; values are
   typed to one decimal in the user's unit, so half a shown lb or inch
   step of slack lets the limits as shown pass (66.1 and 661.4 lb, 3.9 in).
-  The Body chart has the strength ranges: 2 weeks free, longer Premium
-  (confirmed by the user); the profile's target weight shows as its line.
+  The Body chart has the strength ranges, all free (owner's pick,
+  2026-11-24); the profile's target weight shows as its line.
   Comparing is the measurement summary (below). Saving or deleting an entry sets `profile.weightKg` to
   the weight of the most recent dated entry that has one, through the
   profile's `UpdateProfile` (calculators and the target distance use it);

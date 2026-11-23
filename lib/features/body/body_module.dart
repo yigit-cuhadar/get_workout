@@ -28,10 +28,9 @@ import 'presentation/measurement_summary_cubit.dart';
 import 'presentation/weight_form_cubit.dart';
 
 /// Registers the weight log and measurement days. Needs `AuthModule` for
-/// the current user, `ProgramsModule` for `WatchPremium`, `ProfileModule`,
-/// whose use cases keep the profile weight and give the sex and height for
-/// body fat, and for the chart `VolumeModule`, `StepsModule` and
-/// `HealthModule`.
+/// the current user, `ProfileModule`, whose use cases keep the profile
+/// weight and give the sex and height for body fat, and for the chart
+/// `VolumeModule`, `StepsModule` and `HealthModule`.
 class BodyModule implements FeatureModule {
   const BodyModule();
 
@@ -101,7 +100,6 @@ class BodyModule implements FeatureModule {
           watchAuthUser: sl(),
           watchEntries: sl(),
           watchRejectedWrites: sl(),
-          watchPremium: sl(),
           watchProfile: sl(),
           findPhotos: sl(),
           restorePhoto: sl(),
@@ -115,7 +113,6 @@ class BodyModule implements FeatureModule {
           firstWeekday: firstWeekday,
           body: sl(),
           watchAuthUser: sl(),
-          watchPremium: sl(),
           loadChoice: sl(),
           saveChoice: sl(),
           watchVolume: sl(),

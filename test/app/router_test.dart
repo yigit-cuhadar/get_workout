@@ -2738,7 +2738,6 @@ void main() {
             exerciseId: id,
             watchAuthUser: WatchAuthUser(strengthAuth),
             watchStats: WatchExerciseStats(workouts),
-            watchPremium: const WatchPremium(FixedPremium(false)),
             rebuildStats: RebuildExerciseStats(workouts),
             unit: unit,
           ),

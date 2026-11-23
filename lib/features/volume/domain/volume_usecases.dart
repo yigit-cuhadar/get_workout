@@ -12,8 +12,8 @@ typedef VolumeQuery = ({
 });
 
 /// The weekly sets per muscle of the [VolumeQuery]'s weeks, oldest first,
-/// again on every change of their workouts. One week is the volume page
-/// for everyone and the Today tab's card; [trendWeeks] the Premium trend.
+/// again on every change of their workouts. One week is the Today tab's
+/// card; [trendWeeks] the volume page with its trend.
 class WatchWeeklyVolume {
   const WatchWeeklyVolume(this._watchWorkouts);
   final WatchWorkoutsBetween _watchWorkouts;

@@ -12,8 +12,6 @@ import '../../exercises/presentation/vocabulary_labels.dart';
 import '../../programs/presentation/program_text.dart';
 import '../../settings/domain/user_settings.dart';
 import '../../settings/presentation/settings_cubit.dart';
-import '../../analytics/domain/analytics.dart';
-import '../../subscription/presentation/premium.dart';
 import '../domain/strength.dart';
 import 'exercise_strength_cubit.dart';
 import 'strength_list_cubit.dart';
@@ -145,25 +143,6 @@ class _StrengthView extends StatelessWidget {
         _RangePicker(state.range),
         _E1rmChart(state, unit: unit, name: name),
       ],
-      if (state.olderLocked)
-        ListRowCard(
-          children: [
-            ListRow(
-              leading: ForgeIcon(
-                ForgeIcons.lock,
-                size: 18,
-                color: ForgeStyle.of(context).colors.inkMuted,
-              ),
-              title: l10n.strengthOlderLocked,
-              trailing: ForgeButton(
-                label: l10n.strengthUnlock,
-                variant: ForgeButtonVariant.text,
-                size: ForgeButtonSize.small,
-                onPressed: context.openPaywall,
-              ),
-            ),
-          ],
-        ),
       ListRowCard(
         children: [
           for (final entry in state.records)
@@ -223,8 +202,7 @@ class _StrengthView extends StatelessWidget {
   }
 }
 
-/// The chart's ranges; a Premium one asks for Premium first, and is
-/// locked for a free user.
+/// The chart's ranges.
 class _RangePicker extends StatelessWidget {
   const _RangePicker(this.range);
   final StrengthRange range;
@@ -232,29 +210,14 @@ class _RangePicker extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final locked = context.watchPremium() == PremiumStatus.free;
     return ForgeSegmentedControl<StrengthRange>(
       segments: [
         for (final option in StrengthRange.values)
-          ForgeSegment(
-            value: option,
-            label: l10n.rangeName(option),
-            locked: locked && option.premium,
-          ),
+          ForgeSegment(value: option, label: l10n.rangeName(option)),
       ],
       selected: range,
-      onChanged: (option) => _select(context, option),
-      onLocked: (option) => _select(context, option),
+      onChanged: context.read<ExerciseStrengthCubit>().selectRange,
     );
-  }
-
-  static Future<void> _select(BuildContext context, StrengthRange range) async {
-    final cubit = context.read<ExerciseStrengthCubit>();
-    if (range.premium &&
-        !await context.requirePremium(PremiumFeature.strengthRange)) {
-      return;
-    }
-    cubit.selectRange(range);
   }
 }
 

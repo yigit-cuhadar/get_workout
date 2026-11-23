@@ -6,7 +6,6 @@ import 'package:forge_core/forge_core.dart';
 import 'package:forge_health/forge_health.dart';
 
 import '../../programs/domain/calendar_date.dart';
-import '../../programs/domain/program_usecases.dart';
 import '../../steps/domain/steps_usecases.dart';
 import '../../strength/domain/strength.dart';
 import '../../volume/domain/volume_usecases.dart';
@@ -19,7 +18,6 @@ class BodyChartState extends Equatable {
     this.shown = const [BodySeries.weight],
     this.targetLine = true,
     this.stepsReadable = false,
-    this.premium,
     this.from,
     this.to,
     this.points = const {},
@@ -37,10 +35,6 @@ class BodyChartState extends Equatable {
 
   /// Whether daily steps can be read here, so offered.
   final bool stepsReadable;
-
-  /// Whether the user has Premium, which the training series need; null
-  /// while not known, when they are neither locked nor read.
-  final bool? premium;
 
   /// The time the chart spans: from its first day (see [chartStart]) to
   /// now, widened to whole weeks while bars show. Null while there is
@@ -70,16 +64,11 @@ class BodyChartState extends Equatable {
       if (series != BodySeries.dailySteps || stepsReadable) series,
   ];
 
-  /// Whether picking [series] needs Premium first: only once the user is
-  /// known not to have it.
-  bool locked(BodySeries series) => series.isBar && premium == false;
-
   @override
   List<Object?> get props => [
     shown,
     targetLine,
     stepsReadable,
-    premium,
     from,
     to,
     points,
@@ -92,16 +81,15 @@ class BodyChartState extends Equatable {
 
 /// The series of the Body chart: what the user picked (see [shownSeries]),
 /// kept on this device, over the range of the shared [BodyListCubit].
-/// Lines come from the body entries; with Premium, weekly sets follow the
-/// user's workouts and daily steps are read from the health store, each
-/// only while shown. Steps are offered only where the store can be read;
-/// this never asks for access. Weeks start on ISO weekday [firstWeekday].
+/// Lines come from the body entries; weekly sets follow the user's workouts
+/// and daily steps are read from the health store, each only while shown.
+/// Steps are offered only where the store can be read; this never asks for
+/// access. Weeks start on ISO weekday [firstWeekday].
 class BodyChartCubit extends Cubit<BodyChartState> {
   BodyChartCubit({
     required this._firstWeekday,
     required this._body,
     required WatchAuthUser watchAuthUser,
-    required WatchPremium watchPremium,
     required this._loadChoice,
     required this._saveChoice,
     required this._watchVolume,
@@ -111,10 +99,6 @@ class BodyChartCubit extends Cubit<BodyChartState> {
   }) : _clock = clock ?? DateTime.now,
        super(const BodyChartState()) {
     _bodySubscription = _body.stream.listen((_) => _publish());
-    _premiumSubscription = watchPremium().listen((premium) {
-      _premium = premium;
-      _publish();
-    });
     _userSubscription = watchAuthUser()
         .map((user) => user?.id)
         .distinct()
@@ -131,11 +115,9 @@ class BodyChartCubit extends Cubit<BodyChartState> {
   final GetDailySteps _getDailySteps;
   final DateTime Function() _clock;
   late final StreamSubscription<BodyListState> _bodySubscription;
-  late final StreamSubscription<bool?> _premiumSubscription;
   late final StreamSubscription<String?> _userSubscription;
   StreamSubscription<List<SeriesPoint>>? _setsSubscription;
   String? _uid;
-  bool? _premium;
   bool _stepsReadable = false;
 
   /// The user's choice as last made, kept even before it is stored; null
@@ -168,13 +150,6 @@ class BodyChartCubit extends Cubit<BodyChartState> {
     await _choose(
       BodyChartChoice(series: next, targetLine: _choice?.targetLine ?? true),
     );
-  }
-
-  /// Shows [series] too, never taking it away: e.g. once Premium unlocked
-  /// it, which the stored choice may already hold.
-  Future<void> add(BodySeries series) async {
-    if (!_loaded || _chosen().contains(series)) return;
-    await toggle(series);
   }
 
   Future<void> showTargetLine(bool show) async {
@@ -223,8 +198,7 @@ class BodyChartCubit extends Cubit<BodyChartState> {
   }
 
   bool _visible(BodySeries series) =>
-      (series != BodySeries.dailySteps || _stepsReadable) &&
-      (!series.isBar || _premium == true);
+      series != BodySeries.dailySteps || _stepsReadable;
 
   List<BodySeries> _defaultSeries() => shownSeries(
     null,
@@ -331,7 +305,6 @@ class BodyChartCubit extends Cubit<BodyChartState> {
         shown: shown,
         targetLine: _choice?.targetLine ?? true,
         stepsReadable: _stepsReadable,
-        premium: _premium,
         from: from,
         to: start == null
             ? null
@@ -440,7 +413,6 @@ class BodyChartCubit extends Cubit<BodyChartState> {
   @override
   Future<void> close() async {
     await _bodySubscription.cancel();
-    await _premiumSubscription.cancel();
     await _userSubscription.cancel();
     await _setsSubscription?.cancel();
     return super.close();

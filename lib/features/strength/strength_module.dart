@@ -5,9 +5,8 @@ import '../settings/domain/user_settings.dart';
 import 'presentation/exercise_strength_cubit.dart';
 import 'presentation/strength_list_cubit.dart';
 
-/// Registers the strength pages. Needs `AuthModule`, `ExercisesModule`,
-/// `ProgramsModule` (for `WatchPremium`) and `WorkoutModule`, which
-/// keeps the stats.
+/// Registers the strength pages. Needs `AuthModule`, `ExercisesModule`
+/// and `WorkoutModule`, which keeps the stats.
 class StrengthModule implements FeatureModule {
   const StrengthModule();
 
@@ -27,7 +26,6 @@ class StrengthModule implements FeatureModule {
           exerciseId: exerciseId,
           watchAuthUser: sl(),
           watchStats: sl(),
-          watchPremium: sl(),
           rebuildStats: sl(),
           unit: unit,
         ),

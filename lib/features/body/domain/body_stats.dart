@@ -23,8 +23,7 @@ List<WeightPoint> weightSeries(
   ];
 }
 
-/// Whether any of [entries] is from before [range] starts: results a free
-/// user is told exist, behind Premium.
+/// Whether any of [entries] is from before [range] starts.
 bool hasEntryBefore(
   List<BodyEntry> entries, {
   required StrengthRange range,

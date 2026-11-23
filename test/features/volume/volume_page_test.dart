@@ -3,7 +3,6 @@ import 'package:material_ui/material_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:forge_core/forge_core.dart';
-import 'package:forge_purchases/forge_purchases.dart';
 import 'package:forge_ui/forge_ui.dart';
 import 'package:get_workout/app/theme.dart';
 import 'package:get_workout/core/widgets/volume_band.dart';
@@ -29,9 +28,6 @@ class _ModelCubit extends MockCubit<BodyModelState> implements BodyModelCubit {}
 class _SettingsCubit extends MockCubit<SettingsState>
     implements SettingsCubit {}
 
-class _EntitlementCubit extends MockCubit<EntitlementState>
-    implements EntitlementCubit {}
-
 void main() {
   final monday = CalendarDate(2026, 11, 9);
   final before = CalendarDate(2026, 11, 2);
@@ -51,6 +47,12 @@ void main() {
       ),
   ]);
 
+  /// The [trendWeeks] weeks ending with [last], sets only in that one.
+  List<WeekVolume> trendTo(CalendarDate last, int sets) => [
+    for (var i = trendWeeks - 1; i >= 0; i--)
+      weekOf(last.addDays(-7 * i), i == 0 ? sets : 0),
+  ];
+
   late _VolumeCubit volume;
 
   setUp(() {
@@ -60,11 +62,7 @@ void main() {
 
   tearDown(sl.reset);
 
-  Future<void> pump(
-    WidgetTester tester,
-    VolumeState state, {
-    EntitlementState premium = const EntitlementInactive(),
-  }) async {
+  Future<void> pump(WidgetTester tester, VolumeState state) async {
     tester.view
       ..physicalSize = const Size(1200, 12000)
       ..devicePixelRatio = 3;
@@ -73,8 +71,6 @@ void main() {
     final settings = _SettingsCubit();
     when(() => settings.state)
         .thenReturn(SettingsState(UserSettings.defaultsFor(null)));
-    final entitlement = _EntitlementCubit();
-    when(() => entitlement.state).thenReturn(premium);
     final catalogue = _CatalogueCubit();
     when(() => catalogue.state).thenReturn(const CatalogueReady([]));
     final model = _ModelCubit();
@@ -84,7 +80,6 @@ void main() {
       MultiBlocProvider(
         providers: [
           BlocProvider<SettingsCubit>.value(value: settings),
-          BlocProvider<EntitlementCubit>.value(value: entitlement),
           BlocProvider<ExerciseCatalogueCubit>.value(value: catalogue),
           BlocProvider<BodyModelCubit>.value(value: model),
         ],
@@ -107,8 +102,8 @@ void main() {
         weeks: weeks,
       );
 
-  testWidgets('the week, every muscle with the trained ones first, and a '
-      'locked trend for a free user', (tester) async {
+  testWidgets('the week, every muscle with the trained ones first, and the '
+      'trend loading', (tester) async {
     await pump(tester, ready([weekOf(monday, 14)]));
 
     expect(find.text('Nov 9–15'), findsOneWidget);
@@ -129,31 +124,16 @@ void main() {
       findsOneWidget,
     );
     expect(find.text('12-week trend'), findsOneWidget);
-    expect(find.text('Total sets per week over 12 weeks.'), findsOneWidget);
   });
 
-  testWidgets('the trend stays locked while Premium is unknown', (
+  testWidgets('the trend charts each week\'s total, without Premium', (
     tester,
   ) async {
-    await pump(
-      tester,
-      ready([weekOf(monday, 14)]),
-      premium: const EntitlementUnknown(),
-    );
-
-    expect(find.text('Total sets per week over 12 weeks.'), findsOneWidget);
-  });
-
-  testWidgets('Premium charts each week\'s total', (tester) async {
     final weeks = [
       for (var i = trendWeeks - 1; i >= 0; i--)
         weekOf(monday.addDays(-7 * i), i == 0 ? 14 : 10),
     ];
-    await pump(
-      tester,
-      ready(weeks),
-      premium: const EntitlementActive(Entitlement(isActive: true)),
-    );
+    await pump(tester, ready(weeks));
 
     final chart = tester.widget<Chart>(
       find.ancestor(
@@ -191,7 +171,7 @@ void main() {
   testWidgets('a muscle opens its sheet; one without sets says so', (
     tester,
   ) async {
-    await pump(tester, ready([weekOf(monday, 14)]));
+    await pump(tester, ready(trendTo(monday, 14)));
 
     await tester.tap(find.text('Chest'));
     await tester.pumpAndSettle();
@@ -199,10 +179,6 @@ void main() {
     expect(find.text('14 sets · 10–20 sets'), findsOneWidget);
     expect(find.text('Push · Nov 13'), findsOneWidget);
     expect(find.text('Last 12 weeks'), findsOneWidget);
-    expect(
-      find.text('See 12 weeks of every muscle with Premium'),
-      findsOneWidget,
-    );
     Navigator.of(tester.element(find.byType(ForgeBottomSheet))).pop();
     await tester.pumpAndSettle();
 
@@ -212,18 +188,14 @@ void main() {
     expect(find.text('No sets for this muscle this week.'), findsOneWidget);
   });
 
-  testWidgets('Premium: the sheet charts the muscle\'s weeks over the band', (
+  testWidgets('the sheet charts the muscle\'s weeks over the band', (
     tester,
   ) async {
     final weeks = [
       for (var i = trendWeeks - 1; i >= 0; i--)
         weekOf(monday.addDays(-7 * i), 12),
     ];
-    await pump(
-      tester,
-      ready(weeks),
-      premium: const EntitlementActive(Entitlement(isActive: true)),
-    );
+    await pump(tester, ready(weeks));
 
     await tester.tap(find.text('Chest'));
     await tester.pumpAndSettle();
@@ -243,7 +215,7 @@ void main() {
   });
 
   testWidgets('a past week\'s sheet trend ends with that week', (tester) async {
-    await pump(tester, ready([weekOf(before, 12)], week: before));
+    await pump(tester, ready(trendTo(before, 12), week: before));
 
     await tester.tap(find.text('Chest'));
     await tester.pumpAndSettle();

@@ -4,33 +4,21 @@ import '../../exercises/domain/vocabulary.dart';
 import '../../settings/domain/user_settings.dart';
 import '../../workout/domain/exercise_stats.dart';
 
-/// The time ranges of an exercise's e1RM chart. Free users see
-/// [StrengthRange.free]; the longer ones are Premium.
+/// The time ranges of an exercise's e1RM chart and the Body chart; both
+/// open on [weeks2].
 enum StrengthRange {
   weeks2,
   months6,
   year1,
   all;
 
-  static const free = weeks2;
-
-  /// How many weeks [free] covers.
-  static const freeWeeks = 2;
-
-  bool get premium => this != free;
-
   /// The first day shown, from its local midnight; null for [all].
   DateTime? start(DateTime now) => switch (this) {
-    weeks2 => DateTime(now.year, now.month, now.day - 7 * freeWeeks),
+    weeks2 => DateTime(now.year, now.month, now.day - 14),
     months6 => _monthsBefore(now, 6),
     year1 => _monthsBefore(now, 12),
     all => null,
   };
-
-  /// What a user with [premium] (null: not known yet) is shown when they
-  /// chose this range.
-  StrengthRange allowed(bool? premium) =>
-      this.premium && premium != true ? free : this;
 }
 
 /// [now]'s day [months] months earlier, at midnight; past the end of that
@@ -64,17 +52,6 @@ List<E1rmPoint> e1rmSeries(
             workoutId: point.workoutId,
           ),
   ];
-}
-
-/// Whether [history] has a workout from before [range] starts: results a
-/// free user is told exist, behind Premium.
-bool hasResultsBefore(
-  List<HistoryPoint> history, {
-  required StrengthRange range,
-  required DateTime now,
-}) {
-  final start = range.start(now);
-  return start != null && history.any((point) => point.date.isBefore(start));
 }
 
 /// The workouts of [history] from [start] on (all of them when null),

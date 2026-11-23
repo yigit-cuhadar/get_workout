@@ -7,20 +7,22 @@ import '../../workout/domain/workout_repository.dart';
 /// How a value in kg moved over a card's weeks: [kg] over [weeks].
 typedef KgChange = ({double kg, int weeks});
 
-/// The whole weeks from [first] to [last], 1 to the free charts' window
-/// ([StrengthRange.freeWeeks]): a change within a week still reads "in 1
-/// week".
+/// The window of the Progress tab's cards; longer history is on the chart
+/// pages.
+const progressCardRange = StrengthRange.weeks2;
+
+/// How many weeks [progressCardRange] covers.
+const progressCardWeeks = 2;
+
+/// The whole weeks from [first] to [last], 1 to [progressCardWeeks]: a
+/// change within a week still reads "in 1 week".
 int changeWeeks(DateTime first, DateTime last) =>
-    (last.difference(first).inDays / 7).round().clamp(
-      1,
-      StrengthRange.freeWeeks,
-    );
+    (last.difference(first).inDays / 7).round().clamp(1, progressCardWeeks);
 
 /// The exercise the Progress tab's Strength card shows: its latest
 /// workout's best estimated one-rep max, in kg, its [change] since the
-/// first one of the free charts' window ([StrengthRange.free], for
-/// everyone; longer history is on the chart pages; null with a single one
-/// there) and its [trend], the bests of that window, oldest first.
+/// first one of [progressCardRange] (null with a single one there) and its
+/// [trend], the bests of that window, oldest first.
 class StrengthHighlight extends Equatable {
   const StrengthHighlight({
     required this.exerciseId,
@@ -64,7 +66,7 @@ StrengthHighlight? strengthHighlight(
   }
   if (newest == null) return null;
   final latest = newest.points.last;
-  final start = StrengthRange.free.start(now)!;
+  final start = progressCardRange.start(now)!;
   final recent = [
     for (final point in newest.points)
       if (!point.date.isBefore(start)) point,

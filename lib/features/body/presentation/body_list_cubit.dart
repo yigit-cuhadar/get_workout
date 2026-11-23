@@ -7,7 +7,6 @@ import 'package:forge_core/forge_core.dart';
 import '../../../core/user_stream_follower.dart';
 import '../../profile/domain/profile_usecases.dart';
 import '../../profile/domain/user_profile.dart';
-import '../../programs/domain/program_usecases.dart';
 import '../../strength/domain/strength.dart';
 import '../domain/body_entry.dart';
 import '../domain/body_stats.dart';
@@ -20,9 +19,8 @@ class BodyListState extends Equatable {
     this.status = BodyListStatus.loading,
     this.entries = const [],
     this.photoFiles = const {},
-    this.range = StrengthRange.free,
+    this.range = StrengthRange.weeks2,
     this.hasOlder = false,
-    this.olderLocked = false,
     this.bodyFat = const {},
     this.writeRejected = false,
   });
@@ -36,16 +34,12 @@ class BodyListState extends Equatable {
   /// shortly after [entries].
   final Map<String, String> photoFiles;
 
-  /// The chart's range: the one chosen, as far as Premium allows.
+  /// The chart's range.
   final StrengthRange range;
 
-  /// Some entries are from before [StrengthRange.free]: the range
+  /// Some entries are from before [StrengthRange.weeks2]: the range
   /// control shows.
   final bool hasOlder;
-
-  /// A free user has entries from before [StrengthRange.free]; tell them
-  /// they are behind Premium.
-  final bool olderLocked;
 
   /// The body fat of every entry it can be estimated for, by entry id,
   /// from the profile's sex and height; never stored.
@@ -67,7 +61,6 @@ class BodyListState extends Equatable {
     photoFiles: photoFiles ?? this.photoFiles,
     range: range,
     hasOlder: hasOlder,
-    olderLocked: olderLocked,
     bodyFat: bodyFat,
     writeRejected: writeRejected ?? this.writeRejected,
   );
@@ -79,7 +72,6 @@ class BodyListState extends Equatable {
     photoFiles,
     range,
     hasOlder,
-    olderLocked,
     bodyFat,
     writeRejected,
   ];
@@ -87,15 +79,12 @@ class BodyListState extends Equatable {
 
 /// The body entries of whoever is signed in, followed live, with their
 /// body fat, which follows the profile's sex and height, and the range of
-/// the Body chart. Starts over on every user change. Ranges beyond
-/// [StrengthRange.free] show only while the user is known to have Premium;
-/// the page asks for Premium before choosing one.
+/// the Body chart. Starts over on every user change.
 class BodyListCubit extends Cubit<BodyListState> {
   BodyListCubit({
     required WatchAuthUser watchAuthUser,
     required WatchBodyEntries watchEntries,
     required WatchRejectedBodyWrites watchRejectedWrites,
-    required WatchPremium watchPremium,
     required WatchProfile watchProfile,
     required this._findPhotos,
     required this._restorePhoto,
@@ -109,7 +98,7 @@ class BodyListCubit extends Cubit<BodyListState> {
       watch: watchEntries.call,
       onUser: (_) {
         _entries = null;
-        _chosen = StrengthRange.free;
+        _chosen = StrengthRange.weeks2;
         _publish();
       },
       onData: (entries) {
@@ -136,10 +125,6 @@ class BodyListCubit extends Cubit<BodyListState> {
       },
       logTag: 'body',
     );
-    _premiumSubscription = watchPremium().listen((premium) {
-      _premium = premium;
-      if (_entries != null) _publish();
-    });
     _rejectedSubscription = watchRejectedWrites().listen(
       (_) => emit(state.copyWith(writeRejected: true)),
     );
@@ -156,18 +141,14 @@ class BodyListCubit extends Cubit<BodyListState> {
   /// A profile that fails to load leaves the last one in use.
   late final UserStreamFollower<UserProfile> _profileFollower;
   UserProfile? _profile;
-  late final StreamSubscription<bool?> _premiumSubscription;
   late final StreamSubscription<Failure> _rejectedSubscription;
   List<BodyEntry>? _entries;
-  bool? _premium;
-  StrengthRange _chosen = StrengthRange.free;
+  StrengthRange _chosen = StrengthRange.weeks2;
 
   void retry() => _follower.resume();
 
   void rejectionShown() => emit(state.copyWith(writeRejected: false));
 
-  /// Shows [range]; a Premium one only once the user is known to have
-  /// Premium, which may be after the paywall closed.
   void selectRange(StrengthRange range) {
     _chosen = range;
     if (_entries != null) _publish();
@@ -210,20 +191,17 @@ class BodyListCubit extends Cubit<BodyListState> {
       return;
     }
     final now = _clock();
-    final range = _chosen.allowed(_premium);
-    final hasOlder = hasEntryBefore(
-      entries,
-      range: StrengthRange.free,
-      now: now,
-    );
     emit(
       BodyListState(
         status: BodyListStatus.ready,
         entries: entries,
         photoFiles: state.photoFiles,
-        range: range,
-        hasOlder: hasOlder,
-        olderLocked: _premium == false && hasOlder,
+        range: _chosen,
+        hasOlder: hasEntryBefore(
+          entries,
+          range: StrengthRange.weeks2,
+          now: now,
+        ),
         bodyFat: bodyFatByEntry(
           entries,
           sex: _profile?.sex,
@@ -255,7 +233,6 @@ class BodyListCubit extends Cubit<BodyListState> {
   Future<void> close() async {
     await _follower.cancel();
     await _profileFollower.cancel();
-    await _premiumSubscription.cancel();
     await _rejectedSubscription.cancel();
     return super.close();
   }

@@ -3,7 +3,6 @@ import 'package:material_ui/material_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:forge_core/forge_core.dart';
-import 'package:forge_purchases/forge_purchases.dart';
 import 'package:forge_ui/forge_ui.dart';
 import 'package:get_workout/app/theme.dart';
 import 'package:get_workout/features/exercises/domain/vocabulary.dart';
@@ -34,9 +33,6 @@ class _CatalogueCubit extends MockCubit<ExerciseCatalogueState>
 
 class _SettingsCubit extends MockCubit<SettingsState>
     implements SettingsCubit {}
-
-class _EntitlementCubit extends MockCubit<EntitlementState>
-    implements EntitlementCubit {}
 
 String path(GoRouter router) =>
     router.routerDelegate.currentConfiguration.uri.path;
@@ -70,11 +66,7 @@ void main() {
 
   /// [location] in a router with the strength pages; any other route shows
   /// its path.
-  Future<GoRouter> pump(
-    WidgetTester tester,
-    String location, {
-    EntitlementState premium = const EntitlementInactive(),
-  }) async {
+  Future<GoRouter> pump(WidgetTester tester, String location) async {
     tester.view
       ..physicalSize = const Size(1200, 4800)
       ..devicePixelRatio = 3;
@@ -82,8 +74,6 @@ void main() {
     final settings = _SettingsCubit();
     when(() => settings.state)
         .thenReturn(SettingsState(UserSettings.defaultsFor(null)));
-    final entitlement = _EntitlementCubit();
-    when(() => entitlement.state).thenReturn(premium);
     final router = GoRouter(
       initialLocation: location,
       routes: [
@@ -109,7 +99,6 @@ void main() {
       MultiBlocProvider(
         providers: [
           BlocProvider<SettingsCubit>.value(value: settings),
-          BlocProvider<EntitlementCubit>.value(value: entitlement),
           BlocProvider<ExerciseCatalogueCubit>.value(value: catalogue),
         ],
         child: MaterialApp.router(
@@ -213,7 +202,6 @@ void main() {
       points: [(date: friday, value: 104.5, workoutId: 'w1')],
       sessions: [session],
       rangeStart: DateTime(year, 8, 24),
-      olderLocked: true,
       loggingType: LoggingType.weightReps,
     );
 
@@ -229,12 +217,6 @@ void main() {
       expect(find.byType(ForgeSegmentedControl<StrengthRange>), findsOneWidget);
       expect(find.text('Estimated 1RM'), findsOneWidget);
       expect(find.text('Aug 24 – Nov 13'), findsOneWidget);
-      expect(
-        find.text(
-          'Your results from before the last 2 weeks are part of Premium.',
-        ),
-        findsOneWidget,
-      );
       expect(find.text('Best e1RM'), findsOneWidget);
       expect(find.text('104.5 kg'), findsOneWidget);
       expect(find.text('Heaviest'), findsOneWidget);
