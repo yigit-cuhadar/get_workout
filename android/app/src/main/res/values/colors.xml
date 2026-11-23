@@ -3,4 +3,6 @@
     <!-- The splash's featured colour (Slate, the same in light and dark), so
          the native launch screen does not flash before Flutter's first frame. -->
     <color name="launch_background">#FF222B38</color>
+    <!-- The app icon's ground, the dark logo's. -->
+    <color name="ic_launcher_background">#FF262F3D</color>
 </resources>
