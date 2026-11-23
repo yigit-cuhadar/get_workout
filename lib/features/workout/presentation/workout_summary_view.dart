@@ -17,7 +17,6 @@ import '../../../core/widgets/records.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../feedback/presentation/review_prompt.dart';
 import '../../exercises/presentation/body_model_cubit.dart';
-import '../../exercises/presentation/vocabulary_labels.dart';
 import '../../programs/domain/program.dart';
 import '../../programs/presentation/program_list_cubit.dart';
 import '../../programs/presentation/program_text.dart';
@@ -26,14 +25,16 @@ import '../../strength/presentation/strength_text.dart';
 import '../../settings/presentation/settings_cubit.dart';
 import '../../subscription/domain/paywall_moment.dart';
 import '../../subscription/presentation/premium.dart';
-import '../../volume/presentation/volume_text.dart';
 import '../domain/exercise_stats.dart';
 import 'active_workout_cubit.dart';
+import 'exercise_set_table.dart';
+import 'widgets/set_table.dart';
 import 'workout_text.dart';
 
 /// The finished workout's summary: the featured block with its four
 /// figures and their change since the program day's last workout, the
-/// records, the muscles worked, and Done over Save as program (a free
+/// records, the muscles worked, each exercise's sets, and Done over Save
+/// as program (a free
 /// workout) or Save changes to the day (a program day done differently).
 /// Back does what Done does. A workout that ended itself also offers Edit,
 /// which opens it in the editor. Leaving it, except by Edit, shows a free
@@ -44,9 +45,6 @@ class WorkoutSummaryView extends StatefulWidget {
   const WorkoutSummaryView(this.state, {super.key});
 
   final ActiveWorkoutState state;
-
-  /// How many of the busiest muscles the line names.
-  static const shownMuscles = 3;
 
   @override
   State<WorkoutSummaryView> createState() => _WorkoutSummaryViewState();
@@ -77,8 +75,6 @@ class _WorkoutSummaryViewState extends State<WorkoutSummaryView> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final text = Theme.of(context).textTheme;
-    final colors = ForgeStyle.of(context).colors;
     final state = widget.state;
     final workout = state.workout!;
     final summary = state.summary!;
@@ -101,17 +97,6 @@ class _WorkoutSummaryViewState extends State<WorkoutSummaryView> {
       ?program?.name,
       if (summary.programWeek case final week?) l10n.summaryWeek(week),
     ];
-    final busiest = summary.muscleSets.entries.toList()
-      ..sort((a, b) => b.value.compareTo(a.value));
-    final numbers = NumberFormat.decimalPattern(l10n.localeName);
-    final worked = [
-      for (final (i, MapEntry(key: muscle, value: sets))
-          in busiest.take(WorkoutSummaryView.shownMuscles).indexed)
-        l10n.summaryWorkedMuscle(
-          l10n.muscleName(muscle),
-          i == 0 ? l10n.setsText(sets) : numbers.format(sets),
-        ),
-    ].join(' · ');
     final canSaveAsProgram =
         !workout.isFromProgram && state.savedProgramId == null;
     final canUpdateDay =
@@ -177,16 +162,7 @@ class _WorkoutSummaryViewState extends State<WorkoutSummaryView> {
               note: compare.isEmpty ? null : compare.join(' · '),
               stats: _stats(l10n, summary, unit, date),
             ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(Gap.xs, 18, Gap.xs, Gap.sm),
-              child: Text(
-                l10n.summaryRecords,
-                style: text.labelMedium!.copyWith(
-                  fontWeight: FontWeight.w600,
-                  color: colors.inkMuted,
-                ),
-              ),
-            ),
+            const SizedBox(height: 10),
             if (summary.records.isEmpty)
               RecordList.message(
                 message: switch (summary) {
@@ -212,6 +188,29 @@ class _WorkoutSummaryViewState extends State<WorkoutSummaryView> {
                     ),
                 ],
               ),
+            if (summary.muscleSets.values.any((sets) => sets > 0)) ...[
+              const SizedBox(height: 10),
+              WorkedMuscles(
+                model: model,
+                sets: summary.muscleSets,
+                title: l10n.summaryWorkedToday,
+              ),
+            ],
+            if (workout.exercises.isNotEmpty) ...[
+              const SizedBox(height: 10),
+              SetTableList(
+                title: l10n.summaryYourSets,
+                tables: [
+                  for (final (i, exercise) in workout.exercises.indexed)
+                    ExerciseSetTable(
+                      exercise: exercise,
+                      group: exercise.group == null
+                          ? null
+                          : groupItemLabel(workout.exercises, i),
+                    ),
+                ],
+              ),
+            ],
             if (summary.programUnknown) ...[
               const SizedBox(height: 10),
               NoticeBanner(
@@ -223,15 +222,6 @@ class _WorkoutSummaryViewState extends State<WorkoutSummaryView> {
                   variant: ForgeButtonVariant.secondary,
                   onPressed: () => _leave(() => context.go(Routes.programs)),
                 ),
-              ),
-            ],
-            if (worked.isNotEmpty) ...[
-              const SizedBox(height: 10),
-              WorkedMuscles(
-                model: model,
-                sets: summary.muscleSets,
-                title: l10n.summaryWorkedToday,
-                line: worked,
               ),
             ],
           ],
