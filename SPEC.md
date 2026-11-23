@@ -1426,15 +1426,22 @@ Decisions (the canvases they were drawn on are deleted):
   first three with their change since the program day's previous finished
   workout (more volume or sets in success, less in danger, duration and
   "=" muted; free workouts and a day's first time show no "vs" and no
-  change); records are RecordList rows, one per exercise that beat a
-  record (its heaviest working set, the gain over the previous heaviest,
-  "+2 reps" / "+5 s" without a weight), counted by the records figure;
-  none beaten is one sentence on a plain card ("No new records this time.
-  Bench Press was 2.5 kg off your best.", the first workout "Records start
-  from this workout."); a program not moved on is a NoticeBanner ("Program
-  not updated", the reason, Open Programs); "Worked today" shows small front and back models
-  shaded by this workout's sets on Weekly volume's 0–20 scale and up to
-  three busiest muscles; the bottom bar has Done and, for a free workout,
+  change); right under it the records are one RecordList card (no
+  section label): a success trophy and "2 new records" ("1 new record"),
+  then a row per exercise that beat a record (the records beaten and its
+  heaviest working set in mono under the name, the gain over the previous
+  heaviest as a record tag, "+2 reps" / "+5 s" without a weight), counted
+  by the records figure; none beaten is one sentence on that card ("No new
+  records this time. Bench Press was 2.5 kg off your best.", the first
+  workout "Records start from this workout."); "Worked today" shows the
+  front and back models side by side, 100 px wide, shaded by this
+  workout's sets on Weekly volume's 0–20 scale, over the four busiest
+  muscles as set bars ("10 sets", filled in success relative to the
+  busiest); "Your sets" lists each exercise's done sets as the Workout
+  detail's SetTable, the first two shown and "+ 4 more exercises" opening
+  the rest in place; a program not moved on is a NoticeBanner last
+  ("Program not updated", the reason, Open Programs); the bottom bar has
+  Done and, for a free workout,
   Save as program (a dialog with "Its exercises and sets become a new
   one-day program."; once saved it goes and a snackbar offers View
   program), for a program day only "Save changes to Push" when the workout
@@ -1961,6 +1968,7 @@ Decisions (the canvases they were drawn on are deleted):
   (ProgramCard name wraps beside its tags, Forge), G4 unchanged (Clear all
   keeps its own row); the Next/Done keyboard bar above set entry is
   removed (owner, Forge StepperField).
+- Workout summary redesign (2026-11-23), canvas https://claude.ai/artifact/EAeojwrrTVCeAdhA58w1Qe: S1 unchanged, S2 A (records as one highlighted card with gain badges), S3 A then S3b B (front and back models over the top four muscles as set bars), S4 B (each exercise's sets as a table, two shown, the rest behind + n more).
 ## Open questions
 
 - Google sign-in is offered next to email (`socialProviders` in
@@ -4150,8 +4158,9 @@ the feature you are about to touch, and keep it true when you change it.
   skips the exercise's first history point).
 - **Workout summary**: duration ("< 1 min" under a minute), volume (weight ×
   reps of the working sets of `weight_reps` and `weighted_bodyweight`;
-  assistance is no load), working sets and records, laid out as SPEC ›
-  Design says. The comparison reads the program's finished workouts by
+  assistance is no load), working sets and records, then the muscles
+  worked and each exercise's done sets (warm-ups marked W, as in history),
+  laid out as SPEC › Design says. The comparison reads the program's finished workouts by
   `programId` (no composite index), from the server within 2 s, else the
   cache, before the batch is written. The day's changes are judged on the
   workout as it was before finishing (every set) against the day's items
