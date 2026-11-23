@@ -19,8 +19,18 @@ export const webhookAuthorization = defineSecret(
   "REVENUECAT_WEBHOOK_AUTHORIZATION",
 );
 
+/**
+ * RevenueCat's secret API key (v2), to read a customer's entitlements when
+ * an event does not carry them (TRANSFER).
+ */
+export const revenueCatApiKey = defineSecret("REVENUECAT_API_KEY");
+
 /** The RevenueCat entitlement every Premium product is attached to. */
 export const PREMIUM_ENTITLEMENT = "premium";
+
+/** GetWorkout's RevenueCat project and Premium's id in it, for the API. */
+const REVENUECAT_PROJECT = "proj994e814e";
+const PREMIUM_ENTITLEMENT_ID = "entl0606b46fbd";
 
 /** The prefix of the ids RevenueCat makes up before a user is identified. */
 const ANONYMOUS_PREFIX = "$RCAnonymousID:";
@@ -463,15 +473,26 @@ export function planUpdate(
 }
 
 /**
+ * Whether RevenueCat grants a customer Premium now, and until when
+ * ([NEVER_EXPIRES_MS] for a lifetime grant); null when it does not.
+ */
+export interface PremiumSource {
+  activePremium(uid: string): Promise<{ expiresAtMs: number } | null>;
+}
+
+/**
  * What a TRANSFER writes: TRANSFER carries no entitlement, so Premium
- * known for the [from] uids moves to the [to] uids; the [from] uids lose
- * it now.
+ * known for the [from] uids moves to the [to] uids, and a [to] uid that
+ * RevenueCat says has Premium ([live]) gets it even when nothing was known
+ * for the [from] uids (a deleted account, an anonymous one); the [from]
+ * uids lose it now.
  */
 export function planTransfer(
   event: RevenueCatEvent,
   from: string[],
   to: string[],
   stored: Map<string, StoredEntitlement | undefined>,
+  live: Map<string, { expiresAtMs: number } | null> = new Map(),
 ): Plan {
   const writes = new Map<string, StoredEntitlement>();
   let skipped: ReasonValue | undefined;
@@ -500,18 +521,25 @@ export function planTransfer(
       grant: false,
     });
   }
-  if (source) {
-    for (const uid of to) {
-      const entitlement = stored.get(uid);
-      const keepsLater = premiumUntil(entitlement) > source.expiresAtMs;
-      const kept = keepsLater && entitlement ? entitlement : source;
-      put(uid, {
-        premium: true,
-        expiresAtMs: kept.expiresAtMs,
-        ...optionalProduct(kept.productId),
-        grant: true,
-      });
-    }
+  for (const uid of to) {
+    const entitlement = stored.get(uid);
+    const candidates = [
+      ...(source ? [source] : []),
+      ...(premiumUntil(entitlement) > 0 && entitlement ? [entitlement] : []),
+    ];
+    const kept = candidates.reduce<StoredEntitlement | undefined>(
+      (best, c) => (best && best.expiresAtMs >= c.expiresAtMs ? best : c),
+      undefined,
+    );
+    const liveUntil = live.get(uid)?.expiresAtMs ?? 0;
+    const until = Math.max(kept?.expiresAtMs ?? 0, liveUntil);
+    if (until === 0 || (!source && liveUntil === 0)) continue;
+    put(uid, {
+      premium: true,
+      expiresAtMs: until,
+      ...optionalProduct(kept?.productId),
+      grant: true,
+    });
   }
   const reason =
     writes.size > 0 ? Reason.applied : (skipped ?? Reason.nothingToTransfer);
@@ -542,6 +570,7 @@ async function existing(
 async function applyEvent(
   event: RevenueCatEvent,
   store: EntitlementStore,
+  revenueCat: PremiumSource | undefined,
 ): Promise<WebhookResponse> {
   let plan: Plan;
   if (event.type === "TRANSFER") {
@@ -559,8 +588,16 @@ async function applyEvent(
     if (from.length === 0 && to.length === 0) {
       return respond(200, Reason.deletedUser);
     }
+    const live = new Map(
+      await Promise.all(
+        to.map(
+          async (uid) =>
+            [uid, (await revenueCat?.activePremium(uid)) ?? null] as const,
+        ),
+      ),
+    );
     plan = await store.apply([...from, ...to], (stored) =>
-      planTransfer(event, from, to, stored),
+      planTransfer(event, from, to, stored, live),
     );
   } else {
     if (!isPremiumEvent(event)) return respond(200, Reason.notPremium);
@@ -597,7 +634,11 @@ async function applyEvent(
  */
 export async function revenueCatWebhookOf(
   request: WebhookRequest,
-  deps: { authorization: string; store: EntitlementStore },
+  deps: {
+    authorization: string;
+    store: EntitlementStore;
+    revenueCat?: PremiumSource;
+  },
 ): Promise<WebhookResponse> {
   // Never log the header or the body: either may hold the secret.
   if (!sameSecret(request.authorization, deps.authorization)) {
@@ -621,7 +662,7 @@ export async function revenueCatWebhookOf(
   }
   try {
     await deps.store.record(event.id, revenueEventRecord(event));
-    return await applyEvent(event, deps.store);
+    return await applyEvent(event, deps.store, deps.revenueCat);
   } catch (error) {
     logger.error("revenuecat event not applied", {
       id: event.id,
@@ -693,9 +734,42 @@ export const firebaseEntitlementStore = (
   };
 };
 
+/**
+ * [PremiumSource] on RevenueCat's API v2 with [apiKey]. An unknown customer
+ * has no Premium; any other failure throws, so RevenueCat retries.
+ */
+export const revenueCatPremiumSource = (
+  apiKey: string,
+  fetcher: typeof fetch = fetch,
+): PremiumSource => ({
+  async activePremium(uid) {
+    const response = await fetcher(
+      `https://api.revenuecat.com/v2/projects/${REVENUECAT_PROJECT}` +
+        `/customers/${encodeURIComponent(uid)}/active_entitlements`,
+      { headers: { Authorization: `Bearer ${apiKey}` } },
+    );
+    if (response.status === 404) return null;
+    if (!response.ok) {
+      throw new Error(`revenuecat api ${response.status}`);
+    }
+    const body = (await response.json()) as {
+      items?: { entitlement_id?: string; expires_at?: number | null }[];
+    };
+    const premium = body.items?.find(
+      (item) => item.entitlement_id === PREMIUM_ENTITLEMENT_ID,
+    );
+    if (premium === undefined) return null;
+    return { expiresAtMs: premium.expires_at ?? NEVER_EXPIRES_MS };
+  },
+});
+
 /** RevenueCat's webhook; public, as RevenueCat calls it without Google auth. */
 export const revenueCatWebhook = onRequest(
-  { secrets: [webhookAuthorization], invoker: "public", maxInstances: 10 },
+  {
+    secrets: [webhookAuthorization, revenueCatApiKey],
+    invoker: "public",
+    maxInstances: 10,
+  },
   async (req, res) => {
     const response = await revenueCatWebhookOf(
       {
@@ -707,6 +781,7 @@ export const revenueCatWebhook = onRequest(
       {
         authorization: webhookAuthorization.value(),
         store: firebaseEntitlementStore(getFirestore(), getAuth()),
+        revenueCat: revenueCatPremiumSource(revenueCatApiKey.value()),
       },
     );
     res.status(response.status).json(response.body);

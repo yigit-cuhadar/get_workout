@@ -8,9 +8,11 @@ import {
   RevenueEventRecord,
   StoredEntitlement,
   TEMPORARY_GRANT_MS,
+  PremiumSource,
   WebhookRequest,
   isUid,
   parseEvent,
+  revenueCatPremiumSource,
   revenueCatWebhookOf,
   sameSecret,
   targetUid,
@@ -701,6 +703,120 @@ describe("TRANSFER", () => {
     await expect200(fake, purchase, Reason.applied);
     await expect200(fake, transfer, Reason.applied);
     await expect200(fake, transfer, Reason.duplicate);
+  });
+
+  describe("with RevenueCat's own view of the new owner", () => {
+    const premiumFor = (
+      grants: Record<string, number>,
+    ): PremiumSource & { asked: string[] } => {
+      const asked: string[] = [];
+      return {
+        asked,
+        async activePremium(uid) {
+          asked.push(uid);
+          const until = grants[uid];
+          return until === undefined ? null : { expiresAtMs: until };
+        },
+      };
+    };
+    const deliverWith = (fake: Fake, revenueCat: PremiumSource) =>
+      revenueCatWebhookOf(post(webhookBody(transfer)), {
+        authorization: secret,
+        store: fake.store,
+        revenueCat,
+      });
+
+    test("a deleted old owner: the new one gets Premium RevenueCat grants", async () => {
+      const fake = fakeStore({ users: ["u2"] });
+      const until = transfer.event_timestamp_ms + 30 * day;
+      const revenueCat = premiumFor({ u2: until });
+      const response = await deliverWith(fake, revenueCat);
+      assert.deepEqual(response, {
+        status: 200,
+        body: { reason: Reason.applied },
+      });
+      assert.deepEqual(revenueCat.asked, ["u2"]);
+      assert.deepEqual(doc(fake, "u2"), {
+        premium: true,
+        expiresAtMs: until,
+        lastEventMs: transfer.event_timestamp_ms,
+        lastEventIds: [transfer.id],
+      });
+    });
+
+    test("the later of what moves and what RevenueCat grants is kept", async () => {
+      const fake = fakeStore();
+      await expect200(fake, purchase, Reason.applied);
+      const later = purchase.expiration_at_ms + 7 * day;
+      await deliverWith(fake, premiumFor({ u2: later }));
+      assert.equal(doc(fake, "u2")?.expiresAtMs, later);
+      assert.equal(doc(fake, "u2")?.productId, purchase.product_id);
+      assert.equal(doc(fake, "u1")?.premium, false);
+    });
+
+    test("nothing known and nothing granted still writes nothing", async () => {
+      const fake = fakeStore({ users: ["u2"] });
+      const response = await deliverWith(fake, premiumFor({}));
+      assert.deepEqual(response, {
+        status: 200,
+        body: { reason: Reason.nothingToTransfer },
+      });
+      assert.equal(fake.docs.size, 0);
+    });
+
+    test("RevenueCat failing is retried", async () => {
+      const fake = fakeStore({ users: ["u2"] });
+      const response = await deliverWith(fake, {
+        async activePremium() {
+          throw new Error("down");
+        },
+      });
+      assert.equal(response.status, 500);
+    });
+  });
+});
+
+describe("revenueCatPremiumSource", () => {
+  const reply = (status: number, body: unknown = {}) =>
+    (async () =>
+      new Response(JSON.stringify(body), { status })) as typeof fetch;
+
+  test("reads Premium's expiry, a lifetime grant as never expiring", async () => {
+    const items = (expires_at: number | null) => ({
+      items: [
+        { entitlement_id: "other", expires_at: 1 },
+        { entitlement_id: "entl0606b46fbd", expires_at },
+      ],
+    });
+    assert.deepEqual(
+      await revenueCatPremiumSource("k", reply(200, items(42))).activePremium(
+        "u1",
+      ),
+      { expiresAtMs: 42 },
+    );
+    assert.deepEqual(
+      await revenueCatPremiumSource("k", reply(200, items(null))).activePremium(
+        "u1",
+      ),
+      { expiresAtMs: NEVER_EXPIRES_MS },
+    );
+  });
+
+  test("no Premium or an unknown customer is none; other errors throw", async () => {
+    assert.equal(
+      await revenueCatPremiumSource(
+        "k",
+        reply(200, { items: [] }),
+      ).activePremium("u1"),
+      null,
+    );
+    assert.equal(
+      await revenueCatPremiumSource("k", reply(404)).activePremium("u1"),
+      null,
+    );
+    await assert.rejects(
+      revenueCatPremiumSource("k", reply(500)).activePremium("u1"),
+    );
   });
 });
 
