@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:forge_core/forge_core.dart';
 import 'package:forge_ui/forge_ui.dart';
@@ -222,5 +224,36 @@ void main() {
     expect(find.byType(CataloguePage), findsOneWidget);
     expect(app.path(), Routes.catalogue);
     verifyNever(() => app.programs.createProgram(any(), any()));
+  });
+
+  testWidgets('while the health prompt is on its way Connect spins and a '
+      'second tap asks nothing more', (tester) async {
+    app.storedProfile = choicesAnswered;
+    await app.startAs(tester, guest);
+    await tapText(tester, 'Get started');
+    for (var i = 0; i < ProfileField.values.length; i++) {
+      await next(tester);
+    }
+    await tapText(tester, 'Not now');
+    // The health step's cubit exists once the step shows.
+    final prompt = Completer<void>();
+    when(app.health.allow).thenAnswer((_) => prompt.future);
+
+    final connect = find.ancestor(
+      of: find.textContaining('Connect '),
+      matching: find.byType(ForgeButton),
+    );
+    await tester.tap(connect);
+    await tester.pump();
+    expect(tester.widget<ForgeButton>(connect).loading, isTrue);
+    await tester.tap(connect);
+    await tester.tap(find.text('Skip'));
+    await tester.pump();
+    verify(app.health.allow).called(1);
+    expect(find.text('Bring in steps and cardio?'), findsOneWidget);
+
+    prompt.complete();
+    await tester.pumpAndSettle();
+    expect(find.text('Your plan is ready'), findsOneWidget);
   });
 }

@@ -44,6 +44,10 @@ class _Steps extends StatefulWidget {
 class _StepsState extends State<_Steps> {
   var _step = _Step.reminders;
 
+  /// A system prompt was asked for and has not answered yet; it can take
+  /// seconds to show on a busy device.
+  var _asking = false;
+
   /// Told while the reminder step shows, so the health step rarely waits.
   late final Future<void> _healthKnown;
 
@@ -71,7 +75,18 @@ class _StepsState extends State<_Steps> {
     if (mounted) setState(() => _step = step);
   }
 
-  Future<void> _turnOnReminders() async {
+  /// Runs [ask] once at a time, showing the prompt as asking meanwhile.
+  Future<void> _whileAsking(Future<void> Function() ask) async {
+    if (_asking) return;
+    setState(() => _asking = true);
+    try {
+      await ask();
+    } finally {
+      if (mounted) setState(() => _asking = false);
+    }
+  }
+
+  Future<void> _turnOnReminders() => _whileAsking(() async {
     final settings = context.read<SettingsCubit>();
     if (await context.read<NotificationsCubit>().allow()) {
       await settings.update(
@@ -79,11 +94,11 @@ class _StepsState extends State<_Steps> {
       );
     }
     _go(_Step.health);
-  }
+  });
 
   /// Asks where the system still can; where it will not ask again (iOS
   /// once asked, Android refused for good), the store's settings.
-  Future<void> _connectHealth() async {
+  Future<void> _connectHealth() => _whileAsking(() async {
     final health = context.read<HealthAccessCubit>();
     switch (health.state) {
       case StepsAccess.undetermined:
@@ -95,7 +110,7 @@ class _StepsState extends State<_Steps> {
         await health.allow();
     }
     _go(_Step.done);
-  }
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -122,6 +137,7 @@ class _StepsState extends State<_Steps> {
             skipLabel: l10n.onboardingRemindersNotNow,
             onSkip: () => _go(_Step.health),
             page: true,
+            asking: _asking,
           ),
         );
       case _Step.health:
@@ -148,6 +164,7 @@ class _StepsState extends State<_Steps> {
                 skipLabel: l10n.onboardingHealthSkip,
                 onSkip: () => _go(_Step.done),
                 page: true,
+                asking: _asking,
               ),
             );
           },

@@ -818,11 +818,9 @@ packages:
   forge_ui:
     dependency: "direct main"
     description:
-      path: "packages/forge_ui"
-      ref: "57ef314c4673f72619af7040ad3f99f440d0c0a8"
-      resolved-ref: "57ef314c4673f72619af7040ad3f99f440d0c0a8"
-      url: "https://github.com/yigit-cuhadar/MobileAppForge.git"
-    source: git
+      path: "/private/tmp/claude-501/-Users-yigitcuhadar--claude-spares-spare-PQFIYp/aa350a4f-3a51-4cea-a940-e09b01214ed8/scratchpad/forge/packages/forge_ui"
+      relative: false
+    source: path
     version: "0.2.0"
   frontend_server_client:
     dependency: transitive
