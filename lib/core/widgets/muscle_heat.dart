@@ -25,7 +25,7 @@ Map<Muscle, Color> muscleHeatColors(GwColors c, Map<Muscle, num> sets) => {
 };
 
 /// Front and back models painted by [sets], side by side, each 100px
-/// wide.
+/// wide, the figure filling its box as on the exercise page.
 class MuscleHeatPair extends StatelessWidget {
   const MuscleHeatPair({super.key, required this.model, required this.sets});
 
@@ -35,6 +35,10 @@ class MuscleHeatPair extends StatelessWidget {
   static const double _width = 100;
   static const double _height = 190;
   static const double _gap = 24;
+
+  /// The camera's zoom at which the figure fills a [_width] × [_height]
+  /// box, as the exercise page's models do.
+  static const double _fill = 2;
 
   @override
   Widget build(BuildContext context) {
@@ -56,6 +60,7 @@ class MuscleHeatPair extends StatelessWidget {
               back: back,
               base: base,
               colors: colors,
+              zoom: _fill,
             ),
           ),
       ],
