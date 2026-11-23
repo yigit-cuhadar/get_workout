@@ -79,4 +79,34 @@ void main() {
     }
     expect(find.textContaining('outline'), findsNothing);
   });
+
+  testWidgets('worked muscles show the four busiest as set bars', (
+    tester,
+  ) async {
+    await pumpComponent(
+      tester,
+      const WorkedMuscles(
+        model: null,
+        title: 'Worked today',
+        sets: {
+          Muscle.pec: 6,
+          Muscle.lat: 4,
+          Muscle.triceps: 3,
+          Muscle.frontDelt: 2.5,
+          Muscle.biceps: 1,
+          Muscle.quads: 0,
+        },
+      ),
+    );
+
+    expect(find.text('Worked today'), findsOneWidget);
+    for (final text in ['6 sets', '4 sets', '3 sets', '2.5 sets']) {
+      expect(find.text(text), findsOneWidget);
+    }
+    expect(find.text('1 set'), findsNothing);
+    final bars = tester
+        .widgetList<FractionallySizedBox>(find.byType(FractionallySizedBox))
+        .map((bar) => bar.widthFactor);
+    expect(bars, [1, 4 / 6, 3 / 6, 2.5 / 6]);
+  });
 }

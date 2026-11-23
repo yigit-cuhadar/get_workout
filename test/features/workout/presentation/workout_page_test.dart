@@ -421,6 +421,8 @@ void main() {
       await pump(tester, finished());
       expect(find.text('Workout done · Fri, Nov 13'), findsOneWidget);
       expect(find.text('Save as program'), findsOneWidget);
+      await tester.scrollUntilVisible(find.text('Your sets'), 200);
+      expect(find.text('Squat'), findsOneWidget);
       when(() => cubit.summaryShown()).thenReturn(null);
       await tester.tap(find.text('Done'));
       verify(() => cubit.summaryShown()).called(1);
@@ -512,7 +514,8 @@ void main() {
       expect(find.text('−4 min vs Fri, Nov 6'), findsOneWidget);
       expect(find.text('+6 % vs Fri, Nov 6'), findsOneWidget);
       expect(find.text('same as Fri, Nov 6'), findsOneWidget);
-      expect(find.text('Chest 10 sets · Triceps 6'), findsOneWidget);
+      expect(find.text('10 sets'), findsOneWidget);
+      expect(find.text('6 sets'), findsOneWidget);
       expect(find.text('Save as program'), findsNothing);
     });
 

@@ -43,7 +43,7 @@ Widget muscleHeatPair(BuildContext context) {
 Widget muscleHeatLegend(BuildContext context) =>
     const Padding(padding: EdgeInsets.all(Gap.md), child: MuscleHeatLegend());
 
-@widgetbook.UseCase(name: 'Worked today', type: WorkedMuscles)
+@widgetbook.UseCase(name: 'Worked today · set bars', type: WorkedMuscles)
 Widget workedMuscles(BuildContext context) {
   final loading = context.knobs.boolean(label: 'Loading');
   return Padding(
@@ -52,9 +52,14 @@ Widget workedMuscles(BuildContext context) {
       future: _body,
       builder: (context, snapshot) => WorkedMuscles(
         model: loading ? null : snapshot.data,
-        sets: const {Muscle.pec: 10, Muscle.frontDelt: 9, Muscle.triceps: 6},
+        sets: const {
+          Muscle.pec: 6,
+          Muscle.lat: 4,
+          Muscle.triceps: 3,
+          Muscle.frontDelt: 2.5,
+          Muscle.biceps: 1,
+        },
         title: 'Worked today',
-        line: 'Chest 10 sets · Shoulders 9 · Triceps 6',
       ),
     ),
   );

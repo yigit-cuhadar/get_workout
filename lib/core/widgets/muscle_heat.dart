@@ -4,7 +4,9 @@ import 'package:forge_ui/forge_ui.dart';
 
 import '../../app/theme.dart';
 import '../../features/exercises/domain/vocabulary.dart';
+import '../../features/exercises/presentation/vocabulary_labels.dart';
 import '../../features/volume/domain/weekly_volume.dart';
+import '../../features/volume/presentation/volume_text.dart';
 import '../../l10n/app_localizations.dart';
 import 'muscle_model.dart';
 
@@ -22,15 +24,21 @@ Map<Muscle, Color> muscleHeatColors(GwColors c, Map<Muscle, num> sets) => {
     if (count > 0) muscle: muscleHeatColor(c, count),
 };
 
-/// Small front and back models painted by weekly [sets], side by side.
+/// Front and back models painted by [sets], side by side, each 100px
+/// wide, the figure filling its box as on the exercise page.
 class MuscleHeatPair extends StatelessWidget {
   const MuscleHeatPair({super.key, required this.model, required this.sets});
 
   final Model3D model;
   final Map<Muscle, num> sets;
 
-  static const double _width = 44;
-  static const double _height = 85;
+  static const double _width = 100;
+  static const double _height = 190;
+  static const double _gap = 24;
+
+  /// The camera's zoom at which the figure fills a [_width] × [_height]
+  /// box, as the exercise page's models do.
+  static const double _fill = 2;
 
   @override
   Widget build(BuildContext context) {
@@ -41,7 +49,7 @@ class MuscleHeatPair extends StatelessWidget {
     final base = Color.lerp(p.surface, p.lineStrong, 0.35)!;
     return Row(
       mainAxisSize: MainAxisSize.min,
-      spacing: 12,
+      spacing: _gap,
       children: [
         for (final back in [false, true])
           SizedBox(
@@ -52,6 +60,7 @@ class MuscleHeatPair extends StatelessWidget {
               back: back,
               base: base,
               colors: colors,
+              zoom: _fill,
             ),
           ),
       ],
@@ -113,8 +122,9 @@ class MuscleHeatLegend extends StatelessWidget {
   }
 }
 
-/// A card of what a workout worked: [MuscleHeatPair] painted by its [sets],
-/// beside a [title] and a [line] naming the busiest muscles. Without a
+/// A card of what a workout worked: its [title] over a [MuscleHeatPair]
+/// painted by its [sets], then the [shown] busiest muscles as bars, each
+/// with its sets and filled in success relative to the busiest. Without a
 /// [model] (loading, or it could not load) the figures are shimmering
 /// bars.
 class WorkedMuscles extends StatelessWidget {
@@ -123,20 +133,24 @@ class WorkedMuscles extends StatelessWidget {
     required this.model,
     required this.sets,
     required this.title,
-    required this.line,
   });
 
   final Model3D? model;
-  final Map<Muscle, num> sets;
+  final Map<Muscle, double> sets;
   final String title;
-  final String line;
+
+  static const shown = 4;
 
   @override
   Widget build(BuildContext context) {
     final style = ForgeStyle.of(context);
     final p = style.colors;
     final text = Theme.of(context).textTheme;
+    final l10n = AppLocalizations.of(context);
     final model = this.model;
+    final busiest = sets.entries.where((e) => e.value > 0).toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
+    final most = busiest.isEmpty ? 0.0 : busiest.first.value;
     return Container(
       padding: const EdgeInsets.fromLTRB(Gap.md, 14, Gap.md, Gap.md),
       decoration: BoxDecoration(
@@ -146,45 +160,73 @@ class WorkedMuscles extends StatelessWidget {
             ? null
             : Border.all(color: p.line, width: style.cardBorder),
       ),
-      child: Row(
-        spacing: 14,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        spacing: Gap.sm,
         children: [
-          ExcludeSemantics(
-            child: model == null
-                ? const Row(
-                    mainAxisSize: MainAxisSize.min,
-                    spacing: 12,
-                    children: [
-                      SkeletonBar(
-                        width: MuscleHeatPair._width,
-                        height: MuscleHeatPair._height,
-                      ),
-                      SkeletonBar(
-                        width: MuscleHeatPair._width,
-                        height: MuscleHeatPair._height,
-                      ),
-                    ],
-                  )
-                : MuscleHeatPair(model: model, sets: sets),
-          ),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              spacing: Gap.xs,
-              children: [
-                Text(
-                  title,
-                  style: text.bodySmall!.copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: p.ink,
-                  ),
-                ),
-                Text(line, style: text.bodySmall!.copyWith(color: p.inkMuted)),
-              ],
+          Text(title, style: text.titleMedium),
+          Center(
+            child: ExcludeSemantics(
+              child: model == null
+                  ? const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      spacing: MuscleHeatPair._gap,
+                      children: [
+                        SkeletonBar(
+                          width: MuscleHeatPair._width,
+                          height: MuscleHeatPair._height,
+                        ),
+                        SkeletonBar(
+                          width: MuscleHeatPair._width,
+                          height: MuscleHeatPair._height,
+                        ),
+                      ],
+                    )
+                  : MuscleHeatPair(model: model, sets: sets),
             ),
           ),
+          for (final MapEntry(key: muscle, value: count) in busiest.take(shown))
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              spacing: Gap.xs,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        l10n.muscleName(muscle),
+                        style: text.bodySmall!.copyWith(color: p.ink),
+                      ),
+                    ),
+                    Text(
+                      l10n.setsText(count),
+                      style: style.data.copyWith(color: p.inkMuted),
+                    ),
+                  ],
+                ),
+                Container(
+                  height: _bar,
+                  alignment: Alignment.centerLeft,
+                  decoration: BoxDecoration(
+                    color: p.surfaceSunken,
+                    borderRadius: BorderRadius.circular(_bar / 2),
+                  ),
+                  child: FractionallySizedBox(
+                    widthFactor: count / most,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: p.success,
+                        borderRadius: BorderRadius.circular(_bar / 2),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
         ],
       ),
     );
   }
+
+  static const double _bar = 6;
 }

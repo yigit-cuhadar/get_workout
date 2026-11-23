@@ -86,6 +86,8 @@ class SetTableEditRow {
 /// the card (a chevron down while closed, up while [open]); closed, only
 /// the header shows.
 ///
+/// Inside a [SetTableList] it leaves the card to the list.
+///
 /// [SetTable.edit] (Add past workout, Edit workout) has the exercise's ⋯
 /// [menu] on top, the values in small boxes and "Add set" ([onAddSet]) at
 /// the end.
@@ -168,9 +170,13 @@ class SetTable extends StatelessWidget {
         ),
       );
     }
+    final inList =
+        context.dependOnInheritedWidgetOfExactType<_InList>() != null;
     return Container(
-      decoration: decoration,
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+      decoration: inList ? null : decoration,
+      padding: inList
+          ? null
+          : const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -194,6 +200,75 @@ class SetTable extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Several exercises' [tables] ([SetTable]s) on one card under its
+/// [title], a line between them. Past the first [shown], a text button
+/// ("+ 3 more exercises") shows the rest in place.
+class SetTableList extends StatefulWidget {
+  const SetTableList({super.key, required this.title, required this.tables});
+
+  final String title;
+  final List<Widget> tables;
+
+  static const shown = 2;
+
+  @override
+  State<SetTableList> createState() => _SetTableListState();
+}
+
+class _SetTableListState extends State<SetTableList> {
+  bool _all = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final style = ForgeStyle.of(context);
+    final colors = style.colors;
+    final tables = widget.tables;
+    final hidden = _all ? 0 : tables.length - SetTableList.shown;
+    return Container(
+      padding: const EdgeInsets.fromLTRB(14, 14, 14, 6),
+      decoration: BoxDecoration(
+        color: colors.surface,
+        borderRadius: BorderRadius.circular(style.radii.lg),
+        border: style.cardBorder == 0
+            ? null
+            : Border.all(color: colors.line, width: style.cardBorder),
+      ),
+      child: _InList(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(widget.title, style: Theme.of(context).textTheme.titleMedium),
+            for (final (i, table) in tables.indexed)
+              if (hidden <= 0 || i < SetTableList.shown) ...[
+                if (i > 0)
+                  Divider(height: Gap.md, thickness: 1, color: colors.line),
+                table,
+              ],
+            if (hidden > 0)
+              Align(
+                alignment: Alignment.centerLeft,
+                child: ForgeButton(
+                  label: AppLocalizations.of(context).setTableMore(hidden),
+                  variant: ForgeButtonVariant.text,
+                  size: ForgeButtonSize.small,
+                  onPressed: () => setState(() => _all = true),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Marks the [SetTable]s of a [SetTableList].
+class _InList extends InheritedWidget {
+  const _InList({required super.child});
+
+  @override
+  bool updateShouldNotify(_InList oldWidget) => false;
 }
 
 class _Header extends StatelessWidget {

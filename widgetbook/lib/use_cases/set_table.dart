@@ -232,3 +232,38 @@ Widget openingSetTable(BuildContext context) {
     ),
   ]);
 }
+
+@widgetbook.UseCase(name: 'List · two shown, + more', type: SetTableList)
+Widget listSetTable(BuildContext context) {
+  final count = context.knobs.int.slider(
+    label: 'Exercises',
+    initialValue: 4,
+    min: 1,
+    max: 6,
+  );
+  const exercises = [
+    ('Bench Press', '82.5 kg × 6'),
+    ('Barbell Row', '70 kg × 10'),
+    ('Overhead Press', '45 kg × 8'),
+    ('Lat Pulldown', '55 kg × 10'),
+    ('Plank', '60 s'),
+    ('Cable Curl', '20 kg × 12'),
+  ];
+  return _page([
+    SetTableList(
+      title: 'Your sets',
+      tables: [
+        for (final (name, values) in exercises.take(count))
+          SetTable(
+            name: name,
+            count: '3 sets',
+            rows: [
+              const SetTableRow(label: 'W', values: '40 kg × 10'),
+              SetTableRow(label: '1', values: values, effort: 'RIR 2'),
+              SetTableRow(label: '2', values: values, effort: 'RIR 1'),
+            ],
+          ),
+      ],
+    ),
+  ]);
+}
