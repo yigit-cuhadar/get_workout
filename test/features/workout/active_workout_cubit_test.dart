@@ -1686,6 +1686,14 @@ void main() {
 
       expect(telemetry.names, ['workout_complete', 'first_workout_complete']);
       expect(telemetry.events.first.$2['workout_count'], 1);
+      expect(cubit.state.workoutCount, 1);
+      await cubit.close();
+    });
+
+    test('the summary knows how many workouts the user finished', () async {
+      final cubit = await signedIn(draft: draft);
+      await cubit.finish();
+      expect(cubit.state.workoutCount, 5);
       await cubit.close();
     });
 

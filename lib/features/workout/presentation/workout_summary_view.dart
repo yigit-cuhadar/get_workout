@@ -38,7 +38,7 @@ import 'workout_text.dart';
 /// workout) or Save changes to the day (a program day done differently).
 /// Back does what Done does. A workout that ended itself also offers Edit,
 /// which opens it in the editor. Leaving it, except by Edit, shows a free
-/// user the paywall first ([PaywallMoment.workoutDone]). Every summary is
+/// user the paywall first when due ([workoutPaywallDue]). Every summary is
 /// a review moment, a highlight with a record; the first workout's never
 /// asks.
 class WorkoutSummaryView extends StatefulWidget {
@@ -64,7 +64,7 @@ class _WorkoutSummaryViewState extends State<WorkoutSummaryView> {
   Future<void> _leave([VoidCallback? then, bool toEdit = false]) async {
     if (_leaving) return;
     _leaving = true;
-    if (!toEdit) {
+    if (!toEdit && workoutPaywallDue(widget.state.workoutCount)) {
       await context.paywallMoment(PaywallMoment.workoutDone);
       if (!mounted) return;
     }

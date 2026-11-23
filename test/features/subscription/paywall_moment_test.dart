@@ -37,6 +37,14 @@ void main() {
     });
   });
 
+  test('a workout offers it on the 1st, 4th, 7th and so on', () {
+    expect(
+      [for (var count = 1; count <= 8; count++) workoutPaywallDue(count)],
+      [true, false, false, true, false, false, true, false],
+    );
+    expect(workoutPaywallDue(null), isFalse);
+  });
+
   test('the offering decides at onboarding and on app open only', () {
     expect(PaywallMoment.onboarding.offeringDecides, isTrue);
     expect(PaywallMoment.appOpen.offeringDecides, isTrue);
