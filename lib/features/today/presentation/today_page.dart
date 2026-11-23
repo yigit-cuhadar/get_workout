@@ -11,7 +11,6 @@ import '../../../app/router.dart';
 import '../../../core/text_length.dart';
 import '../../../core/widgets/featured_card.dart';
 import '../../../l10n/app_localizations.dart';
-import '../../calculators/presentation/calculator_list.dart';
 import '../../feedback/presentation/review_prompt.dart';
 import '../../programs/domain/calendar_date.dart';
 import '../../programs/domain/program.dart';
@@ -71,7 +70,7 @@ class _TodayViewState extends State<_TodayView> {
   late final AppLifecycleListener _lifecycle;
 
   /// Independent cards, in order.
-  static const _cards = [_WorkoutCard(), _StartEmptyRow(), _CalculatorsCard()];
+  static const _cards = [_WorkoutCard(), _StartEmptyRow(), _CalculatorsRow()];
 
   /// Today moves on while the app sleeps, without a new snapshot to
   /// recompute it. Launching and resuming count as opening the app for
@@ -479,27 +478,22 @@ class _StartEmptyRow extends StatelessWidget {
   }
 }
 
-/// Every calculator as a chip opening it; the card opens the list.
-class _CalculatorsCard extends StatelessWidget {
-  const _CalculatorsCard();
+/// The calculators, one row opening their list.
+class _CalculatorsRow extends StatelessWidget {
+  const _CalculatorsRow();
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    return SectionCard(
-      title: l10n.calculatorsTitle,
-      onTap: () => context.go(Routes.calculators),
-      child: Wrap(
-        spacing: Gap.sm,
-        runSpacing: Gap.sm,
-        children: [
-          for (final entry in calculatorsOf(l10n))
-            ForgeChip(
-              label: entry.title,
-              onPressed: () => openCalculator(context, entry),
-            ),
-        ],
-      ),
+    return ListRowCard(
+      children: [
+        ListRow(
+          title: l10n.calculatorsTitle,
+          detail: l10n.todayCalculatorsDetail,
+          end: ListRowEnd.chevron,
+          onTap: () => context.go(Routes.calculators),
+        ),
+      ],
     );
   }
 }
