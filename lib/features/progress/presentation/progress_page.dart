@@ -561,7 +561,8 @@ class _CardioCard extends StatelessWidget {
   }
 }
 
-/// Today's steps against the daily goal; the Steps page sets access up.
+/// Today's steps against the daily goal; without access, why there is no
+/// number and the way to the Steps page, which sets access up.
 class _StepsCard extends StatelessWidget {
   const _StepsCard();
 
@@ -572,10 +573,12 @@ class _StepsCard extends StatelessWidget {
     final title = l10n.progressSteps;
     void open() => context.go(Routes.steps);
     return switch ((state.status, state.progress)) {
-      (TodayStepsStatus.setUp, _) => SectionCard.empty(
+      (TodayStepsStatus.setUp, _) => StatTile.empty(
         title: title,
         onTap: open,
-        message: l10n.todayStepsSetUp,
+        message: l10n.progressStepsConnect(healthStoreName(context)),
+        actionLabel: l10n.progressStepsConnectAction(healthStoreName(context)),
+        onAction: open,
       ),
       (TodayStepsStatus.failure, _) => SectionCard.error(
         title: title,

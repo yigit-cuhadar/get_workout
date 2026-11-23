@@ -401,7 +401,8 @@ void main() {
     expect(find.text('No sets this week.'), findsOneWidget);
     expect(find.text('Finish a workout to see your e1RM.'), findsOneWidget);
     expect(find.text('Log a session or connect a health app.'), findsOneWidget);
-    expect(find.text('See your steps'), findsOneWidget);
+    expect(find.textContaining('to count your steps.'), findsOneWidget);
+    expect(find.textContaining('Connect ', findRichText: true), findsWidgets);
   });
 
   testWidgets('a drop keeps its minus; trained without an e1RM says how', (
