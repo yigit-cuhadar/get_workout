@@ -795,12 +795,14 @@ Where it stands (2026-11-18, end of Group 11):
     Zealand, Ireland), not in new territories; others open as the app gets
     their language. iPhone only (#216); iPads use compatibility mode.
   - TestFlight builds: 1.0.0 (1), 1.0.0 (2) (privacy manifest, iPhone only,
-    23 programs), 1.0.0 (3) and (4) (test fixes). The app icon and launch
-    screen come from the owner's logo (2026-11-23). Still to do before
-    submission: attach the build with the icon to the version;
-    the prod entitlement after the sandbox renewal (due 2026-11-23 08:56
-    UTC), restore, renewal and expiry on TestFlight; then submit the
-    version with both subscriptions, manual release.
+    23 programs), 1.0.0 (3) and (4) (test fixes), (5) (the owner's logo as
+    icon and launch screen), (6) (the workout summary redesign). Version
+    1.0.0 has build 6 attached (2026-11-23); the seven store screenshots
+    were checked against it and still match (none shows the summary or the
+    removed keyboard bar). Still to do before submission: the prod
+    entitlement after the sandbox renewal, restore, renewal and expiry on
+    TestFlight; then submit the version with both subscriptions, manual
+    release.
 - Both studios' links match main again (published 2026-11-18 from a
   session: they belong to the owner's account, so a session publishes
   them directly). Owner to do: the Play Console Health declaration
@@ -2032,8 +2034,7 @@ Decisions (the canvases they were drawn on are deleted):
   `getworkout.premium.monthly` (7.99 USD) and `getworkout.premium.yearly`
   (39.99 USD, 7-day free trial), 175 territories, equalized prices; the
   Paid Apps agreement is active. The App Store review screenshot on both is
-  a placeholder (an old Profile screen): replace it with the paywall before
-  submission. RevenueCat: iOS app with the In-App Purchase key, entitlement
+  the paywall (1206 x 2622, checked 2026-11-23). RevenueCat: iOS app with the In-App Purchase key, entitlement
   `premium`, offering `default` ($rc_monthly, $rc_annual, metadata
   `dismissible: true`). Webhooks: sandbox → dev, sandbox and production →
   prod (since 2026-11-22: TestFlight and App Review buy in the sandbox
