@@ -171,4 +171,70 @@ void main() {
     await pumpComponent(tester, table(open: true));
     expect(find.text('82.5 kg × 8'), findsOneWidget);
   });
+
+  testWidgets('a list shows two tables, + n more shows the rest in place', (
+    tester,
+  ) async {
+    await pumpComponent(
+      tester,
+      SingleChildScrollView(
+        child: SetTableList(
+          title: 'Your sets',
+          tables: [
+            for (final name in ['Bench Press', 'Row', 'Squat', 'Curl'])
+              SetTable(
+                name: name,
+                rows: const [SetTableRow(label: '1', values: '80 kg × 8')],
+              ),
+          ],
+        ),
+      ),
+    );
+
+    expect(find.text('Your sets'), findsOneWidget);
+    expect(find.text('Row'), findsOneWidget);
+    expect(find.text('Squat'), findsNothing);
+    expect(find.text('Curl'), findsNothing);
+
+    await tester.tap(find.text('+ 2 more exercises'));
+    await tester.pump();
+
+    expect(find.text('Squat'), findsOneWidget);
+    expect(find.text('Curl'), findsOneWidget);
+    expect(find.textContaining('more exercise'), findsNothing);
+  });
+
+  testWidgets('a list of two or fewer has no + more', (tester) async {
+    await pumpComponent(
+      tester,
+      const SetTableList(
+        title: 'Your sets',
+        tables: [
+          SetTable(
+            name: 'Bench Press',
+            rows: [SetTableRow(label: '1', values: '80 kg × 8')],
+          ),
+        ],
+      ),
+    );
+
+    expect(find.text('Bench Press'), findsOneWidget);
+    expect(find.textContaining('more exercise'), findsNothing);
+  });
+
+  testWidgets('one hidden table says + 1 more exercise', (tester) async {
+    await pumpComponent(
+      tester,
+      const SetTableList(
+        title: 'Your sets',
+        tables: [
+          SetTable(name: 'A', rows: []),
+          SetTable(name: 'B', rows: []),
+          SetTable(name: 'C', rows: []),
+        ],
+      ),
+    );
+
+    expect(find.text('+ 1 more exercise'), findsOneWidget);
+  });
 }

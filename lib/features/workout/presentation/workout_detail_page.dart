@@ -7,9 +7,6 @@ import 'package:go_router/go_router.dart';
 import '../../../app/router.dart';
 import '../../../core/widgets/featured_card.dart';
 import '../../../l10n/app_localizations.dart';
-import '../../exercises/domain/vocabulary.dart';
-import '../../exercises/presentation/exercise_catalogue_cubit.dart';
-import '../../exercises/presentation/vocabulary_labels.dart';
 import '../../programs/domain/calendar_date.dart';
 import '../../programs/domain/program_schedule.dart';
 import '../../programs/presentation/program_list_cubit.dart';
@@ -17,7 +14,7 @@ import '../../programs/presentation/program_text.dart';
 import '../../settings/presentation/settings_cubit.dart';
 import '../domain/exercise_stats.dart';
 import '../domain/workout.dart';
-import 'widgets/set_table.dart';
+import 'exercise_set_table.dart';
 import 'workout_detail_cubit.dart';
 import 'workout_edit_page.dart';
 import 'workout_editor_view.dart';
@@ -211,14 +208,16 @@ class _WorkoutState extends State<_Workout> {
               ],
               for (final (i, exercise) in workout.exercises.indexed) ...[
                 const SizedBox(height: Gap.md),
-                _ExerciseCard(
-                  index: i,
+                ExerciseSetTable(
                   exercise: exercise,
-                  name: _name(context, exercise),
                   group: exercise.group == null
                       ? null
                       : groupItemLabel(workout.exercises, i),
-                  records: state.records ?? const {},
+                  records: {
+                    for (final (e, set)
+                        in state.records ?? const <(int, int)>{})
+                      if (e == i) set,
+                  },
                   open: _open.contains(i),
                   onToggle: () => setState(
                     () => _open.contains(i) ? _open.remove(i) : _open.add(i),
@@ -230,18 +229,6 @@ class _WorkoutState extends State<_Workout> {
         ),
       ],
     );
-  }
-
-  /// The catalogue's name, custom exercises included; the name stored with
-  /// the workout for one no longer there.
-  String _name(BuildContext context, WorkoutExercise exercise) {
-    final catalogue = context.watch<ExerciseCatalogueCubit>().state;
-    final known = catalogue is CatalogueReady
-        ? catalogue.exercises
-              .where((e) => e.id == exercise.exerciseId)
-              .firstOrNull
-        : null;
-    return known?.localized(context).name ?? exercise.name;
   }
 }
 
@@ -311,66 +298,6 @@ class _Header extends StatelessWidget {
     return (
       week == null ? program.name : l10n.historyProgramWeek(program.name, week),
       () => context.go(Routes.program(id)),
-    );
-  }
-}
-
-/// An exercise as logged, as a [SetTable]: its group letter, name, logging
-/// type (when not weight and reps), note and set count over a row per set,
-/// each drop on its own row under its set; it opens and closes.
-class _ExerciseCard extends StatelessWidget {
-  const _ExerciseCard({
-    required this.index,
-    required this.exercise,
-    required this.name,
-    required this.group,
-    required this.records,
-    required this.open,
-    required this.onToggle,
-  });
-
-  final int index;
-  final WorkoutExercise exercise;
-  final String name;
-  final String? group;
-  final Set<(int, int)> records;
-  final bool open;
-  final VoidCallback onToggle;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final settings = context.select(
-      (SettingsCubit cubit) => cubit.state.settings,
-    );
-    final unit = settings.weightUnit;
-    final type = exercise.loggingType;
-    return SetTable(
-      name: name,
-      group: group,
-      type: type == LoggingType.weightReps ? null : l10n.loggingTypeName(type),
-      note: exercise.note,
-      count: l10n.historySetCount(exercise.sets.length),
-      open: open,
-      onToggle: onToggle,
-      rows: [
-        for (final (i, set) in exercise.sets.indexed)
-          SetTableRow(
-            label: l10n.setLabel(exercise, i),
-            values: l10n.setWithUnitText(set, type, unit),
-            effort: l10n.effortText(set, settings.effortScale),
-            record: records.contains((index, i)),
-            note: set.note,
-            drops: [
-              for (final drop in set.drops)
-                l10n.setWithUnitText(
-                  WorkoutSet(weightKg: drop.weightKg, reps: drop.reps),
-                  type,
-                  unit,
-                ),
-            ],
-          ),
-      ],
     );
   }
 }
