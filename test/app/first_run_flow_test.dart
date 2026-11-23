@@ -78,7 +78,8 @@ void main() {
     await tester.pump();
 
     expect(find.byType(SplashScreen), findsOneWidget);
-    expect(find.text('GetWorkout'), findsOneWidget);
+    // The launch logo stands alone; the name is its label.
+    expect(find.bySemanticsLabel('GetWorkout'), findsOneWidget);
     await tester.pump(const Duration(milliseconds: 1999));
     expect(slowLine, findsNothing);
     await tester.pump(const Duration(milliseconds: 1));

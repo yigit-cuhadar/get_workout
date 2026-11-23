@@ -795,11 +795,9 @@ Where it stands (2026-11-18, end of Group 11):
     Zealand, Ireland), not in new territories; others open as the app gets
     their language. iPhone only (#216); iPads use compatibility mode.
   - TestFlight builds: 1.0.0 (1), 1.0.0 (2) (privacy manifest, iPhone only,
-    23 programs). Still to do before submission: the app icon (still
-    Flutter's default on iOS, the 1024 store icon and Android; the drawn
-    options were rejected, the owner brings a 1024 PNG made with ChatGPT,
-    then generate the iOS set and Android mipmaps, adaptive and Android 12
-    splash icons); build 1.0.0 (3) on Flutter 3.50.1 (#223) and attach it;
+    23 programs), 1.0.0 (3) and (4) (test fixes). The app icon and launch
+    screen come from the owner's logo (2026-11-23). Still to do before
+    submission: attach the build with the icon to the version;
     the prod entitlement after the sandbox renewal (due 2026-11-23 08:56
     UTC), restore, renewal and expiry on TestFlight; then submit the
     version with both subscriptions, manual release.
@@ -1969,6 +1967,13 @@ Decisions (the canvases they were drawn on are deleted):
   keeps its own row); the Next/Done keyboard bar above set entry is
   removed (owner, Forge StepperField).
 - Workout summary redesign (2026-11-23), canvas https://claude.ai/artifact/EAeojwrrTVCeAdhA58w1Qe: S1 unchanged, S2 A (records as one highlighted card with gain badges), S3 A then S3b B (front and back models over the top four muscles as set bars), S4 B (each exercise's sets as a table, two shown, the rest behind + n more).
+- App icon and launch (2026-11-23): the owner's own logo, two 1024 PNGs
+  kept in `design/logo/`: the dark one is the app icon (iOS set, Android
+  mipmaps and adaptive icon with a monochrome layer) and gives AppMark its
+  letters; the light one is the launch screen. G5 A on the same canvas:
+  the light logo alone, 240 square, on on-featured, the native launch
+  screen identical and both centred on the whole screen, so the handover
+  does not move it (Forge SplashScreen logo form).
 ## Open questions
 
 - Google sign-in is offered next to email (`socialProviders` in
