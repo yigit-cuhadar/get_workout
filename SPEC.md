@@ -2940,7 +2940,10 @@ the feature you are about to touch, and keep it true when you change it.
   undetermined (SG4). Connect asks where the system still can (never
   asked; Android refused asks again) and otherwise opens the store's or
   the app's settings (iOS once asked; Android still refused after
-  asking); Skip moves on. Then the suggestion: "Your plan is ready",
+  asking); Skip moves on. While either step waits on the system's prompt
+  (seconds on a busy device) its main button spins and neither button
+  takes a tap (`PermissionPrompt.ask(asking:)`, Forge), so a slow prompt is
+  never asked for twice. Then the suggestion: "Your plan is ready",
   the FeaturedCard outline ("Recommended for you · free", or "Recommended
   for you" and the Premium tag under the name for a premium program
   while the user has no Premium (R5 A), the name,
