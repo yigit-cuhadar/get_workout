@@ -19,6 +19,7 @@ export { generatorRulesCheck } from "./generator/generator_rules_check";
 export { generatorRulesGet } from "./generator/generator_rules_get";
 export { generatorRulesHistory } from "./generator/generator_rules_history";
 export { generatorRulesPublish } from "./generator/generator_rules_publish";
+export { guestCleanupNightly } from "./guest_cleanup";
 export { revenueCatWebhook } from "./revenuecat_webhook";
 export { sendAnnouncement } from "./send_announcement";
 export { sendSupportReply } from "./send_support_reply";

@@ -416,6 +416,14 @@ only, JPEG, max 5 MB.
 
 ### Cloud Functions
 
+- `guestCleanupNightly` (scheduled 03:30 Europe/Istanbul,
+  `functions/src/guest_cleanup.ts`; owner's pick 2026-11-24) → deletes
+  every guest (no linked provider) the app has not used for 90 days
+  (`metadata.lastRefreshTime`, else last sign-in or creation) and that
+  has no `entitlements/{uid}`, through `deleteUserData` exactly as
+  `deleteAccount`; at most 500 per run, a failure is logged and retried
+  the next night. This also removes the guests left behind by signing in
+  to an existing account.
 - `revenueCatWebhook` (HTTPS, `functions/src/revenuecat_webhook.ts`) →
   writes `entitlements/{uid}`; see the RevenueCat webhook decision.
 - `deleteAccount` (callable, `functions/src/delete_account.ts`) → for the
@@ -1992,12 +2000,10 @@ Decisions (the canvases they were drawn on are deleted):
   with Apple entitlement is in Runner.entitlements). Android offers Google
   alone: Apple there would need a Services ID. Checked on the owner's
   iPhone the same day: a guest linked with Apple and kept their data.
-- A guest who signs in to an existing account leaves an orphaned anonymous user and its data behind; clean these up with a scheduled function when Cloud Functions arrive.
 - Photo backup: the default bucket and `storage.rules` are live in both
   projects (since 2026-11-12). On the owner's iPhone (2026-11-18) a
   measurement day's four photos uploaded to the dev bucket. `deleteAccount`
-  already deletes `users/{uid}/` in the bucket; the orphaned-guest cleanup
-  must do the same.
+  and `guestCleanupNightly` delete `users/{uid}/` in the bucket.
 - Body feature, not yet run on a device: the camera permission prompt and
   denial text, the ghost's alignment (front-camera previews are mirrored,
   saved photos are not; `mirrorGhost` in `forge_camera`), retake,
