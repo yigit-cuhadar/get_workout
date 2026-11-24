@@ -4,6 +4,7 @@ import 'package:forge_ui/forge_ui.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../admin_router.dart';
+import '../../shell/page_header.dart';
 import '../domain/admin_user.dart';
 import 'users_cubit.dart';
 import 'users_format.dart';
@@ -26,14 +27,18 @@ class UsersPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Users')),
       body: Align(
         alignment: Alignment.topCenter,
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: usersPageWidth),
           child: ListView(
-            padding: const EdgeInsets.all(Gap.md),
+            padding: const EdgeInsets.all(Gap.lg),
             children: const [
+              PageHeader(
+                title: 'Users',
+                subtitle: 'Find one by email or uid; the newest sign-ups below',
+              ),
+              SizedBox(height: Gap.md),
               _FindSection(),
               SizedBox(height: Gap.md),
               _LatestSection(),

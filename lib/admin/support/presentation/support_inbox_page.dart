@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:forge_core/forge_core.dart';
 import 'package:forge_ui/forge_ui.dart';
 
+import '../../shell/page_header.dart';
 import '../domain/support_inbox_repository.dart';
 import '../domain/support_thread.dart';
 import 'new_thread_count_cubit.dart';
@@ -34,8 +35,6 @@ class _InboxView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final text = Theme.of(context).textTheme;
-    final colors = ForgeStyle.of(context).colors;
     return Scaffold(
       body: BlocListener<SupportInboxCubit, SupportInboxState>(
         listenWhen: (previous, current) =>
@@ -51,11 +50,9 @@ class _InboxView extends StatelessWidget {
         child: ListView(
           padding: const EdgeInsets.all(Gap.lg),
           children: [
-            Text('Support inbox', style: text.headlineSmall),
-            const SizedBox(height: Gap.xs),
-            Text(
-              'Messages from Help & feedback and the review prompt',
-              style: text.bodyMedium!.copyWith(color: colors.inkMuted),
+            const PageHeader(
+              title: 'Support inbox',
+              subtitle: 'Messages from Help & feedback and the review prompt',
             ),
             const SizedBox(height: Gap.lg),
             const Row(
