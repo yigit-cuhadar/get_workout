@@ -268,6 +268,8 @@ class AnnouncementsCubit extends Cubit<AnnouncementsState> {
       state.copyWith(
         lastAttempt: () => request,
         status: AnnouncementSendStatus.sending,
+        // A test's outcome is about the draft before it went.
+        testStatus: AnnouncementTestStatus.idle,
       ),
     );
     final result = await _sendAnnouncement(request);

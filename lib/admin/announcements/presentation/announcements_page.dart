@@ -408,6 +408,11 @@ class _ScheduleFields extends StatelessWidget {
     final picked = await showTimePicker(
       context: context,
       initialTime: TimeOfDay.fromDateTime(at),
+      // The page writes times in 24 hours; the picker says them the same.
+      builder: (context, child) => MediaQuery(
+        data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: true),
+        child: child!,
+      ),
     );
     if (picked == null) return;
     cubit.setScheduleAt(

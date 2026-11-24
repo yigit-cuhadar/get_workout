@@ -259,6 +259,14 @@ void main() {
       expect(cubit.state.draft.title, ' New programs ');
     });
 
+    test('a send clears the last test\'s outcome', () async {
+      fill();
+      await cubit.sendTest();
+      await cubit.send();
+      expect(cubit.state.testStatus, AnnouncementTestStatus.idle);
+      expect(cubit.state.testResult, isNull);
+    });
+
     test('without a device it says so', () async {
       when(() => repository.sendTest(any()))
           .thenAnswer((_) async => const Err(NoTestDevicesFailure()));
