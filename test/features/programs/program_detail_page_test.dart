@@ -344,8 +344,8 @@ void main() {
     expect(find.text('Missed'), findsOneWidget);
     expect(find.text('Do it today'), findsOneWidget);
     expect(find.text('Move to Monday'), findsOneWidget);
-    expect(find.text('Change days'), findsOneWidget);
-    expect(find.text('Stop'), findsOneWidget);
+    // Change days and Stop program live in the ⋯ menu.
+    expect(find.text('Change days'), findsNothing);
 
     await tester.tap(find.text('Skip'));
     await tester.pump();
@@ -372,8 +372,6 @@ void main() {
     );
 
     expect(find.text('Start Lower'), findsNothing);
-    expect(find.text('Change days'), findsNothing);
-    expect(find.text('Stop'), findsOneWidget);
     expect(
       find.text(
         'This program came from Premium, which has ended. It carries '
@@ -382,6 +380,12 @@ void main() {
       findsOneWidget,
     );
     expect(find.text('Weekly sets in this program'), findsOneWidget);
+
+    // A locked copy cannot be rescheduled, only stopped.
+    await tester.tap(options());
+    await settle(tester);
+    expect(find.text('Change days'), findsNothing);
+    expect(find.text('Stop program'), findsOneWidget);
   });
 
   testWidgets('a locked program not running opens the paywall on Start', (
