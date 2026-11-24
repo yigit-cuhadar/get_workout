@@ -433,6 +433,7 @@ class _Header extends StatelessWidget implements PreferredSizeWidget {
         ForgeButton(
           label: l10n.workoutFinish,
           onPressed: () => finishWorkout(context, state),
+          variant: ForgeButtonVariant.text,
           size: ForgeButtonSize.small,
           loading: finishing,
         ),
