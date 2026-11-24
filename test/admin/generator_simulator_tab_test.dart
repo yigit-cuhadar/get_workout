@@ -147,13 +147,11 @@ void main() {
     ]) {
       expect(find.text(text), findsOneWidget, reason: text);
     }
-    expect(
-      find.text(
-        'Weekly sets: pec 4 / 16 · abdominal 1.5 / 6 · quads 3 / 12 · '
-        'triceps 2',
-      ),
-      findsOneWidget,
-    );
+    // Targeted muscles as bars with their targets, the rest on one line.
+    for (final value in ['4 / 16', '1.5 / 6', '3 / 12']) {
+      expect(find.text(value), findsOneWidget, reason: value);
+    }
+    expect(find.text('Also trained: triceps 2'), findsOneWidget);
 
     const why =
         'tier 30 · equipment 12 · popularity 18.5 · variety 0.9 — next: '
@@ -258,10 +256,12 @@ void main() {
       ),
       findsOneWidget,
     );
-    expect(
-      find.text('Weekly sets: pec 4 · triceps 2 · abdominal 1.5 · quads 3'),
-      findsOneWidget,
-    );
+    // Rules not known: every trained muscle a bar, no targets.
+    for (final value in ['4', '2', '1.5', '3']) {
+      expect(find.text(value), findsWidgets, reason: value);
+    }
+    expect(find.text('4 / 16'), findsNothing);
+    expect(find.textContaining('Also trained'), findsNothing);
   });
 
   testWidgets('a refusal says so in words and keeps the answers', (
