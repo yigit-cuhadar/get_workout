@@ -31,6 +31,8 @@ class AnnouncementAdminModule implements FeatureModule {
         () => AnnouncementsCubit(
           watchAnnouncements: sl(),
           sendAnnouncement: sl(),
+          sendTestAnnouncement: sl(),
+          cancelAnnouncement: sl(),
           checkAdminAccess: sl(),
         ),
       );

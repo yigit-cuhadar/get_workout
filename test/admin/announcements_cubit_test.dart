@@ -31,9 +31,13 @@ void main() {
     sentAt: DateTime(2026),
   );
 
-  setUpAll(
-    () => registerFallbackValue((id: 'x', draft: const AnnouncementDraft())),
-  );
+  // 10:30 on a known day, so scheduled times are fixed.
+  final now = DateTime(2026, 11, 24, 10, 30);
+
+  setUpAll(() {
+    registerFallbackValue((id: 'x', draft: const AnnouncementDraft()));
+    registerFallbackValue(const AnnouncementDraft());
+  });
 
   setUp(() async {
     repository = MockRepository();
@@ -42,11 +46,19 @@ void main() {
     when(() => repository.watchHistory()).thenAnswer((_) => history.stream);
     when(() => repository.send(any())).thenAnswer((_) async => const Ok(sent));
     when(() => checkAdminAccess(true)).thenAnswer((_) async => const Ok(true));
+    when(() => repository.sendTest(any())).thenAnswer(
+      (_) async => const Ok(TestAnnouncementResult(delivered: 2, failed: 0)),
+    );
+    when(() => repository.cancel(any()))
+        .thenAnswer((_) async => const Ok(null));
     // No retry fires during a test: [history] can be listened to only once.
     cubit = AnnouncementsCubit(
       watchAnnouncements: WatchAnnouncements(repository),
       sendAnnouncement: SendAnnouncement(repository),
+      sendTestAnnouncement: SendTestAnnouncement(repository),
+      cancelAnnouncement: CancelAnnouncement(repository),
       checkAdminAccess: checkAdminAccess,
+      now: () => now,
       firstRetryDelay: const Duration(hours: 1),
     );
   });
@@ -200,5 +212,93 @@ void main() {
     cubit.setBody('Other body');
     expect(cubit.state.failure, isA<AnnouncementOutcomeUnknownFailure>());
     expect(cubit.state.sent, isNull);
+  });
+
+  group('audience and time', () {
+    test('a scheduled draft starts on the next full hour an hour away and '
+        'goes with its audience', () async {
+      fill();
+      cubit
+        ..setAudience(AnnouncementAudience.premium)
+        ..setScheduled(true);
+      expect(cubit.state.draft.scheduleAt, DateTime(2026, 11, 24, 12));
+      expect(cubit.state.canSend, isTrue);
+      await cubit.send();
+      final draft = requests().single.draft;
+      expect(draft.audience, AnnouncementAudience.premium);
+      expect(draft.scheduleAt, DateTime(2026, 11, 24, 12));
+      // The next draft keeps the audience and goes now again.
+      expect(cubit.state.draft.audience, AnnouncementAudience.premium);
+      expect(cubit.state.draft.scheduleAt, isNull);
+    });
+
+    test('a time under a minute or over 30 days away cannot be sent', () async {
+      fill();
+      cubit.setScheduleAt(now.add(const Duration(seconds: 30)));
+      expect(cubit.state.scheduleProblem, contains('a minute'));
+      expect(cubit.state.canSend, isFalse);
+      cubit.setScheduleAt(now.add(const Duration(days: 31)));
+      expect(cubit.state.scheduleProblem, contains('30 days'));
+      await cubit.send();
+      verifyNever(() => repository.send(any()));
+      cubit.setScheduled(false);
+      expect(cubit.state.scheduleProblem, isNull);
+      expect(cubit.state.canSend, isTrue);
+    });
+  });
+
+  group('test send', () {
+    test('goes to the admin and says how many devices took it', () async {
+      fill();
+      await cubit.sendTest();
+      verify(() => repository.sendTest(any())).called(1);
+      expect(cubit.state.testStatus, AnnouncementTestStatus.sent);
+      expect(cubit.state.testResult?.delivered, 2);
+      // A test is not the announcement: nothing was sent, the form stays.
+      verifyNever(() => repository.send(any()));
+      expect(cubit.state.draft.title, ' New programs ');
+    });
+
+    test('a send clears the last test\'s outcome', () async {
+      fill();
+      await cubit.sendTest();
+      await cubit.send();
+      expect(cubit.state.testStatus, AnnouncementTestStatus.idle);
+      expect(cubit.state.testResult, isNull);
+    });
+
+    test('without a device it says so', () async {
+      when(() => repository.sendTest(any()))
+          .thenAnswer((_) async => const Err(NoTestDevicesFailure()));
+      fill();
+      await cubit.sendTest();
+      expect(cubit.state.testStatus, AnnouncementTestStatus.failed);
+      expect(cubit.state.testFailure, isA<NoTestDevicesFailure>());
+    });
+
+    test('needs a draft that passes', () async {
+      await cubit.sendTest();
+      verifyNever(() => repository.sendTest(any()));
+    });
+  });
+
+  group('cancel', () {
+    test('cancels by id and keeps no failure', () async {
+      await cubit.cancel('r9');
+      verify(() => repository.cancel('r9')).called(1);
+      expect(cubit.state.cancelling, isEmpty);
+      expect(cubit.state.cancelFailure, isNull);
+    });
+
+    test('a request no longer scheduled says why', () async {
+      when(
+        () => repository.cancel(any()),
+      ).thenAnswer((_) async => const Err(AnnouncementNotCancellableFailure()));
+      await cubit.cancel('r9');
+      expect(
+        cubit.state.cancelFailure,
+        isA<AnnouncementNotCancellableFailure>(),
+      );
+    });
   });
 }
