@@ -718,11 +718,13 @@ Open after Group 11 (the per-group build history is in git and the PRs
   password, no device account picker, broken by Chrome's first-run
   screens); open decision for the owner: native Credential Manager
   (recommended) or keep the web flow.
-- Release: version 1.0.0 has TestFlight build 6 attached (builds 1–6 since
-  2026-11-21); the seven store screenshots match it. Before submission:
-  the prod entitlement after the sandbox renewal, restore, renewal and
-  expiry on TestFlight; then submit the version with both subscriptions,
-  manual release.
+- Release: version 1.0.0 has TestFlight build 7 attached (builds 1–7 since
+  2026-11-21). On 2026-11-24 the seven store screenshots were retaken from
+  build 7's code over fresh `tool/seed_demo.dart` data (Programs with the
+  fake store's Premium, the owner's pick) and both subscriptions' review
+  screenshot is the new paywall; both subscriptions are READY_TO_SUBMIT.
+  Before submission: the expiry on TestFlight (Subscription feature); then
+  submit the version with both subscriptions, manual release.
 - App Store listing (2026-11-22, owner's picks; screenshot canvas
   https://claude.ai/artifact/EbzyhQps5J6xmubwaEjA48): name "GetWorkout:
   Gym & Fitness Log", subtitle "Workout tracker & programs", keywords
@@ -2170,8 +2172,12 @@ Decisions (the canvases they were drawn on are deleted):
 - `forge_purchases` has no "unavailable" backend; the app swaps in its own
   repository for release builds without keys. Move it into the package when
   it is next changed.
-- App Check (2026-11-20), monitoring first (owner's decision); enforcement
-  is turned on before release. Live in code: `initFirebase` (forge_firebase)
+- App Check (2026-11-20), monitoring first (owner's decision). On
+  2026-11-24 the owner moved enforcement after release: App Attest is
+  registered for the iOS app on dev and prod (no service enforced), and
+  Storage and the app's callables are enforced once the metrics show nearly
+  every request verified; Firestore waits for the admin web's reCAPTCHA
+  provider. Live in code: `initFirebase` (forge_firebase)
   activates it before any Firestore, Storage or Functions call, with App
   Attest (DeviceCheck below iOS 14) on iOS, Play Integrity on Android and
   the debug provider in debug builds, the simulator included. Profile builds
@@ -2183,10 +2189,9 @@ Decisions (the canvases they were drawn on are deleted):
   (its own bootstrap, no reCAPTCHA key), so `sendAnnouncement` and the
   admin's Firestore writes must stay unenforced until the web gets a
   reCAPTCHA Enterprise provider. Not done yet, per project (dev and prod):
-  - Register the iOS app for App Attest and DeviceCheck (App Check › Apps,
-    or the App Check API's `appAttestConfig` / `deviceCheckConfig` on
-    `projects/<p>/apps/<iosAppId>`; DeviceCheck needs a DeviceCheck key
-    (.p8) of team A8J42TV74R, stored with `tools/secret.sh`).
+  - Register the iOS app for DeviceCheck (below iOS 14 only;
+    `deviceCheckConfig` needs a DeviceCheck key (.p8) of team A8J42TV74R,
+    stored with `tools/secret.sh`).
   - Register the Android app for Play Integrity (`playIntegrityConfig`)
     once the Play Console exists: link the Cloud project in Play Console ›
     App integrity and add the Play app signing SHA-256 to the Android app.
