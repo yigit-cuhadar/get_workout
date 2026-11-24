@@ -377,10 +377,10 @@ class _SearchState extends State<_Search> {
   );
 }
 
-/// The table's columns with their widths, as flex factors.
+/// The table's columns with their widths, as flex factors. The id sits
+/// under the name, so a narrow window keeps every column readable.
 const _columns = [
-  ('Name', 3, ExerciseColumn.name),
-  ('Id', 3, ExerciseColumn.id),
+  ('Name', 4, ExerciseColumn.name),
   ('Status', 1, ExerciseColumn.status),
   ('Main muscles', 2, ExerciseColumn.mainMuscles),
   ('Equipment', 3, ExerciseColumn.equipment),
@@ -421,8 +421,17 @@ class _ExerciseRow extends StatelessWidget {
     return InkWell(
       onTap: () => context.go(AdminRoutes.exercise(record.id)),
       child: _Cells([
-        Text(draft.name, style: Theme.of(context).textTheme.labelLarge),
-        Text(record.id, style: style.data),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          spacing: 2,
+          children: [
+            Text(draft.name, style: Theme.of(context).textTheme.labelLarge),
+            Text(
+              record.id,
+              style: style.data.copyWith(color: style.colors.inkMuted),
+            ),
+          ],
+        ),
         Align(alignment: Alignment.centerLeft, child: StatusTag(draft.status)),
         Text(codeLabels(draft.mainMuscles)),
         Text(

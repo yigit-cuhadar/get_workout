@@ -13,7 +13,6 @@ import '../domain/exercise_draft.dart';
 /// The columns of the table, each of which it can be sorted by.
 enum ExerciseColumn {
   name,
-  id,
   status,
   mainMuscles,
   equipment,
@@ -186,7 +185,6 @@ class ExerciseListState extends Equatable {
     final sorted = switch (sortColumn) {
       null => 0,
       ExerciseColumn.name => by((d) => _text(d.name)),
-      ExerciseColumn.id => by((d) => _text(d.id)),
       ExerciseColumn.status => by((d) => _label(d.status)),
       ExerciseColumn.mainMuscles => by(
         (d) => _label(d.mainMuscles.firstOrNull),
