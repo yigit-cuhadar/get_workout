@@ -57,6 +57,7 @@ import '../features/programs/presentation/program_builder_page.dart';
 import '../features/programs/presentation/program_detail_page.dart';
 import '../features/programs/presentation/programs_page.dart';
 import '../features/progress/presentation/progress_page.dart';
+import '../features/settings/presentation/rest_timer_settings_page.dart';
 import '../features/settings/presentation/warmup_settings_page.dart';
 import '../features/steps/presentation/steps_page.dart';
 import '../features/strength/presentation/exercise_strength_page.dart';
@@ -273,6 +274,9 @@ abstract final class Routes {
 
   /// The automatic warm-up sets, from the settings.
   static const warmupSettings = '$profile/warmups';
+
+  /// The rest timer, from the settings.
+  static const restTimerSettings = '$profile/rest-timer';
 
   /// The user's bars and plates, from the settings.
   static const barPlates = '$profile/bar-plates';
@@ -1026,6 +1030,12 @@ GoRouter buildRouter(
                 path: 'warmups',
                 pageBuilder: (_, state) =>
                     _pushed(state, const WarmupSettingsPage()),
+              ),
+              _route(
+                'rest_timer_settings',
+                path: 'rest-timer',
+                pageBuilder: (_, state) =>
+                    _pushed(state, const RestTimerSettingsPage()),
               ),
               _route(
                 'profile_details',

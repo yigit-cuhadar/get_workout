@@ -70,18 +70,13 @@ class ProfilePage extends StatelessWidget {
                   const _Header(),
                   const PremiumCard(),
                   SettingsGroup(
-                    title: l10n.profileMore,
+                    title: l10n.profileYou,
                     rows: [
                       ListRow(
                         title: l10n.profileDetails,
+                        detail: l10n.profileDetailsDetail,
                         end: ListRowEnd.chevron,
                         onTap: () => context.go(Routes.profileDetails),
-                      ),
-                      ListRow(
-                        title: l10n.profileFeedback,
-                        detail: l10n.profileFeedbackDetail,
-                        end: ListRowEnd.chevron,
-                        onTap: () => context.go(Routes.profileFeedback),
                       ),
                     ],
                   ),

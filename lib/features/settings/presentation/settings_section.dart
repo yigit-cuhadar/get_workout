@@ -8,16 +8,14 @@ import '../../../app/router.dart';
 import '../../../core/widgets/choice_sheet.dart';
 import '../../../core/widgets/settings_group.dart';
 import '../../../l10n/app_localizations.dart';
-import '../../notifications/presentation/notification_permission.dart';
 import '../../programs/presentation/program_text.dart';
-import '../../workout/presentation/rest_timer_cubit.dart';
 import '../domain/user_settings.dart';
 import 'first_weekday.dart';
 import 'settings_cubit.dart';
 import 'warmup_settings_page.dart';
 
-/// The Units and Workout groups of the settings. Needs [SettingsCubit],
-/// [RestTimerCubit] and `NotificationsCubit` above it.
+/// The Units and Workout groups of the settings. Needs [SettingsCubit]
+/// above it.
 class WorkoutSettingsGroups extends StatelessWidget {
   const WorkoutSettingsGroups({super.key});
 
@@ -29,8 +27,6 @@ class WorkoutSettingsGroups extends StatelessWidget {
     );
     final cubit = context.read<SettingsCubit>();
     final rest = settings.restTimer;
-    void updateRest(RestTimerSettings rest) =>
-        cubit.update(settings.copyWith(restTimer: rest));
     return SettingsColumn(
       children: [
         SettingsGroup(
@@ -97,40 +93,15 @@ class WorkoutSettingsGroups extends StatelessWidget {
             ),
             ListRow(
               title: l10n.settingsRestTimer,
-              detail: l10n.settingsRestTimerOn,
-              trailing: ForgeSwitch(
-                value: rest.enabled,
-                onChanged: (on) => updateRest(rest.copyWith(enabled: on)),
-              ),
+              detail: rest.enabled
+                  ? l10n.settingsRestTimerSummary(
+                      l10n.restClock(rest.defaultS),
+                      l10n.restAlertLabel(rest.alert),
+                    )
+                  : l10n.settingsRestTimerOff,
+              end: ListRowEnd.chevron,
+              onTap: () => context.push(Routes.restTimerSettings),
             ),
-            // A rest timer that is off has nothing to set.
-            if (rest.enabled) ...[
-              ChoiceSettingRow(
-                title: l10n.settingsRestDefault,
-                values: ({...RestTimerSettings.choicesS, rest.defaultS}.toList()
-                  ..sort()),
-                selected: rest.defaultS,
-                labelOf: l10n.restClock,
-                onChanged: (seconds) =>
-                    updateRest(rest.copyWith(defaultS: seconds)),
-              ),
-              ListRow(
-                title: l10n.settingsRestNotify,
-                trailing: ForgeSwitch(
-                  value: rest.notify ?? false,
-                  onChanged: (on) => _setNotify(context, on),
-                ),
-              ),
-              ChoiceSettingRow(
-                title: l10n.settingsRestAlert,
-                values: RestAlert.values,
-                selected: rest.alert,
-                labelOf: (alert) => alert == const RestTimerSettings().alert
-                    ? l10n.settingDefault(l10n.restAlertLabel(alert))
-                    : l10n.restAlertLabel(alert),
-                onChanged: (alert) => updateRest(rest.copyWith(alert: alert)),
-              ),
-            ],
             ListRow(
               title: l10n.settingsBarPlates,
               detail: l10n.barPlatesSummary(settings),
@@ -211,18 +182,6 @@ class AppearanceGroup extends StatelessWidget {
       ],
     );
   }
-}
-
-/// Turns the rest notification on, asking for the device's permission as
-/// the reminders do, or off.
-Future<void> _setNotify(BuildContext context, bool on) {
-  final rest = context.read<RestTimerCubit>();
-  if (!on) return rest.setNotify(false);
-  return turnOnNotifying(
-    context,
-    reason: AppLocalizations.of(context).restNotifyPermissionReason,
-    store: () => rest.setNotify(true),
-  );
 }
 
 extension SettingsText on AppLocalizations {
