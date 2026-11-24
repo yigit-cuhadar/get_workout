@@ -1945,6 +1945,11 @@ Decisions (the canvases they were drawn on are deleted):
   unstarted exercise keeps its empty progress line), S1 (values keep
   "(default)"), N1 (reminder switches stay live while notifications are
   off), C3 (the catalogue's count line stays between its sections).
+- Admin fixes after the dev check (owner's picks, 2026-11-24, canvas
+  https://claude.ai/artifact/UizB3AJdRYCzcjfzQJ5pm2): AD3 unchanged (the
+  exercises table keeps its eight columns, wrapping as it does); AD4 A
+  (App settings' cards start under the page header, left-aligned, at the
+  same width).
 
 ## Open questions
 
