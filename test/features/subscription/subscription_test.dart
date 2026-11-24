@@ -106,12 +106,18 @@ void main() {
       expect(l10n.purchaseButton(yearly), 'Start 7-day free trial');
     });
 
-    test('a row has the price per period and the tag', () {
-      final row = l10n.paywallPlan(yearly, PaywallLayout.list, bestValue: true);
+    test('a row has the price per period, a month and the saving', () {
+      final row = l10n.paywallPlan(
+        yearly,
+        PaywallLayout.list,
+        monthly: monthly,
+      );
       expect(row.name, 'Yearly');
       expect(row.price, r'$39.99 / year');
-      expect(row.tag, 'Best value');
-      expect(row.detail, isNull);
+      expect(row.tag, 'Save 58%');
+      expect(row.detail, r'$3.33 a month');
+      // Alone, a yearly row compares with nothing.
+      expect(l10n.paywallPlan(yearly, PaywallLayout.list).tag, isNull);
       expect(row.terms, l10n.purchaseTerms(yearly).join(' '));
     });
 
@@ -119,13 +125,13 @@ void main() {
       final yearlyTile = l10n.paywallPlan(
         yearly,
         PaywallLayout.cards,
-        bestValue: true,
+        monthly: monthly,
       );
       expect(yearlyTile.price, r'$39.99');
       expect(yearlyTile.detail, '7 days free');
       expect(yearlyTile.tag, isNull);
       expect(
-        l10n.paywallPlan(monthly, PaywallLayout.cards, bestValue: false).detail,
+        l10n.paywallPlan(monthly, PaywallLayout.cards).detail,
         'billed monthly',
       );
       const lifetime = Plan(
@@ -135,29 +141,19 @@ void main() {
         priceAmount: 79.99,
         currencyCode: 'USD',
       );
-      expect(
-        l10n
-            .paywallPlan(lifetime, PaywallLayout.cards, bestValue: false)
-            .detail,
-        'once',
-      );
+      expect(l10n.paywallPlan(lifetime, PaywallLayout.cards).detail, 'once');
     });
 
     test('the single plan names its trial and its monthly price', () {
       final single = l10n.paywallPlan(
         yearly,
         PaywallLayout.single,
-        bestValue: true,
+        monthly: monthly,
       );
       expect(single.name, 'Yearly · 7 days free');
       expect(single.price, r'$39.99 / year');
       expect(single.detail, r'That is $3.33 a month.');
-      expect(
-        l10n
-            .paywallPlan(monthly, PaywallLayout.single, bestValue: false)
-            .detail,
-        isNull,
-      );
+      expect(l10n.paywallPlan(monthly, PaywallLayout.single).detail, isNull);
       expect(l10n.paywallSeePlan(monthly), 'See monthly plan');
     });
 
@@ -178,22 +174,22 @@ void main() {
         final row = l10n.paywallPlan(
           lapsed,
           PaywallLayout.list,
-          bestValue: true,
+          monthly: monthly,
         );
         expect(row.offer, 'Welcome back · 1 month free');
         expect(row.price, r'1 month free, then $39.99 / year');
-        expect(row.tag, 'Best value');
+        expect(row.tag, 'Save 58%');
         final tile = l10n.paywallPlan(
           lapsed,
           PaywallLayout.cards,
-          bestValue: true,
+          monthly: monthly,
         );
         expect(tile.detail, '1 month free');
         expect(tile.offer, row.offer);
         final single = l10n.paywallPlan(
           lapsed,
           PaywallLayout.single,
-          bestValue: true,
+          monthly: monthly,
         );
         expect(single.name, 'Yearly · 1 month free');
         expect(single.offer, row.offer);
@@ -205,7 +201,7 @@ void main() {
 
       test('a plan without one is unchanged', () {
         expect(
-          l10n.paywallPlan(yearly, PaywallLayout.list, bestValue: true).offer,
+          l10n.paywallPlan(yearly, PaywallLayout.list, monthly: monthly).offer,
           isNull,
         );
       });
@@ -228,9 +224,7 @@ void main() {
         );
         expect(l10n.purchaseButton(discounted), r'Start for $0.99');
         expect(
-          l10n
-              .paywallPlan(discounted, PaywallLayout.list, bestValue: false)
-              .offer,
+          l10n.paywallPlan(discounted, PaywallLayout.list).offer,
           r'Welcome back · $0.99 for 1 month',
         );
       });
@@ -253,7 +247,7 @@ void main() {
       test('is stated, then the regular price', () {
         expect(l10n.purchaseButton(intro), r'Start for $0.99');
         expect(
-          l10n.paywallPlan(intro, PaywallLayout.cards, bestValue: false).detail,
+          l10n.paywallPlan(intro, PaywallLayout.cards).detail,
           r'$0.99 per month for 3 months',
         );
         final terms = l10n.purchaseTerms(intro);

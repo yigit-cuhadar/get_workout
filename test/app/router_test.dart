@@ -2450,7 +2450,8 @@ void main() {
       expect(find.byType(PaywallPage), findsOneWidget);
       expect(find.text(r'$7.99 / month'), findsOneWidget);
       expect(find.text(r'$39.99 / year'), findsOneWidget);
-      expect(find.text('Best value'), findsOneWidget);
+      expect(find.text('Save 58%'), findsOneWidget);
+      expect(find.text(r'$3.33 a month'), findsOneWidget);
       expect(find.text('Restore purchases'), findsOneWidget);
       expect(find.text('Terms of Use'), findsOneWidget);
       expect(find.text('Privacy Policy'), findsOneWidget);
