@@ -153,7 +153,9 @@ class _PaywallViewState extends State<_PaywallView> {
     final layout = cubit.layout;
     final plans = state.plans;
     final selected = state.selected;
-    final hasMonthly = plans.any((plan) => plan.period == PlanPeriod.monthly);
+    final monthly = plans
+        .where((plan) => plan.period == PlanPeriod.monthly)
+        .firstOrNull;
     // The single layout links to the plan after the shown one.
     final other = layout == PaywallLayout.single && plans.length > 1
         ? plans[(plans.indexOf(selected!) + 1) % plans.length]
@@ -161,7 +163,19 @@ class _PaywallViewState extends State<_PaywallView> {
     return SubscriptionPlans(
       onClose: cubit.closable ? () => _close(null, premium: false) : null,
       title: l10n.premiumTitle,
-      benefits: [l10n.paywallBenefitGenerator, l10n.paywallBenefitPrograms],
+      lead: l10n.paywallLead,
+      benefits: [
+        (
+          icon: ForgeIcons.autoAwesome,
+          title: l10n.paywallBenefitGenerator,
+          detail: l10n.paywallBenefitGeneratorDetail,
+        ),
+        (
+          icon: ForgeIcons.description,
+          title: l10n.paywallBenefitPrograms,
+          detail: l10n.paywallBenefitProgramsDetail,
+        ),
+      ],
       layout: switch (layout) {
         PaywallLayout.list => SubscriptionLayout.rows,
         PaywallLayout.cards => SubscriptionLayout.tiles,
@@ -169,11 +183,7 @@ class _PaywallViewState extends State<_PaywallView> {
       },
       plans: [
         for (final plan in plans)
-          l10n.paywallPlan(
-            plan,
-            layout,
-            bestValue: hasMonthly && plan.period == PlanPeriod.yearly,
-          ),
+          l10n.paywallPlan(plan, layout, monthly: monthly),
       ],
       selected: selected == null ? -1 : plans.indexOf(selected),
       onSelected: (index) => cubit.select(plans[index]),
