@@ -144,7 +144,8 @@ void main() {
     for (final name in ['Program fits', 'Program paid', 'Program far']) {
       expect(find.text(name), findsOneWidget);
     }
-    expect(find.text('Fits you'), findsOneWidget);
+    // The recommended rows carry no Fits you; the section line says why.
+    expect(find.text('Fits you'), findsNothing);
     expect(find.text('Premium'), findsOneWidget);
     double top(String text) => tester.getTopLeft(find.text(text)).dy;
     expect(top('Program fits'), lessThan(top('Program paid')));
