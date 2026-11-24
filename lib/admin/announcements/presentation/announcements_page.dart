@@ -214,8 +214,7 @@ class _Form extends StatelessWidget {
         children: [
           Text(
             'A push notification to every device that allowed '
-            'notifications, for its language. Tapping it opens Today. iOS '
-            'devices get none until push is set up for iOS.',
+            'notifications, for its language. Tapping it opens Today.',
             style: Theme.of(context).textTheme.bodySmall
                 ?.copyWith(color: colors.inkMuted),
           ),
