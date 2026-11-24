@@ -339,7 +339,7 @@ class _VolumeCard extends StatelessWidget {
                           _count(l10n, week.totalSets),
                           _count(l10n, planned),
                         ),
-                  style: ForgeStyle.of(context).data,
+                  style: ForgeStyle.of(context).figures,
                 ),
               ],
             ),
