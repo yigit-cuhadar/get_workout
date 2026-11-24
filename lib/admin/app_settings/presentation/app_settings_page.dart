@@ -272,12 +272,20 @@ class _Settings extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Expanded(
+          // Under the page header, from its left edge.
           child: Align(
-            alignment: Alignment.topCenter,
+            alignment: AlignmentDirectional.topStart,
             child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: maxFormWidth),
+              constraints: const BoxConstraints(
+                maxWidth: maxFormWidth + 2 * Gap.lg,
+              ),
               child: ListView(
-                padding: const EdgeInsets.all(Gap.md),
+                padding: const EdgeInsets.fromLTRB(
+                  Gap.lg,
+                  Gap.md,
+                  Gap.lg,
+                  Gap.md,
+                ),
                 children: [
                   Text(
                     'Remote Config · version ${version.number}, published '
