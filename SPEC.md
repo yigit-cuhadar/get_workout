@@ -2014,10 +2014,17 @@ Decisions (the canvases they were drawn on are deleted):
   in it and Premium unlocked. Its first event reached only dev (before the
   webhook change); prod gets the entitlement at the sandbox renewal. Device builds use the real store only with
   `--dart-define=REVENUECAT_IOS_KEY=...`. On the owner's iPhone both plans
-  load. Not done yet: a completed sandbox purchase (the sandbox tester's
-  sign-in loops after the verification code), then `entitlements/<uid>` on
-  dev, Premium unlocking, the trial, restore, renewal and EXPIRATION. Until
-  then the Subscription feature stays unticked. Android / Play is not set
+  load. Checked on prod with TestFlight build 1.0.0 (7) on 2026-11-24
+  (the owner's choice; the dev sandbox tester's sign-in still loops after
+  the verification code): the monthly plan renews daily and each RENEWAL
+  is applied; a reinstall keeps the guest (Firebase Auth lives in the
+  keychain), so Premium stays without a restore; after deleting the guest,
+  Restore on the new guest showed "Premium restored.", the TRANSFER was
+  applied to the new uid (the #242 webhook, deployed to prod that day) and
+  the generator opened; the cancellation was applied. Still open: the
+  EXPIRATION after the cancellation (due at the next daily renewal), then
+  the feature is ticked. The trial cannot be checked with this Apple ID,
+  which already subscribed in the group. Android / Play is not set
   up (products, service account in RevenueCat, license testers, the
   merged manifest's BILLING permission).
   Win-back (W1, W2, 2026-11-20): promotional offers "1 month free" (free,
