@@ -30,6 +30,10 @@ App-wide decisions only. How each feature behaves is under Feature notes.
 - **Accounts**: starts as an anonymous Firebase user. Linking email, Google or
   Apple keeps the uid and all data. Signing in to an *existing* account from a
   guest session discards the guest data after a warning; there is no merge.
+  Google sign-in uses the platform's own picker: Android Credential
+  Manager's account sheet, iOS Google's sign-in sheet; the admin panel's web
+  build keeps Firebase's popup (owner, 2026-11-24). Closing that sheet
+  returns to the page quietly, with no error (2026-11-24).
 - **Monetization** (owner's picks, 2026-11-19): freemium via RevenueCat with
   a soft paywall. Monthly 7.99 USD and yearly 39.99 USD (regional prices per
   store), a 7-day trial on yearly only. The paywall shows once at the end of
@@ -714,10 +718,6 @@ Open after Group 11 (the per-group build history is in git and the PRs
   access again; the real Apple Health / Health Connect prompts; large text.
 - Not covered by the flow tests: dragging the weight ruler, taking a
   measurement photo.
-- Android: Google sign-in uses Firebase's web flow in Chrome (email and
-  password, no device account picker, broken by Chrome's first-run
-  screens); open decision for the owner: native Credential Manager
-  (recommended) or keep the web flow.
 - Release: version 1.0.0 has TestFlight build 7 attached (builds 1–7 since
   2026-11-21). On 2026-11-24 the seven store screenshots were retaken from
   build 7's code over fresh `tool/seed_demo.dart` data (Programs with the
@@ -1964,13 +1964,17 @@ Decisions (the canvases they were drawn on are deleted):
 
 - Google sign-in is offered next to email (`socialProviders` in
   `lib/app/router.dart`); both providers are enabled in both Firebase
-  projects. It runs through Firebase Auth's browser flow, so iOS returns
-  through the encoded Firebase app id URL schemes in `Info.plist` (dev and
-  prod) and Android needs the signing certificate's SHA registered on the
-  Firebase Android app: the debug keystore's SHA-1 and SHA-256 are
-  registered on dev. Still open: the release (Play app signing) SHA on
-  prod once the Play Console exists, and a completed sign-in on a device
-  (the emulator check stopped at the browser opening).
+  projects. On the phones it is native (forge_auth's `NativeGoogleSignIn`):
+  iOS takes the iOS OAuth client from `iosClientId` in
+  `firebase_options_{dev,prod}.dart` and returns through its reversed id
+  URL schemes in `Info.plist` (dev and prod; `ios/Firebase/*` hold
+  CLIENT_ID/REVERSED_CLIENT_ID since 2026-11-24 but are not bundled).
+  Android's Credential Manager takes the web client from
+  `google-services.json` (both projects have one) and needs the signing
+  certificate's SHA on the Firebase Android app: the debug keystore's SHA-1
+  and SHA-256 are registered on dev. Still open: the release (Play app
+  signing) SHA on prod once the Play Console exists, and a completed native
+  sign-in, guest link and re-sign-in on both platforms.
 - Sign in with Apple is offered first on iOS (Runner.entitlements, team
   A8J42TV74R); Android offers Google alone (Apple there would need a
   Services ID).

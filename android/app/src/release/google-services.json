@@ -12,7 +12,12 @@
           "package_name": "com.getworkout.app"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "451944630151-nho6623ci2slfbtqt96fr2829pdun3m9.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyAs60hthwj61C82fCXqR1Hv2ZvQbIY8eFw"
@@ -20,7 +25,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "451944630151-nho6623ci2slfbtqt96fr2829pdun3m9.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "451944630151-0k0i7qrg9b4f9tgm2e8d191dcak40q1i.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.getworkout.app"
+              }
+            }
+          ]
         }
       }
     }
