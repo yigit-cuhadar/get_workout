@@ -240,7 +240,9 @@ void main() {
   });
 
   testWidgets('the active program: its days, next day, week over a bar in '
-      'weeks, Change days and Stop; Today starts the day', (tester) async {
+      'weeks; Change days and Stop are in its menu; Today starts the day', (
+    tester,
+  ) async {
     await pump(
       tester,
       ready(
@@ -270,17 +272,38 @@ void main() {
     expect(bar.segments, 8);
     expect(bar.value, closeTo((1 + 1 / 2) / 8, 1e-9));
     expect(find.text('Start Lower'), findsNothing);
-    expect(find.text('Change days'), findsOneWidget);
-    expect(find.text('Stop'), findsOneWidget);
+    expect(find.text('Change days'), findsNothing);
+    expect(find.text('Stop'), findsNothing);
+
+    await tester.tap(find.bySemanticsLabel('Program options'));
+    await settle(tester);
+    final rows = tester
+        .widget<ForgeMenu>(find.byType(ForgeMenu))
+        .items
+        .map((item) => item.label);
+    expect(rows, [
+      'Change days',
+      'Edit',
+      'Duplicate',
+      'Stop program',
+      'Delete',
+    ]);
   });
 
-  testWidgets('Stop asks first', (tester) async {
+  testWidgets('Stop program asks first', (tester) async {
     await pump(tester, ready(activeProgram: active));
 
-    await tester.tap(find.text('Stop'));
+    await tester.tap(find.bySemanticsLabel('Program options'));
+    await settle(tester);
+    await tester.tap(find.text('Stop program'));
     await settle(tester);
     expect(find.text('Stop this program?'), findsOneWidget);
-    await tester.tap(find.text('Stop program'));
+    await tester.tap(
+      find.descendant(
+        of: find.byType(ForgeDialog),
+        matching: find.text('Stop program'),
+      ),
+    );
     await settle(tester);
     verify(() => detail.stop()).called(1);
   });

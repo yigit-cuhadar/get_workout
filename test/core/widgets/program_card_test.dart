@@ -62,7 +62,7 @@ void main() {
     expect(find.text('Matches your goal and days'), findsOneWidget);
   });
 
-  testWidgets('a recommended row says why it matches, under no eyebrow', (
+  testWidgets('a row that fits carries Fits you, under no eyebrow', (
     tester,
   ) async {
     var opened = 0;
@@ -72,7 +72,6 @@ void main() {
         name: 'Push Pull Legs',
         facts: '3 days · Intermediate · 8 weeks',
         fits: true,
-        match: 'Matches your goal and level',
         onTap: () => opened++,
       ),
     );
@@ -81,7 +80,6 @@ void main() {
       find.widgetWithText(ForgeTag, 'Fits you'),
     );
     expect(fits.kind, ForgeTagKind.record);
-    expect(find.text('Matches your goal and level'), findsOneWidget);
     expect(find.text('Recommended for you'), findsNothing);
 
     await tester.tap(find.text('Push Pull Legs'));

@@ -206,15 +206,20 @@ class _CatalogueViewState extends State<_CatalogueView> {
       ],
       if (recommended.isNotEmpty) ...[
         SectionLabel(l10n.catalogueRecommended),
+        // Said once for the section, so its rows carry no Fits you tag or
+        // match line.
+        Padding(
+          padding: const EdgeInsets.fromLTRB(Gap.xs, 0, Gap.xs, Gap.sm),
+          child: Text(
+            l10n.catalogueRecommendedLine,
+            style: Theme.of(context).textTheme.bodySmall!
+                .copyWith(color: ForgeStyle.of(context).colors.inkMuted),
+          ),
+        ),
         ListRowCard(
           children: [
             for (final r in recommended)
-              _row(
-                context,
-                state,
-                r.program,
-                match: r.reasons.isEmpty ? null : l10n.matchText(r.reasons),
-              ),
+              _row(context, state, r.program, recommended: true),
           ],
         ),
         const SizedBox(height: Gap.sm),
@@ -267,7 +272,7 @@ class _CatalogueViewState extends State<_CatalogueView> {
     BuildContext context,
     ProgramCatalogueState state,
     CatalogueProgram program, {
-    String? match,
+    bool recommended = false,
     String? facts,
     String? copyId,
   }) {
@@ -280,10 +285,9 @@ class _CatalogueViewState extends State<_CatalogueView> {
           : facts == null
           ? l10n.catalogueOpensCopy
           : l10n.catalogueActiveCopy(facts),
-      fits: state.profile.suits(program),
+      fits: !recommended && state.profile.suits(program),
       active: copyId != null,
       locked: program.premium && state.premium == false,
-      match: match,
       onTap: () => context.go(
         copyId == null
             ? Routes.catalogueProgram(program.id)
