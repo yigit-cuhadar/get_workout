@@ -69,6 +69,7 @@ class DefaultFirebaseOptions {
     messagingSenderId: '451944630151',
     projectId: 'getworkout-prod',
     storageBucket: 'getworkout-prod.firebasestorage.app',
+    iosClientId: '451944630151-0k0i7qrg9b4f9tgm2e8d191dcak40q1i.apps.googleusercontent.com',
     iosBundleId: 'com.getworkout.app',
   );
 }
