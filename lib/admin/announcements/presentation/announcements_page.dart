@@ -592,10 +592,14 @@ class _History extends StatelessWidget {
       for (final a in history)
         if (a.status == AnnouncementStatus.scheduled) a,
     ]..sort((a, b) => a.scheduledFor!.compareTo(b.scheduledFor!));
+    // By the time each row shows, newest first: a scheduled one that went
+    // sits by when it went, not when it was asked for.
+    DateTime shown(Announcement a) =>
+        a.sentAt ?? a.scheduledFor ?? a.requestedAt ?? DateTime(0);
     final past = [
       for (final a in history)
         if (a.status != AnnouncementStatus.scheduled) a,
-    ];
+    ]..sort((a, b) => shown(b).compareTo(shown(a)));
     Widget section(String title) => Padding(
       padding: const EdgeInsets.only(top: Gap.sm, bottom: Gap.xs),
       child: Text(
