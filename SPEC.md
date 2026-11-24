@@ -5233,6 +5233,16 @@ not in a separate dashboard tool.
   - A2 B: sending confirms in a dialog showing the text, with "I
     understand it cannot be recalled" to tick.
   - A3 A: the send's result stays in a box under the form.
+  - Audience, schedule, test and cancel (AN1-AN4, 2026-11-24): a new
+    schedule starts on the next full hour at least an hour away; date
+    and time open the Material pickers; a time under a minute or over 30
+    days away shows why in danger and Schedule stays off; the time is
+    re-checked on Schedule. After a send the form keeps its language and
+    audience and goes back to Now. A test's result has its own box
+    above the send's. Cancel asks first ("Cancel this scheduled
+    announcement?", Keep it / Cancel it in danger); a failed cancel is a
+    snackbar. Scheduled rows sort soonest first; a cancelled row reads
+    "was due …" and stays under Sent with a neutral tag.
 - Asked with the builds (2026-11-21): the app records its devices
   (model, OS, app version, last seen) so a user's page lists them all;
   `paywall_layout` stays editable with a line saying a change also

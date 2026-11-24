@@ -3,10 +3,12 @@ import 'package:forge_ui/forge_ui.dart';
 
 import '../../shell/admin_form.dart';
 import '../domain/announcement.dart';
+import 'announcement_text.dart';
 
-/// Asks before [draft] goes out, showing its text; Send to everyone stays
-/// off until "I understand it cannot be recalled" is ticked. Pops true to
-/// send.
+/// Asks before [draft] goes out, naming its audience and time and showing
+/// its text. One sent now cannot be recalled, so Send stays off until "I
+/// understand it cannot be recalled" is ticked; a scheduled one can be
+/// cancelled until it goes and needs no tick. Pops true to send.
 class SendConfirmDialog extends StatefulWidget {
   const SendConfirmDialog({super.key, required this.draft});
 
@@ -27,8 +29,12 @@ class _SendConfirmDialogState extends State<SendConfirmDialog> {
     final style = ForgeStyle.of(context);
     final text = Theme.of(context).textTheme;
     final draft = widget.draft;
+    final at = draft.scheduleAt;
+    final who = audiencePhrase(draft.audience);
     return AlertDialog(
-      title: const Text('Send this announcement to every user?'),
+      title: Text(
+        at == null ? 'Send to $who now?' : 'Send to $who ${scheduleLabel(at)}?',
+      ),
       content: SizedBox(
         width: maxFormWidth / 2,
         child: Column(
@@ -37,9 +43,13 @@ class _SendConfirmDialogState extends State<SendConfirmDialog> {
           spacing: Gap.md,
           children: [
             Text(
-              'It notifies every user of the "${draft.locale}" app language '
-              'who allowed notifications, right away. A sent announcement '
-              'cannot be recalled or edited.',
+              at == null
+                  ? 'It notifies $who of the "${draft.locale}" app language '
+                        'who allowed notifications, right away. A sent '
+                        'announcement cannot be recalled or edited.'
+                  : 'It notifies $who of the "${draft.locale}" app language '
+                        'who allowed notifications then. You can cancel it in '
+                        'the list until then; once sent it cannot be recalled.',
               style: text.bodyMedium?.copyWith(color: style.colors.inkMuted),
             ),
             DecoratedBox(
@@ -59,23 +69,24 @@ class _SendConfirmDialogState extends State<SendConfirmDialog> {
                 ),
               ),
             ),
-            MergeSemantics(
-              child: InkWell(
-                onTap: _toggle,
-                child: Row(
-                  spacing: Gap.sm,
-                  children: [
-                    ForgeCheckbox(
-                      value: _understood,
-                      onChanged: (_) => _toggle(),
-                    ),
-                    const Expanded(
-                      child: Text('I understand it cannot be recalled'),
-                    ),
-                  ],
+            if (at == null)
+              MergeSemantics(
+                child: InkWell(
+                  onTap: _toggle,
+                  child: Row(
+                    spacing: Gap.sm,
+                    children: [
+                      ForgeCheckbox(
+                        value: _understood,
+                        onChanged: (_) => _toggle(),
+                      ),
+                      const Expanded(
+                        child: Text('I understand it cannot be recalled'),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ),
           ],
         ),
       ),
@@ -86,8 +97,10 @@ class _SendConfirmDialogState extends State<SendConfirmDialog> {
           onPressed: () => Navigator.pop(context, false),
         ),
         ForgeButton(
-          label: 'Send to everyone',
-          onPressed: _understood ? () => Navigator.pop(context, true) : null,
+          label: at == null ? 'Send now' : 'Schedule',
+          onPressed: at != null || _understood
+              ? () => Navigator.pop(context, true)
+              : null,
         ),
       ],
     );

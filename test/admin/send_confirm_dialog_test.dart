@@ -8,7 +8,11 @@ void main() {
   const draft = AnnouncementDraft(title: 'New programs', body: 'Three.');
 
   /// Opens the dialog; [answer] gets what it pops.
-  Future<void> open(WidgetTester tester, List<bool?> answer) async {
+  Future<void> open(
+    WidgetTester tester,
+    List<bool?> answer, {
+    AnnouncementDraft draft = draft,
+  }) async {
     await tester.pumpWidget(
       MaterialApp(
         theme: ForgeTheme.light(),
@@ -17,7 +21,7 @@ void main() {
             onPressed: () async => answer.add(
               await showDialog<bool>(
                 context: context,
-                builder: (_) => const SendConfirmDialog(draft: draft),
+                builder: (_) => SendConfirmDialog(draft: draft),
               ),
             ),
             child: const Text('Open'),
@@ -34,16 +38,17 @@ void main() {
   ) async {
     final answer = <bool?>[];
     await open(tester, answer);
+    expect(find.text('Send to every user now?'), findsOneWidget);
     expect(find.text('New programs'), findsOneWidget);
     expect(find.text('Three.'), findsOneWidget);
 
-    await tester.tap(find.text('Send to everyone'));
+    await tester.tap(find.text('Send now'));
     await tester.pumpAndSettle();
     expect(answer, isEmpty);
 
     await tester.tap(find.text('I understand it cannot be recalled'));
     await tester.pump();
-    await tester.tap(find.text('Send to everyone'));
+    await tester.tap(find.text('Send now'));
     await tester.pumpAndSettle();
     expect(answer, [true]);
   });
@@ -56,5 +61,30 @@ void main() {
     await tester.tap(find.text('Cancel'));
     await tester.pumpAndSettle();
     expect(answer, [false]);
+  });
+
+  testWidgets('a scheduled one names its audience and time and needs no tick', (
+    tester,
+  ) async {
+    final answer = <bool?>[];
+    final at = DateTime(2026, 11, 25, 9);
+    await open(
+      tester,
+      answer,
+      draft: AnnouncementDraft(
+        title: 'New programs',
+        body: 'Three.',
+        audience: AnnouncementAudience.premium,
+        scheduleAt: at,
+      ),
+    );
+    expect(
+      find.textContaining('Send to Premium users on Wed, Nov 25 at 09:00'),
+      findsOneWidget,
+    );
+    expect(find.text('I understand it cannot be recalled'), findsNothing);
+    await tester.tap(find.text('Schedule'));
+    await tester.pumpAndSettle();
+    expect(answer, [true]);
   });
 }
