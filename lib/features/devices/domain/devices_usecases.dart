@@ -3,10 +3,11 @@ import 'package:forge_core/forge_core.dart';
 import 'device_repository.dart';
 
 /// Records this install under the signed-in user [params] (a uid), for
-/// the admin panel's Devices. It writes only when the user, the device's
-/// model, platform, OS version or app version changed since this install
-/// last wrote, or that was [refreshAfter] ago or more, so "last seen" is
-/// right to the day without a write on every launch. True when it wrote.
+/// the admin panel's Devices and test announcements. It writes only when
+/// the user, the device's model, platform, OS version, app version or push
+/// token changed since this install last wrote, or that was [refreshAfter]
+/// ago or more, so "last seen" is right to the day without a write on
+/// every launch. True when it wrote.
 class RecordDevice implements UseCase<bool, String> {
   const RecordDevice(this._repository, this._now);
   final DeviceRepository _repository;
@@ -34,4 +35,11 @@ class RecordDevice implements UseCase<bool, String> {
     }
     return (await _repository.record(params, device, now)).map((_) => true);
   }
+}
+
+class WatchPushTokenChanges {
+  const WatchPushTokenChanges(this._repository);
+  final DeviceRepository _repository;
+
+  Stream<void> call() => _repository.pushTokenChanges();
 }

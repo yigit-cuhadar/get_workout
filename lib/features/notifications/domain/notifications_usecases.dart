@@ -54,11 +54,12 @@ class SyncReminders implements UseCase<void, ReminderSync> {
       _repository.syncReminders(params.kind, params.wanted);
 }
 
-/// Takes the announcements of a language (`announcements_<code>`).
-class FollowAnnouncements implements UseCase<void, String> {
+/// Takes the announcements of a language and Premium state.
+class FollowAnnouncements implements UseCase<void, AnnouncementAudience> {
   const FollowAnnouncements(this._repository);
   final AnnouncementRepository _repository;
 
   @override
-  Future<Result<void>> call(String language) => _repository.follow(language);
+  Future<Result<void>> call(AnnouncementAudience audience) =>
+      _repository.follow(audience);
 }

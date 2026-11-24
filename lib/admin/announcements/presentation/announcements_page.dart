@@ -410,7 +410,7 @@ class _HistoryRow extends StatelessWidget {
         Text(a.body, style: text.bodyMedium?.copyWith(color: colors.inkMuted)),
         Text(
           '${a.locale} · ${dateTimeLabel(a.sentAt ?? a.requestedAt)} · '
-          'by ${a.sentBy}',
+          'by ${a.sender}',
           style: text.bodySmall?.copyWith(color: colors.inkMuted),
         ),
         _StatusTag(a),
@@ -435,6 +435,9 @@ class _StatusTag extends StatelessWidget {
       AnnouncementStatus.failed => ('Failed, not sent', null),
       AnnouncementStatus.sent => ('Sent', ForgeTagKind.record),
       AnnouncementStatus.sending => ('Sending', ForgeTagKind.source),
+      // Placeholders until the scheduling look is picked.
+      AnnouncementStatus.scheduled => ('Scheduled', ForgeTagKind.source),
+      AnnouncementStatus.cancelled => ('Cancelled', ForgeTagKind.neutral),
       AnnouncementStatus.unknown => ('Unknown', ForgeTagKind.neutral),
     };
     if (kind != null) return ForgeTag(label, kind: kind);

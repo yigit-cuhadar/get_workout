@@ -32,10 +32,17 @@ abstract interface class NotificationRepository {
   );
 }
 
-/// Announcements, pushed to every device of one language (an FCM topic).
+/// Which announcements a device takes: those of its [language], and of
+/// the user's Premium state ([premium]; null while unknown).
+typedef AnnouncementAudience = ({String language, bool? premium});
+
+/// Announcements, pushed to the devices of one language, to all of them or
+/// to the free or the Premium ones (FCM topics).
 abstract interface class AnnouncementRepository {
-  /// Receives the announcements in [language] on this device from now on,
-  /// and no longer those of any other. Without a push token (no APNs or
-  /// Play services) it does nothing and succeeds.
-  Future<Result<void>> follow(String language);
+  /// Receives [audience]'s announcements on this device from now on: its
+  /// language's for everyone, and once the Premium state is known, the
+  /// free or the Premium ones, leaving the other and every other
+  /// language's. Without a push token (no APNs or Play services) it does
+  /// nothing and succeeds.
+  Future<Result<void>> follow(AnnouncementAudience audience);
 }

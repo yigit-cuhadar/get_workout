@@ -9,27 +9,34 @@ import 'package:forge_firebase/forge_firebase.dart';
 import '../../../core/device_details.dart';
 import '../domain/device.dart';
 import '../domain/device_repository.dart';
+import 'push_token_source.dart';
 
 /// Records the device in Firestore. The install id is a random one kept in
 /// [_directory] (the app's support directory: it survives updates, not a
-/// reinstall), as is the last record.
+/// reinstall), as is the last record. The push token is FCM's, from
+/// [_pushTokens].
 class FirestoreDeviceRepository implements DeviceRepository {
   FirestoreDeviceRepository(
     this._firestore,
     this._details,
-    this._directory, {
+    this._directory,
+    this._pushTokens, {
     Random? random,
   }) : _random = random ?? Random.secure();
 
   final FirebaseFirestore _firestore;
   final DeviceDetailsSource _details;
   final Future<Directory> Function() _directory;
+  final PushTokenSource _pushTokens;
   final Random _random;
 
   static final _installId = RegExp(r'^[0-9a-f]{32}$');
 
   /// The longest each text field may be, as the rules allow.
   static const maxLength = 100;
+
+  /// The longest push token the rules allow; FCM's are far shorter.
+  static const maxTokenLength = 4096;
 
   Future<File> _file(String name) async =>
       File('${(await _directory()).path}/$name');
@@ -62,6 +69,11 @@ class FirestoreDeviceRepository implements DeviceRepository {
       platform: details.platform,
       osVersion: _cut(details.osVersion),
       appVersion: _cut(details.appVersion),
+      pushToken: switch (await _pushTokens.read()) {
+        final token? when token.isNotEmpty && token.length <= maxTokenLength =>
+          token,
+        _ => null,
+      },
     );
   });
 
@@ -79,6 +91,7 @@ class FirestoreDeviceRepository implements DeviceRepository {
         platform: json['platform']! as String,
         osVersion: json['osVersion']! as String,
         appVersion: json['appVersion']! as String,
+        pushToken: json['pushToken'] as String?,
       ),
     );
   });
@@ -100,6 +113,7 @@ class FirestoreDeviceRepository implements DeviceRepository {
             'platform': device.platform,
             'osVersion': device.osVersion,
             'appVersion': device.appVersion,
+            'pushToken': ?device.pushToken,
           }),
         );
       }, mapper: mapFirebaseError);
@@ -110,6 +124,10 @@ class FirestoreDeviceRepository implements DeviceRepository {
     'platform': device.platform,
     'osVersion': device.osVersion,
     'appVersion': device.appVersion,
+    'pushToken': ?device.pushToken,
     'lastSeenAt': FieldValue.serverTimestamp(),
   };
+
+  @override
+  Stream<void> pushTokenChanges() => _pushTokens.changes();
 }

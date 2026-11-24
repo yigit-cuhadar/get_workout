@@ -1,18 +1,35 @@
+import 'dart:async';
 import 'dart:io';
 import 'dart:math';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:forge_auth/forge_auth.dart';
 import 'package:forge_core/forge_core.dart';
 import 'package:get_workout/core/device_details.dart';
 import 'package:get_workout/features/devices/data/firestore_device_repository.dart';
+import 'package:get_workout/features/devices/data/push_token_source.dart';
 import 'package:get_workout/features/devices/domain/device.dart';
 import 'package:get_workout/features/devices/domain/device_repository.dart';
 import 'package:get_workout/features/devices/domain/devices_usecases.dart';
+import 'package:get_workout/features/devices/presentation/device_session.dart';
 import 'package:mocktail/mocktail.dart';
 
 class MockRepository extends Mock implements DeviceRepository {}
+
+class MockAuthRepository extends Mock implements AuthRepository {}
+
+class _Tokens implements PushTokenSource {
+  String? token;
+  final changed = StreamController<void>.broadcast(sync: true);
+
+  @override
+  Future<String?> read() async => token;
+
+  @override
+  Stream<void> changes() => changed.stream;
+}
 
 class _Details implements DeviceDetailsSource {
   _Details(this.details);
@@ -133,17 +150,20 @@ void main() {
     late Directory directory;
     late FakeFirebaseFirestore firestore;
     late _Details details;
+    late _Tokens tokens;
 
     FirestoreDeviceRepository repository() => FirestoreDeviceRepository(
       firestore,
       details,
       () async => directory,
+      tokens,
       random: Random(1),
     );
 
     setUp(() async {
       directory = await Directory.systemTemp.createTemp('devices');
       firestore = FakeFirebaseFirestore();
+      tokens = _Tokens();
       details = _Details(
         DeviceDetails(
           appVersion: '1.0.0+12',
@@ -164,6 +184,7 @@ void main() {
         firestore,
         details,
         () async => directory,
+        tokens,
         random: Random(2),
       ).current()).valueOrNull!;
       expect(again.installId, first.installId);
@@ -197,6 +218,87 @@ void main() {
         (await repo.lastRecord()).valueOrNull,
         DeviceRecord(uid: 'u1', device: device, at: at),
       );
+    });
+
+    test('writes and remembers the push token once there is one', () async {
+      tokens.token = 'fcm-token';
+      final repo = repository();
+      final device = (await repo.current()).valueOrNull!;
+      expect(device.pushToken, 'fcm-token');
+      final at = DateTime(2026, 11, 24, 9);
+
+      await repo.record('u1', device, at);
+
+      final doc = await firestore
+          .doc('users/u1/devices/${device.installId}')
+          .get();
+      expect(doc.data()!['pushToken'], 'fcm-token');
+      expect(
+        (await repo.lastRecord()).valueOrNull,
+        DeviceRecord(uid: 'u1', device: device, at: at),
+      );
+    });
+
+    test('drops a token the rules would refuse', () async {
+      for (final token in [
+        '',
+        'x' * (FirestoreDeviceRepository.maxTokenLength + 1),
+      ]) {
+        tokens.token = token;
+        expect((await repository().current()).valueOrNull!.pushToken, isNull);
+      }
+    });
+
+    test('passes on token changes', () async {
+      final changes = <void>[];
+      repository().pushTokenChanges().listen(changes.add);
+      tokens.changed.add(null);
+      await pumpEventQueue();
+      expect(changes, hasLength(1));
+    });
+  });
+
+  group('DeviceSession', () {
+    late MockRepository repository;
+    late StreamController<AuthUser?> users;
+    late StreamController<void> tokenChanges;
+
+    setUp(() {
+      repository = MockRepository();
+      users = StreamController.broadcast(sync: true);
+      tokenChanges = StreamController.broadcast(sync: true);
+      final auth = MockAuthRepository();
+      when(auth.watchUser).thenAnswer((_) => users.stream);
+      when(repository.pushTokenChanges).thenAnswer((_) => tokenChanges.stream);
+      when(repository.current).thenAnswer((_) async => const Ok(_iphone));
+      when(repository.lastRecord).thenAnswer((_) async => const Ok(null));
+      when(() => repository.record(any(), any(), any()))
+          .thenAnswer((_) async => const Ok(null));
+      addTearDown(
+        DeviceSession(
+          watchAuthUser: WatchAuthUser(auth),
+          recordDevice: RecordDevice(repository, DateTime.now),
+          watchPushTokenChanges: WatchPushTokenChanges(repository),
+        ).cancel,
+      );
+    });
+
+    test('records for each user and again on a new push token', () async {
+      tokenChanges.add(null);
+      await pumpEventQueue();
+      verifyNever(() => repository.record(any(), any(), any()));
+
+      users.add(const AuthUser(id: 'u1'));
+      await pumpEventQueue();
+      tokenChanges.add(null);
+      await pumpEventQueue();
+      verify(() => repository.record('u1', _iphone, any())).called(2);
+
+      users.add(null);
+      await pumpEventQueue();
+      tokenChanges.add(null);
+      await pumpEventQueue();
+      verifyNever(() => repository.record(any(), any(), any()));
     });
   });
 }

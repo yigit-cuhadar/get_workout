@@ -111,5 +111,81 @@ void main() {
       expect(result.failureOrNull, isA<ValidationFailure>());
       verifyNever(() => repository.send(any()));
     });
+
+    test('keeps the audience and time through trimming', () async {
+      final at = DateTime(2026, 12, 1, 9);
+      await send((
+        id: 'r1',
+        draft: draft.copyWith(
+          audience: AnnouncementAudience.premium,
+          scheduleAt: () => at,
+        ),
+      ));
+      verify(
+        () => repository.send((
+          id: 'r1',
+          draft: AnnouncementDraft(
+            title: 'New programs',
+            body: 'Go.',
+            audience: AnnouncementAudience.premium,
+            scheduleAt: at,
+          ),
+        )),
+      ).called(1);
+    });
+  });
+
+  group('SendTestAnnouncement', () {
+    late MockRepository repository;
+    const tested = TestAnnouncementResult(delivered: 1, failed: 0);
+
+    setUpAll(() => registerFallbackValue(const AnnouncementDraft()));
+
+    setUp(() {
+      repository = MockRepository();
+      when(() => repository.sendTest(any()))
+          .thenAnswer((_) async => const Ok(tested));
+    });
+
+    test('tests the trimmed draft', () async {
+      final result = await SendTestAnnouncement(repository)(draft);
+      expect(result.valueOrNull, tested);
+      verify(
+        () => repository.sendTest(
+          const AnnouncementDraft(title: 'New programs', body: 'Go.'),
+        ),
+      ).called(1);
+    });
+
+    test('a draft with problems is refused without the server', () async {
+      final result = await SendTestAnnouncement(repository)(
+        const AnnouncementDraft(),
+      );
+      expect(result.failureOrNull, isA<ValidationFailure>());
+      verifyNever(() => repository.sendTest(any()));
+    });
+  });
+
+  test('CancelAnnouncement cancels by request id', () async {
+    final repository = MockRepository();
+    when(() => repository.cancel('r1')).thenAnswer((_) async => const Ok(null));
+    expect((await CancelAnnouncement(repository)('r1')).isOk, isTrue);
+    verify(() => repository.cancel('r1')).called(1);
+  });
+
+  test('the sender is the email, or the uid on older rows', () {
+    Announcement record({String? email}) => Announcement(
+      id: 'r1',
+      locale: 'en',
+      title: 'T',
+      body: 'B',
+      status: AnnouncementStatus.sent,
+      sentBy: 'admin1',
+      senderEmail: email,
+      requestedAt: null,
+      sentAt: null,
+    );
+    expect(record(email: 'a@x.com').sender, 'a@x.com');
+    expect(record().sender, 'admin1');
   });
 }

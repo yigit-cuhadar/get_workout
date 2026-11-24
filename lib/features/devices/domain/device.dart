@@ -1,7 +1,7 @@
 import 'package:forge_core/forge_core.dart';
 
 /// This install of the app, as `users/{uid}/devices/{installId}` records
-/// it for the admin panel.
+/// it for the admin panel and the panel's test announcements.
 class Device extends Equatable {
   const Device({
     required this.installId,
@@ -9,6 +9,7 @@ class Device extends Equatable {
     required this.platform,
     required this.osVersion,
     required this.appVersion,
+    this.pushToken,
   });
 
   /// 32 lowercase hex characters, made once per install.
@@ -24,6 +25,10 @@ class Device extends Equatable {
   /// "1.2.0+14": version and build.
   final String appVersion;
 
+  /// FCM's registration token; null while the install has none
+  /// (notifications never allowed, no APNs or Play services).
+  final String? pushToken;
+
   @override
   List<Object?> get props => [
     installId,
@@ -31,6 +36,7 @@ class Device extends Equatable {
     platform,
     osVersion,
     appVersion,
+    pushToken,
   ];
 }
 

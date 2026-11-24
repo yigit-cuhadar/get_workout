@@ -25,6 +25,8 @@ class AnnouncementAdminModule implements FeatureModule {
       )
       ..registerFactory(() => WatchAnnouncements(sl()))
       ..registerFactory(() => SendAnnouncement(sl()))
+      ..registerFactory(() => SendTestAnnouncement(sl()))
+      ..registerFactory(() => CancelAnnouncement(sl()))
       ..registerFactory(
         () => AnnouncementsCubit(
           watchAnnouncements: sl(),

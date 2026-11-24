@@ -13,6 +13,8 @@ import 'package:get_workout/features/notifications/domain/reminder_plan.dart';
 import 'package:get_workout/features/notifications/presentation/notifications_cubit.dart';
 import 'package:get_workout/features/programs/domain/active_program.dart';
 import 'package:get_workout/features/programs/domain/calendar_date.dart';
+import 'package:get_workout/features/programs/domain/premium_status.dart';
+import 'package:get_workout/features/programs/domain/program_usecases.dart';
 import 'package:get_workout/features/programs/domain/program_schedule.dart';
 import 'package:get_workout/features/programs/presentation/program_list_cubit.dart';
 import 'package:get_workout/features/settings/domain/settings_repository.dart';
@@ -36,6 +38,16 @@ class MockAnnouncementRepository extends Mock
     implements AnnouncementRepository {}
 
 class MockBodyRepository extends Mock implements BodyRepository {}
+
+class _Premium implements PremiumStatus {
+  _Premium(this._stream);
+  final Stream<bool?> _stream;
+
+  @override
+  Stream<bool?> watch() => _stream;
+}
+
+const AnnouncementAudience _en = (language: 'en', premium: null);
 
 void main() {
   // Wednesday 11 November 2026, 07:00.
@@ -75,6 +87,7 @@ void main() {
   late StreamController<ProgramListState> programStates;
   late MockNotificationRepository device;
   late MockAnnouncementRepository announcements;
+  late StreamController<bool?> premium;
   late bool allowed;
   late bool asked;
   late bool requestGrants;
@@ -90,7 +103,10 @@ void main() {
   /// While set, every sync waits for it.
   Completer<void>? gate;
 
-  setUpAll(() => registerFallbackValue(ReminderKind.workout));
+  setUpAll(() {
+    registerFallbackValue(ReminderKind.workout);
+    registerFallbackValue(_en);
+  });
 
   setUp(() {
     users = StreamController.broadcast(sync: true);
@@ -103,6 +119,7 @@ void main() {
     when(() => programs.stream).thenAnswer((_) => programStates.stream);
     device = MockNotificationRepository();
     announcements = MockAnnouncementRepository();
+    premium = StreamController.broadcast(sync: true);
     allowed = true;
     asked = true;
     requestGrants = true;
@@ -134,6 +151,7 @@ void main() {
   tearDown(() async {
     await users.close();
     await programStates.close();
+    await premium.close();
     for (final controller in [...settings.values, ...entryChanges.values]) {
       await controller.close();
     }
@@ -168,6 +186,7 @@ void main() {
       watchSettings: WatchSettings(repository),
       watchMeasured: WatchMeasuredDates(body),
       programs: programs,
+      watchPremium: WatchPremium(_Premium(premium.stream)),
       planWorkout: const PlanWorkoutReminders(),
       planMeasurement: const PlanMeasurementReminders(),
       sync: SyncReminders(device),
@@ -576,7 +595,7 @@ void main() {
       await pumpEventQueue();
 
       expect(cubit.state, const NotificationsState(allowed: true, asked: true));
-      verify(() => announcements.follow('en')).called(1);
+      verify(() => announcements.follow(_en)).called(1);
 
       await cubit.resumed();
       verifyNever(() => announcements.follow(any()));
@@ -596,7 +615,8 @@ void main() {
       expect(await cubit.allow(), isTrue);
 
       expect(cubit.state, const NotificationsState(allowed: true, asked: true));
-      verify(() => announcements.follow('en')).called(1);
+      await pumpEventQueue();
+      verify(() => announcements.follow(_en)).called(1);
       await cubit.close();
     });
 
@@ -610,7 +630,8 @@ void main() {
 
       expect(await cubit.allow(), isTrue);
 
-      verify(() => announcements.follow('en')).called(1);
+      await pumpEventQueue();
+      verify(() => announcements.follow(_en)).called(1);
       following.complete(const Ok(null));
       await cubit.close();
     });
@@ -665,7 +686,66 @@ void main() {
 
       await cubit.resumed();
 
-      verify(() => announcements.follow('en')).called(2);
+      verify(() => announcements.follow(_en)).called(2);
+      await cubit.close();
+    });
+
+    test('follows the Premium state as it becomes known and changes', () async {
+      final cubit = build();
+      await pumpEventQueue();
+      verify(() => announcements.follow(_en)).called(1);
+
+      premium.add(false);
+      await pumpEventQueue();
+      premium
+        ..add(false)
+        ..add(true);
+      await pumpEventQueue();
+
+      verifyInOrder([
+        () => announcements.follow((language: 'en', premium: false)),
+        () => announcements.follow((language: 'en', premium: true)),
+      ]);
+      verifyNoMoreInteractions(announcements);
+      await cubit.close();
+    });
+
+    test(
+      'a Premium change follows nothing until notifications are allowed',
+      () async {
+        allowed = false;
+        final cubit = build();
+        await pumpEventQueue();
+
+        premium.add(true);
+        await pumpEventQueue();
+        verifyNever(() => announcements.follow(any()));
+
+        await cubit.allow();
+        await pumpEventQueue();
+        verify(() => announcements.follow((language: 'en', premium: true)))
+            .called(1);
+        await cubit.close();
+      },
+    );
+
+    test('topic changes of two Premium states never overlap', () async {
+      final first = Completer<Result<void>>();
+      var calls = 0;
+      when(() => announcements.follow(any())).thenAnswer((_) {
+        calls++;
+        return calls == 1 ? first.future : Future.value(const Ok(null));
+      });
+      final cubit = build();
+      await pumpEventQueue();
+
+      premium.add(true);
+      await pumpEventQueue();
+      expect(calls, 1, reason: 'waits for the first follow');
+
+      first.complete(const Ok(null));
+      await pumpEventQueue();
+      expect(calls, 2);
       await cubit.close();
     });
   });

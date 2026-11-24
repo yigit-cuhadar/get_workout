@@ -8,9 +8,10 @@ import 'package:forge_firebase/forge_firebase.dart';
 import '../domain/admin_announcement_repository.dart';
 import '../domain/announcement.dart';
 
-/// Sends through the callable `sendAnnouncement`
-/// (`functions/src/send_announcement.ts`) and reads the history it writes
-/// to `announcements`, which only admins may read.
+/// Sends, tests and schedules through the callable `sendAnnouncement`
+/// (`functions/src/send_announcement.ts`), cancels through
+/// `cancelAnnouncement`, and reads the history they write to
+/// `announcements`, which only admins may read.
 class CallableAdminAnnouncementRepository
     implements AdminAnnouncementRepository {
   const CallableAdminAnnouncementRepository(this._functions, this._firestore);
@@ -19,14 +20,19 @@ class CallableAdminAnnouncementRepository
   final FirebaseFirestore _firestore;
 
   static const function = 'sendAnnouncement';
+  static const cancelFunction = 'cancelAnnouncement';
 
-  /// `details.reason` values of the function's refusals.
+  /// `details.reason` values of the functions' refusals.
   static const _notAdmin = 'not-admin';
   static const _inProgress = 'in-progress';
   static const _invalidInput = 'invalid-input';
   static const _requestIdReused = 'request-id-reused';
   static const _sendFailed = 'send-failed';
   static const _outcomeUnknown = 'outcome-unknown';
+  static const _scheduleFailed = 'schedule-failed';
+  static const _cancelled = 'cancelled';
+  static const _noDevices = 'no-devices';
+  static const _notScheduled = 'not-scheduled';
 
   @override
   Stream<List<Announcement>> watchHistory() => _firestore
@@ -50,23 +56,59 @@ class CallableAdminAnnouncementRepository
         ),
       );
 
+  /// The draft as the function takes it.
+  static Map<String, Object?> _input(AnnouncementDraft draft) => {
+    'locale': draft.locale,
+    'title': draft.title,
+    'body': draft.body,
+    'audience': draft.audience.name,
+  };
+
+  Future<Map<Object?, Object?>> _call(
+    String name,
+    Map<String, Object?> input,
+  ) async {
+    final result = await _functions.httpsCallable(name).call<Object?>(input);
+    final data = result.data;
+    if (data is! Map) throw UnknownFailure('unexpected result: $data');
+    return data;
+  }
+
   @override
   Future<Result<SentAnnouncement>> send(AnnouncementRequest request) =>
       guard(() async {
-        final draft = request.draft;
-        final result = await _functions.httpsCallable(function).call<Object?>({
+        final scheduleAt = request.draft.scheduleAt;
+        final data = await _call(function, {
           'requestId': request.id,
-          'locale': draft.locale,
-          'title': draft.title,
-          'body': draft.body,
+          ..._input(request.draft),
+          'scheduleAt': ?scheduleAt?.millisecondsSinceEpoch,
         });
-        final data = result.data;
-        if (data is! Map) throw UnknownFailure('unexpected result: $data');
         return SentAnnouncement(
           messageId: '${data['messageId'] ?? ''}',
           alreadySent: data['alreadySent'] == true,
+          scheduledFor: switch (data['scheduledFor']) {
+            final num millis => DateTime.fromMillisecondsSinceEpoch(
+              millis.toInt(),
+            ),
+            _ => null,
+          },
         );
       }, mapper: _mapError);
+
+  @override
+  Future<Result<TestAnnouncementResult>> sendTest(AnnouncementDraft draft) =>
+      guard(() async {
+        final data = await _call(function, {..._input(draft), 'test': true});
+        return TestAnnouncementResult(
+          delivered: (data['delivered'] as num?)?.toInt() ?? 0,
+          failed: (data['failed'] as num?)?.toInt() ?? 0,
+        );
+      }, mapper: _mapError);
+
+  @override
+  Future<Result<void>> cancel(String id) => guard(() async {
+    await _call(cancelFunction, {'id': id});
+  }, mapper: _mapError);
 
   static Failure? _mapError(Object error) {
     if (error is! FirebaseFunctionsException) return mapFirebaseError(error);
@@ -88,6 +130,10 @@ class CallableAdminAnnouncementRepository
       (_, _invalidInput || _requestIdReused) => ValidationFailure(message),
       (_, _sendFailed) => AnnouncementNotSentFailure(message, error),
       (_, _outcomeUnknown) => AnnouncementOutcomeUnknownFailure(message, error),
+      (_, _scheduleFailed) => AnnouncementNotScheduledFailure(message, error),
+      (_, _cancelled) => AnnouncementCancelledFailure(message, error),
+      (_, _noDevices) => NoTestDevicesFailure(message, error),
+      (_, _notScheduled) => AnnouncementNotCancellableFailure(message, error),
       // Not deployed (404), or deployed without permission to call it.
       ('not-found' || 'permission-denied', _) =>
         AnnouncementsUnavailableFailure(message, error),
@@ -102,12 +148,24 @@ class CallableAdminAnnouncementRepository
         title: '${data['title'] ?? ''}',
         body: '${data['body'] ?? ''}',
         status: switch (data['status']) {
+          'scheduled' => AnnouncementStatus.scheduled,
           'sending' => AnnouncementStatus.sending,
           'sent' => AnnouncementStatus.sent,
           'failed' => AnnouncementStatus.failed,
+          'cancelled' => AnnouncementStatus.cancelled,
           _ => AnnouncementStatus.unknown,
         },
+        audience: switch (data['audience']) {
+          'free' => AnnouncementAudience.free,
+          'premium' => AnnouncementAudience.premium,
+          _ => AnnouncementAudience.everyone,
+        },
+        scheduledFor: _date(data['scheduledFor']),
         sentBy: '${data['sentBy'] ?? ''}',
+        senderEmail: switch (data['senderEmail']) {
+          final String email when email.isNotEmpty => email,
+          _ => null,
+        },
         requestedAt: _date(data['requestedAt']),
         sentAt: _date(data['sentAt']),
       );
