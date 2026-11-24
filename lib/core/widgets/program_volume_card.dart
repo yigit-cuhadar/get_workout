@@ -91,7 +91,7 @@ class ProgramVolumeCard extends StatelessWidget {
                   ),
                   Text(
                     l10n.setsText(total.toDouble()),
-                    style: style.data.copyWith(color: style.colors.inkMuted),
+                    style: style.figures.copyWith(color: style.colors.inkMuted),
                   ),
                   ForgeIcon(
                     ForgeIcons.chevronRight,
