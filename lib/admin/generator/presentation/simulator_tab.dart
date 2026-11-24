@@ -430,36 +430,155 @@ class _Program extends StatelessWidget {
           ),
         _DayTabs(key: ValueKey(run), run: run),
         _DayTable(run),
-        Text(
-          'Weekly sets: ${_weeklyLine(run, targets: loadedVersion == null)}',
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(color: muted),
-        ),
+        _WeeklySets(run, targets: loadedVersion == null),
       ],
     );
   }
 }
 
-/// Each targeted muscle as "muscle sets / target", then the other muscles
-/// the week trains; without [targets] (unknown rules) every muscle the week
-/// trains with its sets alone.
-String _weeklyLine(SimulationRun run, {required bool targets}) {
-  final simulation = run.simulation;
-  final targeted = [
-    if (targets)
+/// The week's sets per targeted muscle as bars, two columns, each with a
+/// tick at that muscle's own target and drawn quieter while under it; then
+/// the other muscles the week trains on one line. Without [targets]
+/// (unknown rules) every trained muscle is a bar with no tick.
+class _WeeklySets extends StatelessWidget {
+  const _WeeklySets(this.run, {required this.targets});
+
+  final SimulationRun run;
+  final bool targets;
+
+  static const double _barHeight = 10;
+  static const double _tickHeight = 18;
+
+  @override
+  Widget build(BuildContext context) {
+    final style = ForgeStyle.of(context);
+    final colors = style.colors;
+    final text = Theme.of(context).textTheme;
+    final small = text.bodySmall!.copyWith(color: colors.inkMuted);
+    final simulation = run.simulation;
+    double sets(Muscle muscle) => simulation.weeklySets[muscle] ?? 0;
+    final barred = [
       for (final muscle in Muscle.values)
-        if (simulation.program.targeted.contains(muscle)) muscle,
-  ];
-  final aims = weeklyTargets(run.rules, run.request.answers, targeted);
-  String sets(Muscle muscle) =>
-      _number.format(simulation.weeklySets[muscle] ?? 0);
-  return [
-    for (final muscle in targeted)
-      '${_muscle(muscle)} ${sets(muscle)} / ${_number.format(aims[muscle])}',
-    for (final muscle in Muscle.values)
-      if (!targeted.contains(muscle) &&
-          (simulation.weeklySets[muscle] ?? 0) > 0)
-        '${_muscle(muscle)} ${sets(muscle)}',
-  ].join(' · ');
+        if (targets
+            ? simulation.program.targeted.contains(muscle)
+            : sets(muscle) > 0)
+          muscle,
+    ];
+    final aims = targets
+        ? weeklyTargets(run.rules, run.request.answers, barred)
+        : const <Muscle, double>{};
+    final others = [
+      for (final muscle in Muscle.values)
+        if (!barred.contains(muscle) && sets(muscle) > 0) muscle,
+    ];
+    final scale = [
+      1.0,
+      for (final muscle in barred) ...[sets(muscle), aims[muscle] ?? 0],
+    ].reduce((a, b) => a > b ? a : b);
+
+    Widget bar(Muscle muscle) {
+      final aim = aims[muscle];
+      final under = aim != null && sets(muscle) < aim;
+      return Row(
+        spacing: Gap.sm,
+        children: [
+          SizedBox(
+            width: 96,
+            child: Text(_muscle(muscle), overflow: TextOverflow.ellipsis),
+          ),
+          Expanded(
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final width = constraints.maxWidth;
+                return SizedBox(
+                  height: _tickHeight,
+                  child: Stack(
+                    alignment: AlignmentDirectional.centerStart,
+                    children: [
+                      Container(
+                        height: _barHeight,
+                        decoration: BoxDecoration(
+                          color: colors.surfaceSunken,
+                          borderRadius: BorderRadius.circular(_barHeight / 2),
+                        ),
+                      ),
+                      Container(
+                        width: width * sets(muscle) / scale,
+                        height: _barHeight,
+                        decoration: BoxDecoration(
+                          color: under ? colors.lineStrong : colors.ink,
+                          borderRadius: BorderRadius.circular(_barHeight / 2),
+                        ),
+                      ),
+                      if (aim != null)
+                        PositionedDirectional(
+                          start: (width * aim / scale - 1).clamp(0, width - 2),
+                          child: Container(
+                            width: 2,
+                            height: _tickHeight,
+                            color: colors.success,
+                          ),
+                        ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ),
+          SizedBox(
+            width: 64,
+            child: Text(
+              aim == null
+                  ? _number.format(sets(muscle))
+                  : '${_number.format(sets(muscle))} / ${_number.format(aim)}',
+              textAlign: TextAlign.end,
+              style: style.data.copyWith(color: colors.inkMuted),
+            ),
+          ),
+        ],
+      );
+    }
+
+    final half = (barred.length / 2).ceil();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      spacing: Gap.sm,
+      children: [
+        const Divider(height: Gap.md),
+        Wrap(
+          spacing: Gap.md,
+          alignment: WrapAlignment.spaceBetween,
+          children: [
+            Text('Weekly sets', style: text.titleSmall),
+            if (targets)
+              Text(
+                'bar: sets in the week · green tick: the muscle\'s target · '
+                'grey: under target',
+                style: small,
+              ),
+          ],
+        ),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          spacing: Gap.lg,
+          children: [
+            for (final column in [barred.take(half), barred.skip(half)])
+              Expanded(
+                child: Column(
+                  spacing: Gap.xs,
+                  children: [for (final muscle in column) bar(muscle)],
+                ),
+              ),
+          ],
+        ),
+        if (others.isNotEmpty)
+          Text(
+            'Also trained: ${[for (final muscle in others) '${_muscle(muscle)} ${_number.format(sets(muscle))}'].join(' · ')}',
+            style: small,
+          ),
+      ],
+    );
+  }
 }
 
 /// "Upper A · 53 min" per day, as the engine counts it ([dayMinutes]).

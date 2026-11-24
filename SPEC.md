@@ -1959,6 +1959,22 @@ Decisions (the canvases they were drawn on are deleted):
   exercises table keeps its eight columns, wrapping as it does); AD4 A
   (App settings' cards start under the page header, left-aligned, at the
   same width).
+- Admin announcements and simulator (owner's picks, 2026-11-24, canvas
+  https://claude.ai/artifact/6Jg7vHHUGovZYiCsuiShJq): AN1 A (the compose
+  form opens with Audience as an Everyone / Free / Premium segmented
+  control; "Send me a test" is an outline button at the bottom left,
+  "Send now…" at the right); AN2 A (a "When" Now / Schedule control;
+  Schedule shows date and time in the admin's local time with the
+  time-zone name, the button reads "Schedule…"); AN3 A (the confirm's
+  title names the audience and the time, "Send to Premium users on Wed,
+  Nov 25 at 09:00?"; a scheduled one says it can be cancelled until then
+  and has no recall checkbox, a send-now keeps it); AN4 A (the history
+  card has a "Scheduled" section first, each row with its info tag and
+  Cancel, then "Sent"; every row reads audience · language · time · by
+  the sender's email); GS1 A (the simulator's weekly sets are two
+  columns of bars, each with a success-coloured tick at the muscle's own
+  target and a quieter bar while under it; muscles without a target on
+  one "Also trained" line).
 
 ## Open questions
 
