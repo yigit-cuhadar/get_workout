@@ -5,6 +5,7 @@ import 'package:forge_ui/forge_ui.dart';
 
 import '../../../features/exercises/domain/content_rules.dart';
 import '../../shell/admin_text.dart';
+import '../../shell/page_header.dart';
 import '../domain/announcement.dart';
 import 'announcements_cubit.dart';
 import 'send_confirm_dialog.dart';
@@ -143,20 +144,17 @@ class _AnnouncementsView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = ForgeStyle.of(context).colors;
     return Scaffold(
-      appBar: AppBar(title: const Text('Announcements')),
       body: Align(
         alignment: Alignment.topCenter,
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: _maxPageWidth),
           child: ListView(
-            padding: const EdgeInsets.all(Gap.md),
+            padding: const EdgeInsets.all(Gap.lg),
             children: [
-              Text(
-                'Push notifications to every user who allowed them',
-                style: Theme.of(context).textTheme.bodyMedium
-                    ?.copyWith(color: colors.inkMuted),
+              const PageHeader(
+                title: 'Announcements',
+                subtitle: 'Push notifications to every user who allowed them',
               ),
               const SizedBox(height: Gap.md),
               LayoutBuilder(

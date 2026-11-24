@@ -21,13 +21,14 @@ extension SubscriptionText on AppLocalizations {
     PlanPeriod.lifetime => paywallOnce(plan.price),
   };
 
-  /// [plan] worded for the paywall's [layout]; [bestValue] tags a row. A
-  /// win-back offer (W2) tags the plan in every layout and takes the
-  /// trial's place in its lines.
+  /// [plan] worded for the paywall's [layout]. Beside a [monthly] plan, a
+  /// yearly row says what it costs a month and what it saves. A win-back
+  /// offer (W2) tags the plan in every layout and takes the trial's place
+  /// in its lines.
   SubscriptionPlan paywallPlan(
     Plan plan,
     PaywallLayout layout, {
-    required bool bestValue,
+    Plan? monthly,
   }) {
     final terms = purchaseTerms(plan).join(' ');
     final trial = plan.trial;
@@ -40,7 +41,14 @@ extension SubscriptionText on AppLocalizations {
             ? _planPriceShort(plan)
             : paywallThen(winBack, _planPriceShort(plan)),
         terms: terms,
-        tag: bestValue ? paywallBestValue : null,
+        detail: plan.period == PlanPeriod.yearly
+            ? paywallAMonth(_perMonth(plan))
+            : null,
+        tag: switch ((plan.period, monthly)) {
+          (PlanPeriod.yearly, final monthly?) when _saving(plan, monthly) > 0 =>
+            paywallSave(_saving(plan, monthly)),
+          _ => null,
+        },
         offer: offer,
       ),
       PaywallLayout.cards => SubscriptionPlan(
@@ -73,16 +81,22 @@ extension SubscriptionText on AppLocalizations {
         price: _planPriceShort(plan),
         terms: terms,
         detail: plan.period == PlanPeriod.yearly
-            ? paywallMonthlyEquivalent(
-                NumberFormat.simpleCurrency(
-                  locale: localeName,
-                  name: plan.currencyCode,
-                ).format(plan.priceAmount / 12),
-              )
+            ? paywallMonthlyEquivalent(_perMonth(plan))
             : null,
       ),
     };
   }
+
+  /// A yearly [plan]'s price a month, in its currency: `$3.33`.
+  String _perMonth(Plan plan) => NumberFormat.simpleCurrency(
+    locale: localeName,
+    name: plan.currencyCode,
+  ).format(plan.priceAmount / 12);
+
+  /// How much a yearly [plan] saves against twelve months of [monthly], in
+  /// whole percent.
+  int _saving(Plan plan, Plan monthly) =>
+      ((1 - plan.priceAmount / (monthly.priceAmount * 12)) * 100).floor();
 
   /// The single layout's link to [plan]: `See monthly plan`.
   String paywallSeePlan(Plan plan) => switch (plan.period) {

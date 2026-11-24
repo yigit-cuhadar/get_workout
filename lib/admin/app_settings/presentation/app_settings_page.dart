@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 
 import '../../shell/admin_form.dart';
 import '../../shell/admin_text.dart';
+import '../../shell/page_header.dart';
 import '../../shell/publishing.dart';
 import '../domain/app_settings.dart';
 import 'app_settings_cubit.dart';
@@ -172,18 +173,6 @@ class _AppSettingsView extends StatelessWidget {
       (AppSettingsCubit cubit) => cubit.state.historyOpen,
     );
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('App settings'),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: Gap.md),
-            child: OutlinedButton(
-              onPressed: historyOpen ? cubit.closeHistory : cubit.openHistory,
-              child: const Text('History'),
-            ),
-          ),
-        ],
-      ),
       body: BlocListener<AppSettingsCubit, AppSettingsState>(
         listenWhen: (previous, state) =>
             previous.publishStatus != state.publishStatus,
@@ -219,7 +208,34 @@ class _AppSettingsView extends StatelessWidget {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Expanded(child: _Settings()),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(
+                      Gap.lg,
+                      Gap.lg,
+                      Gap.lg,
+                      0,
+                    ),
+                    child: PageHeader(
+                      title: 'App settings',
+                      subtitle: 'Remote Config every app fetches',
+                      trailing: [
+                        OutlinedButton(
+                          onPressed: historyOpen
+                              ? cubit.closeHistory
+                              : cubit.openHistory,
+                          child: const Text('History'),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Expanded(child: _Settings()),
+                ],
+              ),
+            ),
             if (historyOpen) ...[
               const VerticalDivider(width: 1),
               const SizedBox(width: historyWidth, child: _History()),

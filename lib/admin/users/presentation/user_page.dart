@@ -6,6 +6,7 @@ import 'package:forge_ui/forge_ui.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../admin_router.dart';
+import '../../shell/page_header.dart';
 import '../domain/admin_user.dart';
 import 'user_cubit.dart';
 import 'users_cubit.dart';
@@ -76,7 +77,6 @@ class _UserView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Users')),
       body: BlocConsumer<UserCubit, UserState>(
         listenWhen: (previous, current) =>
             previous.running != null && current.running == null,
@@ -86,20 +86,8 @@ class _UserView extends StatelessWidget {
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: usersPageWidth),
             child: ListView(
-              padding: const EdgeInsets.all(Gap.md),
-              children: [
-                Align(
-                  alignment: AlignmentDirectional.centerStart,
-                  child: ForgeButton(
-                    label: 'Users',
-                    variant: ForgeButtonVariant.text,
-                    leadingIcon: ForgeIcons.chevronLeft,
-                    onPressed: () => context.go(AdminRoutes.users),
-                  ),
-                ),
-                const SizedBox(height: Gap.sm),
-                ..._content(context, state),
-              ],
+              padding: const EdgeInsets.all(Gap.lg),
+              children: _content(context, state),
             ),
           ),
         ),
@@ -110,9 +98,16 @@ class _UserView extends StatelessWidget {
   List<Widget> _content(BuildContext context, UserState state) {
     final user = state.user;
     final failure = state.failure;
+    PageHeader header(String title, String subtitle) => PageHeader(
+      title: title,
+      subtitle: subtitle,
+      back: ('Users', () => context.go(AdminRoutes.users)),
+    );
     if (user == null) {
-      if (failure == null) return const [LoadingView()];
+      final loading = header('User', 'Loading');
+      if (failure == null) return [loading, const LoadingView()];
       return [
+        header('User', "Couldn't load"),
         ErrorView(
           title: 'The user did not load',
           message: userFailureText(failure),
@@ -121,14 +116,11 @@ class _UserView extends StatelessWidget {
         ),
       ];
     }
-    final text = Theme.of(context).textTheme;
-    final muted = ForgeStyle.of(context).colors.inkMuted;
     return [
-      Text(user.email ?? 'Guest, no email', style: text.headlineSmall),
-      Text(
+      header(
+        user.email ?? 'Guest, no email',
         'Signed up ${userDateLabel(user.signedUp)} · '
         'last workout ${userDateLabel(user.lastWorkout)}',
-        style: text.bodyMedium?.copyWith(color: muted),
       ),
       const SizedBox(height: Gap.md),
       if (failure != null) ...[

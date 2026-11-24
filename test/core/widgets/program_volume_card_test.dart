@@ -31,7 +31,7 @@ void main() {
     expect(find.text('96 sets'), findsOneWidget);
   });
 
-  testWidgets('the five busiest muscles as bands, ties in order', (
+  testWidgets('the busiest major muscles as bands, in body order', (
     tester,
   ) async {
     await show(tester);
@@ -39,7 +39,8 @@ void main() {
     final bands = tester.widgetList<VolumeBand>(find.byType(VolumeBand));
     expect(
       [for (final band in bands) band.muscle],
-      [Muscle.frontDelt, Muscle.pec, Muscle.lat, Muscle.triceps, Muscle.biceps],
+      // Triceps and biceps are small muscles: the full list has them.
+      [Muscle.pec, Muscle.lat, Muscle.frontDelt],
     );
     expect({for (final band in bands) band.scale}, {25});
   });

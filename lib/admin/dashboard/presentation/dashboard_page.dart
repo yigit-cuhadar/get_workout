@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:forge_core/forge_core.dart';
 import 'package:forge_ui/forge_ui.dart';
 
+import '../../shell/page_header.dart';
 import '../domain/dashboard.dart';
 import 'dashboard_cubit.dart';
 import 'dashboard_format.dart';
@@ -41,14 +42,13 @@ class _DashboardView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Dashboard')),
       body: BlocBuilder<DashboardCubit, DashboardState>(
         builder: (context, state) => Align(
           alignment: Alignment.topCenter,
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: _maxPageWidth),
             child: ListView(
-              padding: const EdgeInsets.all(Gap.md),
+              padding: const EdgeInsets.all(Gap.lg),
               children: [
                 _StatusLine(state: state, env: env),
                 const SizedBox(height: Gap.md),
@@ -139,7 +139,6 @@ class _StatusLine extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final text = Theme.of(context).textTheme;
     final error = TextStyle(color: Theme.of(context).colorScheme.error);
     final status = state.data?.status;
     final lastDay = status?.lastDay;
@@ -157,16 +156,13 @@ class _StatusLine extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          children: [
-            Expanded(
-              child: Text(
-                '${env.isProd ? 'Production' : 'Development'} · updated '
-                'nightly · last day: '
-                '${lastDay == null ? 'none yet' : dayLabel(lastDay)}',
-                style: text.bodyMedium,
-              ),
-            ),
+        PageHeader(
+          title: 'Dashboard',
+          subtitle:
+              '${env.isProd ? 'Production' : 'Development'} · updated '
+              'nightly · last day: '
+              '${lastDay == null ? 'none yet' : dayLabel(lastDay)}',
+          trailing: [
             TextButton(
               onPressed: state.refreshing
                   ? null

@@ -627,7 +627,7 @@ class FeaturedCard extends StatelessWidget {
           children: [
             Text(label, style: text.bodySmall!.copyWith(color: ink)),
             if (progressDetail case final detail?)
-              Text(detail, style: style.data.copyWith(color: quiet)),
+              Text(detail, style: style.figures.copyWith(color: quiet)),
           ],
         ),
       if (progress != null)
@@ -867,7 +867,7 @@ class FeaturedCard extends StatelessWidget {
     final label = Text(line.text, style: text.bodyMedium!.copyWith(color: ink));
     final trailing = [
       if (line.data case final data?)
-        Text(data, style: style.data.copyWith(color: quiet)),
+        Text(data, style: style.figures.copyWith(color: quiet)),
       if (line.status case final status?)
         Text(
           status,

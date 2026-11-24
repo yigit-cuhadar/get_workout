@@ -1,14 +1,17 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:forge_ui/forge_ui.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../app/legal_links.dart';
+import '../../../app/router.dart';
 import '../../../core/open_link.dart';
 import '../../../core/widgets/settings_group.dart';
 import '../../../l10n/app_localizations.dart';
 import 'consent_cubit.dart';
 
-/// The Privacy group: the analytics consent switch and the privacy policy.
+/// Profile's last group, Help and privacy: Help & feedback, the analytics
+/// consent switch and the privacy policy.
 /// Needs [ConsentCubit] above it.
 class PrivacySection extends StatelessWidget {
   const PrivacySection({super.key});
@@ -25,8 +28,14 @@ class PrivacySection extends StatelessWidget {
         error: true,
       ),
       builder: (context, state) => SettingsGroup(
-        title: l10n.privacyHeader,
+        title: l10n.helpPrivacyHeader,
         rows: [
+          ListRow(
+            title: l10n.profileFeedback,
+            detail: l10n.profileFeedbackDetail,
+            end: ListRowEnd.chevron,
+            onTap: () => context.go(Routes.profileFeedback),
+          ),
           ListRow(
             title: l10n.privacyShareUsage,
             detail: l10n.privacyShareUsageInfo,

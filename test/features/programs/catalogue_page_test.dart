@@ -132,18 +132,20 @@ void main() {
     await pump(tester, ready());
 
     expect(find.text('Recommended for you'), findsOneWidget);
+    // Why they are recommended is said once, not on each row.
     expect(
-      find.text('Matches your goal, level, days per week and equipment'),
+      find.text('Picked for your goal, level, days per week and equipment'),
       findsOneWidget,
     );
-    expect(find.text('Matches your equipment'), findsOneWidget);
+    expect(find.textContaining('Matches your'), findsNothing);
     expect(find.text('3 programs · 2 free'), findsOneWidget);
     expect(find.text('All programs'), findsOneWidget);
     // Each program once: the two recommended are not repeated below.
     for (final name in ['Program fits', 'Program paid', 'Program far']) {
       expect(find.text(name), findsOneWidget);
     }
-    expect(find.text('Fits you'), findsOneWidget);
+    // The recommended rows carry no Fits you; the section line says why.
+    expect(find.text('Fits you'), findsNothing);
     expect(find.text('Premium'), findsOneWidget);
     double top(String text) => tester.getTopLeft(find.text(text)).dy;
     expect(top('Program fits'), lessThan(top('Program paid')));

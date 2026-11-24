@@ -88,27 +88,27 @@ Widget programRecommendedRows(BuildContext context) => Column(
       padding: EdgeInsets.fromLTRB(Gap.md, Gap.md, Gap.md, 0),
       child: SectionLabel('Recommended for you'),
     ),
+    const Padding(
+      padding: EdgeInsets.fromLTRB(Gap.md, 0, Gap.md, 0),
+      child: Text('Picked for your goal, level, days per week and equipment'),
+    ),
     _page([
       ListRowCard(
         children: [
           ProgramCard.row(
             name: 'Upper/Lower 4-Day',
             facts: '4 days · Intermediate · 10 weeks',
-            fits: true,
-            match: 'Matches your goal, level, days and equipment',
             onTap: () {},
           ),
           ProgramCard.row(
             name: 'Glute Focus 4-Day',
             facts: '4 days · Intermediate · 10 weeks',
             locked: true,
-            match: 'Matches your level, days and equipment',
             onTap: () {},
           ),
           ProgramCard.row(
             name: 'Full Body Basics',
             facts: '3 days · Beginner · 6 weeks',
-            match: 'Matches your equipment',
             onTap: () {},
           ),
         ],
