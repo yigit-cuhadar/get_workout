@@ -10,6 +10,7 @@ import 'package:get_workout/features/notifications/presentation/reminder_setting
 import 'package:get_workout/features/profile/presentation/profile_page.dart';
 import 'package:get_workout/features/settings/domain/user_settings.dart';
 import 'package:get_workout/features/settings/presentation/settings_cubit.dart';
+import 'package:get_workout/features/settings/presentation/rest_timer_settings_page.dart';
 import 'package:get_workout/features/settings/presentation/settings_section.dart';
 import 'package:get_workout/features/subscription/presentation/premium_card.dart';
 import 'package:get_workout/features/subscription/presentation/premium_trial_cubit.dart';
@@ -72,20 +73,21 @@ void main() {
           BlocProvider<NotificationsCubit>.value(value: notifications),
           BlocProvider<RestTimerCubit>.value(value: rest),
         ],
-        child: SingleChildScrollView(child: child),
+        child: child is RestTimerSettingsPage
+            ? child
+            : SingleChildScrollView(child: child),
       ),
     );
   }
 
   group('Workout settings', () {
-    testWidgets('show the rest rows only while the rest timer is on', (
+    testWidgets('the Workout group sums the rest timer up in one row', (
       tester,
     ) async {
       await pump(tester, const WorkoutSettingsGroups());
-      expect(find.text('Default rest'), findsOneWidget);
-      expect(find.text('1:30'), findsOneWidget);
-      expect(find.text('Notify when rest is over'), findsOneWidget);
-      expect(find.text('Chime · vibrate (default)'), findsOneWidget);
+      expect(find.text('Rest timer'), findsOneWidget);
+      expect(find.text('1:30 rest · Chime · vibrate'), findsOneWidget);
+      expect(find.text('Default rest'), findsNothing);
 
       await pump(
         tester,
@@ -94,7 +96,25 @@ void main() {
           restTimer: const RestTimerSettings(enabled: false),
         ),
       );
-      expect(find.text('Rest timer'), findsOneWidget);
+      expect(find.text('Off'), findsOneWidget);
+    });
+
+    testWidgets('the rest timer page shows its rows only while it is on', (
+      tester,
+    ) async {
+      await pump(tester, const RestTimerSettingsPage());
+      expect(find.text('Default rest'), findsOneWidget);
+      expect(find.text('1:30'), findsOneWidget);
+      expect(find.text('Notify when rest is over'), findsOneWidget);
+      expect(find.text('Chime · vibrate (default)'), findsOneWidget);
+
+      await pump(
+        tester,
+        const RestTimerSettingsPage(),
+        shown: metric.copyWith(
+          restTimer: const RestTimerSettings(enabled: false),
+        ),
+      );
       expect(find.text('Default rest'), findsNothing);
       expect(find.text('Notify when rest is over'), findsNothing);
       expect(find.text('Rest sound and vibration'), findsNothing);
@@ -160,7 +180,7 @@ void main() {
     });
 
     testWidgets('the rest sound is picked in a choice sheet', (tester) async {
-      await pump(tester, const WorkoutSettingsGroups());
+      await pump(tester, const RestTimerSettingsPage());
       await tester.tap(find.text('Rest sound and vibration'));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Vibrate'));
@@ -191,7 +211,7 @@ void main() {
 
     testWidgets('notify when rest is over asks first without permission, and '
         '"Not now" changes nothing', (tester) async {
-      await pump(tester, const WorkoutSettingsGroups(), allowed: false);
+      await pump(tester, const RestTimerSettingsPage(), allowed: false);
       final notify = find.ancestor(
         of: find.text('Notify when rest is over'),
         matching: find.byType(ListRow),
@@ -218,7 +238,7 @@ void main() {
     testWidgets('a refusal stores the wish and points to the settings', (
       tester,
     ) async {
-      await pump(tester, const WorkoutSettingsGroups(), allowed: false);
+      await pump(tester, const RestTimerSettingsPage(), allowed: false);
       final notify = find.ancestor(
         of: find.text('Notify when rest is over'),
         matching: find.byType(ListRow),
