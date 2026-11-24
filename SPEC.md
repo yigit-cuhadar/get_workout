@@ -317,8 +317,14 @@ writes only when the user, model, platform, OS version, app version or
 push token changed since this install last wrote, or that was 24 hours ago or more
 (the last write is kept in `device_record.json`), so "last seen" is right
 to the day. The token is read only once FCM auto-init is on (after
-notifications were allowed), so no install gets one just for this. A
-signed-out user's record keeps its token until that account is deleted.
+notifications were allowed), so no install gets one just for this.
+Before every sign-out (Account's and the email verification page's) the
+app clears the token from that user's record of this install
+(`ForgetPushToken`, through `SignOutForgettingPushToken`, which
+`DevicesModule` registers in place of forge_auth's `SignOut`), so test
+announcements stop reaching a device its admin left (owner, 2026-11-24).
+Best effort: it gives up after 3 seconds (offline) and the sign-out goes
+on; the next user's record then carries the token.
 
 **`users/{uid}/feedback/{id}`** (Help & feedback): `uid` (equal to the
 path's), `email?` (where to reply, 3-254 characters; absent when left

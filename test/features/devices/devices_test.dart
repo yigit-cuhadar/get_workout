@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:math';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:fake_async/fake_async.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:forge_auth/forge_auth.dart';
@@ -299,6 +300,105 @@ void main() {
       tokenChanges.add(null);
       await pumpEventQueue();
       verifyNever(() => repository.record(any(), any(), any()));
+    });
+  });
+
+  group('ForgetPushToken', () {
+    late MockRepository repository;
+    final now = DateTime(2026, 11, 24, 12);
+    const withToken = Device(
+      installId: '0123456789abcdef0123456789abcdef',
+      model: 'iPhone15,2',
+      platform: 'ios',
+      osVersion: '18.1',
+      appVersion: '1.0.0+12',
+      pushToken: 'fcm-token',
+    );
+
+    ForgetPushToken forget() => ForgetPushToken(repository, () => now);
+
+    setUp(() {
+      repository = MockRepository();
+      when(repository.current).thenAnswer((_) async => const Ok(withToken));
+      when(() => repository.record(any(), any(), any()))
+          .thenAnswer((_) async => const Ok(null));
+    });
+
+    test('rewrites the record without the token', () async {
+      when(repository.lastRecord).thenAnswer(
+        (_) async => Ok(DeviceRecord(uid: 'u1', device: withToken, at: now)),
+      );
+      expect((await forget()('u1')).isOk, isTrue);
+      verify(() => repository.record('u1', _iphone, now)).called(1);
+    });
+
+    test('writes nothing when the last record has no token', () async {
+      when(repository.lastRecord).thenAnswer(
+        (_) async => Ok(DeviceRecord(uid: 'u1', device: _iphone, at: now)),
+      );
+      expect((await forget()('u1')).isOk, isTrue);
+      verifyNever(() => repository.record(any(), any(), any()));
+    });
+
+    test('gives up offline instead of holding the sign-out', () {
+      fakeAsync((async) {
+        when(repository.lastRecord).thenAnswer((_) async => const Ok(null));
+        when(() => repository.record(any(), any(), any()))
+            .thenAnswer((_) => Completer<Result<void>>().future);
+        Result<void>? result;
+        unawaited(forget()('u1').then((value) => result = value));
+        async.elapse(ForgetPushToken.limit);
+        expect(result?.failureOrNull, isA<NetworkFailure>());
+      });
+    });
+  });
+
+  group('SignOutForgettingPushToken', () {
+    late MockAuthRepository auth;
+    late List<String> calls;
+
+    setUp(() {
+      auth = MockAuthRepository();
+      calls = [];
+      when(auth.signOut).thenAnswer((_) async {
+        calls.add('signOut');
+        return const Ok(null);
+      });
+    });
+
+    SignOutForgettingPushToken signOut({required bool forgets}) {
+      final repository = MockRepository();
+      when(repository.lastRecord).thenAnswer((_) async {
+        calls.add('forget');
+        return const Ok(null);
+      });
+      when(repository.current).thenAnswer(
+        (_) async => forgets ? const Ok(_iphone) : const Err(UnknownFailure()),
+      );
+      when(() => repository.record(any(), any(), any()))
+          .thenAnswer((_) async => const Ok(null));
+      return SignOutForgettingPushToken(
+        auth,
+        GetCurrentUser(auth),
+        ForgetPushToken(repository, DateTime.now),
+      );
+    }
+
+    test('clears the token first, then signs out', () async {
+      when(() => auth.currentUser).thenReturn(const AuthUser(id: 'u1'));
+      expect((await signOut(forgets: true)()).isOk, isTrue);
+      expect(calls, ['forget', 'signOut']);
+    });
+
+    test('signs out even when clearing failed or nobody is in', () async {
+      when(() => auth.currentUser).thenReturn(const AuthUser(id: 'u1'));
+      expect((await signOut(forgets: false)()).isOk, isTrue);
+      expect(calls, ['forget', 'signOut']);
+
+      calls.clear();
+      when(() => auth.currentUser).thenReturn(null);
+      expect((await signOut(forgets: true)()).isOk, isTrue);
+      expect(calls, ['signOut']);
     });
   });
 }
