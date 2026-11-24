@@ -2009,6 +2009,14 @@ Decisions (the canvases they were drawn on are deleted):
   A (the admin Exercises table drops its Id column and shows the id as a
   muted mono line under the name). Not asked, a stale fact to fix with
   AD1: the Announcements page still says iOS gets no pushes.
+- Screen review, second round (owner's picks, 2026-11-24, canvas
+  https://claude.ai/artifact/SMjJkCM8FDy2odRoLe7UfJ): every row stays as
+  built: X1 (the Exercises tab keeps only its search pill to the list),
+  E1 (an exercise's facts stay above its steps), E2 (no personal history
+  on an exercise's page), WK2 (the + bubble may wrap alone), WK3 (an
+  unstarted exercise keeps its empty progress line), S1 (values keep
+  "(default)"), N1 (reminder switches stay live while notifications are
+  off), C3 (the catalogue's count line stays between its sections).
 
 ## Open questions
 
