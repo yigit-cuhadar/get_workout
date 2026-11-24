@@ -33,7 +33,7 @@ App-wide decisions only. How each feature behaves is under Feature notes.
   Google sign-in uses the platform's own picker: Android Credential
   Manager's account sheet, iOS Google's sign-in sheet; the admin panel's web
   build keeps Firebase's popup (owner, 2026-11-24). Closing that sheet
-  returns to the page quietly, with no error (owner, 2026-11-24).
+  returns to the page quietly, with no error (2026-11-24).
 - **Monetization** (owner's picks, 2026-11-19): freemium via RevenueCat with
   a soft paywall. Monthly 7.99 USD and yearly 39.99 USD (regional prices per
   store), a 7-day trial on yearly only. The paywall shows once at the end of
