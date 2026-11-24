@@ -723,8 +723,15 @@ Open after Group 11 (the per-group build history is in git and the PRs
   build 7's code over fresh `tool/seed_demo.dart` data (Programs with the
   fake store's Premium, the owner's pick) and both subscriptions' review
   screenshot is the new paywall; both subscriptions are READY_TO_SUBMIT.
-  Before submission: the expiry on TestFlight (Subscription feature); then
-  submit the version with both subscriptions, manual release.
+  Submitted for review on 2026-11-24 at the owner's word, with both
+  subscriptions, manual release; the expiry check on TestFlight was still
+  due. Before submitting, the review notes, the description's Free and
+  Premium lists and both subscriptions' descriptions were brought in line
+  with the free charts and the every-third-workout paywall; the price is
+  free, content rights "no third-party content" and the regulated medical
+  device declaration "No" (owner's answers). The medical device
+  declaration and attaching an app's first subscriptions to a version exist
+  only on the App Store Connect website, not in the API.
 - App Store listing (2026-11-22, owner's picks; screenshot canvas
   https://claude.ai/artifact/EbzyhQps5J6xmubwaEjA48): name "GetWorkout:
   Gym & Fitness Log", subtitle "Workout tracker & programs", keywords
