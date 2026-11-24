@@ -13,4 +13,7 @@ abstract interface class DeviceRepository {
   /// time as `lastSeenAt`, then keeps it on the device as the last record,
   /// made [at].
   Future<Result<void>> record(String uid, Device device, DateTime at);
+
+  /// Fires when the install's push token changes.
+  Stream<void> pushTokenChanges();
 }

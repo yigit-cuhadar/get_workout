@@ -11,22 +11,38 @@ abstract final class AnnouncementLimits {
   static const body = 240;
 }
 
-/// An announcement as the admin types it. It goes to the devices that follow
-/// [locale]'s topic, `announcements_<locale>`.
+/// Who an announcement goes to, among the devices of its language.
+enum AnnouncementAudience { everyone, free, premium }
+
+/// An announcement as the admin types it. It goes to the devices of
+/// [locale] in [audience] (`announcements_<locale>`, or its `_free` or
+/// `_premium` topic), now or at [scheduleAt].
 class AnnouncementDraft extends Equatable {
   const AnnouncementDraft({
     this.locale = 'en',
     this.title = '',
     this.body = '',
+    this.audience = AnnouncementAudience.everyone,
+    this.scheduleAt,
   });
 
   final String locale;
   final String title;
   final String body;
+  final AnnouncementAudience audience;
+
+  /// When to send it; null sends it now. The function takes a minute to 30
+  /// days ahead.
+  final DateTime? scheduleAt;
 
   /// The text as it is sent.
-  AnnouncementDraft get trimmed =>
-      AnnouncementDraft(locale: locale, title: title.trim(), body: body.trim());
+  AnnouncementDraft get trimmed => AnnouncementDraft(
+    locale: locale,
+    title: title.trim(),
+    body: body.trim(),
+    audience: audience,
+    scheduleAt: scheduleAt,
+  );
 
   /// What `sendAnnouncement` would refuse, by field: `locale`, `title`,
   /// `body`.
@@ -50,20 +66,27 @@ class AnnouncementDraft extends Equatable {
     ];
   }
 
-  AnnouncementDraft copyWith({String? locale, String? title, String? body}) =>
-      AnnouncementDraft(
-        locale: locale ?? this.locale,
-        title: title ?? this.title,
-        body: body ?? this.body,
-      );
+  AnnouncementDraft copyWith({
+    String? locale,
+    String? title,
+    String? body,
+    AnnouncementAudience? audience,
+    DateTime? Function()? scheduleAt,
+  }) => AnnouncementDraft(
+    locale: locale ?? this.locale,
+    title: title ?? this.title,
+    body: body ?? this.body,
+    audience: audience ?? this.audience,
+    scheduleAt: scheduleAt != null ? scheduleAt() : this.scheduleAt,
+  );
 
   @override
-  List<Object?> get props => [locale, title, body];
+  List<Object?> get props => [locale, title, body, audience, scheduleAt];
 }
 
 /// Where a recorded announcement stands; [unknown] for a status this panel
 /// does not know.
-enum AnnouncementStatus { sending, sent, failed, unknown }
+enum AnnouncementStatus { scheduled, sending, sent, failed, cancelled, unknown }
 
 /// How many of the latest announcements the history shows.
 const announcementHistoryLength = 50;
@@ -89,6 +112,9 @@ class Announcement extends Equatable {
     required this.sentBy,
     required this.requestedAt,
     required this.sentAt,
+    this.audience = AnnouncementAudience.everyone,
+    this.scheduledFor,
+    this.senderEmail,
   });
 
   /// The request id.
@@ -98,10 +124,22 @@ class Announcement extends Equatable {
   final String body;
   final AnnouncementStatus status;
 
+  /// Everyone for requests from before audiences.
+  final AnnouncementAudience audience;
+
+  /// When a scheduled request is (or was) due; null for one sent at once.
+  final DateTime? scheduledFor;
+
   /// The uid of the admin who sent it.
   final String sentBy;
+
+  /// Their email; null on requests from before it was recorded.
+  final String? senderEmail;
   final DateTime? requestedAt;
   final DateTime? sentAt;
+
+  /// Who sent it, as the history shows it: the email, else the uid.
+  String get sender => senderEmail ?? sentBy;
 
   /// Still `sending` long after it was requested ([isStaleSending]).
   bool outcomeUnknownAt(DateTime now) =>
@@ -114,24 +152,83 @@ class Announcement extends Equatable {
     title,
     body,
     status,
+    audience,
+    scheduledFor,
     sentBy,
+    senderEmail,
     requestedAt,
     sentAt,
   ];
 }
 
-/// A send that went through.
+/// A send that went through, or a schedule that was stored.
 class SentAnnouncement extends Equatable {
-  const SentAnnouncement({required this.messageId, required this.alreadySent});
+  const SentAnnouncement({
+    required this.messageId,
+    required this.alreadySent,
+    this.scheduledFor,
+  });
 
-  /// FCM's id of the message.
+  /// FCM's id of the message; empty for a scheduled one.
   final String messageId;
 
-  /// The request was sent before (a retry); nothing was sent this time.
+  /// The request was sent (or scheduled) before, a retry; nothing was done
+  /// this time.
   final bool alreadySent;
 
+  /// When it goes, for a scheduled one; null for one sent now.
+  final DateTime? scheduledFor;
+
+  bool get scheduled => scheduledFor != null;
+
   @override
-  List<Object?> get props => [messageId, alreadySent];
+  List<Object?> get props => [messageId, alreadySent, scheduledFor];
+}
+
+/// A test sent to the admin's own devices: how many FCM took and refused.
+class TestAnnouncementResult extends Equatable {
+  const TestAnnouncementResult({required this.delivered, required this.failed});
+
+  final int delivered;
+  final int failed;
+
+  @override
+  List<Object?> get props => [delivered, failed];
+}
+
+/// A test cannot be sent: none of the admin's devices has a push token
+/// (notifications not allowed there, or the app not opened since).
+final class NoTestDevicesFailure extends Failure {
+  const NoTestDevicesFailure([
+    super.message = 'no device to test on',
+    Object? cause,
+  ]) : super(cause: cause);
+}
+
+/// A schedule was not stored: its task was not created. Nothing is
+/// scheduled; scheduling it again may.
+final class AnnouncementNotScheduledFailure extends Failure {
+  const AnnouncementNotScheduledFailure([
+    super.message = 'announcement not scheduled',
+    Object? cause,
+  ]) : super(cause: cause);
+}
+
+/// The request is not scheduled (any more): it went, or is going, and
+/// cannot be cancelled.
+final class AnnouncementNotCancellableFailure extends Failure {
+  const AnnouncementNotCancellableFailure([
+    super.message = 'announcement not scheduled',
+    Object? cause,
+  ]) : super(cause: cause);
+}
+
+/// The request was cancelled; its id never sends.
+final class AnnouncementCancelledFailure extends Failure {
+  const AnnouncementCancelledFailure([
+    super.message = 'announcement cancelled',
+    Object? cause,
+  ]) : super(cause: cause);
 }
 
 /// A request to send [draft] under the request [id]: the server sends an id

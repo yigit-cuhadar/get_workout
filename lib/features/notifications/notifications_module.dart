@@ -20,7 +20,8 @@ import 'presentation/notifications_cubit.dart';
 /// Android channels before any pushed message can need them, the
 /// reminders and the
 /// announcements. Not for the admin panel. Needs `AuthModule`,
-/// `SettingsModule`, `ProgramsModule` and `BodyModule` (measurement days).
+/// `SettingsModule`, `ProgramsModule` (programs and Premium) and
+/// `BodyModule` (measurement days).
 class NotificationsModule implements FeatureModule {
   const NotificationsModule();
 
@@ -91,6 +92,7 @@ class NotificationsModule implements FeatureModule {
           watchSettings: sl(),
           watchMeasured: sl(),
           programs: sl(),
+          watchPremium: sl(),
           planWorkout: const PlanWorkoutReminders(),
           planMeasurement: const PlanMeasurementReminders(),
           sync: sl(),

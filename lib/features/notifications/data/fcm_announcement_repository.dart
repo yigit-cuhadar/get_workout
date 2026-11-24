@@ -9,7 +9,9 @@ import 'package:forge_notifications/forge_notifications.dart';
 import '../domain/notification_repository.dart';
 import 'notification_payloads.dart';
 
-/// [AnnouncementRepository] over FCM topics `announcements_<language>`.
+/// [AnnouncementRepository] over FCM topics: `announcements_<language>`
+/// for everyone, and `announcements_<language>_free` or `_premium` for the
+/// user's Premium state (`functions/src/send_announcement.ts`).
 /// Announcements arrive as notification messages: the system shows them
 /// while the app is in the background; in front, the app shows them as a
 /// local notification. Taps on either go to [_taps].
@@ -37,21 +39,34 @@ class FcmAnnouncementRepository implements AnnouncementRepository {
   /// a newer one replaces it.
   static const notificationId = 300;
 
-  static String topic(String language) => 'announcements_$language';
+  /// The topic of everyone in [language], or with [premium] of its free or
+  /// its Premium users only.
+  static String topic(String language, {bool? premium}) => switch (premium) {
+    null => 'announcements_$language',
+    false => 'announcements_${language}_free',
+    true => 'announcements_${language}_premium',
+  };
 
   @override
-  Future<Result<void>> follow(String language) => guard(() async {
+  Future<Result<void>> follow(AnnouncementAudience audience) => guard(() async {
     await _listen();
     // Off in the native config, so devices that never allow notifications
     // get no push token.
     await _messaging.setAutoInitEnabled(true);
     if (!await _hasToken()) return;
+    final (:language, :premium) = audience;
     for (final other in _languages) {
-      if (other != language) {
-        await _messaging.unsubscribeFromTopic(topic(other));
+      if (other == language) continue;
+      for (final tier in const [null, false, true]) {
+        await _messaging.unsubscribeFromTopic(topic(other, premium: tier));
       }
     }
     await _messaging.subscribeToTopic(topic(language));
+    // While the Premium state is unknown the device keeps its tier topic.
+    if (premium != null) {
+      await _messaging.unsubscribeFromTopic(topic(language, premium: !premium));
+      await _messaging.subscribeToTopic(topic(language, premium: premium));
+    }
   }, mapper: mapFirebaseError);
 
   Future<void> _listen() async {

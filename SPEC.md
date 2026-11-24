@@ -296,23 +296,35 @@ profile, never stored), `photos` (map of `front` \| `right` \|
 Storage). A quick weight log is an entry with only `weightKg`; a
 measurement day fills all three.
 
-**`users/{uid}/pushTokens/{token}`**: `platform`, `updatedAt`.
-
-**`users/{uid}/devices/{installId}`** (the admin panel's Devices; written
-by the app, read by admins, never read back): `model` ("iPhone15,2",
+**`users/{uid}/devices/{installId}`** (the admin panel's Devices and its
+test announcements; written by the app, read by admins and the
+functions, never read back): `model` ("iPhone15,2",
 "Google Pixel 8"), `platform` (`ios` \| `android`), `osVersion`,
-`appVersion` ("1.0.0+12"), each string at most 100 characters, and
-`lastSeenAt` (server time). `installId` is 32 lowercase hex characters,
+`appVersion` ("1.0.0+12"), each string at most 100 characters,
+`pushToken?` (the install's FCM registration token, 1-4096 characters;
+absent while it has none: notifications never allowed, no APNs or Play
+services; owner's pick 2026-11-24 to keep tokens here) and
+`lastSeenAt` (server time, the token's update time too). `installId` is 32 lowercase hex characters,
 random, made on the install's first run and kept in the app's support
 directory (`install_id`; it survives updates, a reinstall gets a new one).
 The owner may only create or update their own, validated (`isDevice`);
-account deletion removes them with the rest of `users/{uid}`. The app
+account deletion and the guest cleanup remove them with the rest of
+`users/{uid}` (`deleteUserData`). The app
 (`lib/features/devices`, `DeviceSession`) records the device for each
-signed-in user at launch and after every sign-in or account switch, but
-writes only when the user, model, platform, OS version or app version
-changed since this install last wrote, or that was 24 hours ago or more
+signed-in user at launch, after every sign-in or account switch and when
+FCM issues a new token, but
+writes only when the user, model, platform, OS version, app version or
+push token changed since this install last wrote, or that was 24 hours ago or more
 (the last write is kept in `device_record.json`), so "last seen" is right
-to the day.
+to the day. The token is read only once FCM auto-init is on (after
+notifications were allowed), so no install gets one just for this.
+Before every sign-out (Account's and the email verification page's) the
+app clears the token from that user's record of this install
+(`ForgetPushToken`, through `SignOutForgettingPushToken`, which
+`DevicesModule` registers in place of forge_auth's `SignOut`), so test
+announcements stop reaching a device its admin left (owner, 2026-11-24).
+Best effort: it gives up after 3 seconds (offline) and the sign-out goes
+on; the next user's record then carries the token.
 
 **`users/{uid}/feedback/{id}`** (Help & feedback): `uid` (equal to the
 path's), `email?` (where to reply, 3-254 characters; absent when left
@@ -345,10 +357,16 @@ redelivery). Written only by the RevenueCat webhook (and
 `tool/set_premium.sh` on dev); readable by its owner. The rules read only
 `premium` and `expiresAt`.
 
-**`announcements/{requestId}`**: `locale`, `title`, `body`, `status`
-(`sending`, `sent`, `failed`), `sentBy` (uid), `requestedAt`, and once
-sent `sentAt` and `messageId` (FCM's). Written only by `sendAnnouncement`;
-readable by admins.
+**`announcements/{requestId}`**: `locale`, `title`, `body`, `audience`
+(`everyone` \| `free` \| `premium`; absent on older rows: everyone),
+`status` (`scheduled`, `sending`, `sent`, `failed`, `cancelled`),
+`sentBy` (uid), `senderEmail?` (from the caller's ID token; older rows
+have none and the history shows the uid), `requestedAt`,
+`scheduledFor?` (a scheduled one's time), once sent `sentAt` and
+`messageId` (FCM's), once cancelled `cancelledBy` (uid) and
+`cancelledAt`. Written only by `sendAnnouncement`,
+`sendScheduledAnnouncement` and `cancelAnnouncement`; readable by admins.
+Tests are not recorded.
 
 **`generator/rules`** (the program generator's rules; Admin SDK only, no
 client reads or writes it): `version` (int, from 1), `publishedAt`,
@@ -432,7 +450,7 @@ only, JPEG, max 5 MB.
   writes `entitlements/{uid}`; see the RevenueCat webhook decision.
 - `deleteAccount` (callable, `functions/src/delete_account.ts`) → for the
   signed-in caller: `users/{uid}` with every subcollection (customExercises,
-  programs, workouts, exerciseStats, cardio, bodyEntries, pushTokens, feedback and any
+  programs, workouts, exerciseStats, cardio, bodyEntries, devices, feedback and any
   added later) by recursive delete, `entitlements/{uid}`, Storage
   `users/{uid}/` (photos; a project without a default bucket has none,
   logged), then the auth user last, so a partial failure can be retried;
@@ -454,24 +472,56 @@ only, JPEG, max 5 MB.
   subscription, the user's to cancel, ends.
 - `sendAnnouncement` (callable, `functions/src/send_announcement.ts`) →
   for a caller with the `admin` claim, input `{requestId, locale, title,
-  body}`: claims `announcements/{requestId}` in a transaction, sends a
-  notification message to topic `announcements_<locale>`, then records it
+  body, audience?, scheduleAt?, test?}` (`audience` `everyone` (default)
+  \| `free` \| `premium`; owner's pick 2026-11-24): claims
+  `announcements/{requestId}` in a transaction with the caller's uid and
+  email, sends a notification message to the audience's topic
+  (`announcements_<locale>`, `_free` or `_premium`), then records it
   sent. Only an FCM error that certainly means it was not accepted
   (invalid argument, payload or recipient, mismatched credential, auth
   errors, rate limits) records it `failed`, which a retry of the same id
   may send again; any other error (timeouts, `internal-error`,
   `server-unavailable`, unknown) leaves it `sending`, never sent again.
   Returns
-  `{id, messageId, alreadySent}`; a request id already sent returns the
-  first send without sending. Refusals carry `details.reason`:
+  `{id, status: "sent", messageId, alreadySent}`; a request id already sent returns the
+  first send without sending. With `scheduleAt` (epoch milliseconds, a
+  minute to 30 days ahead, Cloud Tasks' limit) the claim is stored
+  `scheduled` with `scheduledFor` and a Cloud Task named after the
+  request id is created on `sendScheduledAnnouncement`'s queue (owner's
+  pick 2026-11-24); returns `{id, status: "scheduled", scheduledFor,
+  alreadySent}`. A task that was not created records it `failed`
+  (`schedule-failed`), which may be scheduled again. With `test: true`
+  (no request id, no `scheduleAt`) it goes only to the caller's own
+  devices' push tokens (`users/{uid}/devices`, `sendEachForMulticast`;
+  owner's pick 2026-11-24), unrecorded, and returns `{status: "test",
+  delivered, failed}`. Refusals carry `details.reason`:
   `not-admin` (`permission-denied`), `invalid-input` (`invalid-argument`,
   with `details.field`), `request-id-reused` (`invalid-argument`, the id
-  holds other text), `in-progress` (`already-exists`, the id is
+  holds another request), `in-progress` (`already-exists`, the id is
   `sending`; `details.requestedAt` in epoch milliseconds, which the panel
   uses to tell a stale one), `send-failed` (`internal`, FCM certainly
-  refused; nothing was sent) and `outcome-unknown` (`unknown`, FCM may have
-  taken it). A request left `sending` stays refused as in progress;
+  refused; nothing was sent; for a test also: no device took it),
+  `outcome-unknown` (`unknown`, FCM may have
+  taken it), `schedule-failed` (`internal`), `cancelled`
+  (`failed-precondition`, the id was cancelled and never sends) and
+  `no-devices` (`failed-precondition`, a test with no device token). A request left `sending` stays refused as in progress;
   different text gets a new id.
+- `sendScheduledAnnouncement` (Cloud Tasks queue function,
+  `functions/src/send_scheduled_announcement.ts`; at most 5 attempts, a
+  minute apart at least, one at a time) → for the task `{id}`: in a
+  transaction turns a `scheduled` request `sending` (anything else, such
+  as `cancelled`, or a task delivered twice, sends nothing), then sends
+  and records it exactly as `sendAnnouncement` does. Only a failed claim
+  throws, so Cloud Tasks retries; a failed send is recorded, never
+  retried.
+- `cancelAnnouncement` (callable, `functions/src/cancel_announcement.ts`)
+  → for a caller with the `admin` claim, input `{id}`: in a transaction
+  marks a `scheduled` request `cancelled` (`cancelledBy`, `cancelledAt`;
+  one cancelled already is a retry and succeeds), then deletes its task
+  (a failure is logged: the task finds it cancelled). Refusals:
+  `not-admin`, `invalid-input` (`field: id`) and `not-scheduled`
+  (`not-found` for a missing id, `failed-precondition` with
+  `details.status` for one sent, sending or failed).
 - `sendSupportReply` (callable, `functions/src/send_support_reply.ts`,
   secret `SUPPORT_GMAIL_APP_PASSWORD`, the Gmail app password of
   getworkout.support@gmail.com) → for a caller with the `admin` claim,
@@ -3304,7 +3354,9 @@ the feature you are about to touch, and keep it true when you change it.
   weekday from today then does its own day); meanwhile it is planned on
   the first training weekday from today, and the week plan shows it
   once, on its date, as missed. Starting a program plans the first
-  training weekday from today with its day; when that is today and the
+  training weekday from today with its day, so a program started
+  mid-week begins with the day planned for that weekday, not always day 1
+  (owner, 2026-11-24, as built); when that is today and the
   day was already done today (a workout of that program and day started
   today) it counts as done, as finishing it would have, and the next
   training weekday comes next (`StartProgram` reads today's done days).
@@ -4887,9 +4939,16 @@ the feature you are about to touch, and keep it true when you change it.
   the native config (`firebase_messaging_auto_init_enabled`,
   `FirebaseMessagingAutoInitEnabled`) and turned on only when following,
   so a device that never allows notifications gets no push token.
-  Allowing notifications never waits for the subscription. Topic push needs no
-  stored tokens, so `users/{uid}/pushTokens` stays unwritten until a
-  feature needs per-user push.
+  Allowing notifications never waits for the subscription. Besides the
+  language's topic the device follows `announcements_<locale>_free` or
+  `_premium` as the user's Premium entitlement says (`WatchPremium`),
+  leaving the other, and switches when it changes; while it is unknown
+  the tier topics are left as they are. Everyone stays on the plain topic,
+  which app versions before the split also follow (owner's pick
+  2026-11-24). Follows run one at a time, so two Premium changes never
+  interleave their topic changes. The install's push token is stored on
+  its device record for the panel's test sends (see
+  `users/{uid}/devices`).
 - **Sending announcements**: the admin panel's Announcements page
   (`lib/admin/announcements`) calls `sendAnnouncement` after a confirmation
   that it reaches every user who allowed notifications and cannot be
@@ -4906,7 +4965,15 @@ the feature you are about to touch, and keep it true when you change it.
   device before sending again", and nothing recovers it automatically.
   Messages carry the Android channel `workout`, APNs `sound: default`, and
   a time to live of 3 days (Android `ttl`, `apns-expiration`), so a dated
-  announcement is dropped rather than arriving weeks late.
+  announcement is dropped rather than arriving weeks late. The panel's
+  domain and data also carry an audience (everyone, free, Premium), a
+  scheduled time, a test send to the admin's own devices
+  (`SendTestAnnouncement`) and cancelling a scheduled one
+  (`CancelAnnouncement`), and the history reads `audience`,
+  `scheduledFor`, the `scheduled` and `cancelled` statuses and the
+  sender's email (shown instead of the uid; older rows show the uid). The
+  page does not offer audience, scheduling, test or cancel yet: its look
+  is being drawn; the two new statuses show plain placeholder tags.
 
 ### Analytics
 
@@ -5190,6 +5257,16 @@ not in a separate dashboard tool.
   - A2 B: sending confirms in a dialog showing the text, with "I
     understand it cannot be recalled" to tick.
   - A3 A: the send's result stays in a box under the form.
+  - Audience, schedule, test and cancel (AN1-AN4, 2026-11-24): a new
+    schedule starts on the next full hour at least an hour away; date
+    and time open the Material pickers; a time under a minute or over 30
+    days away shows why in danger and Schedule stays off; the time is
+    re-checked on Schedule. After a send the form keeps its language and
+    audience and goes back to Now. A test's result has its own box
+    above the send's. Cancel asks first ("Cancel this scheduled
+    announcement?", Keep it / Cancel it in danger); a failed cancel is a
+    snackbar. Scheduled rows sort soonest first; a cancelled row reads
+    "was due …" and stays under Sent with a neutral tag.
 - Asked with the builds (2026-11-21): the app records its devices
   (model, OS, app version, last seen) so a user's page lists them all;
   `paywall_layout` stays editable with a line saying a change also

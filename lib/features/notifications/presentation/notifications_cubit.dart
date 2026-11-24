@@ -9,6 +9,7 @@ import '../../body/domain/body_usecases.dart';
 import '../../programs/domain/calendar_date.dart';
 import '../../programs/domain/completed_days.dart';
 import '../../programs/domain/program.dart';
+import '../../programs/domain/program_usecases.dart';
 import '../../programs/domain/program_schedule.dart';
 import '../../programs/presentation/program_list_cubit.dart';
 import '../../settings/domain/settings_usecases.dart';
@@ -35,7 +36,8 @@ typedef NotificationText = ({String title, String body});
 
 /// Keeps the device's reminders matching the signed-in user's reminder
 /// settings and active program, and follows the announcements of the
-/// device's language once the device lets the app notify.
+/// device's language and the user's Premium state once the device lets
+/// the app notify, again whenever that state changes.
 ///
 /// Reminders are planned again whenever the program list (program, its
 /// weekdays, the schedule, done days), the user's settings or their
@@ -53,6 +55,7 @@ class NotificationsCubit extends Cubit<NotificationsState> {
     required WatchSettings watchSettings,
     required WatchMeasuredDates watchMeasured,
     required ProgramListCubit programs,
+    required WatchPremium watchPremium,
     required this._planWorkout,
     required this._planMeasurement,
     required this._sync,
@@ -93,6 +96,10 @@ class NotificationsCubit extends Cubit<NotificationsState> {
       },
       logTag: 'notifications',
     );
+    _premiumSubscription = watchPremium().listen((premium) {
+      _premium = premium;
+      if (state.allowed == true) unawaited(_follow());
+    });
     unawaited(_checkAccess());
   }
 
@@ -123,8 +130,13 @@ class NotificationsCubit extends Cubit<NotificationsState> {
   UserSettings? _userSettings;
   var _sawUser = false;
 
-  /// The language whose announcements are followed.
-  String? _followed;
+  /// The audience whose announcements are followed.
+  AnnouncementAudience? _followed;
+
+  /// The user's Premium state; null while unknown.
+  bool? _premium;
+  late final StreamSubscription<bool?> _premiumSubscription;
+  Future<void> _following = Future.value();
 
   /// Syncs run one after another, each on the latest inputs.
   Future<void> _queue = Future.value();
@@ -184,11 +196,18 @@ class NotificationsCubit extends Cubit<NotificationsState> {
     if (allowed == true) await _follow();
   }
 
-  Future<void> _follow() async {
-    final language = _language();
-    if (_followed == language) return;
-    _followed = language;
-    final result = await _followAnnouncements(language);
+  /// One follow at a time, so a Premium change never interleaves its topic
+  /// changes with an earlier one's.
+  Future<void> _follow() => _following = _following.then((_) => _followNow());
+
+  Future<void> _followNow() async {
+    final AnnouncementAudience audience = (
+      language: _language(),
+      premium: _premium,
+    );
+    if (_followed == audience) return;
+    _followed = audience;
+    final result = await _followAnnouncements(audience);
     if (result.failureOrNull case final failure?) {
       _followed = null;
       Log.e('notifications', 'announcements not followed: ${failure.message}');
@@ -279,6 +298,7 @@ class NotificationsCubit extends Cubit<NotificationsState> {
     await _programSubscription.cancel();
     await _settings.cancel();
     await _measuredDates.cancel();
+    await _premiumSubscription.cancel();
     return super.close();
   }
 }

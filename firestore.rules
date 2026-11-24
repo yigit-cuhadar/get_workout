@@ -414,16 +414,20 @@ service cloud.firestore {
         && data.createdAt == request.time;
     }
 
-    // Mirrors FirestoreDeviceRepository.toMap in lib/features/devices.
+    // Mirrors FirestoreDeviceRepository.toMap in lib/features/devices;
+    // pushToken (FCM's, for test announcements) only once the install has
+    // one.
     function isDevice(data) {
       return data.keys().hasAll(['model', 'platform', 'osVersion',
           'appVersion', 'lastSeenAt'])
         && data.keys().hasOnly(['model', 'platform', 'osVersion',
-          'appVersion', 'lastSeenAt'])
+          'appVersion', 'lastSeenAt', 'pushToken'])
         && data.platform in ['ios', 'android']
         && isFeedbackDetail(data.model)
         && isFeedbackDetail(data.osVersion)
         && isFeedbackDetail(data.appVersion)
+        && (!('pushToken' in data) || (data.pushToken is string
+          && data.pushToken.size() > 0 && data.pushToken.size() <= 4096))
         && data.lastSeenAt == request.time;
     }
 
