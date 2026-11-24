@@ -720,8 +720,8 @@ packages:
     dependency: "direct main"
     description:
       path: "packages/forge_app_gate"
-      ref: "4d3bcc349a54b5c4a5403ce59fae82453328f18b"
-      resolved-ref: "4d3bcc349a54b5c4a5403ce59fae82453328f18b"
+      ref: "7a7bbd257017182597e2c41f146b2239658723aa"
+      resolved-ref: "7a7bbd257017182597e2c41f146b2239658723aa"
       url: "https://github.com/yigit-cuhadar/MobileAppForge.git"
     source: git
     version: "0.1.0"
@@ -729,8 +729,8 @@ packages:
     dependency: "direct main"
     description:
       path: "packages/forge_auth"
-      ref: "4d3bcc349a54b5c4a5403ce59fae82453328f18b"
-      resolved-ref: "4d3bcc349a54b5c4a5403ce59fae82453328f18b"
+      ref: "7a7bbd257017182597e2c41f146b2239658723aa"
+      resolved-ref: "7a7bbd257017182597e2c41f146b2239658723aa"
       url: "https://github.com/yigit-cuhadar/MobileAppForge.git"
     source: git
     version: "0.1.0"
@@ -738,8 +738,8 @@ packages:
     dependency: "direct main"
     description:
       path: "packages/forge_camera"
-      ref: "4d3bcc349a54b5c4a5403ce59fae82453328f18b"
-      resolved-ref: "4d3bcc349a54b5c4a5403ce59fae82453328f18b"
+      ref: "7a7bbd257017182597e2c41f146b2239658723aa"
+      resolved-ref: "7a7bbd257017182597e2c41f146b2239658723aa"
       url: "https://github.com/yigit-cuhadar/MobileAppForge.git"
     source: git
     version: "0.1.0"
@@ -747,8 +747,8 @@ packages:
     dependency: "direct main"
     description:
       path: "packages/forge_core"
-      ref: "4d3bcc349a54b5c4a5403ce59fae82453328f18b"
-      resolved-ref: "4d3bcc349a54b5c4a5403ce59fae82453328f18b"
+      ref: "7a7bbd257017182597e2c41f146b2239658723aa"
+      resolved-ref: "7a7bbd257017182597e2c41f146b2239658723aa"
       url: "https://github.com/yigit-cuhadar/MobileAppForge.git"
     source: git
     version: "0.1.0"
@@ -756,8 +756,8 @@ packages:
     dependency: "direct main"
     description:
       path: "packages/forge_firebase"
-      ref: "4d3bcc349a54b5c4a5403ce59fae82453328f18b"
-      resolved-ref: "4d3bcc349a54b5c4a5403ce59fae82453328f18b"
+      ref: "7a7bbd257017182597e2c41f146b2239658723aa"
+      resolved-ref: "7a7bbd257017182597e2c41f146b2239658723aa"
       url: "https://github.com/yigit-cuhadar/MobileAppForge.git"
     source: git
     version: "0.1.0"
@@ -765,8 +765,8 @@ packages:
     dependency: "direct main"
     description:
       path: "packages/forge_health"
-      ref: "4d3bcc349a54b5c4a5403ce59fae82453328f18b"
-      resolved-ref: "4d3bcc349a54b5c4a5403ce59fae82453328f18b"
+      ref: "7a7bbd257017182597e2c41f146b2239658723aa"
+      resolved-ref: "7a7bbd257017182597e2c41f146b2239658723aa"
       url: "https://github.com/yigit-cuhadar/MobileAppForge.git"
     source: git
     version: "0.1.0"
@@ -774,8 +774,8 @@ packages:
     dependency: "direct main"
     description:
       path: "packages/forge_model_viewer"
-      ref: "4d3bcc349a54b5c4a5403ce59fae82453328f18b"
-      resolved-ref: "4d3bcc349a54b5c4a5403ce59fae82453328f18b"
+      ref: "7a7bbd257017182597e2c41f146b2239658723aa"
+      resolved-ref: "7a7bbd257017182597e2c41f146b2239658723aa"
       url: "https://github.com/yigit-cuhadar/MobileAppForge.git"
     source: git
     version: "0.1.1"
@@ -783,8 +783,8 @@ packages:
     dependency: "direct main"
     description:
       path: "packages/forge_notifications"
-      ref: "4d3bcc349a54b5c4a5403ce59fae82453328f18b"
-      resolved-ref: "4d3bcc349a54b5c4a5403ce59fae82453328f18b"
+      ref: "7a7bbd257017182597e2c41f146b2239658723aa"
+      resolved-ref: "7a7bbd257017182597e2c41f146b2239658723aa"
       url: "https://github.com/yigit-cuhadar/MobileAppForge.git"
     source: git
     version: "0.1.0"
@@ -792,8 +792,8 @@ packages:
     dependency: "direct main"
     description:
       path: "packages/forge_purchases"
-      ref: "4d3bcc349a54b5c4a5403ce59fae82453328f18b"
-      resolved-ref: "4d3bcc349a54b5c4a5403ce59fae82453328f18b"
+      ref: "7a7bbd257017182597e2c41f146b2239658723aa"
+      resolved-ref: "7a7bbd257017182597e2c41f146b2239658723aa"
       url: "https://github.com/yigit-cuhadar/MobileAppForge.git"
     source: git
     version: "0.1.0"
@@ -801,8 +801,8 @@ packages:
     dependency: "direct main"
     description:
       path: "packages/forge_remote_config"
-      ref: "4d3bcc349a54b5c4a5403ce59fae82453328f18b"
-      resolved-ref: "4d3bcc349a54b5c4a5403ce59fae82453328f18b"
+      ref: "7a7bbd257017182597e2c41f146b2239658723aa"
+      resolved-ref: "7a7bbd257017182597e2c41f146b2239658723aa"
       url: "https://github.com/yigit-cuhadar/MobileAppForge.git"
     source: git
     version: "0.1.0"
@@ -810,8 +810,8 @@ packages:
     dependency: "direct main"
     description:
       path: "packages/forge_review"
-      ref: "4d3bcc349a54b5c4a5403ce59fae82453328f18b"
-      resolved-ref: "4d3bcc349a54b5c4a5403ce59fae82453328f18b"
+      ref: "7a7bbd257017182597e2c41f146b2239658723aa"
+      resolved-ref: "7a7bbd257017182597e2c41f146b2239658723aa"
       url: "https://github.com/yigit-cuhadar/MobileAppForge.git"
     source: git
     version: "0.1.0"
@@ -819,8 +819,8 @@ packages:
     dependency: "direct main"
     description:
       path: "packages/forge_ui"
-      ref: "4d3bcc349a54b5c4a5403ce59fae82453328f18b"
-      resolved-ref: "4d3bcc349a54b5c4a5403ce59fae82453328f18b"
+      ref: "7a7bbd257017182597e2c41f146b2239658723aa"
+      resolved-ref: "7a7bbd257017182597e2c41f146b2239658723aa"
       url: "https://github.com/yigit-cuhadar/MobileAppForge.git"
     source: git
     version: "0.2.0"
@@ -856,6 +856,54 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "18.1.4"
+  google_identity_services_web:
+    dependency: transitive
+    description:
+      name: google_identity_services_web
+      sha256: "5d187c46dc59e02646e10fe82665fc3884a9b71bc1c90c2b8b749316d33ee454"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.3.3+1"
+  google_sign_in:
+    dependency: transitive
+    description:
+      name: google_sign_in
+      sha256: "521031b65853b4409b8213c0387d57edaad7e2a949ce6dea0d8b2afc9cb29763"
+      url: "https://pub.dev"
+    source: hosted
+    version: "7.2.0"
+  google_sign_in_android:
+    dependency: transitive
+    description:
+      name: google_sign_in_android
+      sha256: af51a005b7c3c3f54cb5e7d04dd5db96f081e6f92b36468c60d14726a047f918
+      url: "https://pub.dev"
+    source: hosted
+    version: "7.2.19"
+  google_sign_in_ios:
+    dependency: transitive
+    description:
+      name: google_sign_in_ios
+      sha256: bc03e8f8cf0e5a5cbbc1d582516e5f792c734f0a41d324d4760dcb8bef523b28
+      url: "https://pub.dev"
+    source: hosted
+    version: "6.4.0"
+  google_sign_in_platform_interface:
+    dependency: transitive
+    description:
+      name: google_sign_in_platform_interface
+      sha256: "7f59208c42b415a3cca203571128d6f84f885fead2d5b53eb65a9e27f2965bb5"
+      url: "https://pub.dev"
+    source: hosted
+    version: "3.1.0"
+  google_sign_in_web:
+    dependency: transitive
+    description:
+      name: google_sign_in_web
+      sha256: d473003eeca892f96a01a64fc803378be765071cb0c265ee872c7f8683245d14
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.1.3"
   health:
     dependency: transitive
     description:
