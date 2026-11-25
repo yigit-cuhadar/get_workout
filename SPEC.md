@@ -2240,9 +2240,6 @@ Decisions (the canvases they were drawn on are deleted):
     following a topic per language with leaving the others, foreground
     display of pushed notifications, auto-init off until allowed (the
     app's `FcmAnnouncementRepository`).
-- `forge_purchases` has no "unavailable" backend; the app swaps in its own
-  repository for release builds without keys. Move it into the package when
-  it is next changed.
 - App Check (2026-11-20), monitoring first (owner's decision). On
   2026-11-24 the owner moved enforcement after release: App Attest is
   registered for the iOS app on dev and prod (no service enforced), and
@@ -2291,8 +2288,8 @@ the feature you are about to touch, and keep it true when you change it.
   when this platform's public SDK key is passed with `--dart-define`
   (`REVENUECAT_IOS_KEY`, `REVENUECAT_ANDROID_KEY`; never committed), else the
   fake in debug and profile builds (a debug-only "Fake store" section on the
-  Profile tab steers it), else, in release, an unavailable store: nobody is
-  Premium and the paywall says purchases are not available yet.
+  Profile tab steers it), else, in release, the package's `UnavailableBackend`:
+  nobody is Premium and the paywall says purchases are not available yet.
   `PurchaserSession` identifies the signed-in uid (guests too; linking keeps
   it) or resets, at startup and on every auth change, retrying failures.
 - **Premium gate**: `context.watchPremium()` gives unknown / free / premium for
