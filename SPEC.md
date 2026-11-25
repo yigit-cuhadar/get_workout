@@ -248,7 +248,7 @@ reader has an active entitlement.
 **`users/{uid}`**: `profile` (goal, level, daysPerWeek, equipment[], sex,
 birthYear, heightCm, weightKg, targetWeightKg), `settings` (units,
 effortScale, askEffort (absent is true), weekStart (`monday` \| `sunday` \| `saturday`; absent, or a
-value this version does not know, is automatic), restTimer, warmups
+value this version does not know, is automatic), language (`en` \| `tr`; absent or unknown is automatic), restTimer, warmups
 (autoWarmups for older versions), seenTips[],
 keepScreenOn, bar and plates (`barWeightKg`, `ezBarWeightKg`, `trapBarWeightKg`,
 `plates[]`; each only while customised), stepGoal,
@@ -2926,8 +2926,8 @@ the feature you are about to touch, and keep it true when you change it.
   the measurement reminder's day. Settings → Appearance → "Week starts on":
   Automatic (default, shown as "Automatic (Monday)" with the day it gives),
   Monday, Sunday or Saturday (`settings.weekStart`, written only when not
-  automatic). Automatic is the phone's region, not the app's language
-  (English only, so Sunday for everyone): the device locale
+  automatic). Automatic is the phone's region, not the app's language:
+  the device locale
   (`PlatformDispatcher.locale`, followed on change). With a region, CLDR's
   weekData `firstDay` for it (CLDR 49, a const table in
   `regionFirstWeekday`; unlisted regions Monday): `en_TR`, `tr_TR`,
