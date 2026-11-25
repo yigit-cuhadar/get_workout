@@ -36,13 +36,12 @@ abstract interface class NotificationRepository {
 /// the user's Premium state ([premium]; null while unknown).
 typedef AnnouncementAudience = ({String language, bool? premium});
 
-/// Announcements, pushed to the devices of one language, to all of them or
-/// to the free or the Premium ones (FCM topics).
-abstract interface class AnnouncementRepository {
-  /// Receives [audience]'s announcements on this device from now on: its
-  /// language's for everyone, and once the Premium state is known, the
-  /// free or the Premium ones, leaving the other and every other
-  /// language's. Without a push token (no APNs or Play services) it does
-  /// nothing and succeeds.
-  Future<Result<void>> follow(AnnouncementAudience audience);
+/// The announcements' FCM topics (forge_messaging's `LanguageTopics`,
+/// `functions/src/send_announcement.ts`):
+/// `announcements_<language>` for everyone, and `announcements_<language>_free`
+/// or `_premium` for the user's Premium state.
+abstract final class AnnouncementTopics {
+  static const prefix = 'announcements';
+  static const free = 'free';
+  static const premium = 'premium';
 }

@@ -34,8 +34,7 @@ class MockProgramListCubit extends MockCubit<ProgramListState>
 class MockNotificationRepository extends Mock
     implements NotificationRepository {}
 
-class MockAnnouncementRepository extends Mock
-    implements AnnouncementRepository {}
+class MockFollowAnnouncements extends Mock implements FollowAnnouncements {}
 
 class MockBodyRepository extends Mock implements BodyRepository {}
 
@@ -86,7 +85,7 @@ void main() {
   late MockProgramListCubit programs;
   late StreamController<ProgramListState> programStates;
   late MockNotificationRepository device;
-  late MockAnnouncementRepository announcements;
+  late MockFollowAnnouncements announcements;
   late StreamController<bool?> premium;
   late bool allowed;
   late bool asked;
@@ -118,7 +117,7 @@ void main() {
     when(() => programs.state).thenReturn(const ProgramListState());
     when(() => programs.stream).thenAnswer((_) => programStates.stream);
     device = MockNotificationRepository();
-    announcements = MockAnnouncementRepository();
+    announcements = MockFollowAnnouncements();
     premium = StreamController.broadcast(sync: true);
     allowed = true;
     asked = true;
@@ -144,8 +143,7 @@ void main() {
       await gate?.future;
       return const Ok(null);
     });
-    when(() => announcements.follow(any()))
-        .thenAnswer((_) async => const Ok(null));
+    when(() => announcements(any())).thenAnswer((_) async => const Ok(null));
   });
 
   tearDown(() async {
@@ -195,7 +193,7 @@ void main() {
       getAsked: GetNotificationsAsked(device),
       openSettings: OpenNotificationSettings(device),
       refreshTimeZone: RefreshTimeZone(device),
-      followAnnouncements: FollowAnnouncements(announcements),
+      followAnnouncements: announcements,
       workoutText: (reminder) => (
         title: 'Workout',
         body: reminder.day == null
@@ -595,10 +593,10 @@ void main() {
       await pumpEventQueue();
 
       expect(cubit.state, const NotificationsState(allowed: true, asked: true));
-      verify(() => announcements.follow(_en)).called(1);
+      verify(() => announcements(_en)).called(1);
 
       await cubit.resumed();
-      verifyNever(() => announcements.follow(any()));
+      verifyNever(() => announcements(any()));
       await cubit.close();
     });
 
@@ -610,28 +608,27 @@ void main() {
         cubit.state,
         const NotificationsState(allowed: false, asked: true),
       );
-      verifyNever(() => announcements.follow(any()));
+      verifyNever(() => announcements(any()));
 
       expect(await cubit.allow(), isTrue);
 
       expect(cubit.state, const NotificationsState(allowed: true, asked: true));
       await pumpEventQueue();
-      verify(() => announcements.follow(_en)).called(1);
+      verify(() => announcements(_en)).called(1);
       await cubit.close();
     });
 
     test('allowing does not wait for announcements to be followed', () async {
       allowed = false;
       final following = Completer<Result<void>>();
-      when(() => announcements.follow(any()))
-          .thenAnswer((_) => following.future);
+      when(() => announcements(any())).thenAnswer((_) => following.future);
       final cubit = build();
       await pumpEventQueue();
 
       expect(await cubit.allow(), isTrue);
 
       await pumpEventQueue();
-      verify(() => announcements.follow(_en)).called(1);
+      verify(() => announcements(_en)).called(1);
       following.complete(const Ok(null));
       await cubit.close();
     });
@@ -679,21 +676,21 @@ void main() {
     });
 
     test('a failed follow is tried again on resume', () async {
-      when(() => announcements.follow(any()))
+      when(() => announcements(any()))
           .thenAnswer((_) async => const Err(UnknownFailure('offline')));
       final cubit = build();
       await pumpEventQueue();
 
       await cubit.resumed();
 
-      verify(() => announcements.follow(_en)).called(2);
+      verify(() => announcements(_en)).called(2);
       await cubit.close();
     });
 
     test('follows the Premium state as it becomes known and changes', () async {
       final cubit = build();
       await pumpEventQueue();
-      verify(() => announcements.follow(_en)).called(1);
+      verify(() => announcements(_en)).called(1);
 
       premium.add(false);
       await pumpEventQueue();
@@ -703,8 +700,8 @@ void main() {
       await pumpEventQueue();
 
       verifyInOrder([
-        () => announcements.follow((language: 'en', premium: false)),
-        () => announcements.follow((language: 'en', premium: true)),
+        () => announcements((language: 'en', premium: false)),
+        () => announcements((language: 'en', premium: true)),
       ]);
       verifyNoMoreInteractions(announcements);
       await cubit.close();
@@ -719,12 +716,11 @@ void main() {
 
         premium.add(true);
         await pumpEventQueue();
-        verifyNever(() => announcements.follow(any()));
+        verifyNever(() => announcements(any()));
 
         await cubit.allow();
         await pumpEventQueue();
-        verify(() => announcements.follow((language: 'en', premium: true)))
-            .called(1);
+        verify(() => announcements((language: 'en', premium: true))).called(1);
         await cubit.close();
       },
     );
@@ -732,7 +728,7 @@ void main() {
     test('topic changes of two Premium states never overlap', () async {
       final first = Completer<Result<void>>();
       var calls = 0;
-      when(() => announcements.follow(any())).thenAnswer((_) {
+      when(() => announcements(any())).thenAnswer((_) {
         calls++;
         return calls == 1 ? first.future : Future.value(const Ok(null));
       });

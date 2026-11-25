@@ -17,7 +17,7 @@ export const LOCALES = ["en"];
 /**
  * Who an announcement goes to. The app follows `announcements_<locale>`
  * and the topic of its Premium state, `announcements_<locale>_free` or
- * `_premium` (FcmAnnouncementRepository); everyone stays on the plain
+ * `_premium` (FollowAnnouncements); everyone stays on the plain
  * topic, which app versions before the split also follow.
  */
 export const AUDIENCES = ["everyone", "free", "premium"] as const;
