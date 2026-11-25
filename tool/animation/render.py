@@ -6,6 +6,7 @@ Run inside Blender:
   Blender -b --python render.py -- <rig.npz> <exercise id> <out dir> [keys|loop]
 """
 
+import json
 import math
 import os
 import sys
@@ -163,6 +164,26 @@ def aim(azimuth, elevation):
     return direction, turn
 
 
+def floor(view, body):
+    """The floor disc and the body's shadow on it as ellipses in the picture:
+    [x, y, half width, half height] each. sheet.py paints them under the render."""
+    az, el = math.radians(view[0]), math.radians(view[1])
+    direction = Vector((math.sin(az) * math.cos(el), -math.cos(az) * math.cos(el), math.sin(el)))
+    turn = (-direction).to_track_quat("-Z", "Y")
+    right, up = np.array(turn @ Vector((1, 0, 0))), np.array(turn @ Vector((0, 1, 0)))
+    per_unit = SIZE[0] / camera_data.ortho_scale
+
+    def ellipse(at, radius):
+        offset = np.array([at[0], at[1], 0]) - centre
+        x, y = SIZE[0] / 2 + offset @ right * per_unit, SIZE[1] / 2 - offset @ up * per_unit
+        return [x, y, radius * per_unit, radius * per_unit * abs(math.sin(el))]
+
+    span = np.ptp(corners[:, :2], axis=0)
+    under = (body[:, :2].min(axis=0) + body[:, :2].max(axis=0)) / 2
+    reach = np.ptp(body[:, :2], axis=0).max() / 2
+    return {"disc": ellipse(centre, span.max() * 0.48), "shadow": ellipse(under, reach * 0.8)}
+
+
 gear = []
 
 
@@ -186,6 +207,8 @@ def show(solved, first, ring, label):
                 mark.rotation_euler = turn.to_euler()
         scene.render.filepath = os.path.join(out_dir, f"{label}_v{v}.png")
         bpy.ops.render.render(write_still=True)
+        with open(os.path.join(out_dir, f"{label}_v{v}.json"), "w") as f:
+            json.dump(floor(view, body), f)
 
 
 def report(solved):
