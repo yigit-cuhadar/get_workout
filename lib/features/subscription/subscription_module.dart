@@ -8,7 +8,6 @@ import 'package:get_it/get_it.dart';
 
 import '../analytics/domain/analytics.dart';
 import '../programs/domain/premium_status.dart' as programs;
-import 'data/unavailable_purchases_repository.dart';
 import 'domain/paywall_layout.dart';
 import 'domain/paywall_moment.dart';
 import 'domain/subscription_usecases.dart';
@@ -23,9 +22,9 @@ const premiumEntitlementId = 'premium';
 
 /// RevenueCat when this platform's public SDK key is passed with
 /// `--dart-define=REVENUECAT_IOS_KEY=appl_…` / `REVENUECAT_ANDROID_KEY=goog_…`;
-/// otherwise the fake in debug and profile builds, and none (purchases
-/// unavailable) in release builds.
-PurchasesBackend? purchasesBackend({
+/// otherwise the fake in debug and profile builds, and an unavailable store
+/// in release builds.
+PurchasesBackend purchasesBackend({
   required TargetPlatform platform,
   required bool release,
   String iosKey = const String.fromEnvironment('REVENUECAT_IOS_KEY'),
@@ -35,7 +34,7 @@ PurchasesBackend? purchasesBackend({
   if (key.isNotEmpty) {
     return RevenueCatBackend(appleApiKey: iosKey, googleApiKey: androidKey);
   }
-  return release ? null : const FakeBackend(fakePlans);
+  return release ? const UnavailableBackend() : const FakeBackend(fakePlans);
 }
 
 /// The fake store's plans, as SPEC's monetization decision describes them,
@@ -65,7 +64,7 @@ const _freeMonth = WinBackOffer.free(
   OfferPeriod(1, PeriodUnit.month),
 );
 
-/// Registers purchases on [backend] (null: unavailable), the session that
+/// Registers purchases on [backend], the session that
 /// keeps the store's user in step with the signed-in user, and the paywall.
 /// Needs `AuthModule`, `AnalyticsModule` and a
 /// `RemoteConfigRepository` with [remoteConfigDefaults].
@@ -75,7 +74,7 @@ class SubscriptionModule implements FeatureModule {
     required this.pastOnboarding,
   });
 
-  final PurchasesBackend? backend;
+  final PurchasesBackend backend;
 
   /// Whether a user is past onboarding, once known: the install's ad
   /// attribution is looked up only before (the profile feature's).
@@ -104,26 +103,10 @@ class SubscriptionModule implements FeatureModule {
 
   @override
   void register(GetIt sl) {
-    final backend = this.backend;
-    if (backend != null) {
-      PurchasesModule(
-        entitlementId: premiumEntitlementId,
-        backend: backend,
-      ).register(sl);
-    } else {
-      // The package has no "unavailable" backend: register it with an empty
-      // fake, then swap the repository before anything has resolved it.
-      const PurchasesModule(
-        entitlementId: premiumEntitlementId,
-        backend: FakeBackend([]),
-      ).register(sl);
-      sl
-        ..unregister<PurchasesRepository>()
-        ..unregister<FakePurchasesRepository>()
-        ..registerLazySingleton<PurchasesRepository>(
-          () => const UnavailablePurchasesRepository(),
-        );
-    }
+    PurchasesModule(
+      entitlementId: premiumEntitlementId,
+      backend: backend,
+    ).register(sl);
     sl
       ..registerLazySingleton(
         () => PurchaserSession(
