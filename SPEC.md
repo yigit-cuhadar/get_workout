@@ -765,7 +765,9 @@ Open after Group 11 (the per-group build history is in git and the PRs
   large volume ("12,400 kg" may be cut); the Cardio session's distance tile
   ("18.4 km" may wrap); health cardio sessions on a real device; users who
   allowed steps before #118 are asked for workouts only through Allow
-  access again; the real Apple Health / Health Connect prompts; large text.
+  access again; the real Apple Health / Health Connect prompts; large text
+  beyond Today and Progress (both wrap without overflow at the largest
+  accessibility size on the simulator, 2026-11-25).
 - Not covered by the flow tests: dragging the weight ruler, taking a
   measurement photo.
 - Release: version 1.0.0 has TestFlight build 7 attached (builds 1–7 since
@@ -820,7 +822,8 @@ Group 14, program generator rebuild (owner's picks, 2026-11-22; see Feature note
 
 Open after Group 14 (merged as #221–#230, live on dev and prod with
 rules version 1):
-- The app's generator offline state is not tried on a device.
+- The app's generator offline state is not tried on a device (the
+  simulator cannot go offline on its own).
 - For the owner to tune in the panel: the seed rules leave 69 of the 140
   standard answers with a target muscle without direct work and 83 with a
   day under half the session; the intermediate Upper/Lower gives glutes 21
@@ -2120,40 +2123,26 @@ Decisions (the canvases they were drawn on are deleted):
   only in the device log (`sudo log collect --device-udid …`); a stale
   free-team profile once made iOS end each activity at once, fixed by an
   `xcodebuild -allowProvisioningUpdates` build after deleting it.
-- Workout on the lock screen (iOS), not yet checked in full on a device: the two widget files
-  were renamed (`WorkoutActivityAttributes.swift`,
-  `WorkoutLiveActivity.swift`, same entries in `project.pbxproj`), and the
-  Swift was only type-checked with `swiftc` against the simulator SDK and
-  Flutter.framework. Check on the simulator: it starts with the first
-  exercise (not for an empty workout) and ends on finish and discard; the
-  elapsed time runs on the lock screen and in the Dynamic Island; a rest
-  shows its countdown and turns back into the workout at its end with the
-  app in the background (the stale-date redraw) and in front, on skip and
-  on +15 s; relaunching with a workout in progress keeps one activity
-  (none duplicated) and without one removes the old; a tap in each
-  presentation and mode opens the workout page, also from its minimized
-  bar, from another tab with unsaved changes (no prompt: it is pushed),
-  and from a killed app (the launch URL reaches `ForgeLiveActivityPlugin`
-  through the late-registered scene delegate); with no workout in
-  progress a tap only opens the app, and with the workout page open (also
-  under the exercise picker or the paywall) it stays as it is; Google
-  sign-in still returns to the app; the clocks fit at 1:00:00 in every
-  presentation without squeezing the labels. Since LA1–LA4 (2026-11-19;
-  both targets compiled with `xcodebuild` for the simulator, nothing run):
-  the set card with its dots (also 6+ sets, a warm-up, a drop set, no
-  values yet, every set done), the rest card's bar emptying and the
-  compact island's ring; −15 s, +15 s and Skip on iOS 17+ with the app in
-  front, in the background and killed (the activity moves at once; the app
-  shows the same rest when opened, and the rest notification follows when
-  it ran), none below iOS 17; a tap beside the buttons still opens the
-  workout; a Live Activity started by the build before stays undrawable
-  until the app updates it (its content state changed); "All sets done"
-  with "Finish in the app" once the last set is ticked (LA5). Since the
-  bridge moved into `forge_live_activity` (2026-11-25; Swift only
-  type-checked with `swiftc` against the simulator SDK, the JSON content
-  round-tripped on macOS), every check above is to be repeated, and a
-  Live Activity started by the build before it (`WorkoutActivityAttributes`)
-  is no longer seen, like the older one below.
+- Workout on the lock screen (iOS), checked on the iPhone 16 Pro
+  simulator (iOS 18.6) on 2026-11-25, before and after the bridge moved
+  into `forge_live_activity` (same results): it starts with the first
+  exercise; the compact island shows the elapsed time and the expanded one
+  the set card with its dots (six with two warm-ups); a rest shows its
+  countdown, emptying bar and the next set; −15 s, +15 s and Skip on the
+  lock screen move it with the app in the background and killed (a press
+  shows within about two seconds; the app shows the skip when opened); a
+  rest that runs out with the app in the background turns back into the
+  workout; relaunching keeps one activity and the elapsed time; a tap
+  opens the workout page, also from a killed app; discard removes it.
+  Seen: the expanded island cuts the exercise name ("Barbell…") although
+  the line has room; to fix. Not checked yet: the clocks at 1:00:00, a
+  drop set, "All sets done" (LA5), a tap with the workout page under the
+  picker or paywall, below iOS 17, a real device. A Live Activity started
+  by a build before the move (`WorkoutActivityAttributes`) is no longer
+  seen and stays until iOS ends it. Content the extension cannot decode
+  draws as an empty workout without an error, so a key renamed in
+  `ios_workout_lock_screen.dart` must be renamed in
+  `WorkoutActivityContent` too.
 - An activity started by an older build (`RestActivityAttributes`)
   is no longer seen by the app and stays until iOS ends it; only matters
   for a device that had one running across the update.
