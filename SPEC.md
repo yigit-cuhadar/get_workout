@@ -24,9 +24,25 @@ App-wide decisions only. How each feature behaves is under Feature notes.
   account files are ever committed. Firebase client config files are not
   secrets; security rests on Firestore and Storage rules.
 - **Platforms**: iOS + Android. Admin panel is Flutter web from this repo.
-- **Language**: English only in v1. Every UI string goes through `gen_l10n`
-  ARB files; exercise and program text is stored per language (`l10n.en`), so
-  a language is added without schema or code changes.
+- **Language**: English and Turkish (Turkish added 2026-11-25). Every UI
+  string goes through `gen_l10n` ARB files; exercise and program text is
+  stored per language (`l10n.en`, `l10n.tr`). The app follows the phone's
+  language (anything but Turkish gives English) and Profile › Appearance ›
+  Language overrides it. Turkish, the owner's picks (2026-11-25): the UI and
+  the content are translated; the user is addressed as "sen"; exercise names
+  stay English, their texts are Turkish; program and split names keep the
+  English split term with Turkish around it ("Upper/Lower 4 Gün"); day names
+  stay as stored; muscles are Turkish in gym usage (biceps "Ön kol",
+  triceps "Arka kol", forearm "Bilek", lats "Sırt", quadriceps "Ön bacak",
+  hamstrings "Arka bacak", glutes "Kalça"; body measurements keep "Ön kol"
+  for the forearm, where the tape goes); established training terms stay
+  English (set, superset, drop set, circuit, RIR, RPE, 1RM; Squat, Hinge,
+  Lunge as movement patterns), the rest is Turkish (tekrar, dinlenme,
+  ısınma seti); equipment Halter, Dambıl, Kablo, Makine, Sehpa;
+  Apple Health "Apple Sağlık". Privacy policy and terms stay English (the
+  KVKK text is Turkish). The App Store adds Turkey and a Turkish listing
+  after 1.0.0's review. Announcements follow one topic per language, so the
+  panel must send a Turkish version for Turkish users.
 - **Accounts**: starts as an anonymous Firebase user. Linking email, Google or
   Apple keeps the uid and all data. Signing in to an *existing* account from a
   guest session discards the guest data after a warning; there is no merge.
@@ -849,6 +865,9 @@ before drawing) are in AGENTS.md › Design studios.
 - GetWorkout Studio https://claude.ai/artifact/PuK5WUbeyhVHMxA6THNDC2: the
   app's presets, rules, components and every screen with its states. Its
   saved settings download as tokens.json, which `lib/app/theme.dart` follows.
+- Language setting (2026-11-25): https://claude.ai/artifact/F51NiEKmssC2zSSXk8b3Ba
+  (L1 A: Language under Week starts on in Appearance; L2 A: the choice
+  sheet lists each language in its own name).
 - MobileAppForge Studio https://claude.ai/artifact/6G4XXrCwoijEmEcFhNQDCU:
   the shared Forge components, drawn once; each card is that component's rule.
 

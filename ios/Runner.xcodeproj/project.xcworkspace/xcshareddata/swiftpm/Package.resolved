@@ -145,24 +145,6 @@
       }
     },
     {
-      "identity" : "purchases-hybrid-common",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/RevenueCat/purchases-hybrid-common.git",
-      "state" : {
-        "revision" : "c74f91e3e0bb1bfcec2f327b62df8e1fcee5c0f5",
-        "version" : "20.10.0"
-      }
-    },
-    {
-      "identity" : "purchases-ios-spm",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/RevenueCat/purchases-ios-spm",
-      "state" : {
-        "revision" : "5f7c6a01399038a20fe568d4c68db66b55865f6c",
-        "version" : "5.103.1"
-      }
-    },
-    {
       "identity" : "recaptcha-enterprise-mobile-sdk",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/GoogleCloudPlatform/recaptcha-enterprise-mobile-sdk.git",
