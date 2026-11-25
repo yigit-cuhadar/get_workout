@@ -11,7 +11,7 @@ mkdir -p $out/frames
 [ -f $out/rig_$body.npz ] || $blender -b --python tool/animation/rig.py -- assets/models/body_$body.glb $out/rig_$body.npz | grep -E "welded|Error"
 rm -f $out/frames/${name}_* $out/frames/${name}-m*
 $blender -b --python tool/animation/render.py -- $out/rig_$body.npz $name $out/frames $mode 2>&1 | grep -E "^KEY|Error|Traceback|^  File" || true
-for clip in $(ls $out/frames | grep "^$name" | sed -E 's/_[kf][0-9]+_v[0-9]+\.png$//' | sort -u); do
+for clip in $(ls $out/frames | grep "^$name.*\.png$" | sed -E 's/_[kf][0-9]+_v[0-9]+\.png$//' | sort -u); do
   if [ $mode = keys ]; then
     python3 tool/animation/sheet.py keys $out/frames $clip $out/${clip}_keys.png
   else
