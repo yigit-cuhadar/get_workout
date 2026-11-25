@@ -145,6 +145,8 @@ App-wide decisions only. How each feature behaves is under Feature notes.
   Firestore next to the catalogue and solved on the phone; body models and
   the solver ship in the app. Batches follow the equipment families. An
   exercise gets its correct form and, in the same batch, its mistakes.
+  Gear is designed once: a piece of equipment is one kit, approved once,
+  and every exercise that uses it names that kit; no exercise draws its own.
 
 ## Vocabulary
 
@@ -3326,15 +3328,16 @@ the feature you are about to touch, and keep it true when you change it.
   419 live exercises (which carry 852 mistakes). Review page of the spike:
   https://claude.ai/artifact/2FhtzLavcFCNdBh1rZeFHN
 - **Tools** (`tool/animation/` on that branch; they need Blender 5.2 at
-  `/Applications` and
-  python3 with numpy and Pillow): `rig.py` fits the skeleton to a body
-  model and skins its 36 parts; `pose.py` solves a pose (two-bone IK for
-  arms and legs, helper bones that turn half way at hip, knee, shoulder and
-  elbow, a thumb bone, finger curl); `exercises.py` holds the spike's five
-  exercises until recipes replace it; `preview.sh <exercise> [keys|loop]
-  [male|female]` renders into `build/animation/` (key poses in about 6 s);
-  `export.py` writes the skinned body, and per exercise the gear and a clip,
-  for the debug page.
+  `/Applications` and python3 with numpy and Pillow): `rig.py` fits the
+  skeleton to a body model and skins its 36 parts; `pose.py` solves a pose
+  (two-bone IK for arms and legs, helper bones that turn half way at hip,
+  knee, shoulder and elbow, a thumb bone, finger curl); `recipe.py` reads
+  recipes and kits (its header is the format's reference); `preview.sh
+  <exercise id> [keys|loop] [male|female]` renders the correct form and
+  every mistake into `build/animation/` (key poses in a few seconds);
+  `validate.py` checks the recipes on both bodies; `batch.py` prints the
+  counts by status, the kits and the next batch; `export.py` bakes the
+  correct forms for the debug page until the phone solves recipes itself.
 - **A recipe**: the correct form and the exercise's mistakes, each a set of
   key poses with their times; the gear; a status. A mistake is the correct
   form with the few values that go wrong changed, the catalogue `mistakes`
@@ -3342,14 +3345,22 @@ the feature you are about to touch, and keep it true when you change it.
   (breathing, tempo, load) gets no animation and the recipe says so. A pose
   gives the pelvis, the spine's angles, where each hand grips and each foot
   stands, where elbows and knees point; the solver does the rest, so hands
-  stay on the bar and feet on the floor. Gear is built from boxes and
-  cylinders: fixed, carried by the hands, or stretched between two points
-  (a cable). Muscles come from the catalogue's `mainMuscles` and
-  `secondaryMuscles`, never from the recipe.
+  stay on the bar and feet on the floor. Muscles come from the catalogue's
+  `mainMuscles` and `secondaryMuscles`, never from the recipe.
+- **Gear** (owner, 2026-11-25): designed once. A piece of equipment is a
+  kit in `content/animations/_kits.json`, built from boxes and cylinders
+  that stand still, follow the hands, or stretch between two points (a
+  cable), with a status of its own (`draft`, `approved`). A recipe only
+  names kits, says where each stands and sets the few values a kit offers
+  (a plate's size); the validator refuses anything else. A new kit, or a
+  change to one, is shown to the owner on its own before any exercise that
+  uses it goes to review; a change to a kit changes every exercise using
+  it, so those are rendered again.
 - **Status** (in the recipe file): `draft` (being written), `review`
   (rendered, checked, waiting for the owner), `approved`, `fix` with the
-  owner's `note`. Only `approved` recipes are imported. This entry's count
-  and the next batch are the only state kept here.
+  owner's `note`. A mistake carries its own status. Only `approved`
+  recipes are imported. `batch.py` prints the counts and the next batch;
+  the count in this entry is the only state kept here.
 - **Order**: by equipment group, the catalogue's first matching code
   deciding: barbell (barbell, ez_bar, trap_bar, smith_machine, landmine,
   plate; 66 exercises), dumbbell and kettlebell (69), cable (36), machine
@@ -3359,11 +3370,11 @@ the feature you are about to touch, and keep it true when you change it.
   with the most popular exercise first, then `familyRank`. A batch is
   about 5 exercises with their mistakes (10-15 animations) and never
   splits a family.
-- **A batch, step by step**: (1) the Architect lists the batch and builds
-  any gear it needs first, once, as a reusable kit; (2) up to three
+- **A batch, step by step**: (1) the Architect lists the batch
+  (`batch.py`), builds any kit it lacks and gets that kit approved; (2) up to three
   Implementers write recipes in parallel, one family each, so no two touch
-  a file; each renders the key poses, looks at them, and corrects until the
-  checks below pass; (3) the Reviewer looks at every sheet against the
+  a file; each renders the key poses, looks at them, and corrects until
+  `validate.py` and the checks below pass; (3) the Reviewer looks at every sheet against the
   checks and the exercise's own `setup`, `execution`, `mistakes` and `cues`
   text; (4) the Architect renders the loops and publishes one review page
   for the batch: each exercise with its correct loop and every mistake

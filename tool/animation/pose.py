@@ -10,7 +10,8 @@ degrees. A pose is a dict:
   hand        {pos, fingers, palm, curl}: the grip point, the directions the
               fingers and the palm face, and how far the fingers close
   elbow       where the elbow points
-  foot        {pos, yaw, pitch}: the ankle, the toe-out and the toes-down angle
+  foot        {pos, yaw, pitch}: the ankle, the toe-out and the toes-down angle;
+              a standing foot gives {at: (x, y), floor} in place of pos
   knee        where the knee points (default: over the toes)
 
 `hand`, `elbow`, `foot`, `knee` and `clavicle` describe the left side and are
@@ -101,7 +102,7 @@ def solve_limb(root, target, upper, lower, pole):
 
 def mirrored(value):
     if isinstance(value, dict):
-        return {k: mirrored(v) for k, v in value.items()}
+        return {k: v * (-1, 1) if k == "at" else mirrored(v) for k, v in value.items()}
     if isinstance(value, np.ndarray) and value.shape == (3,):
         return value * (-1, 1, 1)
     return value
@@ -147,7 +148,7 @@ def normalized(pose):
                     value = mirrored(value)
             out[f"{key}_{side}"] = value
         foot = out[f"foot_{side}"]
-        out[f"foot_{side}"] = {"yaw": np.float64(10), "pitch": np.float64(0), "rel": None} | foot
+        out[f"foot_{side}"] = {"yaw": np.float64(10), "pitch": np.float64(0), "floor": np.float64(0), "rel": None} | foot
         out[f"hand_{side}"] = {"curl": np.float64(0), "rel": None} | out[f"hand_{side}"]
     return out
 
@@ -185,9 +186,13 @@ class Rig:
             }
 
     def solve(self, pose):
-        """World rotation and position of every bone for a normalized pose."""
+        """World rotation and position of every bone for a normalized pose.
+
+        `missed` then holds how far each hand and foot ended from its target.
+        """
         h = self.heads
         R, p = {}, {}
+        self.missed = {}
 
         def place(bone, parent, rotation):
             R[bone] = rotation
@@ -221,7 +226,9 @@ class Rig:
             elbow_pole = pose[f"elbow_{side}"]
             if hand["rel"] is not None:
                 elbow_pole = R[hand["rel"]] @ elbow_pole
-            elbow, wrist, normal = solve_limb(shoulder, world(hand, "pos") - grip, *rest["arm"], elbow_pole)
+            target = world(hand, "pos") - grip
+            elbow, wrist, normal = solve_limb(shoulder, target, *rest["arm"], elbow_pole)
+            self.missed[f"hand_{side}"] = np.linalg.norm(target - wrist)
             R[f"upper_arm_{side}"] = frame(elbow - shoulder, normal) @ rest["upper_arm"].T
             swing = frame(wrist - elbow, normal) @ rest["forearm"].T
             twist = twist_about(R[f"hand_{side}"] @ swing.T, wrist - elbow, swing @ rest["forearm"][:, 1])
@@ -244,7 +251,12 @@ class Rig:
             elif foot["rel"] is not None:
                 knee_pole = R[foot["rel"]] @ knee_pole
             hip = p["pelvis"] + R["pelvis"] @ (h[f"thigh_{side}"] - h["pelvis"])
-            knee, ankle, normal = solve_limb(hip, world(foot, "pos"), *rest["leg"], knee_pole)
+            if "at" in foot:
+                target = np.array([*foot["at"], foot["floor"] + self.ankle])
+            else:
+                target = world(foot, "pos")
+            knee, ankle, normal = solve_limb(hip, target, *rest["leg"], knee_pole)
+            self.missed[f"foot_{side}"] = np.linalg.norm(target - ankle)
             R[f"thigh_{side}"] = frame(knee - hip, normal) @ rest["thigh"].T
             R[f"shin_{side}"] = frame(ankle - knee, normal) @ rest["shin"].T
             p[f"thigh_{side}"], p[f"shin_{side}"], p[f"foot_{side}"] = hip, knee, ankle

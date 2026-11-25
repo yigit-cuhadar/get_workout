@@ -40,31 +40,31 @@ typedef _Exercise = ({
 
 const _exercises = <_Exercise>[
   (
-    file: 'squat',
+    file: 'ex_barbell_back_squat',
     title: 'Back squat',
     main: {'quads', 'glute'},
     secondary: {'adductor', 'hamstring', 'erector', 'abdominal'},
   ),
   (
-    file: 'bench_press',
+    file: 'ex_barbell_bench_press',
     title: 'Bench press',
     main: {'pec'},
     secondary: {'front_delt', 'triceps'},
   ),
   (
-    file: 'pull_up',
+    file: 'ex_pull_up',
     title: 'Pull-up',
     main: {'lat'},
     secondary: {'biceps', 'rear_delt', 'trap', 'forearm'},
   ),
   (
-    file: 'lat_pulldown',
+    file: 'ex_lat_pulldown',
     title: 'Lat pulldown',
     main: {'lat'},
     secondary: {'biceps', 'rear_delt', 'trap', 'forearm'},
   ),
   (
-    file: 'deadlift',
+    file: 'ex_barbell_deadlift',
     title: 'Deadlift',
     main: {'hamstring', 'glute', 'erector'},
     secondary: {'quads', 'trap', 'lat', 'forearm'},

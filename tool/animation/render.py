@@ -1,7 +1,9 @@
-"""Renders an exercise's key poses or its whole loop.
+"""Renders an exercise's key poses or its whole loop from its recipe: the
+correct form as `<id>_…`, each mistake as `<id>-m<line>_…`, from the recipe's
+view and from the side.
 
 Run inside Blender:
-  Blender -b --python render.py -- <rig.npz> <exercise> <out dir> [keys|loop]
+  Blender -b --python render.py -- <rig.npz> <exercise id> <out dir> [keys|loop]
 """
 
 import math
@@ -14,12 +16,12 @@ import numpy as np
 from mathutils import Matrix, Vector
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-import exercises  # noqa: E402
+import recipe  # noqa: E402
 from pose import SIDES, Rig, normalized, pose_at  # noqa: E402
 
 rig_path, name, out_dir, mode = (sys.argv[sys.argv.index("--") + 1 :] + ["keys"])[:4]
 FPS = 15
-SIZE = (540, 720)
+SIZE = (720, 720)
 COLORS = {
     "body": "D3D6DA",
     "main": "3F7D62",
@@ -28,6 +30,7 @@ COLORS = {
     "steel": "7C828A",
     "plate": "5B6068",
     "pad": "8B9097",
+    "wrong": "A6473C",
 }
 
 
@@ -37,9 +40,20 @@ def linear(code):
 
 
 rig = Rig(rig_path)
-exercise = exercises.EXERCISES[name](rig)
-poses = {id(p): normalized(p) for _, p in exercise["keys"]}
-keys = [(t, poses[id(p)]) for t, p in exercise["keys"]]
+spec, entry = recipe.load(name), recipe.catalogue()[name]
+gear_at = recipe.gear_of(spec["gear"])
+views = [tuple(spec["view"]), (90, 4)]
+
+# (label, keys, joints to ring) for the correct form and every shown mistake.
+clips = [(name, recipe.clip(spec), [])]
+for i, mistake in enumerate(spec["mistakes"]):
+    if mistake.get("shown", True):
+        clips.append((f"{name}-m{mistake['line']}", recipe.clip(spec, i), mistake["ring"]))
+clips = [
+    (label, [(t, poses[id(p)]) for t, p in keys], ring)
+    for label, keys, ring in clips
+    for poses in [{id(p): normalized(p) for _, p in keys}]
+]
 
 bpy.ops.wm.read_factory_settings(use_empty=True)
 scene = bpy.context.scene
@@ -74,13 +88,13 @@ def add_object(label, mesh, slots):
 
 
 # The parts are drawn as one welded surface so shading runs across muscles.
-_, first, welded = np.unique(np.round(rig.verts / 1e-4).astype(np.int64), axis=0, return_index=True, return_inverse=True)
+_, welded_first, welded = np.unique(np.round(rig.verts / 1e-4).astype(np.int64), axis=0, return_index=True, return_inverse=True)
 faces = welded.ravel()[rig.tris]
 body_mesh = bpy.data.meshes.new("body")
-body_mesh.from_pydata(rig.verts[first].tolist(), [], faces.tolist())
+body_mesh.from_pydata(rig.verts[welded_first].tolist(), [], faces.tolist())
 slots = ["body", "main", "secondary"]
 codes = [n.removesuffix("_left").removesuffix("_right") for n in rig.part_names]
-part_slot = np.array([1 if c in exercise["main"] else 2 if c in exercise["secondary"] else 0 for c in codes])
+part_slot = np.array([1 if c in entry["mainMuscles"] else 2 if c in entry["secondaryMuscles"] else 0 for c in codes])
 body_mesh.polygons.foreach_set("material_index", part_slot[rig.tri_part])
 body_mesh.polygons.foreach_set("use_smooth", [True] * len(faces))
 add_object("body", body_mesh, slots)
@@ -100,51 +114,97 @@ def unit_mesh(kind):
 
 camera_data = bpy.data.cameras.new("camera")
 camera_data.type = "ORTHO"
-camera_data.ortho_scale = exercise["height"]
 camera = bpy.data.objects.new("camera", camera_data)
 scene.collection.objects.link(camera)
 scene.camera = camera
+
+bpy.ops.mesh.primitive_torus_add(major_radius=0.09, minor_radius=0.007)
+ring_mesh = bpy.context.object.data
+bpy.data.objects.remove(bpy.context.object)
+rings = []
+
+
+def placed(solved, first):
+    """The body's vertices and the gear's pieces for one frame."""
+    return rig.skin(*solved), gear_at(rig, solved, first)
+
+
+def extent(frames):
+    """Corners of the box around everything the frames show."""
+    low, high = np.full(3, np.inf), np.full(3, -np.inf)
+    for body, pieces in frames:
+        clouds = [body] + [
+            np.array([m[:3, :3] @ (x, y, z) + m[:3, 3] for x in (-r, r) for y in (-r, r) for z in (-0.5, 0.5)])
+            for kind, m, _ in pieces
+            for r in [1 if kind == "cyl" else 0.5]
+        ]
+        low = np.minimum(low, np.min([c.min(axis=0) for c in clouds], axis=0))
+        high = np.maximum(high, np.max([c.max(axis=0) for c in clouds], axis=0))
+    return np.array([[x, y, z] for x in (low[0], high[0]) for y in (low[1], high[1]) for z in (low[2], high[2])])
+
+
+# One framing for the whole exercise, from the key poses of every clip.
+corners = extent(
+    [placed(rig.solve(pose), rig.solve(keys[0][1])) for _, keys, _ in clips for pose in {id(p): p for _, p in keys}.values()]
+)
+centre = (corners.min(axis=0) + corners.max(axis=0)) / 2
 
 
 def aim(azimuth, elevation):
     az, el = math.radians(azimuth), math.radians(elevation)
     direction = Vector((math.sin(az) * math.cos(el), -math.cos(az) * math.cos(el), math.sin(el)))
-    camera.location = Vector(exercise["centre"]) + direction * 20
-    camera.rotation_euler = (-direction).to_track_quat("-Z", "Y").to_euler()
+    turn = (-direction).to_track_quat("-Z", "Y")
+    right, up = np.array(turn @ Vector((1, 0, 0))), np.array(turn @ Vector((0, 1, 0)))
+    wide, tall = (np.ptp((corners - centre) @ axis) for axis in (right, up))
+    camera_data.ortho_scale = max(tall, wide * SIZE[1] / SIZE[0]) * 1.06
+    camera.location = Vector(centre) + direction * 20
+    camera.rotation_euler = turn.to_euler()
+    return direction, turn
 
 
 gear = []
 
 
-def show(pose, label):
-    R, p = rig.solve(pose)
-    body_mesh.vertices.foreach_set("co", rig.skin(R, p)[first].ravel())
+def show(solved, first, ring, label):
+    body, pieces = placed(solved, first)
+    body_mesh.vertices.foreach_set("co", body[welded_first].ravel())
     body_mesh.update()
-    for i, (kind, matrix, color) in enumerate(exercise["gear"](rig, R, p)):
+    for i, (kind, matrix, color) in enumerate(pieces):
         if i == len(gear):
             gear.append(add_object(f"gear{i}", unit_mesh(kind), [color]))
         gear[i].matrix_world = Matrix(matrix.tolist())
-    for v, (azimuth, elevation) in enumerate(exercise["views"]):
-        aim(azimuth, elevation)
-        scene.render.filepath = os.path.join(out_dir, f"{name}_{label}_v{v}.png")
+    while len(rings) < len(ring):
+        rings.append(add_object(f"ring{len(rings)}", ring_mesh.copy(), ["wrong"]))
+    for v, view in enumerate(views):
+        direction, turn = aim(*view)
+        for i, mark in enumerate(rings):
+            mark.hide_render = i >= len(ring)
+            if i < len(ring):
+                # In front of the body, facing the camera.
+                mark.location = Vector(solved[1][ring[i]]) + direction * 0.3
+                mark.rotation_euler = turn.to_euler()
+        scene.render.filepath = os.path.join(out_dir, f"{label}_v{v}.png")
         bpy.ops.render.render(write_still=True)
-    return R, p
 
 
-def report(pose, R, p):
-    """How far each limb is stretched and how far each hand is from its grip."""
+def report(solved):
+    """How far each limb is stretched and how far a hand or foot missed."""
+    R, p = solved
     parts = []
     for side, _ in SIDES:
         arm = np.linalg.norm(p[f"hand_{side}"] - p[f"upper_arm_{side}"]) / sum(rig.rest[side]["arm"])
         leg = np.linalg.norm(p[f"foot_{side}"] - p[f"thigh_{side}"]) / sum(rig.rest[side]["leg"])
         parts.append(f"{side}: arm {arm:.2f} leg {leg:.2f}")
-    return "  ".join(parts)
+    return "  ".join(parts) + f"  missed {max(rig.missed.values()) * 100:.1f} cm"
 
 
-if mode == "keys":
-    for i, pose in enumerate(poses.values()):
-        R, p = show(pose, f"k{i}")
-        print(f"KEY {i}: {report(pose, R, p)}")
-else:
-    for f in range(round(keys[-1][0] * FPS)):
-        show(pose_at(keys, f / FPS), f"f{f:03d}")
+for label, keys, ring in clips:
+    first = rig.solve(keys[0][1])
+    if mode == "keys":
+        for i, pose in enumerate({id(p): p for _, p in keys}.values()):
+            solved = rig.solve(pose)
+            print(f"KEY {label} {i}: {report(solved)}")
+            show(solved, first, ring, f"{label}_k{i}")
+    else:
+        for f in range(round(keys[-1][0] * FPS)):
+            show(rig.solve(pose_at(keys, f / FPS)), first, ring, f"{label}_f{f:03d}")

@@ -3,7 +3,7 @@
   python3 export.py <body.glb> <rig.npz> <skinned body.glb> <clips dir>
 
 The body keeps its geometry and gains JOINTS_0 / WEIGHTS_0 and a skin. Each
-exercise gets `<name>.glb`, the gear with every piece bound to a joint of its
+recipe's correct form gets `<name>.glb`, the gear with every piece bound to a joint of its
 own after the body's, and `<name>.clip`, one 3x4 matrix per joint per frame
 (layout in forge_model_viewer's ModelClip). Everything is in the body file's
 space: y up, the body faces +z.
@@ -16,7 +16,7 @@ import sys
 
 import numpy as np
 
-import exercises
+import recipe
 from pose import Rig, normalized, pose_at
 
 source, rig_path, body_out, clips_dir = sys.argv[1:5]
@@ -178,13 +178,15 @@ def shape(kind, matrix):
 
 
 os.makedirs(clips_dir, exist_ok=True)
-for name, build in exercises.EXERCISES.items():
-    exercise = build(rig)
-    poses = {id(p): normalized(p) for _, p in exercise["keys"]}
-    keys = [(t, poses[id(p)]) for t, p in exercise["keys"]]
+for name in sorted(f[:-5] for f in os.listdir(recipe.RECIPES) if not f.startswith("_")):
+    spec = recipe.load(name)
+    clip_keys = recipe.clip(spec)
+    poses = {id(p): normalized(p) for _, p in clip_keys}
+    keys = [(t, poses[id(p)]) for t, p in clip_keys]
     frames = round(keys[-1][0] * FPS)
     solved = [rig.solve(pose_at(keys, f / FPS)) for f in range(frames)]
-    gear = [exercise["gear"](rig, R, p) for R, p in solved]
+    gear_at = recipe.gear_of(spec["gear"])
+    gear = [gear_at(rig, now, solved[0]) for now in solved]
 
     # Gear is stored where the first frame puts it; its joint carries it from there.
     out, data = empty(), bytearray()
