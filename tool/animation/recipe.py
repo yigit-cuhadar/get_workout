@@ -7,7 +7,7 @@
   keys     [[seconds, pose name], ...]; the last pose equals the first
   gear     [{"kit": name, "at"?: [x, y, z], "turn"?: degrees, ...values}]
   mistakes [{"line": index into the catalogue's mistakes, "status", "ring":
-           [bones], "poses": {name: changed fields}, "keys"?}], or
+           [bones], "poses": {name: changed fields, or a new pose}, "keys"?}], or
            {"line", "shown": false, "why"} for one no pose can show
 
 Gear is designed once: a recipe only names kits from `_kits.json` and says
@@ -67,27 +67,26 @@ def merged(base, change):
     return out
 
 
-def poses_of(recipe):
-    """Every pose with what it extends folded in."""
+def poses_of(recipe, mistake=None):
+    """Every pose with what it extends folded in. A mistake changes fields of
+    the recipe's poses and may add poses of its own."""
+    changes = recipe["mistakes"][mistake].get("poses", {}) if mistake is not None else {}
     done = {}
 
     def pose(name):
         if name not in done:
-            own = dict(recipe["poses"][name])
+            own = merged(recipe["poses"].get(name, {}), changes.get(name, {}))
             base = own.pop("extends", None)
             done[name] = merged(pose(base), own) if base else own
         return done[name]
 
-    return {name: pose(name) for name in recipe["poses"]}
+    return {name: pose(name) for name in {**recipe["poses"], **changes}}
 
 
 def clip(recipe, mistake=None):
     """[(seconds, pose)] of the correct form, or of mistake number `mistake`."""
-    poses, keys = poses_of(recipe), recipe["keys"]
-    if mistake is not None:
-        wrong = recipe["mistakes"][mistake]
-        poses = {n: merged(p, wrong.get("poses", {}).get(n, {})) for n, p in poses.items()}
-        keys = wrong.get("keys", keys)
+    poses = poses_of(recipe, mistake)
+    keys = recipe["keys"] if mistake is None else recipe["mistakes"][mistake].get("keys", recipe["keys"])
     return [(t, poses[name]) for t, name in keys]
 
 

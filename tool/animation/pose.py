@@ -11,7 +11,8 @@ degrees. A pose is a dict:
               fingers and the palm face, and how far the fingers close
   elbow       where the elbow points
   foot        {pos, yaw, pitch}: the ankle, the toe-out and the toes-down angle;
-              a standing foot gives {at: (x, y), floor} in place of pos
+              a standing foot gives {at: (x, y), floor} in place of pos, and
+              its pitch lifts the heel with the ball of the foot staying put
   knee        where the knee points (default: over the toes)
 
 `hand`, `elbow`, `foot`, `knee` and `clavicle` describe the left side and are
@@ -252,7 +253,9 @@ class Rig:
                 knee_pole = R[foot["rel"]] @ knee_pole
             hip = p["pelvis"] + R["pelvis"] @ (h[f"thigh_{side}"] - h["pelvis"])
             if "at" in foot:
-                target = np.array([*foot["at"], foot["floor"] + self.ankle])
+                flat = rot_z(sign * (foot["yaw"] - 10))
+                ball = self.tails[f"foot_{side}"] - h[f"foot_{side}"]
+                target = np.array([*foot["at"], foot["floor"] + self.ankle]) + flat @ ball - R[f"foot_{side}"] @ ball
             else:
                 target = world(foot, "pos")
             knee, ankle, normal = solve_limb(hip, target, *rest["leg"], knee_pole)
