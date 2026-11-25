@@ -280,8 +280,13 @@ class _AppState extends State<App> {
                       onGenerateTitle: (context) =>
                           AppLocalizations.of(context).appTitle,
                       locale: appLocale(appearance.$2),
-                      localizationsDelegates:
-                          AppLocalizations.localizationsDelegates,
+                      // material_ui's own delegates: flutter_localizations'
+                      // (in the generated list) localize the framework's old
+                      // Material types, so a non-English app would have none.
+                      localizationsDelegates: const [
+                        AppLocalizations.delegate,
+                        ...GlobalMaterialLocalizations.delegates,
+                      ],
                       supportedLocales: AppLocalizations.supportedLocales,
                       theme: AppPreset.shipped.lightTheme(),
                       darkTheme: AppPreset.shipped.darkTheme(),
