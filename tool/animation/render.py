@@ -22,14 +22,16 @@ from pose import SIDES, Rig, normalized, pose_at  # noqa: E402
 rig_path, name, out_dir, mode = (sys.argv[sys.argv.index("--") + 1 :] + ["keys"])[:4]
 FPS = 15
 SIZE = (720, 720)
+# The app's light theme: the body is muscle-base, gear takes line, line-strong
+# and ink-muted as the debug page does.
 COLORS = {
-    "body": "D3D6DA",
+    "body": "E2E4E8",
     "main": "3F7D62",
     "secondary": "8FB3A0",
-    "gear": "A4A9B0",
-    "steel": "7C828A",
-    "plate": "5B6068",
-    "pad": "8B9097",
+    "gear": "DCE0E7",
+    "steel": "8B94A3",
+    "plate": "586273",
+    "pad": "8B94A3",
     "wrong": "A6473C",
 }
 
@@ -67,8 +69,7 @@ shading = scene.display.shading
 shading.light = "STUDIO"
 shading.color_type = "MATERIAL"
 shading.show_specular_highlight = False
-shading.show_object_outline = True
-shading.object_outline_color = linear("6A7078")
+shading.show_object_outline = False
 shading.show_cavity = True
 shading.cavity_type = "WORLD"
 scene.display.render_aa = "8"
