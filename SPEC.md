@@ -710,7 +710,7 @@ Group 8, body and extras
 Group 9, launch readiness
 - [x] Onboarding — nine questions, suggested free program
 - [x] Notifications — workout and measurement reminders, FCM announcements
-- [ ] Subscription — paywall, RevenueCat, entitlement checks, restore
+- [x] Subscription — paywall, RevenueCat, entitlement checks, restore
 - [x] Account — delete account, privacy policy link, analytics consent
 
 Group 10, UX pass (see Decisions; each screen is picked by the owner from mock-up variants before it is built)
@@ -774,8 +774,8 @@ Open after Group 11 (the per-group build history is in git and the PRs
   fake store's Premium, the owner's pick) and both subscriptions' review
   screenshot is the new paywall; both subscriptions are READY_TO_SUBMIT.
   Submitted for review on 2026-11-24 at the owner's word, with both
-  subscriptions, manual release; the expiry check on TestFlight was still
-  due. Before submitting, the review notes, the description's Free and
+  subscriptions, manual release; both still WAITING_FOR_REVIEW on
+  2026-11-25. Before submitting, the review notes, the description's Free and
   Premium lists and both subscriptions' descriptions were brought in line
   with the free charts and the every-third-workout paywall; the price is
   free, content rights "no third-party content" and the regulated medical
@@ -2108,9 +2108,9 @@ Decisions (the canvases they were drawn on are deleted):
   keychain), so Premium stays without a restore; after deleting the guest,
   Restore on the new guest showed "Premium restored.", the TRANSFER was
   applied to the new uid (the #242 webhook, deployed to prod that day) and
-  the generator opened; the cancellation was applied. Still open: the
-  EXPIRATION after the cancellation (due at the next daily renewal), then
-  the feature is ticked. The trial cannot be checked with this Apple ID,
+  the generator opened; the cancellation was applied, and its sandbox
+  EXPIRATION reached prod on 2026-11-25 (`applied`; `entitlements/{uid}`
+  premium false), so the feature is ticked. The trial cannot be checked with this Apple ID,
   which already subscribed in the group. Android / Play is not set
   up (products, service account in RevenueCat, license testers, the
   merged manifest's BILLING permission).
