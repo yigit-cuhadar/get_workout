@@ -765,7 +765,9 @@ Open after Group 11 (the per-group build history is in git and the PRs
   large volume ("12,400 kg" may be cut); the Cardio session's distance tile
   ("18.4 km" may wrap); health cardio sessions on a real device; users who
   allowed steps before #118 are asked for workouts only through Allow
-  access again; the real Apple Health / Health Connect prompts; large text.
+  access again; the real Apple Health / Health Connect prompts; large text
+  beyond Today and Progress (both wrap without overflow at the largest
+  accessibility size on the simulator, 2026-11-25).
 - Not covered by the flow tests: dragging the weight ruler, taking a
   measurement photo.
 - Release: version 1.0.0 has TestFlight build 7 attached (builds 1–7 since
@@ -820,7 +822,8 @@ Group 14, program generator rebuild (owner's picks, 2026-11-22; see Feature note
 
 Open after Group 14 (merged as #221–#230, live on dev and prod with
 rules version 1):
-- The app's generator offline state is not tried on a device.
+- The app's generator offline state is not tried on a device (the
+  simulator cannot go offline on its own).
 - For the owner to tune in the panel: the seed rules leave 69 of the 140
   standard answers with a target muscle without direct work and 83 with a
   day under half the session; the intermediate Upper/Lower gives glutes 21
@@ -2120,35 +2123,26 @@ Decisions (the canvases they were drawn on are deleted):
   only in the device log (`sudo log collect --device-udid …`); a stale
   free-team profile once made iOS end each activity at once, fixed by an
   `xcodebuild -allowProvisioningUpdates` build after deleting it.
-- Workout on the lock screen (iOS), not yet checked in full on a device: the two widget files
-  were renamed (`WorkoutActivityAttributes.swift`,
-  `WorkoutLiveActivity.swift`, same entries in `project.pbxproj`), and the
-  Swift was only type-checked with `swiftc` against the simulator SDK and
-  Flutter.framework. Check on the simulator: it starts with the first
-  exercise (not for an empty workout) and ends on finish and discard; the
-  elapsed time runs on the lock screen and in the Dynamic Island; a rest
-  shows its countdown and turns back into the workout at its end with the
-  app in the background (the stale-date redraw) and in front, on skip and
-  on +15 s; relaunching with a workout in progress keeps one activity
-  (none duplicated) and without one removes the old; a tap in each
-  presentation and mode opens the workout page, also from its minimized
-  bar, from another tab with unsaved changes (no prompt: it is pushed),
-  and from a killed app (the launch URL reaches `WorkoutActivityTaps`
-  through the late-registered scene delegate); with no workout in
-  progress a tap only opens the app, and with the workout page open (also
-  under the exercise picker or the paywall) it stays as it is; Google
-  sign-in still returns to the app; the clocks fit at 1:00:00 in every
-  presentation without squeezing the labels. Since LA1–LA4 (2026-11-19;
-  both targets compiled with `xcodebuild` for the simulator, nothing run):
-  the set card with its dots (also 6+ sets, a warm-up, a drop set, no
-  values yet, every set done), the rest card's bar emptying and the
-  compact island's ring; −15 s, +15 s and Skip on iOS 17+ with the app in
-  front, in the background and killed (the activity moves at once; the app
-  shows the same rest when opened, and the rest notification follows when
-  it ran), none below iOS 17; a tap beside the buttons still opens the
-  workout; a Live Activity started by the build before stays undrawable
-  until the app updates it (its content state changed); "All sets done"
-  with "Finish in the app" once the last set is ticked (LA5).
+- Workout on the lock screen (iOS), checked on the iPhone 16 Pro
+  simulator (iOS 18.6) on 2026-11-25, before and after the bridge moved
+  into `forge_live_activity` (same results): it starts with the first
+  exercise; the compact island shows the elapsed time and the expanded one
+  the set card with its dots (six with two warm-ups); a rest shows its
+  countdown, emptying bar and the next set; −15 s, +15 s and Skip on the
+  lock screen move it with the app in the background and killed (a press
+  shows within about two seconds; the app shows the skip when opened); a
+  rest that runs out with the app in the background turns back into the
+  workout; relaunching keeps one activity and the elapsed time; a tap
+  opens the workout page, also from a killed app; discard removes it.
+  Seen: the expanded island cuts the exercise name ("Barbell…") although
+  the line has room; to fix. Not checked yet: the clocks at 1:00:00, a
+  drop set, "All sets done" (LA5), a tap with the workout page under the
+  picker or paywall, below iOS 17, a real device. A Live Activity started
+  by a build before the move (`WorkoutActivityAttributes`) is no longer
+  seen and stays until iOS ends it. Content the extension cannot decode
+  draws as an empty workout without an error, so a key renamed in
+  `ios_workout_lock_screen.dart` must be renamed in
+  `WorkoutActivityContent` too.
 - An activity started by an older build (`RestActivityAttributes`)
   is no longer seen by the app and stays until iOS ends it; only matters
   for a device that had one running across the update.
@@ -2231,18 +2225,6 @@ Decisions (the canvases they were drawn on are deleted):
   after the upgrade; check that they still fire and open their tab.
   `Notifications.openSettings` (the reminder tiles' "open settings") is
   not verified on either platform yet.
-- Forge tasks; the app's own versions are accepted deviations, to be
-  replaced once these exist:
-  - The Live Activity bridge (`AppDelegate.swift`'s `WorkoutActivity`,
-    `WorkoutActivityTaps` and a generic attributes type) could move to a package with a native iOS
-    plugin once a second app needs one; the widget views stay in the app.
-  - A messaging addition (to `forge_notifications` or a new package):
-    following a topic per language with leaving the others, foreground
-    display of pushed notifications, auto-init off until allowed (the
-    app's `FcmAnnouncementRepository`).
-- `forge_purchases` has no "unavailable" backend; the app swaps in its own
-  repository for release builds without keys. Move it into the package when
-  it is next changed.
 - App Check (2026-11-20), monitoring first (owner's decision). On
   2026-11-24 the owner moved enforcement after release: App Attest is
   registered for the iOS app on dev and prod (no service enforced), and
@@ -2291,8 +2273,8 @@ the feature you are about to touch, and keep it true when you change it.
   when this platform's public SDK key is passed with `--dart-define`
   (`REVENUECAT_IOS_KEY`, `REVENUECAT_ANDROID_KEY`; never committed), else the
   fake in debug and profile builds (a debug-only "Fake store" section on the
-  Profile tab steers it), else, in release, an unavailable store: nobody is
-  Premium and the paywall says purchases are not available yet.
+  Profile tab steers it), else, in release, the package's `UnavailableBackend`:
+  nobody is Premium and the paywall says purchases are not available yet.
   `PurchaserSession` identifies the signed-in uid (guests too; linking keeps
   it) or resets, at startup and on every auth change, retrying failures.
 - **Premium gate**: `context.watchPremium()` gives unknown / free / premium for
@@ -4114,10 +4096,19 @@ the feature you are about to touch, and keep it true when you change it.
   swipe them away while unlocked, until the next change.
   iOS (16.2+, below that nothing shows): one Live Activity for the whole
   workout from the `RestTimer` widget extension (target and bundle id kept
-  from when it showed rests only; `WorkoutActivityAttributes`,
-  `WorkoutLiveActivity`), started by the app in front through
-  `AppDelegate.swift` (`getworkout/workout_activity`), updated and ended
-  while the app runs; its texts come from the app. Owner's picks
+  from when it showed rests only; `WorkoutLiveActivity`), started by the
+  app in front through `forge_live_activity`, updated and ended while the
+  app runs; its texts come from the app. The package holds the generic
+  bridge: starting, updating and ending one activity (one across
+  relaunches, extras and iOS-ended ones removed), the stale date, taps,
+  and button presses kept until Dart takes them. Its
+  `ForgeLiveActivityAttributes` carries the content as JSON; the extension
+  declares the same type (`ForgeLiveActivityAttributes.swift`, extension
+  only) and decodes it as `WorkoutActivityContent`
+  (`WorkoutActivityContent.swift`, both targets, with the rest's move
+  rule), which `IosWorkoutLockScreen` writes. The views, the intents and
+  `AppDelegate.swift`'s wiring (tap URL, the move on a press, intents to
+  the package) stay in the app. Owner's picks
   2026-11-19 (LA1 A, LA2 A, LA3 B, LA4 B). Lock screen, on a dark card in
   every appearance: while a set is due, a top row with the app's mark (a
   dumbbell on the muted green), the exercise's place ("Exercise 3 of 6")
@@ -4144,8 +4135,8 @@ the feature you are about to touch, and keep it true when you change it.
   both targets, not shown in Shortcuts), so they run in the app's process
   without opening it: the Runner moves the rest shown at once (the app's
   rule: 15 s more up to 30 min ahead, 15 s less ending it when less is
-  left, Skip ending it) and hands the press to Dart on
-  `getworkout/workout_activity_rest`, which answers only once the press
+  left, Skip ending it) and hands the press to Dart through
+  forge_live_activity, which answers only once the press
   is applied and the rest notification moved (`LockScreenRestPress`, at
   most 5 s), so iOS keeps the app awake until then; Dart applies it to
   the workout's rest (`RestTimerCubit` through `WatchLockScreenRestActions`, waiting
@@ -4169,7 +4160,7 @@ the feature you are about to touch, and keep it true when you change it.
   modes) opens the app with `getworkout://workout` (its widgetURL; the
   `getworkout` scheme next to Google sign-in's in `CFBundleURLTypes`).
   The Runner takes that URL itself as a scene delegate
-  (`WorkoutActivityTaps`) and keeps it until Dart takes it, so a tap that
+  (`ForgeLiveActivityPlugin`) and keeps it until Dart takes it, so a tap that
   launched the app is not lost; Flutter's own deep linking is off
   (`FlutterDeepLinkingEnabled` false; the app has no other deep links).
   The tap joins the notification taps' path in `App`: kept until the app
@@ -4177,7 +4168,7 @@ the feature you are about to touch, and keep it true when you change it.
   pushed through the router as from the minimized workout bar (so the
   unsaved-changes guard sees it), unless it is open already or no workout
   is in progress (an activity left behind), where the tap only opens the
-  app. No App Group: the app's own ActivityKit bridge passes the content,
+  app. No App Group: forge_live_activity's ActivityKit bridge passes the content,
   so the `live_activities` plugin (App Group, iOS 16.1 minimum for the
   whole app) is not used, and the app keeps iOS 15 (ActivityKit
   weak-linked).
@@ -4934,7 +4925,13 @@ the feature you are about to touch, and keep it true when you change it.
   2026-11-24). Follows run one at a time, so two Premium changes never
   interleave their topic changes. The install's push token is stored on
   its device record for the panel's test sends (see
-  `users/{uid}/devices`).
+  `users/{uid}/devices`). Code: forge_messaging holds the topic following
+  (`LanguageTopics`, `TopicRepository`), the foreground display and taps,
+  the auto-init rule and the push token (`PushTokenSource`); the app
+  passes in the prefix `announcements`, its languages, the segments
+  `free` and `premium`, id 300 and payload `announcement`
+  (`NotificationsModule`), and maps the Premium state to a segment
+  (`FollowAnnouncements`).
 - **Sending announcements**: the admin panel's Announcements page
   (`lib/admin/announcements`) calls `sendAnnouncement` after a confirmation
   that it reaches every user who allowed notifications and cannot be

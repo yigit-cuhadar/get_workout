@@ -1,5 +1,5 @@
-import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:forge_core/forge_core.dart';
+import 'package:forge_messaging/forge_messaging.dart';
 import 'package:forge_notifications/forge_notifications.dart';
 import 'package:get_it/get_it.dart';
 import 'package:path_provider/path_provider.dart';
@@ -8,7 +8,7 @@ import '../../core/device_localizations.dart';
 import '../../l10n/app_localizations.dart';
 import '../programs/presentation/program_text.dart';
 import 'data/device_notification_repository.dart';
-import 'data/fcm_announcement_repository.dart';
+import 'data/notification_payloads.dart';
 import 'data/notifications_asked_marker.dart';
 import 'domain/notification_repository.dart';
 import 'domain/notifications_usecases.dart';
@@ -19,11 +19,16 @@ import 'presentation/notifications_cubit.dart';
 /// (`sl.getAsync<Notifications>()` waits for that), which creates the
 /// Android channels before any pushed message can need them, the
 /// reminders and the
-/// announcements. Not for the admin panel. Needs `AuthModule`,
+/// announcements (forge_messaging, which also gives `DevicesModule` its
+/// push tokens). Not for the admin panel. Needs `AuthModule`,
 /// `SettingsModule`, `ProgramsModule` (programs and Premium) and
 /// `BodyModule` (measurement days).
 class NotificationsModule implements FeatureModule {
   const NotificationsModule();
+
+  /// The local notification an announcement shows in front of the app; a
+  /// newer one replaces it.
+  static const _announcementNotificationId = 300;
 
   @override
   void register(GetIt sl) {
@@ -63,19 +68,6 @@ class NotificationsModule implements FeatureModule {
       )
       ..registerLazySingleton(
         () => const NotificationsAskedMarker(getApplicationSupportDirectory),
-      )
-      ..registerLazySingleton<AnnouncementRepository>(
-        () => FcmAnnouncementRepository(
-          FirebaseMessaging.instance,
-          languages: [
-            for (final locale in AppLocalizations.supportedLocales)
-              locale.toString(),
-          ],
-          onMessage: FirebaseMessaging.onMessage,
-          onMessageOpenedApp: FirebaseMessaging.onMessageOpenedApp,
-          notifications: sl.getAsync<Notifications>(),
-          taps: taps,
-        ),
       )
       ..registerFactory(() => GetNotificationAccess(sl()))
       ..registerFactory(() => RequestNotificationAccess(sl()))
@@ -125,5 +117,17 @@ class NotificationsModule implements FeatureModule {
           language: () => deviceLocalizations().localeName,
         ),
       );
+    MessagingModule(
+      topics: LanguageTopics(
+        AnnouncementTopics.prefix,
+        languages: [
+          for (final locale in AppLocalizations.supportedLocales)
+            locale.toString(),
+        ],
+        segments: const [AnnouncementTopics.free, AnnouncementTopics.premium],
+      ),
+      notificationId: _announcementNotificationId,
+      tapPayload: NotificationPayloads.announcement,
+    ).register(sl);
   }
 }

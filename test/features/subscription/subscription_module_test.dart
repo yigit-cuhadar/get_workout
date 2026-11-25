@@ -1,7 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:forge_purchases/forge_purchases.dart';
 import 'package:get_it/get_it.dart';
-import 'package:get_workout/features/subscription/data/unavailable_purchases_repository.dart';
 import 'package:forge_remote_config/forge_remote_config.dart';
 import 'package:get_workout/features/subscription/domain/paywall_layout.dart';
 import 'package:get_workout/features/subscription/presentation/premium_paywall_cubit.dart';
@@ -16,10 +15,12 @@ void main() {
 
   tearDown(() => sl.reset());
 
-  test('without a backend the store is unavailable, never the fake', () async {
-    const SubscriptionModule(backend: null, pastOnboarding: _past).register(sl);
+  test('the unavailable backend never registers the fake', () async {
+    const SubscriptionModule(
+      backend: UnavailableBackend(),
+      pastOnboarding: _past,
+    ).register(sl);
 
-    expect(sl<PurchasesRepository>(), isA<UnavailablePurchasesRepository>());
     expect(sl.isRegistered<FakePurchasesRepository>(), isFalse);
     expect(SubscriptionModule.debugControls(sl), isNull);
 

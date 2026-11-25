@@ -2,7 +2,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:forge_core/forge_core.dart';
 import 'package:forge_purchases/forge_purchases.dart';
-import 'package:get_workout/features/subscription/data/unavailable_purchases_repository.dart';
 import 'package:get_workout/features/subscription/domain/paywall_layout.dart';
 import 'package:get_workout/features/subscription/presentation/premium.dart';
 import 'package:get_workout/features/subscription/presentation/subscription_summary.dart';
@@ -337,27 +336,7 @@ void main() {
           iosKey: '',
           androidKey: '',
         ),
-        isNull,
-      );
-    });
-  });
-
-  group('UnavailablePurchasesRepository', () {
-    const repository = UnavailablePurchasesRepository();
-
-    test('entitles nobody and reports the store unavailable', () async {
-      expect(
-        (await repository.identify('u1')).valueOrNull,
-        const Entitlement.none(),
-      );
-      final failure = (await repository.offering()).failureOrNull;
-      expect(
-        failure,
-        isA<PurchaseFailure>().having(
-          (f) => f.reason,
-          'reason',
-          PurchaseFailureReason.storeUnavailable,
-        ),
+        isA<UnavailableBackend>(),
       );
     });
   });

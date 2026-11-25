@@ -1,16 +1,10 @@
-import ActivityKit
 import Flutter
+import forge_live_activity
 import UIKit
 import UserNotifications
 
 @main
 @objc class AppDelegate: FlutterAppDelegate, FlutterImplicitEngineDelegate {
-  /// Kept here: the registrar does not keep scene delegates alive.
-  private var workoutActivityTaps: WorkoutActivityTaps?
-
-  /// The Live Activity's rest buttons to Dart, once Flutter runs.
-  private var workoutActivityRest: FlutterMethodChannel?
-
   override func application(
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
@@ -18,10 +12,18 @@ import UserNotifications
     // flutter_local_notifications: deliver and report taps of local
     // notifications.
     UNUserNotificationCenter.current().delegate = self as? UNUserNotificationCenterDelegate
-    // Set at launch: a rest button may launch the app in the background,
-    // where Flutter does not start.
-    RestActions.handler = { [weak self] action in
-      await self?.restButtonPressed(action)
+    // The workout on the lock screen (forge_live_activity), set at launch:
+    // a rest button may launch the app in the background, where Flutter
+    // does not start. A press moves the rest shown at once.
+    ForgeLiveActivityPlugin.tapURL = WorkoutActivityLink.url
+    ForgeLiveActivityPlugin.contentAfterPress = { action, json in
+      guard let action = RestAction(rawValue: action),
+        let moved = WorkoutActivityContent(json: json)?.moved(action)
+      else { return nil }
+      return (moved.json, moved.rest?.endsAt)
+    }
+    RestActions.handler = { action in
+      await ForgeLiveActivityPlugin.press(action.rawValue)
     }
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
@@ -29,100 +31,6 @@ import UserNotifications
   func didInitializeImplicitFlutterEngine(_ engineBridge: FlutterImplicitEngineBridge) {
     GeneratedPluginRegistrant.register(with: engineBridge.pluginRegistry)
     registerBackupExclusion(engineBridge.pluginRegistry)
-    registerWorkoutActivity(engineBridge.pluginRegistry)
-  }
-
-  /// The workout in progress as a Live Activity
-  /// (lib/features/workout/data/ios_workout_lock_screen.dart): "show"
-  /// starts or updates it and answers whether it shows (false with Live
-  /// Activities off), "end" removes it, "takeTap" answers whether it was
-  /// tapped since last asked. Below iOS 16.2 none shows. Its rest buttons
-  /// go on `getworkout/workout_activity_rest` (restButtonPressed).
-  private func registerWorkoutActivity(_ registry: FlutterPluginRegistry) {
-    guard let registrar = registry.registrar(forPlugin: "WorkoutActivity") else { return }
-    let restChannel = FlutterMethodChannel(
-      name: "getworkout/workout_activity_rest",
-      binaryMessenger: registrar.messenger()
-    )
-    restChannel.setMethodCallHandler { call, result in
-      guard call.method == "takeRestActions" else {
-        result(FlutterMethodNotImplemented)
-        return
-      }
-      result(RestPresses.take().map(\.rawValue))
-    }
-    workoutActivityRest = restChannel
-    let channel = FlutterMethodChannel(
-      name: "getworkout/workout_activity",
-      binaryMessenger: registrar.messenger()
-    )
-    let taps = WorkoutActivityTaps(channel: channel)
-    workoutActivityTaps = taps
-    registrar.addSceneDelegate(taps)
-    channel.setMethodCallHandler { call, result in
-      if call.method == "takeTap" {
-        result(taps.take())
-        return
-      }
-      guard #available(iOS 16.2, *) else {
-        result(nil)
-        return
-      }
-      switch call.method {
-      case "show":
-        guard let args = call.arguments as? [String: Any],
-          let name = args["name"] as? String,
-          let startedAt = args["startedAt"] as? NSNumber
-        else {
-          result(FlutterError(code: "bad-args", message: "show needs name and startedAt", details: nil))
-          return
-        }
-        let state = WorkoutActivityAttributes.ContentState(
-          name: name,
-          startedAt: date(startedAt),
-          set: activitySet(args["set"]),
-          rest: activityRest(args["rest"])
-        )
-        Task { @MainActor in
-          do {
-            result(try await WorkoutActivity.show(state))
-          } catch {
-            result(FlutterError(code: "show-failed", message: error.localizedDescription, details: nil))
-          }
-        }
-      case "end":
-        Task { @MainActor in
-          await WorkoutActivity.end()
-          result(nil)
-        }
-      default:
-        result(FlutterMethodNotImplemented)
-      }
-    }
-  }
-
-  /// A rest button pressed on the Live Activity: the activity shows the
-  /// moved rest at once, and Dart moves the workout's rest, now when it
-  /// listens, else once it does (kept until then, also across launches).
-  @MainActor private func restButtonPressed(_ action: RestAction) async {
-    if #available(iOS 16.2, *) {
-      await WorkoutActivity.move(action)
-    }
-    guard let channel = workoutActivityRest else {
-      RestPresses.keep(action)
-      return
-    }
-    let taken = await withCheckedContinuation { continuation in
-      channel.invokeMethod("restAction", arguments: action.rawValue) { result in
-        continuation.resume(
-          returning: !(result is FlutterError)
-            && (result as AnyObject?) !== FlutterMethodNotImplemented
-        )
-      }
-    }
-    if !taken {
-      RestPresses.keep(action)
-    }
   }
 
   /// Progress photos live only in the app and in its own backup, so their
@@ -152,154 +60,3 @@ import UserNotifications
   }
 }
 
-/// The set to do now from Dart; nil when every set is done.
-@available(iOS 16.2, *)
-private func activitySet(_ argument: Any?) -> WorkoutActivityAttributes.ContentState.SetToDo? {
-  guard let set = argument as? [String: Any],
-    let exercise = set["exercise"] as? String,
-    let position = set["position"] as? String,
-    let line = set["line"] as? String,
-    let done = set["done"] as? [Bool]
-  else { return nil }
-  return .init(exercise: exercise, position: position, line: line, done: done)
-}
-
-/// The running rest from Dart; nil when none runs.
-@available(iOS 16.2, *)
-private func activityRest(_ argument: Any?) -> WorkoutActivityAttributes.ContentState.Rest? {
-  guard let rest = argument as? [String: Any],
-    let startsAt = rest["startsAt"] as? NSNumber,
-    let endsAt = rest["endsAt"] as? NSNumber,
-    let title = rest["title"] as? String,
-    let shorten = rest["shorten"] as? String,
-    let extend = rest["extend"] as? String,
-    let skip = rest["skip"] as? String
-  else { return nil }
-  return .init(
-    startsAt: date(startsAt),
-    endsAt: date(endsAt),
-    title: title,
-    detail: rest["detail"] as? String,
-    shorten: shorten,
-    extend: extend,
-    skip: skip
-  )
-}
-
-/// Rest presses Dart has not taken yet, kept across launches: one pressed
-/// while the app did not run moves the workout's rest when it next starts.
-enum RestPresses {
-  private static let key = "workoutActivityRestPresses"
-
-  static func keep(_ action: RestAction) {
-    let kept = UserDefaults.standard.stringArray(forKey: key) ?? []
-    UserDefaults.standard.set(kept + [action.rawValue], forKey: key)
-  }
-
-  static func take() -> [RestAction] {
-    let kept = UserDefaults.standard.stringArray(forKey: key) ?? []
-    UserDefaults.standard.removeObject(forKey: key)
-    return kept.compactMap(RestAction.init(rawValue:))
-  }
-}
-
-/// Milliseconds since the epoch from Dart.
-private func date(_ milliseconds: NSNumber) -> Date {
-  Date(timeIntervalSince1970: milliseconds.doubleValue / 1000)
-}
-
-/// One Live Activity for the workout in progress. During a rest its stale
-/// date is the rest's end, so it shows the workout again by itself when the
-/// app is suspended then. Without push updates the app updates and ends it
-/// only while it runs. iOS ends it after 8 hours; the next show then starts
-/// a new one.
-@available(iOS 16.2, *)
-enum WorkoutActivity {
-  /// Whether it shows; false with Live Activities turned off. Throws when
-  /// the app may not start one (not in front).
-  static func show(_ state: WorkoutActivityAttributes.ContentState) async throws -> Bool {
-    let content = ActivityContent(state: state, staleDate: state.rest?.endsAt)
-    let running = Activity<WorkoutActivityAttributes>.activities.filter {
-      $0.activityState == .active || $0.activityState == .stale
-    }
-    if let current = running.first {
-      await current.update(content)
-      for extra in running.dropFirst() {
-        await extra.end(nil, dismissalPolicy: .immediate)
-      }
-      return true
-    }
-    guard ActivityAuthorizationInfo().areActivitiesEnabled else { return false }
-    // One iOS ended (8 hours) stays on the lock screen up to 4 hours more:
-    // removed, so it is not shown next to the new one.
-    for ended in Activity<WorkoutActivityAttributes>.activities where ended.activityState == .ended {
-      await ended.end(nil, dismissalPolicy: .immediate)
-    }
-    _ = try Activity<WorkoutActivityAttributes>.request(
-      attributes: WorkoutActivityAttributes(),
-      content: content,
-      pushType: nil
-    )
-    return true
-  }
-
-  /// The rest shown moved as [action] does, before the app moves it.
-  static func move(_ action: RestAction) async {
-    for activity in Activity<WorkoutActivityAttributes>.activities
-    where activity.activityState == .active {
-      let state = activity.content.state.moved(action)
-      await activity.update(ActivityContent(state: state, staleDate: state.rest?.endsAt))
-    }
-  }
-
-  static func end() async {
-    for activity in Activity<WorkoutActivityAttributes>.activities {
-      await activity.end(nil, dismissalPolicy: .immediate)
-    }
-  }
-}
-
-/// Taps on the activity: its widgetURL opens the app with
-/// WorkoutActivityLink.url, here, not through Flutter's deep linking
-/// (FlutterDeepLinkingEnabled is off). A tap is kept until Dart takes it,
-/// so one that launched the app before Dart listened is not lost; Dart is
-/// told to take it now too.
-final class WorkoutActivityTaps: NSObject, FlutterSceneLifeCycleDelegate {
-  private let channel: FlutterMethodChannel
-  private var tapped = false
-
-  init(channel: FlutterMethodChannel) {
-    self.channel = channel
-  }
-
-  /// Whether it was tapped since last asked.
-  func take() -> Bool {
-    defer { tapped = false }
-    return tapped
-  }
-
-  // Selectors pinned, so a renamed Swift signature cannot silently stop
-  // matching the optional protocol methods.
-  @objc(scene:willConnectToSession:options:)
-  func scene(
-    _ scene: UIScene,
-    willConnectTo session: UISceneSession,
-    options connectionOptions: UIScene.ConnectionOptions?
-  ) -> Bool {
-    // Only noted: the launch is left to the others.
-    _ = open(connectionOptions?.urlContexts ?? [])
-    return false
-  }
-
-  @objc(scene:openURLContexts:)
-  func scene(_ scene: UIScene, openURLContexts URLContexts: Set<UIOpenURLContext>) -> Bool {
-    open(URLContexts)
-  }
-
-  private func open(_ contexts: Set<UIOpenURLContext>) -> Bool {
-    guard contexts.contains(where: { $0.url == WorkoutActivityLink.url }) else { return false }
-    tapped = true
-    channel.invokeMethod("tapped", arguments: nil)
-    return true
-  }
-}
