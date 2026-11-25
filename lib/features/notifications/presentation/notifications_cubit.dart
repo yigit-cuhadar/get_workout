@@ -36,8 +36,10 @@ typedef NotificationText = ({String title, String body});
 
 /// Keeps the device's reminders matching the signed-in user's reminder
 /// settings and active program, and follows the announcements of the
-/// device's language and the user's Premium state once the device lets
-/// the app notify, again whenever that state changes.
+/// app's language and the user's Premium state once the device lets the
+/// app notify, again whenever that state changes. Reminders are written,
+/// and announcements followed, in the language of the user's settings;
+/// while a signed-in user's settings load, announcements wait.
 ///
 /// Reminders are planned again whenever the program list (program, its
 /// weekdays, the schedule, done days), the user's settings or their
@@ -81,8 +83,10 @@ class NotificationsCubit extends Cubit<NotificationsState> {
       watch: watchSettings.call,
       onUser: _onUser,
       onData: (settings) {
+        final languageChanged = settings.language != _userSettings?.language;
         _userSettings = settings;
         _resync();
+        if (languageChanged && state.allowed == true) unawaited(_follow());
       },
       logTag: 'notifications',
     );
@@ -112,11 +116,15 @@ class NotificationsCubit extends Cubit<NotificationsState> {
   final OpenNotificationSettings _openSettings;
   final RefreshTimeZone _refreshTimeZone;
   final FollowAnnouncements _followAnnouncements;
-  final NotificationText Function(WorkoutReminder reminder) _workoutText;
-  final NotificationText Function() _measurementText;
+  final NotificationText Function(
+    WorkoutReminder reminder,
+    AppLanguage language,
+  )
+  _workoutText;
+  final NotificationText Function(AppLanguage language) _measurementText;
 
-  /// The language code announcements follow.
-  final String Function() _language;
+  /// The language code of the announcements followed in [AppLanguage].
+  final String Function(AppLanguage language) _language;
   final DateTime Function() _clock;
   late final StreamSubscription<ProgramListState> _programSubscription;
   late final UserStreamFollower<UserSettings> _settings;
@@ -129,6 +137,7 @@ class NotificationsCubit extends Cubit<NotificationsState> {
   /// The current user's settings; null until they arrive.
   UserSettings? _userSettings;
   var _sawUser = false;
+  var _signedIn = false;
 
   /// The audience whose announcements are followed.
   AnnouncementAudience? _followed;
@@ -144,6 +153,7 @@ class NotificationsCubit extends Cubit<NotificationsState> {
 
   void _onUser(String? uid) {
     _userSettings = null;
+    _signedIn = uid != null;
     // The first user at start is the one the reminders were made for.
     if (_sawUser || uid == null) _enqueue(_clear);
     _sawUser = true;
@@ -201,8 +211,10 @@ class NotificationsCubit extends Cubit<NotificationsState> {
   Future<void> _follow() => _following = _following.then((_) => _followNow());
 
   Future<void> _followNow() async {
+    final settings = _userSettings;
+    if (settings == null && _signedIn) return;
     final AnnouncementAudience audience = (
-      language: _language(),
+      language: _language(settings?.language ?? AppLanguage.automatic),
       premium: _premium,
     );
     if (_followed == audience) return;
@@ -239,7 +251,11 @@ class NotificationsCubit extends Cubit<NotificationsState> {
     } else if (_workoutInput(settings, now) case final workout?) {
       await _syncKind(ReminderKind.workout, [
         for (final reminder in _planWorkout(workout))
-          _notice(reminder.id, reminder.at, _workoutText(reminder)),
+          _notice(
+            reminder.id,
+            reminder.at,
+            _workoutText(reminder, settings.language),
+          ),
       ]);
     }
     if (!settings.measurementReminder.enabled) {
@@ -251,7 +267,11 @@ class NotificationsCubit extends Cubit<NotificationsState> {
           measured: measured,
           now: now,
         )))
-          _notice(reminder.id, reminder.at, _measurementText()),
+          _notice(
+            reminder.id,
+            reminder.at,
+            _measurementText(settings.language),
+          ),
       ]);
     }
   }

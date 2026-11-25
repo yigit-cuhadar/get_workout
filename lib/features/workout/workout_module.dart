@@ -6,9 +6,10 @@ import 'package:get_it/get_it.dart';
 import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 
-import '../../core/device_localizations.dart';
 import '../notifications/data/notification_payloads.dart';
 import '../programs/domain/completed_days.dart';
+import '../settings/presentation/app_language.dart';
+import '../settings/presentation/settings_cubit.dart';
 import '../settings/presentation/settings_section.dart';
 import 'data/android_workout_lock_screen.dart';
 import 'data/audio_rest_chime.dart';
@@ -60,10 +61,11 @@ class WorkoutModule implements FeatureModule {
           getApplicationSupportDirectory,
           sl(),
           channelName: (alert) {
-            final l10n = deviceLocalizations();
+            final l10n = currentLocalizations(sl<SettingsCubit>());
             return l10n.restChannelName(l10n.restAlertLabel(alert));
           },
-          channelDescription: deviceLocalizations().restChannelDescription,
+          channelDescription: currentLocalizations(sl<SettingsCubit>())
+              .restChannelDescription,
         ),
       )
       ..registerLazySingleton<RestChime>(AudioRestChime.new)
@@ -71,7 +73,7 @@ class WorkoutModule implements FeatureModule {
         () => defaultTargetPlatform == TargetPlatform.iOS
             ? IosWorkoutLockScreen(
                 restButtons: () {
-                  final l10n = deviceLocalizations();
+                  final l10n = currentLocalizations(sl<SettingsCubit>());
                   final seconds = restExtension.inSeconds;
                   return (
                     shorten: l10n.lockScreenRestShorten(seconds),
@@ -132,7 +134,7 @@ class WorkoutModule implements FeatureModule {
           cancelEndNotice: sl(),
           analytics: sl(),
           endText: (workout, lastSetAt) {
-            final l10n = deviceLocalizations();
+            final l10n = currentLocalizations(sl<SettingsCubit>());
             if (lastSetAt == null) {
               return (
                 title: l10n.workoutSelfDiscardedTitle(workout.name),
@@ -161,7 +163,7 @@ class WorkoutModule implements FeatureModule {
           schedule: sl(),
           cancel: sl(),
           text: (workout, next) {
-            final l10n = deviceLocalizations();
+            final l10n = currentLocalizations(sl<SettingsCubit>());
             return (
               title: l10n.restOver,
               body: next == null
@@ -175,7 +177,7 @@ class WorkoutModule implements FeatureModule {
           showOnLockScreen: sl(),
           clearLockScreen: sl(),
           lockScreenText: (active, next, unit) {
-            final l10n = deviceLocalizations();
+            final l10n = currentLocalizations(sl<SettingsCubit>());
             final rest = l10n.restLockScreenTitle;
             final workout = active.workout!;
             if (next == null) {
