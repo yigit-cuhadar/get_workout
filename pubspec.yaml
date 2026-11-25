@@ -95,6 +95,11 @@ dependencies:
       url: https://github.com/yigit-cuhadar/MobileAppForge.git
       ref: 7a7bbd257017182597e2c41f146b2239658723aa
       path: packages/forge_review
+  forge_live_activity:
+    git:
+      url: https://github.com/yigit-cuhadar/MobileAppForge.git
+      ref: 7a7bbd257017182597e2c41f146b2239658723aa
+      path: packages/forge_live_activity
   device_info_plus: ^13.3.0
   package_info_plus: ^10.2.2
   cloud_firestore: ^7.1.0
