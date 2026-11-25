@@ -58,6 +58,34 @@
           "Shoulder blades back and down",
           "Touch, then drive"
         ]
+      },
+      "tr": {
+        "name": "Barbell Bench Press",
+        "aliases": [
+          "Bench Press",
+          "Flat Bench Press",
+          "Flat Barbell Bench"
+        ],
+        "setup": [
+          "Gözlerin barın altında olacak şekilde sehpaya uzan.",
+          "Ayaklarını yere tam bas ve kürek kemiklerini birbirine sık.",
+          "Barı omuzlarından biraz geniş kavra ve göğsünün üstünde raftan al."
+        ],
+        "execution": [
+          "Barı kontrollü şekilde göğsünün ortasına indir.",
+          "Dirseklerini vücuduna yaklaşık 45 derece açıda tut.",
+          "Kolların düzleşene kadar barı yukarı ve hafifçe yüzüne doğru it."
+        ],
+        "mistakes": [
+          "Barı göğüsten sektirmek.",
+          "Dirsekleri dümdüz iki yana açmak.",
+          "Kalçayı sehpadan kaldırmak."
+        ],
+        "safety": "Tükenişe yakın çalışırken bir yardımcı ya da güvenlik kolları kullan.",
+        "cues": [
+          "Kürek kemikleri geri ve aşağı",
+          "Değdir, sonra it"
+        ]
       }
     }
   },
@@ -113,6 +141,32 @@
         "cues": [
           "Body like a plank",
           "Chest to the floor"
+        ]
+      },
+      "tr": {
+        "name": "Push-Up",
+        "aliases": [
+          "Press-Up",
+          "Floor Push-Up",
+          "Şınav"
+        ],
+        "setup": [
+          "Ellerini omuzlarından biraz geniş şekilde yere koy.",
+          "Ayaklarını geri at; vücudun baştan topuklara düz bir çizgi oluştursun."
+        ],
+        "execution": [
+          "Dirseklerini bükerek göğsünü neredeyse yere değene kadar indir.",
+          "Dirseklerin iki yana açılmasın, geriye doğru açılı kalsın.",
+          "Kolların düzleşene kadar yeri it."
+        ],
+        "mistakes": [
+          "Kalçanın düşmesine ya da yukarı kalkmasına izin vermek.",
+          "Yerin çok üstünde biten yarım tekrarlar yapmak.",
+          "Başı öne düşürmek."
+        ],
+        "cues": [
+          "Vücut plank gibi",
+          "Göğüs yere"
         ]
       }
     },
@@ -175,6 +229,33 @@
           "Forearms vertical",
           "Slow on the way down"
         ]
+      },
+      "tr": {
+        "name": "Dumbbell Bench Press",
+        "aliases": [
+          "Flat Dumbbell Press",
+          "DB Bench Press",
+          "Dambıl press"
+        ],
+        "setup": [
+          "Dambıllar uyluklarında, sehpanın ucuna otur.",
+          "Geriye uzan ve dambılları göğsünün iki yanına getir.",
+          "Ayaklarını yerleştir ve kürek kemiklerini birbirine çek."
+        ],
+        "execution": [
+          "Kolların göğsünün üstünde düzleşene kadar dambılları yukarı it.",
+          "Dirseklerin sehpanın biraz altına inene kadar yavaşça indir.",
+          "Alt kollarını hareket boyunca dikey tut."
+        ],
+        "mistakes": [
+          "Tepede dambılları birbirine çarpmak.",
+          "Dirseklerin sehpanın çok altına düşmesine izin vermek.",
+          "Kollar hâlâ bükülüyken dambılları yere bırakmak."
+        ],
+        "cues": [
+          "Alt kollar dikey",
+          "İnişte yavaş"
+        ]
       }
     }
   },
@@ -233,6 +314,32 @@
         "cues": [
           "Press over the collarbones",
           "Shoulder blades pinned"
+        ]
+      },
+      "tr": {
+        "name": "Incline Dumbbell Press",
+        "aliases": [
+          "Incline DB Press",
+          "Incline Dumbbell Bench Press",
+          "Eğimli dambıl press"
+        ],
+        "setup": [
+          "Sehpayı 30 ila 45 derece eğime ayarla.",
+          "Dambıllar üst göğsünün iki yanında, geriye yaslan.",
+          "Kürek kemiklerini sehpaya doğru geriye çek."
+        ],
+        "execution": [
+          "Dambılları üst göğsünün üstüne it.",
+          "Göğsünde esneme hissedene kadar kontrollü şekilde indir.",
+          "Dirseklerini hafifçe içte tut."
+        ],
+        "mistakes": [
+          "Sehpayı hareketi omuz press'e çevirecek kadar dik ayarlamak.",
+          "Beli sehpadan kaldırıp kavislendirmek."
+        ],
+        "cues": [
+          "Köprücük kemiklerinin üstüne it",
+          "Kürek kemikleri sabit"
         ]
       }
     }
@@ -293,6 +400,32 @@
           "Bar to upper chest",
           "Stay tight on the bench"
         ]
+      },
+      "tr": {
+        "name": "Incline Barbell Bench Press",
+        "aliases": [
+          "Incline Bench Press",
+          "Incline Barbell Press",
+          "Eğimli halter bench press"
+        ],
+        "setup": [
+          "Sehpayı 30 ila 45 dereceye ayarla ve gözlerin barın altında olacak şekilde otur.",
+          "Omuzlarından biraz geniş kavra ve kürek kemiklerini sık.",
+          "Barı üst göğsünün üstünde raftan al."
+        ],
+        "execution": [
+          "Barı göğsünün üst kısmına, köprücük kemiklerinin hemen altına indir.",
+          "Kolların kilitlenene kadar düz bir çizgide geri it."
+        ],
+        "mistakes": [
+          "Barı göğüsten sektirmek.",
+          "Kalçanın oturaktan kalkmasına izin vermek."
+        ],
+        "safety": "Tükenişe yakın çalışırken bir yardımcı ya da güvenlik kolları kullan.",
+        "cues": [
+          "Bar üst göğse",
+          "Sehpada sıkı kal"
+        ]
       }
     }
   },
@@ -348,6 +481,30 @@
         "cues": [
           "Chest up",
           "Smooth and controlled"
+        ]
+      },
+      "tr": {
+        "name": "Machine Chest Press",
+        "aliases": [
+          "Seated Chest Press",
+          "Chest Press Machine",
+          "Göğüs press makinesi"
+        ],
+        "setup": [
+          "Koltuğu tutamaklar göğsünün ortasıyla hizalanacak şekilde ayarla.",
+          "Sırtın pede dayalı otur ve tutamakları kavra."
+        ],
+        "execution": [
+          "Kolların neredeyse düzleşene kadar tutamakları ileri it.",
+          "Göğsünde esneme hissedene kadar yavaşça geri dön."
+        ],
+        "mistakes": [
+          "Her tekrarın sonunda omuzların öne yuvarlanmasına izin vermek.",
+          "Tekrarlar arasında ağırlık bloğunun çarpmasına izin vermek."
+        ],
+        "cues": [
+          "Göğüs dik",
+          "Akıcı ve kontrollü"
         ]
       }
     }
@@ -406,6 +563,33 @@
           "Hug a big tree",
           "Squeeze, then stretch"
         ]
+      },
+      "tr": {
+        "name": "Cable Crossover",
+        "aliases": [
+          "Cable Fly",
+          "Standing Cable Fly",
+          "High Cable Crossover",
+          "Kablo crossover"
+        ],
+        "setup": [
+          "İki makarayı omuz hizasının üstüne ayarla ve her elinle bir tutamak tut.",
+          "Bir adım öne çık ve gövdeni hafifçe eğ.",
+          "Dirseklerini hafif bükülü tut."
+        ],
+        "execution": [
+          "Tutamakları kalçanın önünde geniş bir yayla aşağı ve birbirine getir.",
+          "Göğsünü bir an sık.",
+          "Esneme hissedene kadar kollarını yavaşça aç."
+        ],
+        "mistakes": [
+          "Dirsekleri büküp hareketi press'e çevirmek.",
+          "Gövdeden ivme almak."
+        ],
+        "cues": [
+          "Büyük bir ağaca sarıl",
+          "Sık, sonra esnet"
+        ]
       }
     }
   },
@@ -462,6 +646,32 @@
           "Soft elbows",
           "Wide arc"
         ]
+      },
+      "tr": {
+        "name": "Dumbbell Fly",
+        "aliases": [
+          "Dumbbell Chest Fly",
+          "Flat Dumbbell Fly",
+          "Dambıl açış",
+          "Göğüs açış"
+        ],
+        "setup": [
+          "Dambıllar göğsünün üstünde, avuç içlerin birbirine bakacak şekilde düz sehpaya uzan.",
+          "Dirseklerini hafifçe bük ve bu açıyı sabit tut."
+        ],
+        "execution": [
+          "Göğsünde esneme hissedene kadar kollarını geniş bir yayla aç.",
+          "Dambılları aynı yay boyunca yukarı getir."
+        ],
+        "mistakes": [
+          "Dambılları omuzları ağrıtacak kadar aşağı indirmek.",
+          "Kolları tamamen düzleştirmek; bu, dirsekleri zorlar."
+        ],
+        "safety": "Omzun önünü korumak için esnemeyi omuz hizasında durdur.",
+        "cues": [
+          "Dirsekler hafif bükülü",
+          "Geniş yay"
+        ]
       }
     }
   },
@@ -516,6 +726,31 @@
         "cues": [
           "Squeeze in the middle",
           "Shoulders down"
+        ]
+      },
+      "tr": {
+        "name": "Pec Deck",
+        "aliases": [
+          "Machine Fly",
+          "Pec Deck Fly",
+          "Butterfly Machine",
+          "Kelebek makinesi"
+        ],
+        "setup": [
+          "Koltuğu tutamaklar göğüs hizasında olacak şekilde ayarla.",
+          "Sırtın pede düz dayalı otur ve tutamakları kavra."
+        ],
+        "execution": [
+          "Tutamakları göğsünün önünde birleştir.",
+          "Bekle ve sık, sonra esneme hissedene kadar yavaşça açılmalarına izin ver."
+        ],
+        "mistakes": [
+          "Ellerin vücudun arkasına gitmesine izin vermek.",
+          "Dönüşü aceleye getirmek."
+        ],
+        "cues": [
+          "Ortada sık",
+          "Omuzlar aşağıda"
         ]
       }
     }
@@ -578,6 +813,33 @@
           "Lean forward",
           "Shoulders down"
         ]
+      },
+      "tr": {
+        "name": "Chest Dip",
+        "aliases": [
+          "Dip",
+          "Parallel Bar Dip",
+          "Weighted Dip",
+          "Göğüs dips",
+          "Dips"
+        ],
+        "setup": [
+          "Barları kavra ve kolların düz şekilde destek pozisyonuna sıçra.",
+          "Gövdeni öne eğ ve dizlerini hafifçe bük."
+        ],
+        "execution": [
+          "Omuzların dirseklerinin biraz altına inene kadar kendini indir.",
+          "Öne eğimi koruyarak kolların düzleşene kadar geri it."
+        ],
+        "mistakes": [
+          "Çok derine inip omuzları zorlamak.",
+          "Omuzları kulaklara doğru kaldırmak."
+        ],
+        "safety": "İnişi omuzlarının ağrısız kaldırabildiği derinlikte durdur.",
+        "cues": [
+          "Öne eğil",
+          "Omuzlar aşağıda"
+        ]
       }
     }
   },
@@ -637,6 +899,30 @@
           "Long arms",
           "Stretch, then pull"
         ]
+      },
+      "tr": {
+        "name": "Dumbbell Pullover",
+        "aliases": [
+          "DB Pullover",
+          "Lying Dumbbell Pullover",
+          "Dambıl pullover"
+        ],
+        "setup": [
+          "Sehpanın enine ya da boyuna uzan, tek dambılı iki elinle göğsünün üstünde tut.",
+          "Dirseklerini hafif bükülü tut."
+        ],
+        "execution": [
+          "Göğsünde ve sırtında esneme hissedene kadar dambılı bir yayla başının arkasına indir.",
+          "Aynı yay boyunca göğsünün üstüne geri çek."
+        ],
+        "mistakes": [
+          "Dirsekleri büküp hareketi bir arka kol extension'ına çevirmek.",
+          "Daha uzağa uzanmak için beli kavislendirmek."
+        ],
+        "cues": [
+          "Kollar uzun",
+          "Esnet, sonra çek"
+        ]
       }
     }
   },
@@ -694,6 +980,29 @@
           "Straight line",
           "Chest to the edge"
         ]
+      },
+      "tr": {
+        "name": "Incline Push-Up",
+        "aliases": [
+          "Hands-Elevated Push-Up",
+          "Eğimli şınav"
+        ],
+        "setup": [
+          "Ellerini omuzlarından biraz geniş şekilde bir sehpaya, kutuya ya da sağlam bir tezgâha koy.",
+          "Vücudun düz bir çizgi oluşturana kadar ayaklarını geri yürüt."
+        ],
+        "execution": [
+          "Göğsünü yüzeyin kenarına indir.",
+          "Kolların düzleşene kadar geri it."
+        ],
+        "mistakes": [
+          "Kalçanın düşmesine izin vermek.",
+          "Elleri omuzların çok önüne koymak."
+        ],
+        "cues": [
+          "Düz çizgi",
+          "Göğüs kenara"
+        ]
       }
     }
   },
@@ -745,6 +1054,29 @@
         ],
         "cues": [
           "Knees to head in one line"
+        ]
+      },
+      "tr": {
+        "name": "Knee Push-Up",
+        "aliases": [
+          "Kneeling Push-Up",
+          "Modified Push-Up",
+          "Dizüstü şınav"
+        ],
+        "setup": [
+          "Diz çök ve ellerini omuzlarından biraz geniş şekilde yere koy.",
+          "Vücudun dizlerinden başına kadar düz olacak şekilde öne kay."
+        ],
+        "execution": [
+          "Göğsünü yere doğru indir.",
+          "Kolların düzleşene kadar geri it."
+        ],
+        "mistakes": [
+          "Düz çizgiyi korumak yerine kalçadan bükülmek.",
+          "Hareket açıklığını kısaltmak."
+        ],
+        "cues": [
+          "Dizden başa tek çizgi"
         ]
       }
     }
@@ -804,6 +1136,31 @@
           "Mid chest",
           "Elbows at 45 degrees"
         ]
+      },
+      "tr": {
+        "name": "Smith Machine Bench Press",
+        "aliases": [
+          "Smith Bench Press",
+          "Smith makinesinde bench press"
+        ],
+        "setup": [
+          "Düz bir sehpayı, bar göğsünün ortasıyla hizalanacak şekilde barın altına koy.",
+          "Uzan, omuzlarından biraz geniş kavra ve kürek kemiklerini yerleştir.",
+          "Güvenlik durdurucularını barın en alt noktasının hemen altına ayarla.",
+          "Barı çevirerek kancasından çıkar."
+        ],
+        "execution": [
+          "Barı göğsünün ortasına indir.",
+          "Kolların düzleşene kadar geri it."
+        ],
+        "mistakes": [
+          "Sehpayı bar boyna ya da karna inecek şekilde yerleştirmek.",
+          "Güvenlik durdurucularını ayarlamayı unutmak."
+        ],
+        "cues": [
+          "Göğsün ortası",
+          "Dirsekler 45 derecede"
+        ]
       }
     }
   },
@@ -861,6 +1218,29 @@
           "Hips in line",
           "Full lockout"
         ]
+      },
+      "tr": {
+        "name": "Decline Push-Up",
+        "aliases": [
+          "Feet-Elevated Push-Up",
+          "Ayaklar yüksekte şınav"
+        ],
+        "setup": [
+          "Ayaklarını bir sehpaya ya da kutuya, ellerini omuzlarının altında yere koy.",
+          "Vücudun düz bir çizgi oluşturacak şekilde karnını sık."
+        ],
+        "execution": [
+          "Göğsünü yere doğru indir.",
+          "Kolların düzleşene kadar geri it."
+        ],
+        "mistakes": [
+          "Belin çökmesine izin vermek.",
+          "Ayakları hareketi omuz press'e çevirecek kadar yükseğe koymak."
+        ],
+        "cues": [
+          "Kalça hizada",
+          "Tam kilitle"
+        ]
       }
     }
   },
@@ -912,6 +1292,28 @@
         ],
         "cues": [
           "Wide hands, full depth"
+        ]
+      },
+      "tr": {
+        "name": "Wide-Grip Push-Up",
+        "aliases": [
+          "Wide Push-Up",
+          "Geniş şınav"
+        ],
+        "setup": [
+          "Ellerini omuz genişliğinin yaklaşık bir buçuk katı açık koy.",
+          "Geri adım atarak düz bir plank pozisyonuna geç."
+        ],
+        "execution": [
+          "Göğsünü yere doğru indir.",
+          "Vücudunu düz tutarak geri it."
+        ],
+        "mistakes": [
+          "Elleri omuzları ağrıtacak kadar geniş koymak.",
+          "Kalçanın düşmesine izin vermek."
+        ],
+        "cues": [
+          "Eller geniş, tam derinlik"
         ]
       }
     }
@@ -969,6 +1371,28 @@
         "cues": [
           "Bar to lower chest"
         ]
+      },
+      "tr": {
+        "name": "Decline Barbell Bench Press",
+        "aliases": [
+          "Decline Bench Press"
+        ],
+        "setup": [
+          "Bacaklarını decline sehpanın pedlerinin altına geçir ve geriye uzan.",
+          "Omuzlarından biraz geniş kavra ve barı yardımla ya da dikkatle raftan al."
+        ],
+        "execution": [
+          "Barı göğsünün alt kısmına indir.",
+          "Kolların düzleşene kadar geri it."
+        ],
+        "mistakes": [
+          "Barı göğüsten sektirmek.",
+          "Barı tek başına, kontrolsüzce raftan almak."
+        ],
+        "safety": "Bir yardımcı kullan; decline sehpada takılan barın altından çıkmak zordur.",
+        "cues": [
+          "Bar alt göğse"
+        ]
       }
     }
   },
@@ -1024,6 +1448,29 @@
         "cues": [
           "Upper chest drives"
         ]
+      },
+      "tr": {
+        "name": "Machine Incline Chest Press",
+        "aliases": [
+          "Incline Chest Press Machine",
+          "Incline Machine Press",
+          "Eğimli göğüs press makinesi"
+        ],
+        "setup": [
+          "Koltuğu tutamaklar üst göğsünle aynı hizada başlayacak şekilde ayarla.",
+          "Pede yaslanarak otur ve tutamakları kavra."
+        ],
+        "execution": [
+          "Kolların neredeyse düzleşene kadar tutamakları yukarı ve ileri it.",
+          "Yavaşça başlangıca dön."
+        ],
+        "mistakes": [
+          "Başı ve omuzları pedden öne itmek.",
+          "Ağırlık bloğunu sektirmek."
+        ],
+        "cues": [
+          "Üst göğüs itsin"
+        ]
       }
     }
   },
@@ -1076,6 +1523,29 @@
         ],
         "cues": [
           "Scoop up and in"
+        ]
+      },
+      "tr": {
+        "name": "Low-to-High Cable Fly",
+        "aliases": [
+          "Low Cable Fly",
+          "Upward Cable Fly",
+          "Alttan üste kablo açış"
+        ],
+        "setup": [
+          "İki makarayı en alt konuma ayarla ve her elinle bir tutamak tut.",
+          "Dirseklerin hafif bükülü, çapraz duruşla bir adım öne çık."
+        ],
+        "execution": [
+          "Ellerini yukarı ve birbirine doğru, üst göğsünün hizasına süpür.",
+          "Aynı yoldan yavaşça indir."
+        ],
+        "mistakes": [
+          "Omuzlarla kaldırıp omuzları kulaklara çekmek.",
+          "Kolları büküp hareketi curl'e çevirmek."
+        ],
+        "cues": [
+          "Yukarı ve içe kepçele"
         ]
       }
     }
@@ -1133,6 +1603,29 @@
         "cues": [
           "Bar to upper chest"
         ]
+      },
+      "tr": {
+        "name": "Incline Smith Machine Press",
+        "aliases": [
+          "Smith Incline Press",
+          "Smith makinesinde eğimli press"
+        ],
+        "setup": [
+          "Eğimli bir sehpayı, bar üst göğsünle hizalanacak şekilde barın altına koy.",
+          "Güvenlik durdurucularını barın en alt noktasının hemen altına ayarla.",
+          "Geriye uzan, omuzlarından biraz geniş kavra ve barı kancasından çıkar."
+        ],
+        "execution": [
+          "Barı üst göğsüne indir.",
+          "Kolların düzleşene kadar geri it."
+        ],
+        "mistakes": [
+          "Barı boyna indirmek.",
+          "Güvenlik durdurucularını ayarlamamak."
+        ],
+        "cues": [
+          "Bar üst göğse"
+        ]
       }
     }
   },
@@ -1186,6 +1679,29 @@
         "cues": [
           "Soft elbows",
           "Stretch the upper chest"
+        ]
+      },
+      "tr": {
+        "name": "Incline Dumbbell Fly",
+        "aliases": [
+          "Incline DB Fly",
+          "Eğimli dambıl açış"
+        ],
+        "setup": [
+          "Sehpayı yaklaşık 30 dereceye ayarla ve dambıllar göğsünün üstünde, geriye yaslan.",
+          "Dirseklerini hafif bükülü tut."
+        ],
+        "execution": [
+          "Üst göğsünde esneme hissedene kadar kollarını geniş bir yayla aç.",
+          "Dambılları göğsünün üstünde yeniden birleştir."
+        ],
+        "mistakes": [
+          "Çok aşağı inip omuzları zorlamak.",
+          "Ağırlığa sarılmak yerine onu press'lemek."
+        ],
+        "cues": [
+          "Dirsekler hafif bükülü",
+          "Üst göğsü esnet"
         ]
       }
     }
@@ -1241,6 +1757,31 @@
           "Push fast",
           "Land soft"
         ]
+      },
+      "tr": {
+        "name": "Clap Push-Up",
+        "aliases": [
+          "Plyometric Clap Push-Up",
+          "Alkışlı şınav"
+        ],
+        "setup": [
+          "Sağlam bir şınav pozisyonunda başla.",
+          "Vücudun havada düz kalsın diye karnını sık."
+        ],
+        "execution": [
+          "Hızla in, sonra ellerin yerden kalkacak kadar güçlü it.",
+          "Bir kez alkış yap ve dirseklerin yumuşak şekilde yere in.",
+          "Gerekirse sonraki tekrardan önce pozisyonunu yeniden kur."
+        ],
+        "mistakes": [
+          "Kilitli dirseklerle yere inmek.",
+          "İnişte kalçanın düşmesine izin vermek."
+        ],
+        "safety": "Önce patlayıcı şınavda ustalaş ve inişlerin özensizleşince dur.",
+        "cues": [
+          "Hızlı it",
+          "Yumuşak in"
+        ]
       }
     }
   },
@@ -1295,6 +1836,30 @@
           "Press straight out",
           "Slow return"
         ]
+      },
+      "tr": {
+        "name": "Band Chest Press",
+        "aliases": [
+          "Resistance Band Chest Press",
+          "Banded Chest Press",
+          "Lastik göğüs press"
+        ],
+        "setup": [
+          "Bandı arkanda göğüs hizasında bağla ve her elinle bir ucunu tut.",
+          "Bant gerilene kadar öne çık ve çapraz duruşta dur."
+        ],
+        "execution": [
+          "Kolların düzleşene kadar ellerini ileri it.",
+          "Ellerin göğsünün yanına gelene kadar yavaşça geri dön."
+        ],
+        "mistakes": [
+          "Tekrarı bitirmek için gövdeyi öne eğmek.",
+          "Bandın geri fırlamasına izin vermek."
+        ],
+        "cues": [
+          "Dümdüz ileri it",
+          "Yavaş dönüş"
+        ]
       }
     }
   },
@@ -1347,6 +1912,30 @@
         "cues": [
           "Fast up",
           "Soft landing"
+        ]
+      },
+      "tr": {
+        "name": "Explosive Push-Up",
+        "aliases": [
+          "Plyo Push-Up",
+          "Plyometric Push-Up",
+          "Patlayıcı şınav"
+        ],
+        "setup": [
+          "Ellerin omuzlarının altında, şınav pozisyonunda başla.",
+          "Vücudun düz kalsın diye karnını sık."
+        ],
+        "execution": [
+          "Kontrollü in, sonra ellerin yerden kalkacak kadar hızlı it.",
+          "Yumuşakça in ve doğrudan sonraki tekrara geç."
+        ],
+        "mistakes": [
+          "Vücudun ortadan bükülmesine izin vermek.",
+          "Düz kollara sert inmek."
+        ],
+        "cues": [
+          "Hızlı kalk",
+          "Yumuşak iniş"
         ]
       }
     }
@@ -1401,6 +1990,28 @@
         "cues": [
           "Brace and press"
         ]
+      },
+      "tr": {
+        "name": "Cable Chest Press",
+        "aliases": [
+          "Standing Cable Press",
+          "Kablo göğüs press"
+        ],
+        "setup": [
+          "Makaraları göğüs hizasına ayarla ve her elinle bir tutamak tut.",
+          "Tutamaklar göğsünün yanında, öne çıkıp çapraz duruşa geç."
+        ],
+        "execution": [
+          "Kolların düzleşene kadar tutamakları ileri ve hafifçe birbirine doğru it.",
+          "Yavaşça başlangıca dön."
+        ],
+        "mistakes": [
+          "Ağırlığı hareket ettirmek için öne eğilmek.",
+          "Dirseklerin omuz hizasının üstüne çıkmasına izin vermek."
+        ],
+        "cues": [
+          "Karnını sık ve it"
+        ]
       }
     }
   },
@@ -1453,6 +2064,29 @@
         "cues": [
           "Stay rigid",
           "Full range"
+        ]
+      },
+      "tr": {
+        "name": "Weighted Push-Up",
+        "aliases": [
+          "Plate Push-Up",
+          "Ağırlıklı şınav"
+        ],
+        "setup": [
+          "Şınav pozisyonuna geç.",
+          "Bir partnerin üst sırtına düz bir plaka koysun ya da ağırlık yeleği giy."
+        ],
+        "execution": [
+          "Yük sabitken göğsünü yere indir.",
+          "Kolların düzleşene kadar geri it."
+        ],
+        "mistakes": [
+          "Ek ağırlık altında kalçanın düşmesine izin vermek.",
+          "Plakanın boyna doğru kaymasına izin vermek."
+        ],
+        "cues": [
+          "Sıkı kal",
+          "Tam açıklık"
         ]
       }
     }
@@ -1509,6 +2143,28 @@
         "cues": [
           "Press over the lower chest"
         ]
+      },
+      "tr": {
+        "name": "Decline Dumbbell Press",
+        "aliases": [
+          "Decline DB Press",
+          "Decline dambıl press"
+        ],
+        "setup": [
+          "Her uyluğunda bir dambıl, bacaklarını decline sehpanın pedlerinin altına geçir.",
+          "Geriye uzan ve dambılları göğsünün alt kısmına getir."
+        ],
+        "execution": [
+          "Kolların düzleşene kadar dambılları yukarı it.",
+          "Göğsünün alt kısmının iki yanına yavaşça indir."
+        ],
+        "mistakes": [
+          "Dambılların yüze doğru kaymasına izin vermek.",
+          "İnişi aceleye getirmek."
+        ],
+        "cues": [
+          "Alt göğsün üstüne it"
+        ]
       }
     }
   },
@@ -1561,6 +2217,28 @@
         ],
         "cues": [
           "Pause on the floor"
+        ]
+      },
+      "tr": {
+        "name": "Dumbbell Floor Press",
+        "aliases": [
+          "DB Floor Press",
+          "Yerde dambıl press"
+        ],
+        "setup": [
+          "Dizlerin bükülü, her elinde bir dambıl ile sırtüstü uzan.",
+          "Üst kollarını vücuduna yaklaşık 45 derece açıyla yere yasla."
+        ],
+        "execution": [
+          "Kolların düzleşene kadar dambılları yukarı it.",
+          "Üst kolların yere hafifçe değene kadar indir, sonra yeniden it."
+        ],
+        "mistakes": [
+          "Dirsekleri yerden sektirmek.",
+          "Dirsekleri dümdüz yana açmak."
+        ],
+        "cues": [
+          "Yerde bekle"
         ]
       }
     }
@@ -1617,6 +2295,29 @@
         "cues": [
           "Squeeze the whole time"
         ]
+      },
+      "tr": {
+        "name": "Dumbbell Squeeze Press",
+        "aliases": [
+          "Hex Press",
+          "Crush Press",
+          "Sıkıştırmalı dambıl press"
+        ],
+        "setup": [
+          "Düz sehpaya uzan ve iki dambılı avuç içlerin birbirine bakacak şekilde göğsünün üstünde birleşik tut.",
+          "Dambılları birbirine sıkıca bastır."
+        ],
+        "execution": [
+          "Birbirine sıkarken dambılları göğsüne indir.",
+          "Ayrılmalarına izin vermeden geri it."
+        ],
+        "mistakes": [
+          "Dambılların birbirinden ayrılmasına izin vermek.",
+          "Bir arada tutulamayacak kadar ağır dambıl kullanmak."
+        ],
+        "cues": [
+          "Hep sık"
+        ]
       }
     }
   },
@@ -1671,6 +2372,28 @@
         "cues": [
           "Pause, then press"
         ]
+      },
+      "tr": {
+        "name": "Barbell Floor Press",
+        "aliases": [
+          "Floor Press",
+          "Yerde halter press"
+        ],
+        "setup": [
+          "Barı rack'te yerde uzanırken ulaşabileceğin yüksekliğe ayarla.",
+          "Dizlerin bükülü, altına uzan ve omuzlarından biraz geniş kavra."
+        ],
+        "execution": [
+          "Üst kolların yere oturana kadar barı indir.",
+          "Kısa bir an bekle, sonra barı geri it."
+        ],
+        "mistakes": [
+          "Dirsekleri yerden sektirmek.",
+          "Barın yüze doğru kaymasına izin vermek."
+        ],
+        "cues": [
+          "Bekle, sonra it"
+        ]
       }
     }
   },
@@ -1721,6 +2444,28 @@
         ],
         "cues": [
           "Wide arc, soft elbows"
+        ]
+      },
+      "tr": {
+        "name": "Band Chest Fly",
+        "aliases": [
+          "Resistance Band Fly",
+          "Lastik göğüs açış"
+        ],
+        "setup": [
+          "Bandı arkanda göğüs hizasında bağla ve her elinle bir ucunu tut.",
+          "Bant gerilene kadar öne çık; kolların açık, dirseklerin hafif bükülü olsun."
+        ],
+        "execution": [
+          "Ellerini geniş bir yayla göğsünün önünde birleştir.",
+          "Kollarını yavaşça başlangıca aç."
+        ],
+        "mistakes": [
+          "Dirsekleri büküp hareketi press'e çevirmek.",
+          "Bandın kolları vücudun arkasına çekmesine izin vermek."
+        ],
+        "cues": [
+          "Geniş yay, dirsekler hafif bükülü"
         ]
       }
     }
@@ -1776,6 +2521,29 @@
           "Plank the whole time",
           "Elbows back"
         ]
+      },
+      "tr": {
+        "name": "Suspension Trainer Chest Press",
+        "aliases": [
+          "TRX Chest Press",
+          "TRX göğüs press"
+        ],
+        "setup": [
+          "Bağlantı noktasına arkanı dön ve tutamakları göğüs hizasında tut.",
+          "Vücudun düz, öne eğilmek için ayaklarını geri yürüt."
+        ],
+        "execution": [
+          "Dirseklerini bükerek göğsünü tutamakların arasına indir.",
+          "Kayışların kollarına sürtmesine izin vermeden kolların düzleşene kadar geri it."
+        ],
+        "mistakes": [
+          "Kalçanın düşmesine izin vermek.",
+          "Tutamakların iki yana açılmasına izin vermek."
+        ],
+        "cues": [
+          "Hep plank",
+          "Dirsekler geride"
+        ]
       }
     }
   },
@@ -1828,6 +2596,27 @@
         ],
         "cues": [
           "Work arm bends, helper arm straight"
+        ]
+      },
+      "tr": {
+        "name": "Archer Push-Up",
+        "aliases": [
+          "Okçu şınav"
+        ],
+        "setup": [
+          "Şınav pozisyonunda ellerini çok geniş koy.",
+          "Vücudunu baştan topuklara düz tut."
+        ],
+        "execution": [
+          "Diğer kolun neredeyse düz kalırken bir eline doğru in.",
+          "Ortaya geri it, sonra diğer tarafta tekrarla."
+        ],
+        "mistakes": [
+          "Kalçayı döndürmek.",
+          "İki kolu eşit bükmek; bu, hareketi geniş şınava çevirir."
+        ],
+        "cues": [
+          "Çalışan kol bükülür, yardımcı kol düz"
         ]
       }
     }
@@ -1886,6 +2675,28 @@
         "cues": [
           "Rings close to the body"
         ]
+      },
+      "tr": {
+        "name": "Ring Dip",
+        "aliases": [
+          "Halka dips"
+        ],
+        "setup": [
+          "Halkaları yaklaşık kalça hizasına ayarla ve kolların düz şekilde destek pozisyonuna sıçra.",
+          "Halkaları yanlarına bastır ve avuç içlerini hafifçe öne çevir."
+        ],
+        "execution": [
+          "Halkaları yakın tutarak omuzların dirseklerinin hemen altına inene kadar in.",
+          "Kilitli destek pozisyonuna geri it."
+        ],
+        "mistakes": [
+          "Halkaların vücuttan uzaklaşmasına izin vermek.",
+          "Omuzlar hazır olmadan fazla derine inmek."
+        ],
+        "safety": "Halka dips denemeden önce halkada sağlam bir destek duruşu ve iyi paralel bar dips oluştur.",
+        "cues": [
+          "Halkalar vücuda yakın"
+        ]
       }
     }
   },
@@ -1938,6 +2749,30 @@
           "Arms locked",
           "Move only the shoulder blades"
         ]
+      },
+      "tr": {
+        "name": "Scapular Push-Up",
+        "aliases": [
+          "Serratus Push-Up",
+          "Push-Up Plus",
+          "Skapular şınav"
+        ],
+        "setup": [
+          "Kolların düz şekilde şınav pozisyonuna geç.",
+          "Ellerini omuzlarının altına koy ve karnını sık."
+        ],
+        "execution": [
+          "Kollarını kilitli tutarak göğsünün çökmesine izin ver; kürek kemiklerin birbirine yaklaşsın.",
+          "Yeri it; üst sırtın yuvarlansın ve kürek kemiklerin açılsın."
+        ],
+        "mistakes": [
+          "Dirsekleri bükmek.",
+          "Kalçanın düşmesine izin vermek."
+        ],
+        "cues": [
+          "Kollar kilitli",
+          "Sadece kürek kemikleri hareket etsin"
+        ]
       }
     }
   },
@@ -1987,6 +2822,27 @@
         ],
         "cues": [
           "Rings steady, body straight"
+        ]
+      },
+      "tr": {
+        "name": "Ring Push-Up",
+        "aliases": [
+          "Halkada şınav"
+        ],
+        "setup": [
+          "Halkaları yerden birkaç santim yükseğe ayarla ve şınav pozisyonunda kavra.",
+          "Halkaları omuzlarının altında tut."
+        ],
+        "execution": [
+          "Halkaları sabit tutarak göğsünü aralarına indir.",
+          "Geri it ve tepede avuç içlerini hafifçe öne çevir."
+        ],
+        "mistakes": [
+          "Halkaların iki yana kaymasına izin vermek.",
+          "Kalçanın düşmesine izin vermek."
+        ],
+        "cues": [
+          "Halkalar sabit, vücut düz"
         ]
       }
     }
@@ -2039,6 +2895,29 @@
         ],
         "cues": [
           "Crush the plates"
+        ]
+      },
+      "tr": {
+        "name": "Svend Press",
+        "aliases": [
+          "Plate Squeeze Press",
+          "Plate Press",
+          "Plaka sıkıştırma press"
+        ],
+        "setup": [
+          "Ayakların kalça genişliğinde, dik dur.",
+          "İki küçük plakayı göğüs hizasında avuçlarının arasında birbirine bastır."
+        ],
+        "execution": [
+          "Plakaları sıkıca sık ve kolların uzanana kadar dümdüz ileri it.",
+          "Sıkmayı gevşetmeden göğsüne geri getir."
+        ],
+        "mistakes": [
+          "Tekrar sırasında sıkmayı gevşetmek.",
+          "Geriye yaslanmak."
+        ],
+        "cues": [
+          "Plakaları ez"
         ]
       }
     }
@@ -2096,6 +2975,28 @@
           "Square hips",
           "Squeeze everything"
         ]
+      },
+      "tr": {
+        "name": "One-Arm Push-Up",
+        "aliases": [
+          "Tek kol şınav"
+        ],
+        "setup": [
+          "Ayaklarını kalçandan geniş aç ve bir elini göğsünün altına koy.",
+          "Diğer elini sırtına koy ve tüm vücudunu sık."
+        ],
+        "execution": [
+          "Dönmeden göğsünü yere doğru indir.",
+          "Kolun düzleşene kadar geri it."
+        ],
+        "mistakes": [
+          "Kalçayı yere doğru döndürmek.",
+          "Hareket açıklığını kısaltmak."
+        ],
+        "cues": [
+          "Kalça düz",
+          "Her yeri sık"
+        ]
       }
     }
   },
@@ -2148,6 +3049,29 @@
         "safety": "Start with a small lean; this exercise loads the shoulders hard.",
         "cues": [
           "Hug, then open slowly"
+        ]
+      },
+      "tr": {
+        "name": "Suspension Trainer Fly",
+        "aliases": [
+          "TRX Fly",
+          "TRX açış"
+        ],
+        "setup": [
+          "Bağlantı noktasına arkanı dön ve tutamakları kolların düz şekilde göğsünün önünde tut.",
+          "Vücudun düz şekilde öne eğil."
+        ],
+        "execution": [
+          "Göğsün öne giderken kollarını geniş bir yayla aç.",
+          "Tutamakları yeniden birleştirmek için göğsünü sık."
+        ],
+        "mistakes": [
+          "Dirsekleri fazla bükmek.",
+          "Omuzları aşırı esnetecek kadar geniş açmak."
+        ],
+        "safety": "Az bir eğimle başla; bu hareket omuzları çok yükler.",
+        "cues": [
+          "Sarıl, sonra yavaşça aç"
         ]
       }
     }
@@ -2204,6 +3128,26 @@
         "cues": [
           "Shoulders ahead of hands"
         ]
+      },
+      "tr": {
+        "name": "Pseudo Planche Push-Up",
+        "aliases": [],
+        "setup": [
+          "Ellerini, parmakların dışa dönük şekilde bel hizasına koy.",
+          "Omuzlarını ellerinin önüne eğ ve vücudunu düz şekilde kilitle."
+        ],
+        "execution": [
+          "Öne eğimi koruyarak göğsünü yere doğru indir.",
+          "Eğimi kaybetmeden geri it."
+        ],
+        "mistakes": [
+          "Omuzların ellerin üstüne geri kaymasına izin vermek.",
+          "Kalçanın düşmesine izin vermek."
+        ],
+        "safety": "Yavaş ilerle; öne eğim bilekleri ve dirsekleri çok zorlar.",
+        "cues": [
+          "Omuzlar ellerin önünde"
+        ]
       }
     }
   },
@@ -2256,6 +3200,28 @@
         ],
         "cues": [
           "Hug a big tree"
+        ]
+      },
+      "tr": {
+        "name": "Seated Cable Fly",
+        "aliases": [
+          "Seated Cable Chest Fly",
+          "Oturarak kablo açış"
+        ],
+        "setup": [
+          "Omuz hizasına ayarlı iki makaranın arasına dik bir sehpa koy.",
+          "Sırtın pede dayalı otur ve dirseklerin hafif bükülü, her elinle bir tutamak tut."
+        ],
+        "execution": [
+          "Tutamakları geniş bir yayla göğsünün önünde birleştir.",
+          "Göğsünde esneme hissedene kadar kollarını yavaşça aç."
+        ],
+        "mistakes": [
+          "Dirsekleri büküp hareketi press'e çevirmek.",
+          "Omuzların öne yuvarlanmasına izin vermek."
+        ],
+        "cues": [
+          "Büyük bir ağaca sarıl"
         ]
       }
     }

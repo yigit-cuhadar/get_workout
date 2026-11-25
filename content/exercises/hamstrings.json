@@ -63,6 +63,34 @@
           "Bar stays close",
           "Chest up, hips through"
         ]
+      },
+      "tr": {
+        "name": "Barbell Deadlift",
+        "aliases": [
+          "Deadlift",
+          "Conventional Deadlift"
+        ],
+        "setup": [
+          "Bar ayaklarının ortasının üstünde, ayakların yaklaşık kalça genişliğinde dur.",
+          "Kalçadan eğil ve barı bacaklarının hemen dışından kavra.",
+          "Kaval kemiklerin bara değene kadar dizlerini bük, sonra göğsünü kaldır ve sırtını düzleştir."
+        ],
+        "execution": [
+          "Karnını sıkıca sık ve barı bacaklarına yakın tutarak yeri it.",
+          "Bar dizlerini geçince kalçanı öne sürerek dik dur.",
+          "Barı indirirken önce kalçanı geri it, sonra dizlerini bük."
+        ],
+        "mistakes": [
+          "Beli yuvarlamak.",
+          "Barın bacaklardan uzaklaşmasına izin vermek.",
+          "Tepede çok geriye yaslanmak."
+        ],
+        "safety": "Sırtını düz tut; sırtın yuvarlanmaya başlar başlamaz ağırlığı azalt.",
+        "cues": [
+          "Yeri it",
+          "Bar yakın kalsın",
+          "Göğüs dik, kalça ileri"
+        ]
       }
     }
   },
@@ -125,6 +153,32 @@
           "Hips back",
           "Bar close to the legs"
         ]
+      },
+      "tr": {
+        "name": "Romanian Deadlift",
+        "aliases": [
+          "RDL",
+          "Barbell RDL",
+          "Rumen deadlift"
+        ],
+        "setup": [
+          "Barı uyluklarında, üstten tutuşla tutarak dik dur.",
+          "Dizlerini hafifçe bük."
+        ],
+        "execution": [
+          "Sırtın düz kalırken kalçanı geri it ve barı uyluklarından aşağı kaydır.",
+          "Arka bacaklarında güçlü bir esneme hissedince, genellikle kaval kemiğinin ortası civarında dur.",
+          "Dik durmak için kalçanı öne sür."
+        ],
+        "mistakes": [
+          "Dizleri daha çok büküp hareketi squat'a çevirmek.",
+          "Daha aşağı uzanmak için sırtı yuvarlamak."
+        ],
+        "safety": "Sırtını düz tut; sırtın yuvarlanmaya başlar başlamaz ağırlığı azalt.",
+        "cues": [
+          "Kalça geri",
+          "Bar bacaklara yakın"
+        ]
       }
     }
   },
@@ -178,6 +232,31 @@
           "Hips down",
           "Slow lowering"
         ]
+      },
+      "tr": {
+        "name": "Lying Leg Curl",
+        "aliases": [
+          "Prone Leg Curl",
+          "Hamstring Curl",
+          "Yatarak bacak bükme",
+          "Leg curl"
+        ],
+        "setup": [
+          "Dizlerin pedin kenarını hafifçe geçecek şekilde makineye yüzüstü uzan.",
+          "Pedi topuklarının hemen üstüne ayarla."
+        ],
+        "execution": [
+          "Topuklarını kalçana doğru bük.",
+          "Bacakların neredeyse düzleşene kadar yavaşça indir."
+        ],
+        "mistakes": [
+          "Kalçayı pedden kaldırmak.",
+          "Ağırlığı hızla bırakmak."
+        ],
+        "cues": [
+          "Kalça aşağıda",
+          "Yavaş iniş"
+        ]
       }
     }
   },
@@ -228,6 +307,28 @@
         ],
         "cues": [
           "Squeeze, then slow"
+        ]
+      },
+      "tr": {
+        "name": "Seated Leg Curl",
+        "aliases": [
+          "Seated Hamstring Curl",
+          "Oturarak bacak bükme"
+        ],
+        "setup": [
+          "Dizlerin makinenin dönme noktasıyla hizalı otur.",
+          "Uyluk pedini bacaklarının üstüne kilitle."
+        ],
+        "execution": [
+          "Topuklarını koltuğun altına doğru bük.",
+          "Yavaşça geri dön."
+        ],
+        "mistakes": [
+          "Dönüşü aceleye getirmek.",
+          "Öne eğilmek."
+        ],
+        "cues": [
+          "Sık, sonra yavaş"
         ]
       }
     }
@@ -291,6 +392,28 @@
         "cues": [
           "Hips back, back flat"
         ]
+      },
+      "tr": {
+        "name": "Dumbbell Romanian Deadlift",
+        "aliases": [
+          "DB RDL",
+          "Dambıl Rumen deadlift"
+        ],
+        "setup": [
+          "Her elinde bir dambıl uyluklarının önünde, dik dur.",
+          "Dizlerini hafifçe bük."
+        ],
+        "execution": [
+          "Sırtın düz, kalçanı geri it ve dambılları bacakların boyunca indir.",
+          "Dik durmak için kalçanı öne sür."
+        ],
+        "mistakes": [
+          "Sırtı yuvarlamak.",
+          "Kalçadan eğilmek yerine çömelmek."
+        ],
+        "cues": [
+          "Kalça geri, sırt düz"
+        ]
       }
     }
   },
@@ -352,6 +475,29 @@
         "safety": "Keep a flat back; reduce the weight as soon as your back starts to round.",
         "cues": [
           "Push the floor away"
+        ]
+      },
+      "tr": {
+        "name": "Trap Bar Deadlift",
+        "aliases": [
+          "Hex Bar Deadlift"
+        ],
+        "setup": [
+          "Ayakların kalça genişliğinde, trap barın ortasında dur.",
+          "Tutamakları kavramak için kalçadan eğil ve dizlerini bük.",
+          "Sırtını düzleştir ve göğsünü kaldır."
+        ],
+        "execution": [
+          "Dik durmak için yeri it.",
+          "Kalçanı geri itip dizlerini bükerek barı indir."
+        ],
+        "mistakes": [
+          "Sırtı yuvarlamak.",
+          "Kalçanın önce fırlamasına izin vermek."
+        ],
+        "safety": "Sırtını düz tut; sırtın yuvarlanmaya başlar başlamaz ağırlığı azalt.",
+        "cues": [
+          "Yeri it"
         ]
       }
     }
@@ -415,6 +561,28 @@
         "cues": [
           "Spread the floor"
         ]
+      },
+      "tr": {
+        "name": "Sumo Deadlift",
+        "aliases": [],
+        "setup": [
+          "Ayakların geniş, parmakların dışa dönük, kaval kemiklerin bara yakın dur.",
+          "Kolların dümdüz aşağıda, barı bacaklarının içinden kavra.",
+          "Dizlerini dışa it ve göğsünü kaldır."
+        ],
+        "execution": [
+          "Yeri iki yana açar gibi it ve barı yakın tutarak kalk.",
+          "Kalçanı sıkarak kilitle.",
+          "Kontrollü şekilde indir."
+        ],
+        "mistakes": [
+          "Dizlerin içe çökmesi.",
+          "Bar hareket etmeden kalçanın kalkması."
+        ],
+        "safety": "Sırtını düz tut; sırtın yuvarlanmaya başlar başlamaz ağırlığı azalt.",
+        "cues": [
+          "Yeri iki yana aç"
+        ]
       }
     }
   },
@@ -472,6 +640,28 @@
         "safety": "Start light; this loads the lower back at a long lever.",
         "cues": [
           "Hips back, flat back"
+        ]
+      },
+      "tr": {
+        "name": "Good Morning",
+        "aliases": [
+          "Barbell Good Morning"
+        ],
+        "setup": [
+          "Squat'taki gibi halteri üst sırtına yerleştir.",
+          "Ayakların kalça genişliğinde, dizlerin hafif bükülü dur."
+        ],
+        "execution": [
+          "Sırtın düz, kalçanı geri it ve gövdeni paralele doğru indir.",
+          "Dik durmak için kalçanı öne sür."
+        ],
+        "mistakes": [
+          "Sırtı yuvarlamak.",
+          "Hareket kalıbı oturmadan ağır yük kullanmak."
+        ],
+        "safety": "Hafif başla; bu hareket beli uzun bir kaldıraçla yükler.",
+        "cues": [
+          "Kalça geri, sırt düz"
         ]
       }
     }
@@ -534,6 +724,30 @@
         "cues": [
           "Hips through"
         ]
+      },
+      "tr": {
+        "name": "Rack Pull",
+        "aliases": [
+          "Block Pull",
+          "Partial Deadlift",
+          "Kısmi deadlift"
+        ],
+        "setup": [
+          "Barı rack pimlerine ya da blokların üstüne, dizlerinin hemen altına koy.",
+          "Deadlift'teki gibi kavra ve sırtını düzleştir."
+        ],
+        "execution": [
+          "Kalçanı öne sürerek kalk.",
+          "Kontrollü şekilde pimlere geri indir."
+        ],
+        "mistakes": [
+          "Tepede geriye yaslanmak.",
+          "Sırtı yuvarlamak."
+        ],
+        "safety": "Sırtını düz tut; sırtın yuvarlanmaya başlar başlamaz ağırlığı azalt.",
+        "cues": [
+          "Kalça ileri"
+        ]
       }
     }
   },
@@ -593,6 +807,30 @@
         "cues": [
           "Straight line, slow fall"
         ]
+      },
+      "tr": {
+        "name": "Nordic Hamstring Curl",
+        "aliases": [
+          "Nordic Curl",
+          "Nordic Hamstring Lowering"
+        ],
+        "setup": [
+          "Topukların ayak pedlerinin altına kilitli, bir GHD'nin ya da Nordic sehpasının pedine diz çök.",
+          "Sehpan yoksa bir minderde diz çök ve bir partner ayak bileklerini tutsun ya da topuklarını sabit bir şeyin altına geçir.",
+          "Dizlerinden başına düz bir çizgi koru."
+        ],
+        "execution": [
+          "Vücudunu olabildiğince yavaş öne indir.",
+          "Ellerinle kendini karşıla ve başlangıca geri it."
+        ],
+        "mistakes": [
+          "Kalçadan bükülmek.",
+          "Hareketin ilk kısmında hızla düşmek."
+        ],
+        "safety": "Birkaç yavaş inişle başla; bu hareket başta ciddi kas ağrısı yapar.",
+        "cues": [
+          "Düz çizgi, yavaş düşüş"
+        ]
       }
     }
   },
@@ -647,6 +885,29 @@
         ],
         "cues": [
           "Hips square"
+        ]
+      },
+      "tr": {
+        "name": "Bodyweight Single-Leg Romanian Deadlift",
+        "aliases": [
+          "Single-Leg RDL",
+          "Single-Leg Hip Hinge",
+          "Tek bacak Rumen deadlift"
+        ],
+        "setup": [
+          "Dizin hafif bükülü, tek bacak üstünde dur.",
+          "Denge için kollarını öne uzat."
+        ],
+        "execution": [
+          "Serbest bacağın arkana uzanırken kalçadan öne eğil.",
+          "Vücudun paralele yaklaşınca dur, sonra dik duruşa dön."
+        ],
+        "mistakes": [
+          "Kalçayı tavana doğru açmak.",
+          "Sırtı yuvarlamak."
+        ],
+        "cues": [
+          "Kalça düz"
         ]
       }
     }
@@ -709,6 +970,28 @@
         "cues": [
           "Hips square, reach long"
         ]
+      },
+      "tr": {
+        "name": "Dumbbell Single-Leg Romanian Deadlift",
+        "aliases": [
+          "Dumbbell Single-Leg RDL",
+          "Dambıl tek bacak Rumen deadlift"
+        ],
+        "setup": [
+          "Destek bacağının karşısındaki elinde bir dambıl tut.",
+          "Dizin hafif bükülü, tek bacak üstünde dur."
+        ],
+        "execution": [
+          "Dambılı destek bacağının boyunca indirerek kalçadan öne eğil.",
+          "Dik duruşa dön."
+        ],
+        "mistakes": [
+          "Kalçayı dışa döndürüp açmak.",
+          "Sırtı yuvarlamak."
+        ],
+        "cues": [
+          "Kalça düz, uzun uzan"
+        ]
       }
     }
   },
@@ -758,6 +1041,28 @@
         ],
         "cues": [
           "Hips stay high"
+        ]
+      },
+      "tr": {
+        "name": "Stability Ball Leg Curl",
+        "aliases": [
+          "Swiss Ball Hamstring Curl",
+          "Pilates topunda bacak bükme"
+        ],
+        "setup": [
+          "Topukların bir pilates topunun üstünde, sırtüstü uzan.",
+          "Kalçanı köprü pozisyonuna kaldır."
+        ],
+        "execution": [
+          "Kalçanı yukarıda tutarak dizlerini bükerek topu kendine doğru yuvarla.",
+          "Yavaşça geri yuvarla."
+        ],
+        "mistakes": [
+          "Kalçanın düşmesine izin vermek.",
+          "Acele etmek."
+        ],
+        "cues": [
+          "Kalça yüksekte kalsın"
         ]
       }
     }
@@ -819,6 +1124,25 @@
         "cues": [
           "Hips back, chest up"
         ]
+      },
+      "tr": {
+        "name": "Kettlebell Deadlift",
+        "aliases": [],
+        "setup": [
+          "Kettlebell ayaklarının arasında, dur.",
+          "Sırtın düz, sapı kavramak için kalçadan eğil ve dizlerini bük."
+        ],
+        "execution": [
+          "Yeri iterek kalk.",
+          "Kalçadan eğilerek indir."
+        ],
+        "mistakes": [
+          "Sırtı yuvarlamak.",
+          "Kalçadan eğilmeden dümdüz çömelmek."
+        ],
+        "cues": [
+          "Kalça geri, göğüs dik"
+        ]
       }
     }
   },
@@ -873,6 +1197,29 @@
         "cues": [
           "Knees drive into the pad"
         ]
+      },
+      "tr": {
+        "name": "Glute-Ham Raise",
+        "aliases": [
+          "GHR",
+          "Glute-Ham Developer Raise"
+        ],
+        "setup": [
+          "GHD'yi dizlerin pedin hemen arkasında, ayakların kilitli olacak şekilde ayarla.",
+          "Dizlerinden itibaren gövden dik başla."
+        ],
+        "execution": [
+          "Vücudun yataya yaklaşana kadar gövdeni öne indir.",
+          "Arka bacaklarınla bükerek kendini geri çek."
+        ],
+        "mistakes": [
+          "Kalçadan bükülmek.",
+          "Sallanarak kalkmak."
+        ],
+        "safety": "Birkaç tekrarla başla; bu hareket başta ciddi kas ağrısı yapar.",
+        "cues": [
+          "Dizler pede bastırsın"
+        ]
       }
     }
   },
@@ -922,6 +1269,29 @@
         ],
         "cues": [
           "Small steps, hips high"
+        ]
+      },
+      "tr": {
+        "name": "Hamstring Walkout",
+        "aliases": [
+          "Bridge Walkout",
+          "Glute Bridge Walkout",
+          "Köprüde topuk yürütme"
+        ],
+        "setup": [
+          "Sırtüstü uzan ve kalçanı köprü pozisyonuna kaldır.",
+          "Kollarını yanlarında tut."
+        ],
+        "execution": [
+          "Kalçanı yukarıda tutarak topuklarını birkaç küçük adımla ileri yürüt.",
+          "Geri yürüt."
+        ],
+        "mistakes": [
+          "Kalçanın düşmesine izin vermek.",
+          "Büyük adımlar atmak."
+        ],
+        "cues": [
+          "Küçük adımlar, kalça yüksek"
         ]
       }
     }
@@ -975,6 +1345,25 @@
         "cues": [
           "Hips back"
         ]
+      },
+      "tr": {
+        "name": "Bodyweight Good Morning",
+        "aliases": [],
+        "setup": [
+          "Ayakların kalça genişliğinde dur.",
+          "Ellerini başının arkasına koy ya da göğsünde çaprazla."
+        ],
+        "execution": [
+          "Sırtın düz, kalçanı geri it ve gövdeni öne eğ.",
+          "Dik durmak için kalçanı öne sür."
+        ],
+        "mistakes": [
+          "Sırtı yuvarlamak.",
+          "Dizleri fazla bükmek."
+        ],
+        "cues": [
+          "Kalça geri"
+        ]
       }
     }
   },
@@ -1027,6 +1416,27 @@
         "cues": [
           "Hips through"
         ]
+      },
+      "tr": {
+        "name": "Band Good Morning",
+        "aliases": [
+          "Lastikle good morning"
+        ],
+        "setup": [
+          "Bir bandın üstüne bas ve diğer ucunu boynunun altından üst sırtına dola.",
+          "Dizlerin hafif bükülü, dik dur."
+        ],
+        "execution": [
+          "Banda karşı, sırtın düz şekilde kalçadan öne eğil.",
+          "Dik durmak için kalçanı öne sür."
+        ],
+        "mistakes": [
+          "Sırtı yuvarlamak.",
+          "Çömelmek."
+        ],
+        "cues": [
+          "Kalça ileri"
+        ]
       }
     }
   },
@@ -1074,6 +1484,27 @@
         ],
         "cues": [
           "Hips down"
+        ]
+      },
+      "tr": {
+        "name": "Band Leg Curl",
+        "aliases": [
+          "Lastikle bacak bükme"
+        ],
+        "setup": [
+          "Bandı önünde alçağa bağla ve bir ayak bileğine dola.",
+          "Gerilim olacak kadar uzakta yüzüstü uzan."
+        ],
+        "execution": [
+          "Topuğunu kalçana doğru bük.",
+          "Yavaşça indir."
+        ],
+        "mistakes": [
+          "Kalçayı kaldırmak.",
+          "Bandın geri fırlamasına izin vermek."
+        ],
+        "cues": [
+          "Kalça aşağıda"
         ]
       }
     }
@@ -1127,6 +1558,28 @@
         "cues": [
           "Squeeze the feet together"
         ]
+      },
+      "tr": {
+        "name": "Dumbbell Leg Curl",
+        "aliases": [
+          "Prone Dumbbell Leg Curl",
+          "Dambıl bacak bükme"
+        ],
+        "setup": [
+          "Dizlerin ucunda olacak şekilde bir sehpaya yüzüstü uzan.",
+          "Bir partner ayaklarının arasına bir dambıl koysun ya da onu dikkatle kendin yerleştir."
+        ],
+        "execution": [
+          "Dambılı sıkarken topuklarını kalçana doğru bük.",
+          "Yavaşça indir."
+        ],
+        "mistakes": [
+          "Dambılın kaymasına izin vermek.",
+          "Kalçayı kaldırmak."
+        ],
+        "cues": [
+          "Ayakları birbirine sık"
+        ]
       }
     }
   },
@@ -1176,6 +1629,28 @@
         ],
         "cues": [
           "Hips up"
+        ]
+      },
+      "tr": {
+        "name": "Suspension Trainer Leg Curl",
+        "aliases": [
+          "TRX Hamstring Curl",
+          "TRX bacak bükme"
+        ],
+        "setup": [
+          "Topukların ayak yuvalarında, sırtüstü uzan.",
+          "Kalçanı köprü pozisyonuna kaldır."
+        ],
+        "execution": [
+          "Topuklarını kalçana doğru çek.",
+          "Yavaşça uzat."
+        ],
+        "mistakes": [
+          "Kalçanın düşmesi.",
+          "Sallanmak."
+        ],
+        "cues": [
+          "Kalça yukarı"
         ]
       }
     }
@@ -1235,6 +1710,29 @@
         "safety": "Start light; this loads the lower back at a long lever.",
         "cues": [
           "Legs long, back flat"
+        ]
+      },
+      "tr": {
+        "name": "Stiff-Leg Deadlift",
+        "aliases": [
+          "Straight-Leg Deadlift",
+          "Düz bacak deadlift"
+        ],
+        "setup": [
+          "Barı yere koy ve ayakların kalça genişliğinde dur.",
+          "Bacakların neredeyse düz, sırtın düz şekilde barı kavramak için kalçadan eğil."
+        ],
+        "execution": [
+          "Kalçanı öne sürerek barı kaldır.",
+          "Bar yere değene ya da arka bacakların seni durdurana kadar kalçadan eğilerek indir."
+        ],
+        "mistakes": [
+          "Yere uzanmak için sırtı yuvarlamak.",
+          "Dizleri bükmek."
+        ],
+        "safety": "Hafif başla; bu hareket beli uzun bir kaldıraçla yükler.",
+        "cues": [
+          "Bacaklar uzun, sırt düz"
         ]
       }
     }
@@ -1297,6 +1795,29 @@
         "cues": [
           "Front leg works"
         ]
+      },
+      "tr": {
+        "name": "Kickstand Romanian Deadlift",
+        "aliases": [
+          "B-Stance RDL",
+          "Staggered-Stance RDL",
+          "Kickstand Rumen deadlift"
+        ],
+        "setup": [
+          "Her elinde bir dambıl tut.",
+          "Bir ayağını, denge için sadece parmakları değecek şekilde biraz arkana koy."
+        ],
+        "execution": [
+          "Dambılları indirerek öndeki bacağın üstünde kalçadan eğil.",
+          "Dik durmak için öndeki kalçanı öne sür."
+        ],
+        "mistakes": [
+          "Arka ayaktan itmek.",
+          "Sırtı yuvarlamak."
+        ],
+        "cues": [
+          "Öndeki bacak çalışsın"
+        ]
       }
     }
   },
@@ -1349,6 +1870,27 @@
         ],
         "cues": [
           "Hips back"
+        ]
+      },
+      "tr": {
+        "name": "Landmine Romanian Deadlift",
+        "aliases": [
+          "Landmine Rumen deadlift"
+        ],
+        "setup": [
+          "Landmine barının ucuna dönük dur.",
+          "Ucu iki elinle uyluklarının hizasında tut."
+        ],
+        "execution": [
+          "Barın bacakların boyunca inmesine izin vererek kalçadan geriye eğil.",
+          "Dik dur."
+        ],
+        "mistakes": [
+          "Sırtı yuvarlamak.",
+          "Çömelmek."
+        ],
+        "cues": [
+          "Kalça geri"
         ]
       }
     }

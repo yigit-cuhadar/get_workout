@@ -52,6 +52,32 @@
           "Ribs down, glutes tight",
           "Breathe behind the brace"
         ]
+      },
+      "tr": {
+        "name": "Plank",
+        "aliases": [
+          "Forearm Plank",
+          "Front Plank",
+          "Elbow Plank",
+          "Dirsek plank"
+        ],
+        "setup": [
+          "Dirseklerin omuzlarının altında, alt kollarının üstüne yaslan.",
+          "Ayaklarını geri at; vücudun baştan topuklara düz bir çizgi oluştursun."
+        ],
+        "execution": [
+          "Kalçanı sık ve karnını, biri dürtecekmiş gibi sıkılaştır.",
+          "Düzenli nefes alarak pozisyonu koru."
+        ],
+        "mistakes": [
+          "Kalçanın yere doğru düşmesine izin vermek.",
+          "Kalçayı yukarı kaldırıp üçgen yapmak.",
+          "Nefesi tutmak."
+        ],
+        "cues": [
+          "Kaburgalar aşağı, kalça sıkı",
+          "Karnın sıkıyken nefes al"
+        ]
       }
     }
   },
@@ -101,6 +127,31 @@
         "cues": [
           "Ribs to hips",
           "Chin off the chest"
+        ]
+      },
+      "tr": {
+        "name": "Crunch",
+        "aliases": [
+          "Floor Crunch",
+          "Abdominal Crunch",
+          "Mekik",
+          "Yarım mekik"
+        ],
+        "setup": [
+          "Dizlerin bükülü, ayakların yerde sırtüstü uzan.",
+          "Parmak uçlarını başının yanına koy ya da kollarını göğsünde çaprazla."
+        ],
+        "execution": [
+          "Kaburgalarını kalçana yaklaştırarak omuzlarını yerden kaldır.",
+          "Bekle, sonra yavaşça in."
+        ],
+        "mistakes": [
+          "Elleriyle başı çekmek.",
+          "İvmeyle tüm sırtı yerden kaldırmak."
+        ],
+        "cues": [
+          "Kaburgalar kalçaya",
+          "Çene göğüsten uzak"
         ]
       }
     }
@@ -157,6 +208,29 @@
           "Curl the pelvis",
           "No swinging"
         ]
+      },
+      "tr": {
+        "name": "Hanging Leg Raise",
+        "aliases": [
+          "Hanging Straight Leg Raise",
+          "Barda bacak kaldırma"
+        ],
+        "setup": [
+          "Kolların düz, bacakların bitişik şekilde bara asıl.",
+          "Sallanmayı durdurmak için omuzlarını hafifçe aşağı çek."
+        ],
+        "execution": [
+          "Düz bacaklarını en az kalça hizasına kadar kaldır, tepede leğen kemiğini yukarı kıvır.",
+          "Sallanmadan yavaşça indir."
+        ],
+        "mistakes": [
+          "Bacakları yukarı atmak için vücudu sallamak.",
+          "Sadece kalça bükücülerle kaldırıp leğen kemiğini hiç kıvırmamak."
+        ],
+        "cues": [
+          "Leğeni kıvır",
+          "Sallanma yok"
+        ]
       }
     }
   },
@@ -205,6 +279,28 @@
         ],
         "cues": [
           "Roll up, roll down"
+        ]
+      },
+      "tr": {
+        "name": "Sit-Up",
+        "aliases": [
+          "Mekik",
+          "Tam mekik"
+        ],
+        "setup": [
+          "Dizlerin bükülü, ayakların yerde, gerekirse sabitlenmiş şekilde sırtüstü uzan.",
+          "Kollarını göğsünde çaprazla."
+        ],
+        "execution": [
+          "Göğsün uyluklarına yaklaşana kadar omurganı kıvırarak kalk.",
+          "Omur omur yavaşça geri yuvarlan."
+        ],
+        "mistakes": [
+          "Boynu öne asılmak.",
+          "Yere hızla geri düşmek."
+        ],
+        "cues": [
+          "Kıvrılarak kalk, kıvrılarak in"
         ]
       }
     }
@@ -258,6 +354,26 @@
           "Turn the shoulders",
           "Chest up"
         ]
+      },
+      "tr": {
+        "name": "Russian Twist",
+        "aliases": [],
+        "setup": [
+          "Dizlerin bükülü otur ve gövden yaklaşık 45 derece olana kadar geriye yaslan.",
+          "Ellerini göğsünün önünde birleştir ve yapabiliyorsan ayaklarını kaldır."
+        ],
+        "execution": [
+          "Omuzlarını bir yana, sonra diğer yana döndür.",
+          "Göğsünü hareket boyunca dik tut."
+        ],
+        "mistakes": [
+          "Gövde yerine sadece kolları oynatmak.",
+          "Sırtı yuvarlamak."
+        ],
+        "cues": [
+          "Omuzları döndür",
+          "Göğüs dik"
+        ]
       }
     }
   },
@@ -309,6 +425,30 @@
           "Ribs to hips",
           "Hips stay still"
         ]
+      },
+      "tr": {
+        "name": "Cable Crunch",
+        "aliases": [
+          "Kneeling Cable Crunch",
+          "Rope Crunch",
+          "Kablo mekik"
+        ],
+        "setup": [
+          "Yüksek makaraya bir halat tak ve makaraya dönük diz çök.",
+          "Halatı başının yanında tut."
+        ],
+        "execution": [
+          "Kaburgalarını kalçana doğru kıvırarak aşağı bük.",
+          "Sırtın uzayana kadar yavaşça geri dön."
+        ],
+        "mistakes": [
+          "Geriye oturup kalçayla çekmek.",
+          "Kollarla çekmek."
+        ],
+        "cues": [
+          "Kaburgalar kalçaya",
+          "Kalça sabit"
+        ]
       }
     }
   },
@@ -357,6 +497,27 @@
         ],
         "cues": [
           "Hips low, knees fast"
+        ]
+      },
+      "tr": {
+        "name": "Mountain Climber",
+        "aliases": [
+          "Dağcı"
+        ],
+        "setup": [
+          "Ellerin omuzlarının altında, yüksek plank pozisyonunda başla.",
+          "Karnını sık."
+        ],
+        "execution": [
+          "Bir dizini göğsüne doğru sür, sonra bacakları hızla değiştir.",
+          "Kalçanı düz, omuzlarını ellerinin üstünde tut."
+        ],
+        "mistakes": [
+          "Kalçayı aşağı yukarı zıplatmak.",
+          "Omuzların ellerin arkasına kaymasına izin vermek."
+        ],
+        "cues": [
+          "Kalça alçak, dizler hızlı"
         ]
       }
     }
@@ -409,6 +570,28 @@
           "Hips high",
           "Stack the shoulders"
         ]
+      },
+      "tr": {
+        "name": "Side Plank",
+        "aliases": [
+          "Yan plank"
+        ],
+        "setup": [
+          "Dirseğin omzunun altında, bacakların üst üste şekilde yan yat.",
+          "Vücudun düz bir çizgi oluşturacak şekilde kalçanı kaldır."
+        ],
+        "execution": [
+          "Düzenli nefes alarak çizgiyi koru.",
+          "Taraf değiştir."
+        ],
+        "mistakes": [
+          "Kalçanın düşmesine izin vermek.",
+          "Göğsü yere doğru döndürmek."
+        ],
+        "cues": [
+          "Kalça yukarı",
+          "Omuzlar üst üste"
+        ]
       }
     }
   },
@@ -455,6 +638,27 @@
         ],
         "cues": [
           "Shoulder to knee, slow"
+        ]
+      },
+      "tr": {
+        "name": "Bicycle Crunch",
+        "aliases": [
+          "Bisiklet mekik"
+        ],
+        "setup": [
+          "Ellerin hafifçe başının yanında, sırtüstü uzan.",
+          "Omuzlarını kaldır ve dizlerini kalçanın üstüne getir."
+        ],
+        "execution": [
+          "Bir bacak içeri çekilip diğeri uzarken bir omzunu karşı dize doğru döndür.",
+          "Düzenli bir ritimle taraf değiştir."
+        ],
+        "mistakes": [
+          "Ellerle başı çekmek.",
+          "Gövdeyi döndürmek yerine dirsekleri oynatmak."
+        ],
+        "cues": [
+          "Omuz dize, yavaş"
         ]
       }
     }
@@ -510,6 +714,31 @@
           "Hollow back",
           "Short range is fine"
         ]
+      },
+      "tr": {
+        "name": "Ab Wheel Rollout",
+        "aliases": [
+          "Kneeling Ab Wheel Rollout",
+          "Ab Roller",
+          "Karın tekerleği"
+        ],
+        "setup": [
+          "Bir minderde diz çök, tekerleği omuzlarının altında tut.",
+          "Leğen kemiğini içe al ve karnını sık."
+        ],
+        "execution": [
+          "Belin çökmeden gidebildiğin kadar tekerleği ileri yuvarla.",
+          "Karın kaslarınla tekerleği başlangıca geri çek."
+        ],
+        "mistakes": [
+          "Belin kavislenmesine izin vermek.",
+          "Dönüşte önce kalçayı geri itmek."
+        ],
+        "safety": "Belin kavislenmeye başlamadan yuvarlamayı durdur.",
+        "cues": [
+          "Sırt içbükey",
+          "Kısa açıklık da olur"
+        ]
       }
     }
   },
@@ -562,6 +791,30 @@
           "Back flat",
           "Slow down"
         ]
+      },
+      "tr": {
+        "name": "Lying Leg Raise",
+        "aliases": [
+          "Floor Leg Raise",
+          "Yerde bacak kaldırma",
+          "Bacak kaldırma"
+        ],
+        "setup": [
+          "Bacakların düz, ellerin kalçanın altında ya da yanlarında sırtüstü uzan.",
+          "Belini yere bastır."
+        ],
+        "execution": [
+          "Bacakların tavanı gösterene kadar kaldır.",
+          "Belin yerde kalırken gidebildiğin kadar yavaşça indir."
+        ],
+        "mistakes": [
+          "Belin yerden kalkıp kavislenmesine izin vermek.",
+          "Bacakları hızla düşürmek."
+        ],
+        "cues": [
+          "Sırt düz",
+          "Yavaşla"
+        ]
       }
     }
   },
@@ -610,6 +863,26 @@
         "cues": [
           "Back glued down",
           "Exhale as you reach"
+        ]
+      },
+      "tr": {
+        "name": "Dead Bug",
+        "aliases": [],
+        "setup": [
+          "Kolların tavanı gösterecek şekilde sırtüstü uzan.",
+          "Kaval kemiklerin yere paralel, dizlerini kalçanın üstüne kaldır."
+        ],
+        "execution": [
+          "Bir kolunu başının üstüne, karşı bacağını yere doğru aynı anda indir.",
+          "Geri dön ve taraf değiştir."
+        ],
+        "mistakes": [
+          "Belin kalkmasına izin vermek.",
+          "Çok hızlı hareket etmek."
+        ],
+        "cues": [
+          "Sırt yere yapışık",
+          "Uzanırken nefes ver"
         ]
       }
     }
@@ -663,6 +936,26 @@
           "Long, not high",
           "Hips level"
         ]
+      },
+      "tr": {
+        "name": "Bird Dog",
+        "aliases": [],
+        "setup": [
+          "Ellerin omuzlarının, dizlerin kalçanın altında, dört ayak üstüne gel.",
+          "Sırtını düz tut."
+        ],
+        "execution": [
+          "Bir kolunu öne, karşı bacağını geriye, ikisi de vücudunla aynı hizaya gelene kadar uzat.",
+          "Kısa bir an tut, geri dön ve değiştir."
+        ],
+        "mistakes": [
+          "Kalçayı döndürmek.",
+          "Bacağı daha yükseğe kaldırmak için beli kavislendirmek."
+        ],
+        "cues": [
+          "Yüksek değil, uzun",
+          "Kalça düz"
+        ]
       }
     }
   },
@@ -708,6 +1001,27 @@
         ],
         "cues": [
           "Hips up, slow down"
+        ]
+      },
+      "tr": {
+        "name": "Reverse Crunch",
+        "aliases": [
+          "Ters mekik"
+        ],
+        "setup": [
+          "Kolların yanlarında sırtüstü uzan.",
+          "Dizlerini 90 derece bükülü şekilde kalçanın üstüne kaldır."
+        ],
+        "execution": [
+          "Dizlerini göğsüne yaklaştırarak kalçanı yerden kaldır.",
+          "Kalçanı yavaşça indir."
+        ],
+        "mistakes": [
+          "İvme için bacakları sallamak.",
+          "Kalçayı kaldırmadan sadece bacakları oynatmak."
+        ],
+        "cues": [
+          "Kalça yukarı, yavaş in"
         ]
       }
     }
@@ -762,6 +1076,27 @@
         "cues": [
           "Small kicks, back flat"
         ]
+      },
+      "tr": {
+        "name": "Flutter Kick",
+        "aliases": [
+          "Flutter Kicks"
+        ],
+        "setup": [
+          "Bacakların düz, ellerin kalçanın altında sırtüstü uzan.",
+          "Topuklarını yerden birkaç santim kaldır."
+        ],
+        "execution": [
+          "Bacaklarını küçük, hızlı ve sırayla aşağı yukarı çırp.",
+          "Belini yere bastırılı tut."
+        ],
+        "mistakes": [
+          "Belin kavislenmesine izin vermek.",
+          "Çok yükseğe çırpmak."
+        ],
+        "cues": [
+          "Küçük çırpış, sırt düz"
+        ]
       }
     }
   },
@@ -812,6 +1147,28 @@
         ],
         "cues": [
           "Reach for the toes"
+        ]
+      },
+      "tr": {
+        "name": "V-Up",
+        "aliases": [
+          "Jackknife Sit-Up",
+          "V mekik"
+        ],
+        "setup": [
+          "Kolların başının üstünde, bacakların düz şekilde düz uzan.",
+          "Karnını sık."
+        ],
+        "execution": [
+          "Ellerini ayaklarına uzatarak kollarını ve bacaklarını birlikte kaldır.",
+          "Kontrollü şekilde geri in."
+        ],
+        "mistakes": [
+          "Dizleri çok bükmek.",
+          "Yere kendini bırakmak."
+        ],
+        "cues": [
+          "Ayak parmaklarına uzan"
         ]
       }
     }
@@ -867,6 +1224,30 @@
           "Turn the chest",
           "Pivot the back foot"
         ]
+      },
+      "tr": {
+        "name": "Cable Woodchop",
+        "aliases": [
+          "High-to-Low Woodchop",
+          "Cable Wood Chop",
+          "Kablo oduncu"
+        ],
+        "setup": [
+          "Makarayı yükseğe ayarla ve makaraya yan dur.",
+          "Tutamağı iki elinle yakın omzunun üstünde tut."
+        ],
+        "execution": [
+          "Gövdeni döndürerek tutamağı vücudunun önünden karşı kalçana doğru aşağı çek.",
+          "Yavaşça geri dön."
+        ],
+        "mistakes": [
+          "Sadece kollarla çekmek.",
+          "Kalçayı ve göğsü döndürmek yerine belden bükülmek."
+        ],
+        "cues": [
+          "Göğsü döndür",
+          "Arka ayağı çevir"
+        ]
       }
     }
   },
@@ -918,6 +1299,28 @@
         "cues": [
           "Don't let it turn you"
         ]
+      },
+      "tr": {
+        "name": "Cable Pallof Press",
+        "aliases": [
+          "Pallof Press",
+          "Anti-Rotation Press"
+        ],
+        "setup": [
+          "Makarayı göğüs hizasına ayarla ve makaraya yan dur.",
+          "Tutamağı göğsüne dayalı tut ve kablo gerilene kadar uzaklaş."
+        ],
+        "execution": [
+          "Vücudunun dönmesine izin vermeden tutamağı dümdüz önüne it.",
+          "Bir nefes boyunca tut, sonra geri getir."
+        ],
+        "mistakes": [
+          "Gövdenin ağırlık bloğuna doğru dönmesine izin vermek.",
+          "Hiç gerilim olmayacak kadar yakın durmak."
+        ],
+        "cues": [
+          "Seni döndürmesine izin verme"
+        ]
       }
     }
   },
@@ -966,6 +1369,27 @@
         "cues": [
           "Knees up, pelvis curls"
         ]
+      },
+      "tr": {
+        "name": "Hanging Knee Raise",
+        "aliases": [
+          "Barda diz çekme"
+        ],
+        "setup": [
+          "Kolların düz şekilde bara asıl.",
+          "Omuzlarını hafifçe aşağı çek."
+        ],
+        "execution": [
+          "Leğen kemiğini yukarı kıvırarak dizlerini göğsüne doğru kaldır.",
+          "Yavaşça indir."
+        ],
+        "mistakes": [
+          "Sallanmak.",
+          "Dizleri kıvırmadan sadece kalça hizasına kaldırmak."
+        ],
+        "cues": [
+          "Dizler yukarı, leğen kıvrılsın"
+        ]
       }
     }
   },
@@ -1013,6 +1437,28 @@
         ],
         "cues": [
           "Lift with the abs"
+        ]
+      },
+      "tr": {
+        "name": "Captain's Chair Knee Raise",
+        "aliases": [
+          "Vertical Knee Raise",
+          "Dikey diz çekme"
+        ],
+        "setup": [
+          "Captain's chair'de ya da paralel barlar arasında alt kollarının üstünde destek al.",
+          "Sırtını pede bastır."
+        ],
+        "execution": [
+          "Dizlerini göğsüne doğru kaldır.",
+          "Yavaşça indir."
+        ],
+        "mistakes": [
+          "Bacakları sallamak.",
+          "Omuzlara çökmek."
+        ],
+        "cues": [
+          "Karınla kaldır"
         ]
       }
     }
@@ -1069,6 +1515,28 @@
           "Press the bar down",
           "Feet to the bar"
         ]
+      },
+      "tr": {
+        "name": "Toes-to-Bar",
+        "aliases": [
+          "T2B"
+        ],
+        "setup": [
+          "Kolların düz, ellerin yaklaşık omuz genişliğinde bara asıl.",
+          "Karnını sık."
+        ],
+        "execution": [
+          "Barı hafifçe aşağı bastır ve ayakların bara değene kadar kaldır.",
+          "Yavaşça indir."
+        ],
+        "mistakes": [
+          "Büyük, kontrolsüz salınımlar.",
+          "Dizleri çok bükmek."
+        ],
+        "cues": [
+          "Barı aşağı bastır",
+          "Ayaklar bara"
+        ]
       }
     }
   },
@@ -1114,6 +1582,27 @@
         ],
         "cues": [
           "Curl, don't sit"
+        ]
+      },
+      "tr": {
+        "name": "Decline Crunch",
+        "aliases": [
+          "Eğimli sehpada mekik"
+        ],
+        "setup": [
+          "Ayakların pedlerin altına geçmiş, decline sehpaya uzan.",
+          "Kollarını göğsünde çaprazla."
+        ],
+        "execution": [
+          "Üst sırtın sehpadan kalkana kadar omuzlarını kıvırarak kaldır.",
+          "Yavaşça in."
+        ],
+        "mistakes": [
+          "Başı çekmek.",
+          "Tamamen oturur pozisyona kalkmak."
+        ],
+        "cues": [
+          "Kıvrıl, oturma"
         ]
       }
     }
@@ -1162,6 +1651,27 @@
         ],
         "cues": [
           "Back flat, reach long"
+        ]
+      },
+      "tr": {
+        "name": "Hollow Body Hold",
+        "aliases": [
+          "Hollow Hold"
+        ],
+        "setup": [
+          "Kolların başının üstünde, bacakların düz şekilde sırtüstü uzan.",
+          "Belini yere bastır."
+        ],
+        "execution": [
+          "Kollarını, omuzlarını ve bacaklarını yerden kaldırarak hafif bir muz şekli al.",
+          "Düzenli nefes alarak tut."
+        ],
+        "mistakes": [
+          "Belin kalkmasına izin vermek.",
+          "Nefesi tutmak."
+        ],
+        "cues": [
+          "Sırt düz, uzun uzan"
         ]
       }
     }
@@ -1215,6 +1725,28 @@
         "cues": [
           "Slow on the way down"
         ]
+      },
+      "tr": {
+        "name": "Decline Sit-Up",
+        "aliases": [
+          "Weighted Decline Sit-Up",
+          "Eğimli sehpada tam mekik"
+        ],
+        "setup": [
+          "Ayaklarını decline sehpanın pedlerinin altına geçir.",
+          "Gerekirse ek yük için göğsüne bir plaka tut."
+        ],
+        "execution": [
+          "Gövden dik olana kadar kıvrılarak kalk.",
+          "Sehpaya yavaşça in."
+        ],
+        "mistakes": [
+          "Sehpadan sekmek.",
+          "Boyunla çekmek."
+        ],
+        "cues": [
+          "İnişte yavaş"
+        ]
       }
     }
   },
@@ -1263,6 +1795,28 @@
         ],
         "cues": [
           "Curl the spine"
+        ]
+      },
+      "tr": {
+        "name": "Machine Crunch",
+        "aliases": [
+          "Ab Crunch Machine",
+          "Karın makinesi"
+        ],
+        "setup": [
+          "Koltuğu ayarla ve tutamakları ya da pedleri tut.",
+          "Dik otur."
+        ],
+        "execution": [
+          "Kaburgalarını kalçana doğru kıvırarak öne bük.",
+          "Yavaşça geri dön."
+        ],
+        "mistakes": [
+          "Kollarla çekmek.",
+          "İvme kullanmak."
+        ],
+        "cues": [
+          "Omurgayı kıvır"
         ]
       }
     }
@@ -1317,6 +1871,30 @@
         "cues": [
           "Push the floor away"
         ]
+      },
+      "tr": {
+        "name": "High Plank",
+        "aliases": [
+          "Straight-Arm Plank",
+          "Push-Up Plank",
+          "Düz kol plank",
+          "Şınav plank"
+        ],
+        "setup": [
+          "Ellerini omuzlarının altına koy ve kollarını düzleştir.",
+          "Vücudun düz olacak şekilde geri adım at."
+        ],
+        "execution": [
+          "Karnını ve kalçanı sıkarak pozisyonu koru.",
+          "Düzenli nefes al."
+        ],
+        "mistakes": [
+          "Kalçayı düşürmek.",
+          "Dirsekleri sertçe kilitlemek."
+        ],
+        "cues": [
+          "Yeri it"
+        ]
       }
     }
   },
@@ -1364,6 +1942,28 @@
         ],
         "cues": [
           "Stretch, then crunch"
+        ]
+      },
+      "tr": {
+        "name": "Stability Ball Crunch",
+        "aliases": [
+          "Swiss Ball Crunch",
+          "Pilates topunda mekik"
+        ],
+        "setup": [
+          "Bir pilates topuna otur ve top belini destekleyene kadar ayaklarını öne yürüt.",
+          "Üst sırtını topun üstüne bırak."
+        ],
+        "execution": [
+          "Kaburgalarını kalçana doğru kıvır.",
+          "Topun üstüne yavaşça geri in."
+        ],
+        "mistakes": [
+          "Mekik yapmak yerine topu yuvarlamak.",
+          "Başı çekmek."
+        ],
+        "cues": [
+          "Esnet, sonra kıvrıl"
         ]
       }
     }
@@ -1418,6 +2018,27 @@
         ],
         "cues": [
           "Push down, legs long"
+        ]
+      },
+      "tr": {
+        "name": "L-Sit",
+        "aliases": [
+          "L-Sit Hold"
+        ],
+        "setup": [
+          "Paralel barları ya da paraletleri kolların düz şekilde kavra.",
+          "Omuzların kulaklarından uzaklaşacak şekilde aşağı bastır."
+        ],
+        "execution": [
+          "Bacaklarını kalça hizasına gelene kadar önünde düz şekilde kaldır.",
+          "Belirlenen süre boyunca tut."
+        ],
+        "mistakes": [
+          "Dizleri bükmek.",
+          "Omuzların kulaklara kalkmasına izin vermek."
+        ],
+        "cues": [
+          "Aşağı bastır, bacaklar uzun"
         ]
       }
     }
@@ -1474,6 +2095,27 @@
           "Straight body",
           "Slow lowering"
         ]
+      },
+      "tr": {
+        "name": "Dragon Flag",
+        "aliases": [],
+        "setup": [
+          "Bir sehpaya uzan ve başının arkasından sehpayı kavra.",
+          "Ağırlığın üst sırtına binecek şekilde bacaklarını ve kalçanı kaldır."
+        ],
+        "execution": [
+          "Sadece omuzlardan dönerek düz vücudunu sehpaya doğru yavaşça indir.",
+          "Kalçadan bükülmeden yeniden kaldır."
+        ],
+        "mistakes": [
+          "Kalçadan bükülmek.",
+          "Beli kavislendirmek."
+        ],
+        "safety": "Önce negatifleri öğren; formun bozulursa bu hareket beli çok yükler.",
+        "cues": [
+          "Vücut düz",
+          "Yavaş iniş"
+        ]
       }
     }
   },
@@ -1529,6 +2171,27 @@
         "cues": [
           "Straight side to side"
         ]
+      },
+      "tr": {
+        "name": "Dumbbell Side Bend",
+        "aliases": [
+          "Dambıl yana eğilme"
+        ],
+        "setup": [
+          "Bir elinde dambıl yanında, dik dur.",
+          "Diğer elini beline koy."
+        ],
+        "execution": [
+          "Dambıla doğru yana eğil.",
+          "Belinin karşı tarafını kullanarak dik pozisyona dön."
+        ],
+        "mistakes": [
+          "Öne ya da arkaya eğilmek.",
+          "Her elde bir dambıl tutmak; bu, yükü dengeler ve etkisini yok eder."
+        ],
+        "cues": [
+          "Dümdüz yandan yana"
+        ]
       }
     }
   },
@@ -1579,6 +2242,28 @@
         "cues": [
           "Side to side, shoulders up"
         ]
+      },
+      "tr": {
+        "name": "Heel Touch",
+        "aliases": [
+          "Alternating Heel Touch",
+          "Topuk dokunma"
+        ],
+        "setup": [
+          "Dizlerin bükülü, ayakların yerde ve kalçandan biraz geniş şekilde sırtüstü uzan.",
+          "Omuzlarını yerden hafifçe kaldır."
+        ],
+        "execution": [
+          "Yana eğilerek bir elini aynı taraftaki topuğuna uzat.",
+          "Taraf değiştir."
+        ],
+        "mistakes": [
+          "Başın yere geri düşmesine izin vermek.",
+          "Boynu çekmek."
+        ],
+        "cues": [
+          "Yandan yana, omuzlar yukarıda"
+        ]
       }
     }
   },
@@ -1627,6 +2312,27 @@
         ],
         "cues": [
           "Hips still"
+        ]
+      },
+      "tr": {
+        "name": "Plank Shoulder Tap",
+        "aliases": [
+          "Plank omuz dokunma"
+        ],
+        "setup": [
+          "Ayakların kalçandan biraz geniş, yüksek plank pozisyonunda başla.",
+          "Karnını sık."
+        ],
+        "execution": [
+          "Bir elini kaldır ve karşı omzuna dokun.",
+          "Kalçanın sallanmasına izin vermeden el değiştir."
+        ],
+        "mistakes": [
+          "Kalçayı iki yana sallamak.",
+          "Acele etmek."
+        ],
+        "cues": [
+          "Kalça sabit"
         ]
       }
     }
@@ -1685,6 +2391,29 @@
           "Arms long",
           "Pivot the feet"
         ]
+      },
+      "tr": {
+        "name": "Landmine Rotation",
+        "aliases": [
+          "Landmine 180",
+          "Landmine Rainbow"
+        ],
+        "setup": [
+          "Landmine barına dönük dur ve ucunu iki elinle, kolların önünde yaklaşık baş hizasında uzanmış şekilde tut.",
+          "Ayaklarını kalçandan geniş aç."
+        ],
+        "execution": [
+          "Gövdeni döndürüp ayaklarını çevirerek barı bir yayla bir kalçana indir.",
+          "Tepeden geçirerek diğer tarafa getir."
+        ],
+        "mistakes": [
+          "Kolları bükmek.",
+          "Sadece belden dönmek."
+        ],
+        "cues": [
+          "Kollar uzun",
+          "Ayakları çevir"
+        ]
       }
     }
   },
@@ -1736,6 +2465,27 @@
         "cues": [
           "Shoulders pinned"
         ]
+      },
+      "tr": {
+        "name": "Lying Windshield Wiper",
+        "aliases": [
+          "Yerde silecek"
+        ],
+        "setup": [
+          "Kolların iki yana açık, bacakların dümdüz yukarıda sırtüstü uzan.",
+          "Omuzlarını yere bastır."
+        ],
+        "execution": [
+          "İki omzunu da yerde tutarak bacaklarını bir yana indir.",
+          "Ortaya geri getir ve diğer tarafa git."
+        ],
+        "mistakes": [
+          "Omuzların kalkmasına izin vermek.",
+          "Bacakları hızla düşürmek."
+        ],
+        "cues": [
+          "Omuzlar yerde"
+        ]
       }
     }
   },
@@ -1784,6 +2534,27 @@
         ],
         "cues": [
           "Down slow, up high"
+        ]
+      },
+      "tr": {
+        "name": "Side Plank Hip Dip",
+        "aliases": [
+          "Yan plank kalça indirme"
+        ],
+        "setup": [
+          "Bacakların üst üste, alt kolunun üstünde yan plank pozisyonuna geç.",
+          "Kalçanı düz bir çizgiye kaldır."
+        ],
+        "execution": [
+          "Kalçanı yere değdirmeden yere doğru indir.",
+          "Çizginin üstüne geri kaldır."
+        ],
+        "mistakes": [
+          "Göğsü döndürmek.",
+          "Hızlı hareket etmek."
+        ],
+        "cues": [
+          "Yavaş in, yükseğe kalk"
         ]
       }
     }
@@ -1835,6 +2606,27 @@
         "cues": [
           "Brace like a plank, just heavier"
         ]
+      },
+      "tr": {
+        "name": "Weighted Plank",
+        "aliases": [
+          "Ağırlıklı plank"
+        ],
+        "setup": [
+          "Dirsek plank pozisyonuna geç.",
+          "Bir partnerin üst sırtına, boynun altına bir plaka koysun."
+        ],
+        "execution": [
+          "Belirlenen süre boyunca vücudunu düz tut.",
+          "Bırakmadan önce plakayı kaldırt."
+        ],
+        "mistakes": [
+          "Ağırlık altında çökmek.",
+          "Plakayı bele koymak."
+        ],
+        "cues": [
+          "Plank gibi sık, sadece daha ağır"
+        ]
       }
     }
   },
@@ -1885,6 +2677,28 @@
         "cues": [
           "Hips up"
         ]
+      },
+      "tr": {
+        "name": "Kneeling Side Plank",
+        "aliases": [
+          "Modified Side Plank",
+          "Dizüstü yan plank"
+        ],
+        "setup": [
+          "Dizlerin arkada bükülü, alt kolunun üstünde yan yat.",
+          "Başını, kalçanı ve dizlerini aynı hizaya getir."
+        ],
+        "execution": [
+          "Kalçanı kaldır ve çizgiyi koru.",
+          "Taraf değiştir."
+        ],
+        "mistakes": [
+          "Kalçanın düşmesine izin vermek.",
+          "Öne doğru dönmek."
+        ],
+        "cues": [
+          "Kalça yukarı"
+        ]
       }
     }
   },
@@ -1931,6 +2745,27 @@
         ],
         "cues": [
           "Stay square"
+        ]
+      },
+      "tr": {
+        "name": "Band Pallof Press",
+        "aliases": [
+          "Lastik Pallof press"
+        ],
+        "setup": [
+          "Bandı göğüs hizasında bağla ve banda yan dur.",
+          "Bandı göğsünde tut ve gerilene kadar uzaklaş."
+        ],
+        "execution": [
+          "Ellerini dümdüz ileri it ve bir nefes boyunca tut.",
+          "Dönmeden geri getir."
+        ],
+        "mistakes": [
+          "Bağlantı noktasına doğru dönmek.",
+          "Ters yöne yaslanmak."
+        ],
+        "cues": [
+          "Düz kal"
         ]
       }
     }
@@ -1982,6 +2817,28 @@
         "cues": [
           "Hollow body all the way"
         ]
+      },
+      "tr": {
+        "name": "Standing Ab Wheel Rollout",
+        "aliases": [
+          "Ayakta karın tekerleği"
+        ],
+        "setup": [
+          "Ayakların kalça genişliğinde dur ve tekerleği ayaklarının önünde yere koy.",
+          "Kavramak için kalçadan eğil."
+        ],
+        "execution": [
+          "Vücudun yere neredeyse paralel olana kadar ileri yuvarla.",
+          "Önce kalçayı bükmeden başlangıca geri çek."
+        ],
+        "mistakes": [
+          "Belin çökmesine izin vermek.",
+          "Geri dönebileceğinden daha uzağa yuvarlamak."
+        ],
+        "safety": "Önce dizüstü tam yuvarlamada ustalaş; bu varyasyon beli çok yükler.",
+        "cues": [
+          "Sonuna kadar içbükey vücut"
+        ]
       }
     }
   },
@@ -2032,6 +2889,28 @@
         ],
         "cues": [
           "Slow turns"
+        ]
+      },
+      "tr": {
+        "name": "Rotary Torso Machine",
+        "aliases": [
+          "Seated Torso Rotation",
+          "Gövde döndürme makinesi"
+        ],
+        "setup": [
+          "Makineye otur ve bacaklarını sabitle.",
+          "Göğsün pede dayalı, tutamakları tut."
+        ],
+        "execution": [
+          "Gövdeni dirence karşı bir yana döndür.",
+          "Yavaşça geri dön ve taraf değiştirmeden önce seti bitir."
+        ],
+        "mistakes": [
+          "Çok hızlı döndürmek.",
+          "Beli ağrıtan bir açıklık kullanmak."
+        ],
+        "cues": [
+          "Yavaş dönüşler"
         ]
       }
     }
@@ -2085,6 +2964,27 @@
         ],
         "cues": [
           "Legs up, rotate slow"
+        ]
+      },
+      "tr": {
+        "name": "Hanging Windshield Wiper",
+        "aliases": [
+          "Barda silecek"
+        ],
+        "setup": [
+          "Bara asıl ve ayakların bara yaklaşana kadar düz bacaklarını kaldır.",
+          "Üst pozisyonda tut."
+        ],
+        "execution": [
+          "Bacaklarını silecek gibi bir yana, sonra diğer yana döndür.",
+          "Üst vücudunu sabit tut."
+        ],
+        "mistakes": [
+          "Sallanmak.",
+          "Dizleri bükmek."
+        ],
+        "cues": [
+          "Bacaklar yukarı, yavaş döndür"
         ]
       }
     }
@@ -2148,6 +3048,28 @@
         "cues": [
           "Turn the chest"
         ]
+      },
+      "tr": {
+        "name": "Plate Russian Twist",
+        "aliases": [
+          "Weighted Russian Twist",
+          "Plakalı Russian twist"
+        ],
+        "setup": [
+          "Dizlerin bükülü otur ve göğsünde bir plaka tut.",
+          "Yaklaşık 45 dereceye kadar geriye yaslan."
+        ],
+        "execution": [
+          "Plakayı bir yana, sonra diğer yana döndür.",
+          "Göğsünü dik tut."
+        ],
+        "mistakes": [
+          "Sadece kolları oynatmak.",
+          "Sırtı yuvarlamak."
+        ],
+        "cues": [
+          "Göğsü döndür"
+        ]
       }
     }
   },
@@ -2195,6 +3117,27 @@
         ],
         "cues": [
           "Turn the chest"
+        ]
+      },
+      "tr": {
+        "name": "Band Woodchop",
+        "aliases": [
+          "Lastik oduncu"
+        ],
+        "setup": [
+          "Bandı yükseğe bağla ve banda yan dur.",
+          "İki elinle yakın omzunun üstünde tut."
+        ],
+        "execution": [
+          "Göğsünü döndürerek aşağı ve çapraz, karşı kalçana doğru çek.",
+          "Yavaşça geri dön."
+        ],
+        "mistakes": [
+          "Sadece kollarla çekmek.",
+          "Sırtı yuvarlamak."
+        ],
+        "cues": [
+          "Göğsü döndür"
         ]
       }
     }
@@ -2250,6 +3193,29 @@
         "cues": [
           "Drive with the hips"
         ]
+      },
+      "tr": {
+        "name": "Low-to-High Cable Woodchop",
+        "aliases": [
+          "Reverse Woodchop",
+          "Cable Lift",
+          "Alttan üste kablo oduncu"
+        ],
+        "setup": [
+          "Makarayı alçağa ayarla ve makaraya yan dur.",
+          "Tutamağı iki elinle yakın kalçanın yanında tut."
+        ],
+        "execution": [
+          "Tutamağı vücudunun önünden yukarı ve çapraz, karşı omzunun üstüne çek.",
+          "Yavaşça geri dön."
+        ],
+        "mistakes": [
+          "Sadece kollarla kaldırmak.",
+          "Belden dönmek."
+        ],
+        "cues": [
+          "Kalçayla sür"
+        ]
       }
     }
   },
@@ -2300,6 +3266,28 @@
         "cues": [
           "Straight line"
         ]
+      },
+      "tr": {
+        "name": "Stability Ball Rollout",
+        "aliases": [
+          "Swiss Ball Rollout",
+          "Pilates topu rollout"
+        ],
+        "setup": [
+          "Alt kolların topun üstünde, bir pilates topunun arkasında diz çök.",
+          "Vücudun dizlerden başa düz olacak şekilde karnını sık."
+        ],
+        "execution": [
+          "Vücudun uzanana kadar topu alt kollarınla ileri yuvarla.",
+          "Başlangıca geri çek."
+        ],
+        "mistakes": [
+          "Sırtı kavislendirmek.",
+          "Kalçadan bükülmek."
+        ],
+        "cues": [
+          "Düz çizgi"
+        ]
       }
     }
   },
@@ -2347,6 +3335,27 @@
         ],
         "cues": [
           "Wall sets the range"
+        ]
+      },
+      "tr": {
+        "name": "Ab Wheel Wall Rollout",
+        "aliases": [
+          "Duvara karın tekerleği"
+        ],
+        "setup": [
+          "Karın tekerleği seninle duvar arasında, duvara dönük diz çök.",
+          "Mesafeyi, tekerlek kontrol edebileceğin bir açıklıkta duracak şekilde ayarla."
+        ],
+        "execution": [
+          "Tekerlek duvara değene kadar ileri yuvarla.",
+          "Başlangıca geri çek."
+        ],
+        "mistakes": [
+          "Sırtın çökmesine izin vermek.",
+          "Acele etmek."
+        ],
+        "cues": [
+          "Açıklığı duvar belirler"
         ]
       }
     }
@@ -2399,6 +3408,28 @@
         "cues": [
           "Hollow back"
         ]
+      },
+      "tr": {
+        "name": "Ab Wheel Diagonal Rollout",
+        "aliases": [
+          "Oblique Rollout",
+          "Çapraz karın tekerleği"
+        ],
+        "setup": [
+          "Karın tekerleğini omuzlarının altında tutarak diz çök.",
+          "Leğen kemiğin içe alınmış, karnını sık."
+        ],
+        "execution": [
+          "Tekerleği ileri ve çapraz olarak bir yana yuvarla.",
+          "Geri çek ve diğer tarafa tekrarla."
+        ],
+        "mistakes": [
+          "Kalçayı döndürmek.",
+          "Sırtın çökmesine izin vermek."
+        ],
+        "cues": [
+          "Sırt içbükey"
+        ]
       }
     }
   },
@@ -2448,6 +3479,25 @@
         "cues": [
           "Small circles, still hips"
         ]
+      },
+      "tr": {
+        "name": "Stir the Pot",
+        "aliases": [],
+        "setup": [
+          "Alt kollarını bir pilates topuna koy ve geri adım atarak plank pozisyonuna geç.",
+          "Ayaklarını kalçandan biraz geniş aç."
+        ],
+        "execution": [
+          "Tencere karıştırır gibi alt kollarınla küçük daireler çiz.",
+          "Yarıda yön değiştir."
+        ],
+        "mistakes": [
+          "Kalçanın düşmesine izin vermek.",
+          "Kocaman daireler çizmek."
+        ],
+        "cues": [
+          "Küçük daireler, kalça sabit"
+        ]
       }
     }
   },
@@ -2495,6 +3545,28 @@
         ],
         "cues": [
           "Knees to chest"
+        ]
+      },
+      "tr": {
+        "name": "Stability Ball Knee Tuck",
+        "aliases": [
+          "Ball Jackknife",
+          "Pilates topunda diz çekme"
+        ],
+        "setup": [
+          "Kaval kemiklerini bir pilates topuna, ellerini şınav pozisyonunda yere koy.",
+          "Vücudun düz olacak şekilde karnını sık."
+        ],
+        "execution": [
+          "Topu öne yuvarlayarak dizlerini göğsüne doğru çek.",
+          "Topu başlangıca geri yuvarla."
+        ],
+        "mistakes": [
+          "Kalçayı düşürmek.",
+          "Omuzların ellerin arkasına kaymasına izin vermek."
+        ],
+        "cues": [
+          "Dizler göğse"
         ]
       }
     }
@@ -2545,6 +3617,29 @@
         "cues": [
           "Smooth tuck"
         ]
+      },
+      "tr": {
+        "name": "Suspension Trainer Knee Tuck",
+        "aliases": [
+          "TRX Knee Tuck",
+          "TRX Crunch",
+          "TRX diz çekme"
+        ],
+        "setup": [
+          "Yüzün yere dönük, ayaklarını ayak yuvalarına yerleştir.",
+          "Ellerinle ilerleyerek şınav pozisyonuna geç."
+        ],
+        "execution": [
+          "Dizlerini göğsüne doğru çek.",
+          "Plank pozisyonuna geri uzat."
+        ],
+        "mistakes": [
+          "Kalçanın düşmesine izin vermek.",
+          "Sallanmak."
+        ],
+        "cues": [
+          "Akıcı çekiş"
+        ]
       }
     }
   },
@@ -2592,6 +3687,27 @@
         ],
         "cues": [
           "Hips to the ceiling"
+        ]
+      },
+      "tr": {
+        "name": "Stability Ball Pike",
+        "aliases": [
+          "Pilates topunda pike"
+        ],
+        "setup": [
+          "Şınav pozisyonunda kaval kemiklerini bir pilates topuna koy.",
+          "Karnını sık."
+        ],
+        "execution": [
+          "Bacakların düz, topu ellerine doğru yuvarlayarak kalçanı yükseğe kaldır.",
+          "Plank pozisyonuna geri in."
+        ],
+        "mistakes": [
+          "Dizleri bükmek.",
+          "Omuzları çökertmek."
+        ],
+        "cues": [
+          "Kalça tavana"
         ]
       }
     }
@@ -2642,6 +3758,27 @@
         ],
         "cues": [
           "Hips high, legs straight"
+        ]
+      },
+      "tr": {
+        "name": "Suspension Trainer Pike",
+        "aliases": [
+          "TRX Pike"
+        ],
+        "setup": [
+          "Yüzün yere dönük, ayaklarını ayak yuvalarına yerleştir.",
+          "Ellerinle ilerleyerek şınav pozisyonuna geç."
+        ],
+        "execution": [
+          "Bacaklarını düz tutarak kalçanı tavana doğru kaldır.",
+          "Plank pozisyonuna geri in."
+        ],
+        "mistakes": [
+          "Dizleri bükmek.",
+          "Altta çökmek."
+        ],
+        "cues": [
+          "Kalça yüksek, bacaklar düz"
         ]
       }
     }
@@ -2699,6 +3836,31 @@
           "Lean back with control",
           "Kick and curl"
         ]
+      },
+      "tr": {
+        "name": "GHD Sit-Up",
+        "aliases": [
+          "Glute-Ham Developer Sit-Up",
+          "GHD mekik"
+        ],
+        "setup": [
+          "Ayak plakasına dönük, kalçan pedin arka kenarının hemen dışında olacak şekilde GHD pedine otur.",
+          "Dizlerin hafif bükülü, ayaklarını silindirlerin altına kilitle."
+        ],
+        "execution": [
+          "Gövden yere yaklaşık paralel olana kadar kontrollü şekilde geriye yaslan.",
+          "Dizlerini düzleştirerek gövdeni kıvır ve dik otur.",
+          "Ayak plakasına uzan, sonra yeniden in."
+        ],
+        "mistakes": [
+          "İlk antrenmanlarda paralelin çok altına düşmek.",
+          "Altta belin çökmesine izin vermek."
+        ],
+        "safety": "Kısa bir açıklık ve az tekrarla başla; bu hareket başta ciddi kas ağrısı yapar ve kalça bükücüleri zorlar.",
+        "cues": [
+          "Kontrollü yaslan",
+          "Bacakları aç ve kıvrıl"
+        ]
       }
     }
   },
@@ -2755,6 +3917,31 @@
         "cues": [
           "Straight side to side",
           "Lift with the top side"
+        ]
+      },
+      "tr": {
+        "name": "45-Degree Side Bend",
+        "aliases": [
+          "Back Extension Side Bend",
+          "Hyperextension Side Bend",
+          "45 derece yana eğilme"
+        ],
+        "setup": [
+          "Kalçan pede dayalı, 45 derecelik hiperekstansiyon sehpasında yan dur.",
+          "Ayaklarını ayak pedlerinin altına geçir ve kollarını göğsünde çaprazla ya da bir plakaya sarıl."
+        ],
+        "execution": [
+          "Üstteki yanında esneme hissedene kadar yere doğru yana eğil.",
+          "Vücudun düz bir çizgi olana kadar gövdeni geri kaldır.",
+          "Seti bitir, sonra taraf değiştir."
+        ],
+        "mistakes": [
+          "Gövdeyi yere doğru döndürmek.",
+          "Alttan sekerek kalkmak."
+        ],
+        "cues": [
+          "Dümdüz yandan yana",
+          "Üst yanla kaldır"
         ]
       }
     }

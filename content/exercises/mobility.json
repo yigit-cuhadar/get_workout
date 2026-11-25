@@ -45,6 +45,29 @@
         "cues": [
           "Tuck and squeeze"
         ]
+      },
+      "tr": {
+        "name": "Kneeling Hip Flexor Stretch",
+        "aliases": [
+          "Half-Kneeling Hip Flexor Stretch",
+          "Lunge Stretch",
+          "Kalça bükücü esnetme"
+        ],
+        "setup": [
+          "Bir dizinin üstüne çök, diğer ayağın önde yere tam bassın.",
+          "Leğen kemiğini içe al ve arka taraftaki kalçanı sık."
+        ],
+        "execution": [
+          "Arka kalçanın önünde esneme hissedene kadar kalçanı hafifçe öne kaydır.",
+          "Tut ve nefes al, sonra taraf değiştir."
+        ],
+        "mistakes": [
+          "Leğen kemiğini içe almak yerine beli kavislendirmek.",
+          "Çok öne doğru hamle yapmak."
+        ],
+        "cues": [
+          "İçe al ve sık"
+        ]
       }
     }
   },
@@ -95,6 +118,29 @@
         "safety": "Back off if you feel pain in the front knee.",
         "cues": [
           "Hips square"
+        ]
+      },
+      "tr": {
+        "name": "Pigeon Stretch",
+        "aliases": [
+          "Pigeon Pose",
+          "Güvercin pozu"
+        ],
+        "setup": [
+          "Dört ayak pozisyonundan bir dizini öne getir ve aynı taraftaki bileğinin arkasına koy.",
+          "Diğer bacağını dümdüz geriye uzat."
+        ],
+        "execution": [
+          "Kalçanı yere doğru indir ve rahatsa öndeki bacağının üstüne doğru eğil.",
+          "Tut, sonra taraf değiştir."
+        ],
+        "mistakes": [
+          "Öndeki dizi ağrıyacak kadar zorlamak.",
+          "Bir kalçanın üstüne yaslanmak."
+        ],
+        "safety": "Öndeki dizinde ağrı hissedersen geri çekil.",
+        "cues": [
+          "Kalça düz"
         ]
       }
     }
@@ -147,6 +193,29 @@
         "cues": [
           "Move one vertebra at a time"
         ]
+      },
+      "tr": {
+        "name": "Cat-Cow",
+        "aliases": [
+          "Cat-Camel",
+          "Kedi-inek"
+        ],
+        "setup": [
+          "Ellerin omuzlarının, dizlerin kalçanın altında, dört ayak üstüne gel.",
+          "Düz bir sırtla başla."
+        ],
+        "execution": [
+          "Sırtını tavana doğru yuvarla ve çeneni içe al.",
+          "Sonra karnını aşağı bırak, göğsünü ve kuyruk sokumunu kaldır.",
+          "İkisi arasında yavaşça hareket et."
+        ],
+        "mistakes": [
+          "Acele etmek.",
+          "Sadece boynu oynatmak."
+        ],
+        "cues": [
+          "Omur omur hareket et"
+        ]
       }
     }
   },
@@ -194,6 +263,27 @@
         ],
         "cues": [
           "Hinge, don't slump"
+        ]
+      },
+      "tr": {
+        "name": "Standing Hamstring Stretch",
+        "aliases": [
+          "Ayakta arka bacak esnetme"
+        ],
+        "setup": [
+          "Bacağın düz, bir topuğunu alçak bir basamağa koy.",
+          "Ellerin belinde, dik dur."
+        ],
+        "execution": [
+          "Uyluğunun arkasında esneme hissedene kadar kalçadan öne eğil.",
+          "Tut, sonra taraf değiştir."
+        ],
+        "mistakes": [
+          "Daha uzağa uzanmak için sırtı yuvarlamak.",
+          "Dizi sertçe kilitlemek."
+        ],
+        "cues": [
+          "Kalçadan eğil, çökme"
         ]
       }
     }
@@ -247,6 +337,28 @@
         "cues": [
           "Breathe into the back"
         ]
+      },
+      "tr": {
+        "name": "Child's Pose",
+        "aliases": [
+          "Child Pose",
+          "Çocuk pozu"
+        ],
+        "setup": [
+          "Ayak başparmakların bitişik, dizlerin açık şekilde diz çök.",
+          "Topuklarına doğru geriye otur."
+        ],
+        "execution": [
+          "Ellerini öne yürüt ve göğsünü yere doğru bırak.",
+          "Sırtına doğru yavaşça nefes al."
+        ],
+        "mistakes": [
+          "Kalçayı aşağı zorlamak.",
+          "Nefesi tutmak."
+        ],
+        "cues": [
+          "Sırtına nefes al"
+        ]
       }
     }
   },
@@ -298,6 +410,26 @@
         "cues": [
           "Long lunge, big reach"
         ]
+      },
+      "tr": {
+        "name": "World's Greatest Stretch",
+        "aliases": [],
+        "setup": [
+          "Arka dizin düz, uzun bir lunge pozisyonuna geç.",
+          "İki elini öndeki ayağının iç tarafında yere koy."
+        ],
+        "execution": [
+          "İçteki dirseğini öndeki ayağının iç kemerine doğru indir.",
+          "Dön ve o kolu tavana uzat.",
+          "Elini geri koy, arka bacak kaslarını esnetmek için öndeki bacağını düzleştir, sonra taraf değiştir."
+        ],
+        "mistakes": [
+          "Pozisyonları aceleyle geçmek.",
+          "Arka dizin bükülmesine izin vermek."
+        ],
+        "cues": [
+          "Uzun lunge, büyük uzanış"
+        ]
       }
     }
   },
@@ -345,6 +477,28 @@
         ],
         "cues": [
           "Sit tall, lean from the hips"
+        ]
+      },
+      "tr": {
+        "name": "Butterfly Stretch",
+        "aliases": [
+          "Seated Groin Stretch",
+          "Kelebek esnetme"
+        ],
+        "setup": [
+          "Ayak tabanların bitişik, dizlerin dışa düşmüş şekilde otur.",
+          "Ayaklarını ellerinle tut."
+        ],
+        "execution": [
+          "Dik otur ve kalçadan nazikçe öne eğil.",
+          "Tut ve nefes al."
+        ],
+        "mistakes": [
+          "Sırtı yuvarlamak.",
+          "Dizleri sertçe aşağı bastırmak."
+        ],
+        "cues": [
+          "Dik otur, kalçadan eğil"
         ]
       }
     }
@@ -396,6 +550,28 @@
         "cues": [
           "Gentle turn away"
         ]
+      },
+      "tr": {
+        "name": "Doorway Chest Stretch",
+        "aliases": [
+          "Doorway Pec Stretch",
+          "Kapıda göğüs esnetme"
+        ],
+        "setup": [
+          "Bir kapı aralığında dur ve dirseğin omuz hizasında, alt kolunu kasaya yasla.",
+          "Aynı taraftaki ayağınla öne adım at."
+        ],
+        "execution": [
+          "Göğsünde esneme hissedene kadar göğsünü nazikçe ters yöne çevir.",
+          "Tut, sonra taraf değiştir."
+        ],
+        "mistakes": [
+          "Omzun önünde ağrıya kadar zorlamak.",
+          "Omuzları kulaklara çekmek."
+        ],
+        "cues": [
+          "Nazikçe ters yöne dön"
+        ]
       }
     }
   },
@@ -441,6 +617,27 @@
         ],
         "cues": [
           "Tall torso, glute on"
+        ]
+      },
+      "tr": {
+        "name": "Couch Stretch",
+        "aliases": [
+          "Koltuk esnetme"
+        ],
+        "setup": [
+          "Sırtın bir duvara ya da koltuğa dönük diz çök ve bir kaval kemiğini ona dayayarak yukarı kaydır.",
+          "Diğer ayağını öne getirerek yarım diz çökme pozisyonuna geç."
+        ],
+        "execution": [
+          "Gövdeni dik kaldır ve arka taraftaki kalçanı sık.",
+          "Tut, sonra taraf değiştir."
+        ],
+        "mistakes": [
+          "Beli kavislendirmek.",
+          "Nefes alamadığın bir pozisyona zorlamak."
+        ],
+        "cues": [
+          "Gövde dik, kalça sıkı"
         ]
       }
     }
@@ -489,6 +686,28 @@
         ],
         "cues": [
           "Heel down"
+        ]
+      },
+      "tr": {
+        "name": "Wall Calf Stretch",
+        "aliases": [
+          "Standing Calf Stretch",
+          "Baldır esnetme"
+        ],
+        "setup": [
+          "Ellerini bir duvara koy ve bir ayağını geri at.",
+          "Arka bacağını düz, topuğunu yerde tut."
+        ],
+        "execution": [
+          "Baldırında esneme hissedene kadar kalçanı duvara doğru yasla.",
+          "Tut, sonra taraf değiştir."
+        ],
+        "mistakes": [
+          "Arka topuğu kaldırmak.",
+          "Arka ayağı dışa çevirmek."
+        ],
+        "cues": [
+          "Topuk yerde"
         ]
       }
     }
@@ -541,6 +760,28 @@
         "cues": [
           "Sit tall, rotate slow"
         ]
+      },
+      "tr": {
+        "name": "90/90 Hip Switch",
+        "aliases": [
+          "90-90 Hip Stretch",
+          "90/90 kalça esnetme"
+        ],
+        "setup": [
+          "İki dizin de 90 derece bükülü, bir bacağın önünde, diğeri yanında olacak şekilde otur.",
+          "Gerekirse ellerin arkada, dik otur."
+        ],
+        "execution": [
+          "Ayaklarını kaldırmadan iki dizini de diğer tarafa çevir.",
+          "Geri dönmeden önce her pozisyonda dik otur."
+        ],
+        "mistakes": [
+          "Sırtı yuvarlamak.",
+          "Dizleri hızla savurmak."
+        ],
+        "cues": [
+          "Dik otur, yavaş çevir"
+        ]
       }
     }
   },
@@ -592,6 +833,28 @@
         "cues": [
           "Knees down, chest turns"
         ]
+      },
+      "tr": {
+        "name": "Thoracic Open Book",
+        "aliases": [
+          "Open Book Stretch",
+          "Açık kitap esnetme"
+        ],
+        "setup": [
+          "Dizlerin 90 derece bükülü, kolların önünde düz şekilde yan yat.",
+          "Dizlerini yerde bitişik tut."
+        ],
+        "execution": [
+          "Göğsünü tavana doğru çevirerek üstteki kolunu vücudunun üstünden aç.",
+          "Yavaşça geri dön ve tekrarla, sonra taraf değiştir."
+        ],
+        "mistakes": [
+          "Dizlerin kalkmasına izin vermek.",
+          "Kolu yere zorlamak."
+        ],
+        "cues": [
+          "Dizler yerde, göğüs dönsün"
+        ]
       }
     }
   },
@@ -640,6 +903,28 @@
         "cues": [
           "Gentle pull"
         ]
+      },
+      "tr": {
+        "name": "Wrist Flexor Stretch",
+        "aliases": [
+          "Forearm Flexor Stretch",
+          "Bilek esnetme"
+        ],
+        "setup": [
+          "Bir kolunu avuç için yukarı bakacak şekilde önüne düz uzat.",
+          "Diğer elinle parmakları nazikçe aşağı ve geriye çek."
+        ],
+        "execution": [
+          "Alt kolunun iç tarafında esneme hissedene kadar tut.",
+          "Kol değiştir."
+        ],
+        "mistakes": [
+          "Dirseği bükmek.",
+          "Çok sert çekmek."
+        ],
+        "cues": [
+          "Nazik çekiş"
+        ]
       }
     }
   },
@@ -687,6 +972,28 @@
         ],
         "cues": [
           "Gentle press"
+        ]
+      },
+      "tr": {
+        "name": "Wrist Extensor Stretch",
+        "aliases": [
+          "Forearm Extensor Stretch",
+          "Bilek esnetme"
+        ],
+        "setup": [
+          "Bir kolunu avuç için aşağı bakacak şekilde önüne düz uzat.",
+          "Diğer elinle el sırtını nazikçe aşağı bastır."
+        ],
+        "execution": [
+          "Alt kolunun üst tarafında esneme hissedene kadar tut.",
+          "Kol değiştir."
+        ],
+        "mistakes": [
+          "Dirseği bükmek.",
+          "Çok sert bastırmak."
+        ],
+        "cues": [
+          "Nazik bastırış"
         ]
       }
     }
@@ -738,6 +1045,27 @@
         ],
         "cues": [
           "Small to big"
+        ]
+      },
+      "tr": {
+        "name": "Arm Circles",
+        "aliases": [
+          "Kol çevirme"
+        ],
+        "setup": [
+          "Kolların omuz hizasında iki yana açık, dik dur.",
+          "Omuzlarını kulaklarından uzak tut."
+        ],
+        "execution": [
+          "Öne doğru küçük daireler çiz, giderek büyüt.",
+          "Yarıda yön değiştir."
+        ],
+        "mistakes": [
+          "Omuzları kulaklara çekmek.",
+          "Kontrolsüzce savurmak."
+        ],
+        "cues": [
+          "Küçükten büyüğe"
         ]
       }
     }
@@ -791,6 +1119,29 @@
         "cues": [
           "Wide grip, straight arms"
         ]
+      },
+      "tr": {
+        "name": "Band Shoulder Pass-Through",
+        "aliases": [
+          "Shoulder Dislocate",
+          "Band Pass-Through",
+          "Lastikle omuz açma"
+        ],
+        "setup": [
+          "Hafif bir bandı uyluklarının önünde geniş tut.",
+          "Kaburgaların aşağıda, dik dur."
+        ],
+        "execution": [
+          "Düz kollarını bir yayla başının üstünden arkana kaldır.",
+          "Öne geri getir."
+        ],
+        "mistakes": [
+          "Çok dar tutmak.",
+          "Beli kavislendirmek."
+        ],
+        "cues": [
+          "Geniş tutuş, kollar düz"
+        ]
       }
     }
   },
@@ -836,6 +1187,27 @@
         ],
         "cues": [
           "Slow rock back"
+        ]
+      },
+      "tr": {
+        "name": "Frog Stretch",
+        "aliases": [
+          "Kurbağa esnetme"
+        ],
+        "setup": [
+          "Dört ayak üstüne gel ve dizlerini iki yana geniş kaydır.",
+          "Ayak bileklerini dizlerinle aynı hizada tut."
+        ],
+        "execution": [
+          "İç uyluklarında esneme hissedene kadar kalçanı yavaşça geriye salla.",
+          "Tut ve nefes al."
+        ],
+        "mistakes": [
+          "Dizleri çok geniş açmaya zorlamak.",
+          "Sırtı kavislendirmek."
+        ],
+        "cues": [
+          "Yavaşça geriye salla"
         ]
       }
     }
@@ -885,6 +1257,27 @@
         "cues": [
           "Shoulder down"
         ]
+      },
+      "tr": {
+        "name": "Cross-Body Shoulder Stretch",
+        "aliases": [
+          "Omuz esnetme"
+        ],
+        "setup": [
+          "Düz bir kolunu göğsünün önünden karşıya getir.",
+          "Diğer elinle dirseğinin üstünden tut."
+        ],
+        "execution": [
+          "Kolu nazikçe göğsüne yaklaştır.",
+          "Tut, sonra değiştir."
+        ],
+        "mistakes": [
+          "Omuzları kulaklara çekmek.",
+          "Gövdeyi döndürmek."
+        ],
+        "cues": [
+          "Omuz aşağıda"
+        ]
       }
     }
   },
@@ -932,6 +1325,27 @@
         ],
         "cues": [
           "Gentle pull"
+        ]
+      },
+      "tr": {
+        "name": "Overhead Triceps Stretch",
+        "aliases": [
+          "Arka kol esnetme"
+        ],
+        "setup": [
+          "Bir kolunu başının üstüne kaldır ve dirseğini bük; elin başının arkasına düşsün.",
+          "Diğer elinle dirseği tut."
+        ],
+        "execution": [
+          "Dirseği nazikçe başının arkasına doğru çek.",
+          "Tut, sonra değiştir."
+        ],
+        "mistakes": [
+          "Sırtı kavislendirmek.",
+          "Dirseği sertçe çekmek."
+        ],
+        "cues": [
+          "Nazik çekiş"
         ]
       }
     }
@@ -989,6 +1403,26 @@
         "cues": [
           "Slow roll"
         ]
+      },
+      "tr": {
+        "name": "Jefferson Curl",
+        "aliases": [],
+        "setup": [
+          "Çok hafif bir dambıl tutarak bir kutunun üstünde dur.",
+          "Bacaklarını düz tut."
+        ],
+        "execution": [
+          "Çeneni içe al ve ağırlığın ayak parmaklarının ötesine inmesine izin vererek omur omur yavaşça aşağı yuvarlan.",
+          "Yavaşça geri yuvarlan."
+        ],
+        "mistakes": [
+          "Ağır yük kullanmak.",
+          "Acele etmek."
+        ],
+        "safety": "Ağırlıksız ya da çok hafif bir ağırlıkla başla, bel ağrın ya da disk sakatlığın varsa bu hareketi atla ve asla tükenişe kadar götürme.",
+        "cues": [
+          "Yavaş yuvarlan"
+        ]
       }
     }
   },
@@ -1041,6 +1475,28 @@
         "cues": [
           "Heels down, chest up"
         ]
+      },
+      "tr": {
+        "name": "Deep Squat Hold",
+        "aliases": [
+          "Squat Hold",
+          "Derin squat bekleme"
+        ],
+        "setup": [
+          "Ayakların omuz genişliğinde, parmakların hafifçe dışa dönük dur.",
+          "Gerekirse bir desteğe tutun."
+        ],
+        "execution": [
+          "Topukların yerde, yapabildiğin en derin squat'a çök.",
+          "Dirseklerinle dizlerini dışa it ve tut."
+        ],
+        "mistakes": [
+          "Topukların kalkması.",
+          "Sırtın çökmesi."
+        ],
+        "cues": [
+          "Topuklar yerde, göğüs dik"
+        ]
       }
     }
   },
@@ -1088,6 +1544,28 @@
         ],
         "cues": [
           "Heel down"
+        ]
+      },
+      "tr": {
+        "name": "Knee-to-Wall Ankle Mobilization",
+        "aliases": [
+          "Ankle Dorsiflexion Drill",
+          "Ayak bileği mobilitesi"
+        ],
+        "setup": [
+          "Öndeki ayağın duvardan birkaç santim uzakta, duvara dönük yarım diz çök.",
+          "Topuğunu yerde tut."
+        ],
+        "execution": [
+          "Öndeki dizini parmaklarının üstünden duvara doğru sür.",
+          "Geri dön ve tekrarla."
+        ],
+        "mistakes": [
+          "Topuğu kaldırmak.",
+          "Dizin içe çökmesine izin vermek."
+        ],
+        "cues": [
+          "Topuk yerde"
         ]
       }
     }
@@ -1137,6 +1615,28 @@
         "cues": [
           "Long through the spine"
         ]
+      },
+      "tr": {
+        "name": "Cobra Stretch",
+        "aliases": [
+          "Cobra Pose",
+          "Kobra pozu"
+        ],
+        "setup": [
+          "Ellerin omuzlarının altında, yüzüstü uzan.",
+          "Kalçanı yerde tut."
+        ],
+        "execution": [
+          "Kalçan yerde kalırken göğsünü nazikçe yukarı it.",
+          "Tut ve nefes al."
+        ],
+        "mistakes": [
+          "Omuzları kulaklara çekmek.",
+          "Bel ağrısına kadar zorlamak."
+        ],
+        "cues": [
+          "Omurga boyunca uza"
+        ]
       }
     }
   },
@@ -1184,6 +1684,27 @@
         ],
         "cues": [
           "Straight leg"
+        ]
+      },
+      "tr": {
+        "name": "Supine Hamstring Band Stretch",
+        "aliases": [
+          "Lastikle arka bacak esnetme"
+        ],
+        "setup": [
+          "Bir ayağında bant, sırtüstü uzan.",
+          "Diğer bacağını yerde düz tut."
+        ],
+        "execution": [
+          "Esneme hissedene kadar bantlı bacağını düz şekilde kaldır.",
+          "Tut, sonra değiştir."
+        ],
+        "mistakes": [
+          "Dizi bükmek.",
+          "Kalçayı kaldırmak."
+        ],
+        "cues": [
+          "Bacak düz"
         ]
       }
     }
@@ -1236,6 +1757,28 @@
         "cues": [
           "Shoulders down"
         ]
+      },
+      "tr": {
+        "name": "Lying Spinal Twist",
+        "aliases": [
+          "Supine Twist",
+          "Sırtüstü omurga burgusu"
+        ],
+        "setup": [
+          "Sırtüstü uzan ve bir dizini göğsüne çek.",
+          "Kollarını iki yana açarak uzat."
+        ],
+        "execution": [
+          "Bükülü dizinin vücudunun üstünden karşıya düşmesine izin ver.",
+          "Tut, sonra değiştir."
+        ],
+        "mistakes": [
+          "Omzu kaldırmak.",
+          "Dizi aşağı zorlamak."
+        ],
+        "cues": [
+          "Omuzlar yerde"
+        ]
       }
     }
   },
@@ -1286,6 +1829,28 @@
         ],
         "cues": [
           "Legs as straight as you can"
+        ]
+      },
+      "tr": {
+        "name": "Inchworm",
+        "aliases": [
+          "Hand Walkout",
+          "Tırtıl"
+        ],
+        "setup": [
+          "Ayakların kalça genişliğinde, dik dur.",
+          "Dizlerini yalnızca gerektiği kadar bükerek yere uzan."
+        ],
+        "execution": [
+          "Ellerini öne yürüterek yüksek plank pozisyonuna geç.",
+          "Geri yürüt ve ayağa kalk."
+        ],
+        "mistakes": [
+          "Plank'te kalçanın düşmesi.",
+          "Acele etmek."
+        ],
+        "cues": [
+          "Bacaklar olabildiğince düz"
         ]
       }
     }
