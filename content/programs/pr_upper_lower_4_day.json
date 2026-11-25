@@ -43,6 +43,10 @@
     "en": {
       "name": "Upper/Lower 4-Day",
       "summary": "Two upper-body and two lower-body sessions a week, pairing heavy compound lifts with machine and cable work. A balanced next step once full-body training feels routine."
+    },
+    "tr": {
+      "name": "Upper/Lower 4 Gün",
+      "summary": "Haftada iki üst vücut ve iki alt vücut antrenmanı; ağır bileşik hareketleri makine ve kablo çalışmasıyla eşleştirir. Full body antrenman rutinleştiğinde dengeli bir sonraki adım."
     }
   },
   "days": [

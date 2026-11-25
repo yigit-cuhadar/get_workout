@@ -44,6 +44,10 @@
     "en": {
       "name": "Arm Focus 4-Day",
       "summary": "Two upper-body days and one lower-body day, plus a dedicated arm day of curl and extension supersets. Biceps and triceps get well above standard volume for a focused block, while the rest of the body gets a standard workload."
+    },
+    "tr": {
+      "name": "Kol Odaklı 4 Gün",
+      "summary": "İki üst vücut ve bir alt vücut günü, ayrıca curl ve extension superset'lerinden oluşan bir kol günü. Odaklı bir dönem için ön kol ve arka kol standardın epey üstünde hacim alır, vücudun geri kalanı standart yük alır."
     }
   },
   "days": [

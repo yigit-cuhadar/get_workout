@@ -35,6 +35,10 @@
     "en": {
       "name": "Beginner Fat-Loss Circuits 3-Day",
       "summary": "Three short full-body circuits a week with dumbbells, a bench and your own bodyweight, each finished with easy cardio moves. A gentle start that keeps you moving and pairs well with sensible eating."
+    },
+    "tr": {
+      "name": "Başlangıç Yağ Yakımı Circuit 3 Gün",
+      "summary": "Dambıl, sehpa ve kendi vücut ağırlığınla haftada üç kısa full body circuit; her biri kolay kardiyo hareketleriyle biter. Seni hareket ettiren ve dengeli beslenmeyle iyi giden yumuşak bir başlangıç."
     }
   },
   "days": [

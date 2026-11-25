@@ -57,6 +57,33 @@
           "Elbows to your back pockets",
           "Chest to the bar"
         ]
+      },
+      "tr": {
+        "name": "Pull-Up",
+        "aliases": [
+          "Pullup",
+          "Overhand Pull-Up",
+          "Weighted Pull-Up",
+          "Barfiks"
+        ],
+        "setup": [
+          "Barı avuç içlerin öne bakacak şekilde, ellerin omuzlarından biraz geniş kavra.",
+          "Kolların düz şekilde asıl ve karnını sık."
+        ],
+        "execution": [
+          "Önce kürek kemiklerini aşağı çek, sonra göğsünü bara doğru çek.",
+          "Çenen barın üstüne çıkana kadar yüksel.",
+          "Kolların tamamen düzleşene kadar kendini indir."
+        ],
+        "mistakes": [
+          "Yükselmek için tekme atmak ya da sallanmak.",
+          "Altta kollar düzleşmeden durmak.",
+          "Göğsü kaldırmak yerine çeneyi öne uzatmak."
+        ],
+        "cues": [
+          "Dirsekler arka ceplere",
+          "Göğüs bara"
+        ]
       }
     }
   },
@@ -124,6 +151,35 @@
           "Flat back",
           "Elbows back, not out"
         ]
+      },
+      "tr": {
+        "name": "Barbell Row",
+        "aliases": [
+          "Bent-Over Row",
+          "Barbell Bent-Over Row",
+          "BB Row",
+          "Eğilerek halter row"
+        ],
+        "setup": [
+          "Barı dizlerinin hemen dışından, üstten tutuşla kavra.",
+          "Gövden yaklaşık 45 derece ya da daha alçak olana kadar kalçadan öne eğil.",
+          "Sırtını düz, dizlerini hafif bükülü tut."
+        ],
+        "execution": [
+          "Dirseklerini geriye sürerek barı alt kaburgalarına çek.",
+          "Tepede kürek kemiklerini birbirine sık.",
+          "Kolların düzleşene kadar barı indir."
+        ],
+        "mistakes": [
+          "Her tekrarda biraz daha doğrulmak.",
+          "Beli yuvarlamak.",
+          "Ağırlığı kalçayla sarsarak kaldırmak."
+        ],
+        "safety": "Sırtını düz tut; bu pozisyon beli çok yükler.",
+        "cues": [
+          "Sırt düz",
+          "Dirsekler dışa değil, geriye"
+        ]
       }
     }
   },
@@ -184,6 +240,34 @@
           "Elbows down to the ribs",
           "Chest up"
         ]
+      },
+      "tr": {
+        "name": "Lat Pulldown",
+        "aliases": [
+          "Wide-Grip Lat Pulldown",
+          "Cable Pulldown",
+          "Pulldown",
+          "Önden lat çekiş",
+          "Lat çekiş"
+        ],
+        "setup": [
+          "Uyluk pedini bacakların sabitlenecek şekilde ayarla.",
+          "Barı avuç içlerin öne bakacak şekilde, omuzlarından geniş kavra.",
+          "Hafifçe geriye yaslanarak dik otur."
+        ],
+        "execution": [
+          "Dirseklerini aşağı sürerek barı üst göğsüne çek.",
+          "Bekle, sonra kolların düzleşene kadar barın yükselmesine izin ver."
+        ],
+        "mistakes": [
+          "Barı ensenin arkasına çekmek.",
+          "Çok geriye yaslanıp hareketi bir row'a çevirmek.",
+          "Ağırlığın kolları yukarı savurmasına izin vermek."
+        ],
+        "cues": [
+          "Dirsekler aşağı, kaburgalara",
+          "Göğüs yukarı"
+        ]
       }
     }
   },
@@ -243,6 +327,33 @@
         "cues": [
           "Sit tall",
           "Pull to the belly button"
+        ]
+      },
+      "tr": {
+        "name": "Seated Cable Row",
+        "aliases": [
+          "Cable Row",
+          "Low Row",
+          "Seated Row",
+          "Oturarak kablo row",
+          "Kürek çekme"
+        ],
+        "setup": [
+          "Ayakların platformda, dizlerin hafif bükülü şekilde row istasyonuna otur.",
+          "Tutamağı kolların düz şekilde tut ve dik otur."
+        ],
+        "execution": [
+          "Gövdeni sabit tutarak tutamağı karnına çek.",
+          "Kürek kemiklerini birbirine sık.",
+          "Kolların düzleşip omuzların öne uzanana kadar tutamağın ileri gitmesine izin ver."
+        ],
+        "mistakes": [
+          "Gövdeyi öne arkaya sallamak.",
+          "Tekrarın önünde sırtı yuvarlamak."
+        ],
+        "cues": [
+          "Dik otur",
+          "Göbeğe çek"
         ]
       }
     }
@@ -306,6 +417,31 @@
           "Chest to the bar",
           "Full hang every rep"
         ]
+      },
+      "tr": {
+        "name": "Chin-Up",
+        "aliases": [
+          "Chinup",
+          "Underhand Pull-Up",
+          "Weighted Chin-Up",
+          "Ters tutuş barfiks"
+        ],
+        "setup": [
+          "Barı avuç içlerin sana bakacak şekilde, ellerin yaklaşık omuz genişliğinde kavra.",
+          "Kolların düz şekilde asıl ve karnını sık."
+        ],
+        "execution": [
+          "Çenen barı geçene kadar çek.",
+          "Kolların düzleşene kadar kendini yavaşça indir."
+        ],
+        "mistakes": [
+          "Yarım tekrar yapmak.",
+          "İvme için bacakları sallamak."
+        ],
+        "cues": [
+          "Göğüs bara",
+          "Her tekrarda tam asıl"
+        ]
       }
     }
   },
@@ -365,6 +501,32 @@
           "Elbow to the hip",
           "Keep the shoulders square"
         ]
+      },
+      "tr": {
+        "name": "One-Arm Dumbbell Row",
+        "aliases": [
+          "Single-Arm Dumbbell Row",
+          "DB Row",
+          "One-Arm DB Row",
+          "Tek kol dambıl row"
+        ],
+        "setup": [
+          "Bir dizini ve aynı taraftaki elini sehpaya koy.",
+          "Diğer elinde, kolun düz şekilde bir dambıl tut.",
+          "Sırtını düz ve yere paralel tut."
+        ],
+        "execution": [
+          "Dirseğini yakın tutarak dambılı kalçana doğru çek.",
+          "Kolun düzleşip omzun esneyene kadar indir."
+        ],
+        "mistakes": [
+          "Ağırlığı kaldırmak için gövdeyi döndürmek.",
+          "Kalça yerine göğse doğru çekmek."
+        ],
+        "cues": [
+          "Dirsek kalçaya",
+          "Omuzlar düz kalsın"
+        ]
       }
     }
   },
@@ -416,6 +578,29 @@
         ],
         "cues": [
           "Straight up, straight down"
+        ]
+      },
+      "tr": {
+        "name": "Dumbbell Shrug",
+        "aliases": [
+          "DB Shrug",
+          "Dambıl omuz silkme",
+          "Omuz silkme"
+        ],
+        "setup": [
+          "Her elinde bir dambıl yanlarında, dik dur.",
+          "Kolların avuç içlerin içe bakacak şekilde düz sarksın."
+        ],
+        "execution": [
+          "Omuzlarını dümdüz kulaklarına doğru kaldır.",
+          "Tepede bir saniye bekle, sonra yavaşça indir."
+        ],
+        "mistakes": [
+          "Omuzları daire çizerek döndürmek.",
+          "Yardım için dirsekleri bükmek."
+        ],
+        "cues": [
+          "Dümdüz yukarı, dümdüz aşağı"
         ]
       }
     }
@@ -469,6 +654,28 @@
         ],
         "cues": [
           "Ears to shoulders"
+        ]
+      },
+      "tr": {
+        "name": "Barbell Shrug",
+        "aliases": [
+          "BB Shrug",
+          "Halter omuz silkme"
+        ],
+        "setup": [
+          "Barı uyluklarının önünde, kalçanın hemen dışından üstten tutuşla tut.",
+          "Kolların düz şekilde dik dur."
+        ],
+        "execution": [
+          "Omuzlarını olabildiğince yükseğe, dümdüz yukarı kaldır.",
+          "Bekle, sonra barı yavaşça indir."
+        ],
+        "mistakes": [
+          "Omuzları döndürmek.",
+          "Dizlerle yaylanarak kaldırmak."
+        ],
+        "cues": [
+          "Omuzlar kulaklara"
         ]
       }
     }
@@ -527,6 +734,32 @@
         "cues": [
           "Hinge at the hips",
           "Stop at a straight line"
+        ]
+      },
+      "tr": {
+        "name": "Back Extension",
+        "aliases": [
+          "Hyperextension",
+          "45-Degree Back Extension",
+          "Roman Chair Back Extension",
+          "Hiperekstansiyon",
+          "Bel ekstansiyonu"
+        ],
+        "setup": [
+          "Pedi kalça kemiklerinin hemen altına ayarla ve topuklarını ayak pedlerinin altına geçir.",
+          "Kollarını göğsünde çaprazla ya da ek yük için bir plakaya sarıl."
+        ],
+        "execution": [
+          "Arka bacaklarında esneme hissedene kadar kalçadan bükülerek gövdeni indir.",
+          "Vücudun düz bir çizgi olana kadar gövdeni kaldır."
+        ],
+        "mistakes": [
+          "Tepede düz çizginin çok ötesine kavislenmek.",
+          "Pedi kalçanın bükülemeyeceği kadar yükseğe ayarlamak."
+        ],
+        "cues": [
+          "Kalçadan bükül",
+          "Düz çizgide dur"
         ]
       }
     }
@@ -591,6 +824,31 @@
           "Chest proud",
           "Pull to the sternum"
         ]
+      },
+      "tr": {
+        "name": "T-Bar Row",
+        "aliases": [
+          "Landmine Row",
+          "T Bar Row"
+        ],
+        "setup": [
+          "Landmine'a takılı bir halterin bir ucuna plaka yükle ve barın iki yanına basarak dur.",
+          "Plakaların yakınında, barın altına bir V tutamak geçir.",
+          "Sırtın düz, gövden yaklaşık 45 derece olana kadar öne eğil."
+        ],
+        "execution": [
+          "Dirseklerini geriye sürerek tutamağı göğsüne çek.",
+          "Kolların düzleşene kadar indir."
+        ],
+        "mistakes": [
+          "Beli yuvarlamak.",
+          "Ağırlığı kaldırmak için bacakları kullanmak."
+        ],
+        "safety": "Sırtını düz tut; bu pozisyon beli çok yükler.",
+        "cues": [
+          "Göğüs dik",
+          "Göğüs kemiğine çek"
+        ]
       }
     }
   },
@@ -647,6 +905,29 @@
         "cues": [
           "Elbows close and down"
         ]
+      },
+      "tr": {
+        "name": "Close-Grip Lat Pulldown",
+        "aliases": [
+          "V-Bar Pulldown",
+          "Neutral-Grip Pulldown",
+          "Dar tutuş lat çekiş"
+        ],
+        "setup": [
+          "V tutamak tak ve uyluklarını pedin altına alarak otur.",
+          "Tutamağı avuç içlerin birbirine bakacak şekilde tut."
+        ],
+        "execution": [
+          "Hafifçe geriye yaslanarak tutamağı üst göğsüne çek.",
+          "Kolların düzleşene kadar yükselmesine izin ver."
+        ],
+        "mistakes": [
+          "Sadece kollarla çekmek.",
+          "Gövdeyi sallamak."
+        ],
+        "cues": [
+          "Dirsekler yakın ve aşağı"
+        ]
       }
     }
   },
@@ -702,6 +983,29 @@
         ],
         "cues": [
           "Full range, chest up"
+        ]
+      },
+      "tr": {
+        "name": "Machine-Assisted Pull-Up",
+        "aliases": [
+          "Assisted Pull-Up",
+          "Gravitron",
+          "Destekli barfiks"
+        ],
+        "setup": [
+          "Destek ağırlığını ayarla; ağırlık arttıkça hareket kolaylaşır.",
+          "Platforma diz çök ya da bas ve tutamakları kavra."
+        ],
+        "execution": [
+          "Göğsünü tutamaklara doğru yukarı çek.",
+          "Kolların düzleşene kadar kendini yavaşça indir."
+        ],
+        "mistakes": [
+          "Platformdan sekmek.",
+          "Tekrarları zahmetsiz yapacak kadar çok destek kullanmak."
+        ],
+        "cues": [
+          "Tam açıklık, göğüs yukarı"
         ]
       }
     }
@@ -763,6 +1067,30 @@
           "Flat back",
           "Row to the hips"
         ]
+      },
+      "tr": {
+        "name": "Dumbbell Bent-Over Row",
+        "aliases": [
+          "Two-Arm Dumbbell Row",
+          "DB Bent-Over Row",
+          "Eğilerek dambıl row"
+        ],
+        "setup": [
+          "Her elinde bir dambıl tut ve dizlerin hafif bükülü kalçadan öne eğil.",
+          "Dambıllar omuzlarının altında sarkarken sırtını düz tut."
+        ],
+        "execution": [
+          "İki dambılı da kalçana çek.",
+          "Kolların düzleşene kadar indir."
+        ],
+        "mistakes": [
+          "Sırtı yuvarlamak.",
+          "Set ilerledikçe daha dik durmak."
+        ],
+        "cues": [
+          "Sırt düz",
+          "Kalçaya çek"
+        ]
       }
     }
   },
@@ -818,6 +1146,30 @@
         "cues": [
           "Chest on the pad",
           "Squeeze the back"
+        ]
+      },
+      "tr": {
+        "name": "Machine Row",
+        "aliases": [
+          "Chest-Supported Machine Row",
+          "Seated Machine Row",
+          "Makine row"
+        ],
+        "setup": [
+          "Koltuğu tutamaklar alt göğsünle hizalanacak şekilde ayarla.",
+          "Göğsün pede dayalı otur ve tutamakları kavra."
+        ],
+        "execution": [
+          "Dirseklerin gövdeni geçene kadar tutamakları geriye çek.",
+          "Kürek kemiklerini sık, sonra yavaşça geri dön."
+        ],
+        "mistakes": [
+          "Göğsü pedden kaldırmak.",
+          "Omuzları kulaklara çekmek."
+        ],
+        "cues": [
+          "Göğüs pedde",
+          "Sırtı sık"
         ]
       }
     }
@@ -875,6 +1227,29 @@
         "cues": [
           "Chest stays down"
         ]
+      },
+      "tr": {
+        "name": "Chest-Supported Dumbbell Row",
+        "aliases": [
+          "Incline Dumbbell Row",
+          "Prone Dumbbell Row",
+          "Eğimli sehpada dambıl row"
+        ],
+        "setup": [
+          "Sehpayı hafif bir eğime ayarla ve yüzüstü uzan.",
+          "Her elinde bir dambıl omuzlarının altında sarksın."
+        ],
+        "execution": [
+          "Dirseklerin gövdeni geçene kadar dambılları yukarı çek.",
+          "Kolların düzleşene kadar indir."
+        ],
+        "mistakes": [
+          "Göğsü sehpadan kaldırmak.",
+          "Ağırlığı ön kolla kaldırmak."
+        ],
+        "cues": [
+          "Göğüs aşağıda kalsın"
+        ]
       }
     }
   },
@@ -930,6 +1305,31 @@
         "cues": [
           "Long arms",
           "Drive to the thighs"
+        ]
+      },
+      "tr": {
+        "name": "Straight-Arm Pulldown",
+        "aliases": [
+          "Straight-Arm Cable Pulldown",
+          "Cable Pullover",
+          "Lat Pushdown",
+          "Düz kol pulldown"
+        ],
+        "setup": [
+          "Yüksek makaraya düz bir bar ya da halat tak.",
+          "Geri adım at, hafifçe öne eğil ve barı kolların düz şekilde göz hizasında tut."
+        ],
+        "execution": [
+          "Kollarını düz tutarak barı uyluklarına kadar aşağı süpür.",
+          "Yavaşça göz hizasına yükselmesine izin ver."
+        ],
+        "mistakes": [
+          "Dirsekleri büküp hareketi pushdown'a çevirmek.",
+          "Omuzları yukarı çekmek."
+        ],
+        "cues": [
+          "Kollar uzun",
+          "Uyluklara sür"
         ]
       }
     }
@@ -992,6 +1392,31 @@
           "Body straight",
           "Chest to the bar"
         ]
+      },
+      "tr": {
+        "name": "Inverted Row",
+        "aliases": [
+          "Bodyweight Row",
+          "Australian Pull-Up",
+          "Ters row",
+          "Avustralya barfiksi"
+        ],
+        "setup": [
+          "Bir rack'te ya da Smith makinesinde barı yaklaşık bel hizasına ayarla.",
+          "Kolların düz, topukların yerde ve vücudun düz şekilde barın altında asıl."
+        ],
+        "execution": [
+          "Göğsünü bara çek.",
+          "Kolların düzleşene kadar kendini indir."
+        ],
+        "mistakes": [
+          "Kalçanın düşmesine izin vermek.",
+          "Göğüs yerine çeneyle uzanmak."
+        ],
+        "cues": [
+          "Vücut düz",
+          "Göğüs bara"
+        ]
       }
     }
   },
@@ -1048,6 +1473,30 @@
         ],
         "cues": [
           "Chest up, elbows down"
+        ]
+      },
+      "tr": {
+        "name": "Neutral-Grip Pull-Up",
+        "aliases": [
+          "Hammer-Grip Pull-Up",
+          "Parallel-Grip Pull-Up",
+          "Nötr tutuş barfiks",
+          "Paralel tutuş barfiks"
+        ],
+        "setup": [
+          "Paralel tutamakları avuç içlerin birbirine bakacak şekilde kavra.",
+          "Kolların düz şekilde asıl."
+        ],
+        "execution": [
+          "Çenen tutamakların üstüne çıkana kadar yüksel.",
+          "Kendini tamamen aşağı indir."
+        ],
+        "mistakes": [
+          "Kipping yapmak.",
+          "Tekrarın alt kısmını kısa kesmek."
+        ],
+        "cues": [
+          "Göğüs yukarı, dirsekler aşağı"
         ]
       }
     }
@@ -1106,6 +1555,28 @@
         ],
         "cues": [
           "Elbows down and back"
+        ]
+      },
+      "tr": {
+        "name": "Wide-Grip Pull-Up",
+        "aliases": [
+          "Wide Pull-Up",
+          "Geniş tutuş barfiks"
+        ],
+        "setup": [
+          "Barı avuç içlerin öne bakacak şekilde, omuzlarından epey geniş kavra.",
+          "Kolların düz şekilde asıl ve karnını sık."
+        ],
+        "execution": [
+          "Çenen barı geçene kadar göğsünü bara doğru çek.",
+          "Kontrollü şekilde kolların düzleşene kadar in."
+        ],
+        "mistakes": [
+          "Hareket açıklığını çok kısaltacak kadar geniş tutmak.",
+          "Sallanmak."
+        ],
+        "cues": [
+          "Dirsekler aşağı ve geri"
         ]
       }
     }
@@ -1168,6 +1639,29 @@
           "Torso still",
           "Reset on the floor"
         ]
+      },
+      "tr": {
+        "name": "Pendlay Row",
+        "aliases": [
+          "Dead-Stop Row"
+        ],
+        "setup": [
+          "Barı yere koy ve gövden yere neredeyse paralel olana kadar öne eğil.",
+          "Sırtın düz, barı omuzlarından biraz geniş kavra."
+        ],
+        "execution": [
+          "Barı patlayıcı şekilde alt göğsüne çek.",
+          "Yere geri koy ve sonraki tekrardan önce oturmasını bekle."
+        ],
+        "mistakes": [
+          "Bar yükselirken gövdeyi kaldırmak.",
+          "Bara uzanmak için sırtı yuvarlamak."
+        ],
+        "safety": "Sırtını düz tut; bu pozisyon beli çok yükler.",
+        "cues": [
+          "Gövde sabit",
+          "Yerde yeniden başla"
+        ]
       }
     }
   },
@@ -1222,6 +1716,30 @@
         "cues": [
           "Long and low",
           "Squeeze the glutes"
+        ]
+      },
+      "tr": {
+        "name": "Superman",
+        "aliases": [
+          "Prone Back Extension",
+          "Superman Raise",
+          "Süpermen"
+        ],
+        "setup": [
+          "Kolların başının üstünde uzanmış, bacakların düz şekilde yüzüstü yat.",
+          "Alnını yerin hemen üstünde tut."
+        ],
+        "execution": [
+          "Kollarını, göğsünü ve bacaklarını birlikte yerden birkaç santim kaldır.",
+          "Bir nefes boyunca tut, sonra yavaşça indir."
+        ],
+        "mistakes": [
+          "Öne bakmak için boynu yukarı kırmak.",
+          "Sıkmak yerine sallanarak kaldırmak."
+        ],
+        "cues": [
+          "Uzun ve alçak",
+          "Kalçanı sık"
         ]
       }
     }
@@ -1279,6 +1797,29 @@
         "cues": [
           "Elbows to the ribs"
         ]
+      },
+      "tr": {
+        "name": "Reverse-Grip Lat Pulldown",
+        "aliases": [
+          "Underhand Lat Pulldown",
+          "Supinated Pulldown",
+          "Ters tutuş lat çekiş"
+        ],
+        "setup": [
+          "Uyluklarını pedin altına alarak otur.",
+          "Barı avuç içlerin sana bakacak şekilde, yaklaşık omuz genişliğinde kavra."
+        ],
+        "execution": [
+          "Barı üst göğsüne çek.",
+          "Kolların düzleşene kadar geri gitmesine izin ver."
+        ],
+        "mistakes": [
+          "Çok geriye yaslanmak.",
+          "Dirseklerin dışa açılmasına izin vermek."
+        ],
+        "cues": [
+          "Dirsekler kaburgalara"
+        ]
       }
     }
   },
@@ -1332,6 +1873,29 @@
         ],
         "cues": [
           "Slow all the way down"
+        ]
+      },
+      "tr": {
+        "name": "Negative Pull-Up",
+        "aliases": [
+          "Eccentric Pull-Up",
+          "Pull-Up Negative",
+          "Negatif barfiks"
+        ],
+        "setup": [
+          "Çeneni barın üstüne çıkarmak için bir kutu kullan ya da sıçra.",
+          "Avuç içlerin öne bakacak şekilde, omuz genişliğinde kavra."
+        ],
+        "execution": [
+          "Kendini olabildiğince yavaş, üç ila beş saniyede indir.",
+          "Yeniden yukarı çık ve tekrarla."
+        ],
+        "mistakes": [
+          "Alt yarıda hızla düşmek.",
+          "Altta omuzların kulaklara kalkmasına izin vermek."
+        ],
+        "cues": [
+          "Sonuna kadar yavaş"
         ]
       }
     }
@@ -1395,6 +1959,31 @@
           "Elbows close",
           "Pull to the belly"
         ]
+      },
+      "tr": {
+        "name": "Underhand Barbell Row",
+        "aliases": [
+          "Reverse-Grip Barbell Row",
+          "Yates Row",
+          "Ters tutuş halter row"
+        ],
+        "setup": [
+          "Barı avuç içlerin öne bakacak şekilde, ellerin omuz genişliğinde tut.",
+          "Sırtın düz, yaklaşık 45 dereceye kadar öne eğil."
+        ],
+        "execution": [
+          "Dirseklerini yakın tutarak barı alt karnına çek.",
+          "Kolların düzleşene kadar indir."
+        ],
+        "mistakes": [
+          "Kalçayla savurmak.",
+          "Ağırlığı ön kolla kaldırmak."
+        ],
+        "safety": "Sırtını düz tut ve barı sarsma; ağır ters tutuş row'lar beli ve ön kol tendonunu zorlar.",
+        "cues": [
+          "Dirsekler yakın",
+          "Karna çek"
+        ]
       }
     }
   },
@@ -1450,6 +2039,29 @@
           "Control the bottom",
           "Chest to the bar"
         ]
+      },
+      "tr": {
+        "name": "Band-Assisted Pull-Up",
+        "aliases": [
+          "Banded Pull-Up",
+          "Lastikle destekli barfiks"
+        ],
+        "setup": [
+          "Bir bandı bara geçir ve bir dizini ya da ayağını içine koy.",
+          "Barı omuzlarından biraz geniş kavra ve asıl."
+        ],
+        "execution": [
+          "Çeneni barın üstüne çek.",
+          "Kolların düzleşene kadar yavaşça in."
+        ],
+        "mistakes": [
+          "Altta bandın seni fırlatmasına izin vermek.",
+          "Hep aynı kalın bandı kullanmak."
+        ],
+        "cues": [
+          "Altı kontrol et",
+          "Göğüs bara"
+        ]
       }
     }
   },
@@ -1504,6 +2116,28 @@
         "cues": [
           "Body straight"
         ]
+      },
+      "tr": {
+        "name": "Suspension Trainer Row",
+        "aliases": [
+          "TRX Row",
+          "Suspension Row"
+        ],
+        "setup": [
+          "Her elinde bir tutamak, bağlantı noktasına dön.",
+          "Ayaklarını öne yürüt ve kolların düz, vücudun düz şekilde geriye yaslan."
+        ],
+        "execution": [
+          "Göğsünü tutamaklara çek.",
+          "Kolların düzleşene kadar kendini indir."
+        ],
+        "mistakes": [
+          "Kalçanın düşmesine izin vermek.",
+          "Omuzları kulaklara çekmek."
+        ],
+        "cues": [
+          "Vücut düz"
+        ]
       }
     }
   },
@@ -1554,6 +2188,28 @@
         ],
         "cues": [
           "Straight arms, shoulders down"
+        ]
+      },
+      "tr": {
+        "name": "Scapular Pull-Up",
+        "aliases": [
+          "Scap Pull-Up",
+          "Skapular barfiks"
+        ],
+        "setup": [
+          "Kolların düz şekilde bara asıl.",
+          "Omuzlarının kulaklarına doğru kalkmasına izin ver."
+        ],
+        "execution": [
+          "Kollarını bükmeden kürek kemiklerini aşağı çek; vücudun birkaç santim yükselsin.",
+          "Gevşek asılı duruşa geri in."
+        ],
+        "mistakes": [
+          "Dirsekleri bükmek.",
+          "Bacakları sallamak."
+        ],
+        "cues": [
+          "Kollar düz, omuzlar aşağı"
         ]
       }
     }
@@ -1608,6 +2264,29 @@
         "cues": [
           "Body straight",
           "Rings to the ribs"
+        ]
+      },
+      "tr": {
+        "name": "Ring Row",
+        "aliases": [
+          "Ring Inverted Row",
+          "Halka row"
+        ],
+        "setup": [
+          "Halkaları yaklaşık bel hizasına ayarla ve her elinle birini kavra.",
+          "Ayaklarını öne yürüt ve vücudun düz şekilde geriye yaslan."
+        ],
+        "execution": [
+          "Yükselirken avuç içlerini içe çevirerek göğsünü halkalara çek.",
+          "Kolların düzleşene kadar in."
+        ],
+        "mistakes": [
+          "Kalçanın düşmesine izin vermek.",
+          "Halkaları birbirinden çok uzağa çekmek."
+        ],
+        "cues": [
+          "Vücut düz",
+          "Halkalar kaburgalara"
         ]
       }
     }
@@ -1666,6 +2345,28 @@
         ],
         "cues": [
           "Elbows forward and down"
+        ]
+      },
+      "tr": {
+        "name": "Close-Grip Chin-Up",
+        "aliases": [
+          "Narrow Chin-Up",
+          "Dar tutuş ters barfiks"
+        ],
+        "setup": [
+          "Barı avuç içlerin sana bakacak, ellerin arasında birkaç santim olacak şekilde kavra.",
+          "Kolların düz şekilde asıl."
+        ],
+        "execution": [
+          "Dirseklerin vücudunun önünde kalırken çenen barı geçene kadar çek.",
+          "Kolların düzleşene kadar in."
+        ],
+        "mistakes": [
+          "Altta yarım tekrarlar.",
+          "Sallanmak."
+        ],
+        "cues": [
+          "Dirsekler önde ve aşağıda"
         ]
       }
     }
@@ -1730,6 +2431,30 @@
           "Pull to the hips",
           "Chest over the bar"
         ]
+      },
+      "tr": {
+        "name": "Bar Muscle-Up",
+        "aliases": [
+          "Muscle-Up"
+        ],
+        "setup": [
+          "Barı avuç içlerin öne bakacak şekilde, barfiksten biraz dar kavra.",
+          "Asıl ve küçük, kontrollü bir salınım başlat."
+        ],
+        "execution": [
+          "Barı göğsünün alt kısmına getirerek patlayıcı şekilde kalçana doğru çek.",
+          "Bileklerini barın üstüne çevirirken göğsünü barın üstüne eğ.",
+          "Barın üstünde kolların düzleşene kadar it."
+        ],
+        "mistakes": [
+          "Kalçaya doğru değil, dümdüz çeneye çekmek.",
+          "Bir kolu diğerinden önce üste geçirmek."
+        ],
+        "safety": "Muscle-up denemeden önce kontrollü, temiz barfiks ve dips yapabiliyor ol.",
+        "cues": [
+          "Kalçaya çek",
+          "Göğüs barın üstüne"
+        ]
       }
     }
   },
@@ -1784,6 +2509,28 @@
         "cues": [
           "Elbow to the hip"
         ]
+      },
+      "tr": {
+        "name": "Single-Arm Cable Row",
+        "aliases": [
+          "One-Arm Cable Row",
+          "Tek kol kablo row"
+        ],
+        "setup": [
+          "Alçak ya da orta makaraya tek bir tutamak tak.",
+          "Makaraya dönük otur ya da dur, tutamağı kolun düz şekilde tek elinle tut."
+        ],
+        "execution": [
+          "Dirseğini geriye sürerek tutamağı yanına çek.",
+          "Omzunu öne uzatarak yavaşça geri gitmesine izin ver."
+        ],
+        "mistakes": [
+          "Ağırlığı hareket ettirmek için gövdeyi döndürmek.",
+          "Omuzları kulaklara çekmek."
+        ],
+        "cues": [
+          "Dirsek kalçaya"
+        ]
       }
     }
   },
@@ -1836,6 +2583,28 @@
         ],
         "cues": [
           "Elbows down to the ribs"
+        ]
+      },
+      "tr": {
+        "name": "Band Lat Pulldown",
+        "aliases": [
+          "Resistance Band Pulldown",
+          "Lastik lat çekiş"
+        ],
+        "setup": [
+          "Bandı yükseğe, örneğin bir kapının ya da barın üstüne bağla.",
+          "Banda dönük diz çök ve uçlarını kolların düz şekilde başının üstünde tut."
+        ],
+        "execution": [
+          "Dirseklerini yanlarına sürerek ellerini omuzlarına çek.",
+          "Kollarının yavaşça yükselmesine izin ver."
+        ],
+        "mistakes": [
+          "Belden öne eğilmek.",
+          "Bandın kolları yukarı fırlatmasına izin vermek."
+        ],
+        "cues": [
+          "Dirsekler aşağı, kaburgalara"
         ]
       }
     }
@@ -1890,6 +2659,29 @@
         "cues": [
           "Sit tall",
           "Squeeze the back"
+        ]
+      },
+      "tr": {
+        "name": "Band Seated Row",
+        "aliases": [
+          "Resistance Band Row",
+          "Lastik kürek çekme"
+        ],
+        "setup": [
+          "Bacakların düz otur ve bandı ayaklarına dola.",
+          "Uçlarını kolların düz şekilde tut ve dik otur."
+        ],
+        "execution": [
+          "Kürek kemiklerini sıkarak ellerini beline çek.",
+          "Yavaşça geri dön."
+        ],
+        "mistakes": [
+          "Çekmek için geriye yaslanmak.",
+          "Başlangıçta sırtı yuvarlamak."
+        ],
+        "cues": [
+          "Dik otur",
+          "Sırtı sık"
         ]
       }
     }
@@ -1947,6 +2739,27 @@
         "cues": [
           "Chest glued to the bench"
         ]
+      },
+      "tr": {
+        "name": "Seal Row",
+        "aliases": [
+          "Bench Row"
+        ],
+        "setup": [
+          "Düz bir sehpayı, kolların düz sarkarken bar yere değmeyecek şekilde blokların üstüne yükselt.",
+          "Bar altında olacak şekilde yüzüstü uzan."
+        ],
+        "execution": [
+          "Barı sehpanın alt yüzüne kadar çek.",
+          "Kolların düzleşene kadar indir."
+        ],
+        "mistakes": [
+          "Göğsü sehpadan kaldırmak.",
+          "Tam esneme için fazla alçak bir sehpa kullanmak."
+        ],
+        "cues": [
+          "Göğüs sehpaya yapışık"
+        ]
       }
     }
   },
@@ -2003,6 +2816,29 @@
         "cues": [
           "Elbows wide, squeeze the upper back"
         ]
+      },
+      "tr": {
+        "name": "Wide-Grip Seated Cable Row",
+        "aliases": [
+          "Wide Cable Row",
+          "Upper-Back Row",
+          "Geniş tutuş kablo row"
+        ],
+        "setup": [
+          "Alçak makaraya uzun, düz bir bar tak.",
+          "Dik otur ve barı omuzlarından geniş kavra."
+        ],
+        "execution": [
+          "Dirsekler yaklaşık 60 derece açık, barı alt göğsüne çek.",
+          "Üst sırtını sık, sonra yavaşça geri dön."
+        ],
+        "mistakes": [
+          "Gövdeyi sallamak.",
+          "Omuzları kulaklara çekmek."
+        ],
+        "cues": [
+          "Dirsekler geniş, üst sırtı sık"
+        ]
       }
     }
   },
@@ -2057,6 +2893,25 @@
         ],
         "cues": [
           "Elbow up and back"
+        ]
+      },
+      "tr": {
+        "name": "Meadows Row",
+        "aliases": [],
+        "setup": [
+          "Çapraz duruşta, landmine barının ucuna yan dur.",
+          "Öne eğil ve barın kalın ucunu üstten tutuşla kavra."
+        ],
+        "execution": [
+          "Barı yukarı ve geriye, kalçana doğru çek.",
+          "Kolun düzleşene kadar indir."
+        ],
+        "mistakes": [
+          "Gövdeyi döndürmek.",
+          "Sırtı yuvarlamak."
+        ],
+        "cues": [
+          "Dirsek yukarı ve geri"
         ]
       }
     }
@@ -2117,6 +2972,28 @@
         "cues": [
           "Elbow to the hip"
         ]
+      },
+      "tr": {
+        "name": "Kettlebell Row",
+        "aliases": [
+          "Single-Arm Kettlebell Row",
+          "Tek kol kettlebell row"
+        ],
+        "setup": [
+          "Bir ayağın önde durarak bir elini öndeki uyluğuna ya da bir sehpaya yasla.",
+          "Diğer elinde, kolun düz şekilde bir kettlebell tut."
+        ],
+        "execution": [
+          "Kettlebell'ı kalçana çek.",
+          "Kolun düzleşene kadar yavaşça indir."
+        ],
+        "mistakes": [
+          "Kaldırmak için dönmek.",
+          "Üst sırtı yuvarlamak."
+        ],
+        "cues": [
+          "Dirsek kalçaya"
+        ]
       }
     }
   },
@@ -2172,6 +3049,28 @@
         "cues": [
           "Slow and controlled"
         ]
+      },
+      "tr": {
+        "name": "Back Extension Machine",
+        "aliases": [
+          "Seated Back Extension",
+          "Bel makinesi"
+        ],
+        "setup": [
+          "Makineyi ped üst sırtına gelecek şekilde ayarla.",
+          "Kemeri ya da ayak desteğini sabitle ve dik otur."
+        ],
+        "execution": [
+          "Omurganı ve kalçanı açarak pede doğru geriye it.",
+          "Yavaşça başlangıca dön."
+        ],
+        "mistakes": [
+          "İvme kullanmak.",
+          "Başı geriye atmak."
+        ],
+        "cues": [
+          "Yavaş ve kontrollü"
+        ]
       }
     }
   },
@@ -2223,6 +3122,28 @@
         ],
         "cues": [
           "Elbow to the hip"
+        ]
+      },
+      "tr": {
+        "name": "Single-Arm Kneeling Lat Pulldown",
+        "aliases": [
+          "One-Arm Pulldown",
+          "Tek kol lat çekiş"
+        ],
+        "setup": [
+          "Yüksek makaraya bir tutamak tak ve makaraya dönük diz çök.",
+          "Tutamağı tek kolun başının üstünde düz şekilde tut."
+        ],
+        "execution": [
+          "Dirseğini yanına doğru aşağı çek.",
+          "Sırtında esneme hissedene kadar kolun yükselsin."
+        ],
+        "mistakes": [
+          "Çekmek için gövdeyi döndürmek.",
+          "Tepede kısa kesmek."
+        ],
+        "cues": [
+          "Dirsek kalçaya"
         ]
       }
     }
@@ -2277,6 +3198,28 @@
         ],
         "cues": [
           "Lift to straight"
+        ]
+      },
+      "tr": {
+        "name": "Stability Ball Back Extension",
+        "aliases": [
+          "Ball Back Extension",
+          "Pilates topunda hiperekstansiyon"
+        ],
+        "setup": [
+          "Top kalçanın altında olacak şekilde pilates topunun üstüne yüzüstü uzan.",
+          "Ayaklarını geniş açıp bir duvara ya da yere daya."
+        ],
+        "execution": [
+          "Vücudun düz bir çizgi olana kadar göğsünü kaldır.",
+          "Topun üstüne yavaşça in."
+        ],
+        "mistakes": [
+          "Tepede fazla kavislenmek.",
+          "Topun yuvarlanmasına izin vermek."
+        ],
+        "cues": [
+          "Düz çizgiye kadar kalk"
         ]
       }
     }
@@ -2333,6 +3276,29 @@
         "cues": [
           "Chin over, chest up"
         ]
+      },
+      "tr": {
+        "name": "Flexed-Arm Hang",
+        "aliases": [
+          "Chin-Up Hold",
+          "Top Hold",
+          "Barfiks tepede bekleme"
+        ],
+        "setup": [
+          "Barın altında bir kutuya çık ve barı avuç içlerin sana bakacak şekilde kavra.",
+          "Çenen barın üstüne çıkana kadar adım at ya da sıçra."
+        ],
+        "execution": [
+          "Göğsün bara yakın şekilde üst pozisyonda kal.",
+          "Çeneni yukarıda tutamadığında yavaşça in."
+        ],
+        "mistakes": [
+          "Çeneyi bara dayamak.",
+          "Bacaklarla tekme atmak."
+        ],
+        "cues": [
+          "Çene yukarıda, göğüs dik"
+        ]
       }
     }
   },
@@ -2385,6 +3351,28 @@
         "cues": [
           "Straight up"
         ]
+      },
+      "tr": {
+        "name": "Trap Bar Shrug",
+        "aliases": [
+          "Hex Bar Shrug",
+          "Trap bar omuz silkme"
+        ],
+        "setup": [
+          "Trap barın içine geç ve nötr tutuşla kaldır.",
+          "Kolların düz şekilde dik dur."
+        ],
+        "execution": [
+          "Omuzlarını dümdüz yukarı kaldır.",
+          "Bekle, sonra yavaşça indir."
+        ],
+        "mistakes": [
+          "Dirsekleri bükmek.",
+          "Omuzları döndürmek."
+        ],
+        "cues": [
+          "Dümdüz yukarı"
+        ]
       }
     }
   },
@@ -2435,6 +3423,27 @@
         ],
         "cues": [
           "Pause at the top"
+        ]
+      },
+      "tr": {
+        "name": "Cable Shrug",
+        "aliases": [
+          "Kablo omuz silkme"
+        ],
+        "setup": [
+          "Alçak makaraya düz bir bar tak.",
+          "Yakın dur ve barı uyluklarının önünde tut."
+        ],
+        "execution": [
+          "Omuzlarını dümdüz yukarı kaldır ve bekle.",
+          "Yavaşça indir."
+        ],
+        "mistakes": [
+          "Geriye yaslanmak.",
+          "Kısa, yaylanan tekrarlar."
+        ],
+        "cues": [
+          "Tepede bekle"
         ]
       }
     }
@@ -2491,6 +3500,29 @@
         "cues": [
           "Small, steady flutter"
         ]
+      },
+      "tr": {
+        "name": "Swimmer",
+        "aliases": [
+          "Alternating Superman",
+          "Prone Swimmers",
+          "Yüzücü"
+        ],
+        "setup": [
+          "Kolların başının üstünde, bacakların düz şekilde yüzüstü yat.",
+          "Göğsünü, kollarını ve bacaklarını yerden hafifçe kaldır."
+        ],
+        "execution": [
+          "Karşı kol ve bacağı biraz daha kaldır, sonra düzenli bir çırpınmayla değiştir.",
+          "Set bitene kadar hepsini yerden yukarıda tut."
+        ],
+        "mistakes": [
+          "Nefesi tutmak.",
+          "Boynun yukarı kırılmasına izin vermek."
+        ],
+        "cues": [
+          "Küçük, düzenli çırpınma"
+        ]
       }
     }
   },
@@ -2544,6 +3576,28 @@
         "cues": [
           "Elbow to the hip"
         ]
+      },
+      "tr": {
+        "name": "Band Single-Arm Row",
+        "aliases": [
+          "Resistance Band One-Arm Row",
+          "Lastik tek kol row"
+        ],
+        "setup": [
+          "Bandı bel hizasında bağla.",
+          "Çapraz duruşta banda dönük dur, bandı tek elinle tut."
+        ],
+        "execution": [
+          "Dirseğini gövdeni geçene kadar geriye çek.",
+          "Kolun düzleşerek yavaşça geri dön."
+        ],
+        "mistakes": [
+          "Gövdeyi döndürmek.",
+          "Omzun kulağa kalkmasına izin vermek."
+        ],
+        "cues": [
+          "Dirsek kalçaya"
+        ]
       }
     }
   },
@@ -2589,6 +3643,27 @@
         ],
         "cues": [
           "Shoulders to ears"
+        ]
+      },
+      "tr": {
+        "name": "Band Shrug",
+        "aliases": [
+          "Lastik omuz silkme"
+        ],
+        "setup": [
+          "Ayakların kalça genişliğinde, bandın ortasına bas.",
+          "Uçlarını kolların düz şekilde yanlarında tut."
+        ],
+        "execution": [
+          "Banda karşı omuzlarını dümdüz yukarı kaldır.",
+          "Bekle ve yavaşça indir."
+        ],
+        "mistakes": [
+          "Dirsekleri bükmek.",
+          "Omuzları döndürmek."
+        ],
+        "cues": [
+          "Omuzlar kulaklara"
         ]
       }
     }
@@ -2640,6 +3715,28 @@
         ],
         "cues": [
           "Long arms, drive down"
+        ]
+      },
+      "tr": {
+        "name": "Band Straight-Arm Pulldown",
+        "aliases": [
+          "Band Pullover",
+          "Lastik düz kol pulldown"
+        ],
+        "setup": [
+          "Bandı baş hizasının üstünde bağla.",
+          "Geri adım at, hafifçe öne eğil ve bandı kolların düz şekilde önünde tut."
+        ],
+        "execution": [
+          "Ellerini uyluklarına kadar aşağı süpür.",
+          "Yavaşça göz hizasına yükselmelerine izin ver."
+        ],
+        "mistakes": [
+          "Dirsekleri bükmek.",
+          "Omuzları kulaklara çekmek."
+        ],
+        "cues": [
+          "Kollar uzun, aşağı sür"
         ]
       }
     }
@@ -2695,6 +3792,27 @@
         ],
         "cues": [
           "Pull to one hand"
+        ]
+      },
+      "tr": {
+        "name": "Archer Pull-Up",
+        "aliases": [
+          "Okçu barfiks"
+        ],
+        "setup": [
+          "Barı avuç içlerin öne bakacak şekilde çok geniş kavra.",
+          "Kolların düz şekilde asıl."
+        ],
+        "execution": [
+          "Diğer kolun bar boyunca düzleşirken bir eline doğru çek.",
+          "Ortaya in ve taraf değiştir."
+        ],
+        "mistakes": [
+          "İki kolu eşit bükmek.",
+          "Vücudu sallamak."
+        ],
+        "cues": [
+          "Tek ele çek"
         ]
       }
     }
@@ -2756,6 +3874,30 @@
           "Rings to the ribs",
           "Fast transition"
         ]
+      },
+      "tr": {
+        "name": "Ring Muscle-Up",
+        "aliases": [
+          "Halka muscle-up"
+        ],
+        "setup": [
+          "Halkaları yükseğe ayarla ve bileklerin halkaların üstünde, false grip ile kavra.",
+          "Kolların düz şekilde asıl."
+        ],
+        "execution": [
+          "Geriye yaslanırken halkaları alt göğsüne doğru çek.",
+          "Göğsünü hızla halkaların üstüne çevir ve dips'in alt pozisyonuna geç.",
+          "Kolların düzleşene kadar it."
+        ],
+        "mistakes": [
+          "False grip'i kaybetmek.",
+          "Geçiş sırasında halkaların iki yana açılmasına izin vermek."
+        ],
+        "safety": "Önce halka dips ve false grip barfiks öğren; geçiş dirsekleri ve omuzları zorlar.",
+        "cues": [
+          "Halkalar kaburgalara",
+          "Hızlı geçiş"
+        ]
       }
     }
   },
@@ -2809,6 +3951,29 @@
         "cues": [
           "Straight arms",
           "Shoulders away from ears"
+        ]
+      },
+      "tr": {
+        "name": "Dip Shrug",
+        "aliases": [
+          "Scapular Dip",
+          "Skapular dips"
+        ],
+        "setup": [
+          "Paralel barları kavra ve kolların düz şekilde destek pozisyonuna sıçra.",
+          "Dizlerini hafifçe bük ve karnını sık."
+        ],
+        "execution": [
+          "Omuzlarının kulaklarına doğru kalkmasına izin vererek vücudunun çökmesine izin ver.",
+          "Kollarını düz tutarak barları aşağı it ve vücudunu yeniden kaldır."
+        ],
+        "mistakes": [
+          "Dirsekleri bükmek.",
+          "Omuzları ağrıtacak kadar çökmek."
+        ],
+        "cues": [
+          "Kollar düz",
+          "Omuzlar kulaklardan uzak"
         ]
       }
     }

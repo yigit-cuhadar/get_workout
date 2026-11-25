@@ -64,6 +64,36 @@
           "Knees track the toes",
           "Whole foot pressure"
         ]
+      },
+      "tr": {
+        "name": "Barbell Back Squat",
+        "aliases": [
+          "Back Squat",
+          "High-Bar Squat",
+          "Low-Bar Squat",
+          "Halter squat"
+        ],
+        "setup": [
+          "Barı rack'te göğsünün ortası hizasına ayarla.",
+          "Altına gir ve barı boynuna değil, üst sırtına yerleştir.",
+          "Barı raftan çıkar ve ayakların yaklaşık omuz genişliğinde, parmakların hafifçe dışa dönük dur."
+        ],
+        "execution": [
+          "Derin bir nefes al ve karnını sık.",
+          "Göğsünü dik tutarak dizlerini ve kalçanı birlikte bükerek topuklarının arasına otur.",
+          "Sırtın nötr kalırken inebildiğin kadar derine in, sonra tüm ayağınla iterek kalk."
+        ],
+        "mistakes": [
+          "Dizlerin içe çökmesine izin vermek.",
+          "Önce kalçayla kalkıp göğsü düşürmek.",
+          "Topukları kaldırmak."
+        ],
+        "safety": "Squat'ı, güvenlik barları en alt pozisyonunun hemen altına ayarlı bir rack'in içinde yap.",
+        "cues": [
+          "Karnını sık, sonra otur",
+          "Dizler parmakları takip etsin",
+          "Tüm ayakla bas"
+        ]
       }
     }
   },
@@ -122,6 +152,32 @@
           "Hips stay down",
           "Push through the whole foot"
         ]
+      },
+      "tr": {
+        "name": "Leg Press",
+        "aliases": [
+          "Machine Leg Press",
+          "45-Degree Leg Press"
+        ],
+        "setup": [
+          "Sırtın ve kalçan pede düz dayalı, makineye otur.",
+          "Ayaklarını platformun ortasına, kalça ile omuz genişliği arasında koy.",
+          "Güvenlik kollarını aç."
+        ],
+        "execution": [
+          "Dizlerini göğsüne doğru bükerek platformu indir.",
+          "Belin pedden kalkmadan dur.",
+          "Dizlerini sertçe kilitlemeden platformu geri it."
+        ],
+        "mistakes": [
+          "Altta kalçanın koltuktan kalkmasına izin vermek.",
+          "Dizleri sertçe kilitlemek.",
+          "Çok büyük yükle minicik tekrarlar yapmak."
+        ],
+        "cues": [
+          "Kalça aşağıda kalsın",
+          "Tüm ayakla it"
+        ]
       }
     }
   },
@@ -175,6 +231,30 @@
         "cues": [
           "Squeeze at the top",
           "Slow down"
+        ]
+      },
+      "tr": {
+        "name": "Leg Extension",
+        "aliases": [
+          "Quad Extension",
+          "Knee Extension",
+          "Ön bacak makinesi"
+        ],
+        "setup": [
+          "Sırt pedini dizlerin makinenin dönme noktasıyla hizalanacak şekilde ayarla.",
+          "Kaval kemiği pedini ayak bileklerinin hemen üstüne ayarla."
+        ],
+        "execution": [
+          "Pedi kaldırmak için dizlerini düzleştir.",
+          "Bekle ve sık, sonra yavaşça indir."
+        ],
+        "mistakes": [
+          "Ağırlığı savurarak kaldırmak.",
+          "Kalçayı koltuktan kaldırmak."
+        ],
+        "cues": [
+          "Tepede sık",
+          "Yavaşla"
         ]
       }
     }
@@ -239,6 +319,30 @@
         "cues": [
           "Elbows inside the knees",
           "Chest tall"
+        ]
+      },
+      "tr": {
+        "name": "Goblet Squat",
+        "aliases": [
+          "Dumbbell Goblet Squat",
+          "Kettlebell Goblet Squat"
+        ],
+        "setup": [
+          "Bir dambılı ya da kettlebell'ı iki elinle göğsüne dayalı dik tut.",
+          "Ayakların yaklaşık omuz genişliğinde, parmakların hafifçe dışa dönük dur."
+        ],
+        "execution": [
+          "Ağırlığı yakın, göğsünü dik tutarak topuklarının arasına çömel.",
+          "Altta dizlerini dışa it.",
+          "Ayağa geri kalk."
+        ],
+        "mistakes": [
+          "Ağırlığın seni öne çekmesine izin vermek.",
+          "Topukları kaldırmak."
+        ],
+        "cues": [
+          "Dirsekler dizlerin içinde",
+          "Göğüs dik"
         ]
       }
     }
@@ -309,6 +413,30 @@
           "Front foot does the work",
           "Straight down"
         ]
+      },
+      "tr": {
+        "name": "Bulgarian Split Squat",
+        "aliases": [
+          "Rear-Foot Elevated Split Squat",
+          "RFESS",
+          "Bulgar squat"
+        ],
+        "setup": [
+          "Bir sehpanın yaklaşık bir uzun adım önünde dur ve bir ayağının üstünü sehpaya koy.",
+          "Her elinde bir dambıl tut."
+        ],
+        "execution": [
+          "Öndeki kaval kemiğin oldukça dik kalırken arka dizini yere doğru indir.",
+          "Kalkmak için öndeki ayağınla it."
+        ],
+        "mistakes": [
+          "Sehpaya çok yakın durmak.",
+          "Arka ayaktan itmek."
+        ],
+        "cues": [
+          "İşi öndeki ayak yapsın",
+          "Dümdüz aşağı"
+        ]
       }
     }
   },
@@ -371,6 +499,31 @@
           "Elbows high",
           "Stay upright"
         ]
+      },
+      "tr": {
+        "name": "Front Squat",
+        "aliases": [
+          "Barbell Front Squat",
+          "Önden squat"
+        ],
+        "setup": [
+          "Barı rack'te omuz hizasına ayarla.",
+          "Barı omuzlarının önüne yerleştir; parmak uçların barın altında, dirseklerin yukarıda olsun.",
+          "Ayakların yaklaşık omuz genişliğinde geri çekil."
+        ],
+        "execution": [
+          "Karnını sık ve dirseklerini yukarıda, gövdeni dik tutarak dümdüz aşağı çömel.",
+          "Tüm ayağınla iterek kalk."
+        ],
+        "mistakes": [
+          "Dirsekleri düşürüp barın öne yuvarlanmasına izin vermek.",
+          "Üst sırtı yuvarlamak."
+        ],
+        "safety": "Squat'ı güvenlik barları olan bir rack'in içinde yap ve barı kaçırırsan öne bırak.",
+        "cues": [
+          "Dirsekler yukarıda",
+          "Dik kal"
+        ]
       }
     }
   },
@@ -426,6 +579,27 @@
         "cues": [
           "Deep and controlled"
         ]
+      },
+      "tr": {
+        "name": "Hack Squat",
+        "aliases": [
+          "Machine Hack Squat"
+        ],
+        "setup": [
+          "Sırtın pede dayalı, omuzların pedlerin altında platforma çık.",
+          "Ayaklarını omuz genişliğinde, platformun ortasına koy."
+        ],
+        "execution": [
+          "Güvenliği aç ve kontrol edebildiğin kadar derine çömel.",
+          "Dizlerini sertçe kilitlemeden geri it."
+        ],
+        "mistakes": [
+          "Topukların kalkmasına izin vermek.",
+          "Derinliği kısa kesmek."
+        ],
+        "cues": [
+          "Derin ve kontrollü"
+        ]
       }
     }
   },
@@ -480,6 +654,27 @@
         ],
         "cues": [
           "Sit between the heels"
+        ]
+      },
+      "tr": {
+        "name": "Bodyweight Squat",
+        "aliases": [
+          "Air Squat"
+        ],
+        "setup": [
+          "Ayakların yaklaşık omuz genişliğinde, parmakların hafifçe dışa dönük dur.",
+          "Denge için kollarını önde tut."
+        ],
+        "execution": [
+          "Rahatça inebildiğin kadar derine, topuklarının arasına otur.",
+          "Tüm ayağınla iterek geri kalk."
+        ],
+        "mistakes": [
+          "Dizlerin içe çökmesi.",
+          "Topukların kalkması."
+        ],
+        "cues": [
+          "Topukların arasına otur"
         ]
       }
     }
@@ -542,6 +737,28 @@
         "cues": [
           "Long step, tall chest"
         ]
+      },
+      "tr": {
+        "name": "Dumbbell Walking Lunge",
+        "aliases": [
+          "Walking Lunge",
+          "Yürüyen lunge"
+        ],
+        "setup": [
+          "Her elinde bir dambıl yanlarında, dik dur.",
+          "Önünde bir yol aç."
+        ],
+        "execution": [
+          "Öne adım at ve arka dizini yere doğru indir.",
+          "Öndeki ayağınla it ve diğer bacakla doğrudan sonraki lunge'a adım at."
+        ],
+        "mistakes": [
+          "Kısa adım atıp öndeki dizi çok öne kaçırmak.",
+          "Gövdeyi çok öne eğmek."
+        ],
+        "cues": [
+          "Uzun adım, göğüs dik"
+        ]
       }
     }
   },
@@ -594,6 +811,29 @@
         ],
         "cues": [
           "Step back, drop straight down"
+        ]
+      },
+      "tr": {
+        "name": "Reverse Lunge",
+        "aliases": [
+          "Backward Lunge",
+          "Step-Back Lunge",
+          "Geri lunge"
+        ],
+        "setup": [
+          "Ayakların kalça genişliğinde, dik dur.",
+          "Ellerini beline koy."
+        ],
+        "execution": [
+          "Bir ayağını geri at ve arka dizini yere doğru indir.",
+          "Dik duruşa dönmek için öndeki ayağınla it."
+        ],
+        "mistakes": [
+          "Çok kısa geri adım atmak.",
+          "Öndeki dizin içe çökmesine izin vermek."
+        ],
+        "cues": [
+          "Geri adım, dümdüz aşağı"
         ]
       }
     }
@@ -651,6 +891,29 @@
         "cues": [
           "Brace and sit"
         ]
+      },
+      "tr": {
+        "name": "Smith Machine Squat",
+        "aliases": [
+          "Smith Squat",
+          "Smith makinesinde squat"
+        ],
+        "setup": [
+          "Barı üst göğüs hizasına ayarla, altına gir ve üst sırtına yerleştir.",
+          "Güvenlik durdurucularını barın en alt noktasının hemen altına ayarla.",
+          "Ayaklarını barın biraz önüne, yaklaşık omuz genişliğinde koy."
+        ],
+        "execution": [
+          "Barı kancasından çıkar ve kontrollü şekilde çömel.",
+          "Geri it."
+        ],
+        "mistakes": [
+          "Ayakların çok önde ya da tam barın altında olması.",
+          "Güvenlik durdurucularını ayarlamamak."
+        ],
+        "cues": [
+          "Karnını sık ve otur"
+        ]
       }
     }
   },
@@ -706,6 +969,29 @@
         ],
         "cues": [
           "Step long, push back"
+        ]
+      },
+      "tr": {
+        "name": "Forward Lunge",
+        "aliases": [
+          "Lunge",
+          "Front Lunge",
+          "Öne lunge"
+        ],
+        "setup": [
+          "Ayakların kalça genişliğinde, dik dur.",
+          "Ellerini beline koy."
+        ],
+        "execution": [
+          "Öne adım at ve arka dizini yere doğru indir.",
+          "Geri dönmek için öndeki ayağınla it."
+        ],
+        "mistakes": [
+          "Öndeki topuğun kalkması.",
+          "Gövdenin öne düşmesi."
+        ],
+        "cues": [
+          "Uzun adım, geri it"
         ]
       }
     }
@@ -770,6 +1056,28 @@
         "cues": [
           "Top leg does the work"
         ]
+      },
+      "tr": {
+        "name": "Dumbbell Step-Up",
+        "aliases": [
+          "Weighted Step-Up",
+          "Dambıl ile basamak çıkma"
+        ],
+        "setup": [
+          "Her elinde bir dambıl, bir sehpaya ya da sağlam bir kutuya dönük dur.",
+          "Bir ayağının tamamını üstüne koy."
+        ],
+        "execution": [
+          "Sehpanın üstünde dik durmak için üstteki ayağınla it.",
+          "Serbest bacağını yavaşça yere indir, inişi üstteki bacağınla kontrol et."
+        ],
+        "mistakes": [
+          "Alttaki ayaktan itmek.",
+          "Kalçayı dizin altına düşürecek kadar yüksek bir kutu kullanmak."
+        ],
+        "cues": [
+          "İşi üstteki bacak yapsın"
+        ]
       }
     }
   },
@@ -820,6 +1128,29 @@
         ],
         "cues": [
           "Back flat, thighs level"
+        ]
+      },
+      "tr": {
+        "name": "Wall Sit",
+        "aliases": [
+          "Wall Squat",
+          "Duvarda oturma",
+          "Duvar squat"
+        ],
+        "setup": [
+          "Sırtın duvara dayalı dur.",
+          "Ayaklarını yaklaşık iki ayak boyu öne yürüt."
+        ],
+        "execution": [
+          "Uylukların yere paralel, dizlerin ayak bileklerinin üstünde olana kadar aşağı kay.",
+          "Belirlenen süre boyunca tut."
+        ],
+        "mistakes": [
+          "Ellerle uyluklara bastırmak.",
+          "Dizlerin parmakları geçmesi."
+        ],
+        "cues": [
+          "Sırt düz, uyluklar yatay"
         ]
       }
     }
@@ -872,6 +1203,28 @@
         ],
         "cues": [
           "Straight down, straight up"
+        ]
+      },
+      "tr": {
+        "name": "Split Squat",
+        "aliases": [
+          "Static Lunge",
+          "Sabit lunge"
+        ],
+        "setup": [
+          "Arka topuğun kalkık, uzun bir adım duruşunda dur.",
+          "Gövdeni dik tut."
+        ],
+        "execution": [
+          "Arka dizini dümdüz yere doğru indir.",
+          "Ayaklarını oynatmadan geri it."
+        ],
+        "mistakes": [
+          "Duruşun çok kısa olması.",
+          "Öndeki topuğun kalkması."
+        ],
+        "cues": [
+          "Dümdüz aşağı, dümdüz yukarı"
         ]
       }
     }
@@ -929,6 +1282,29 @@
         ],
         "cues": [
           "Push the box away"
+        ]
+      },
+      "tr": {
+        "name": "Step-Up",
+        "aliases": [
+          "Box Step-Up",
+          "Bench Step-Up",
+          "Basamak çıkma"
+        ],
+        "setup": [
+          "Bir sehpaya ya da sağlam bir kutuya dönük dur.",
+          "Bir ayağının tamamını üstüne koy."
+        ],
+        "execution": [
+          "Sehpanın üstünde dik durmak için üstteki ayağınla it.",
+          "Yavaşça in."
+        ],
+        "mistakes": [
+          "Arka ayaktan itmek.",
+          "Çok öne eğilmek."
+        ],
+        "cues": [
+          "Kutuyu aşağı it"
         ]
       }
     }
@@ -995,6 +1371,28 @@
         "cues": [
           "Sit, pause, drive"
         ]
+      },
+      "tr": {
+        "name": "Box Squat",
+        "aliases": [
+          "Kutuya squat"
+        ],
+        "setup": [
+          "Uyluklarını yaklaşık paralele getirecek yükseklikte bir kutuyu ya da sehpayı arkana koy.",
+          "Bar üst sırtında, pozisyon al."
+        ],
+        "execution": [
+          "Kontrollü şekilde kutuya geriye otur ve gevşemeden kısa bir an bekle.",
+          "Kutudan iterek kalk."
+        ],
+        "mistakes": [
+          "Kutuya kendini bırakmak.",
+          "Geriye sallanıp gerilimi kaybetmek."
+        ],
+        "safety": "Squat'ı, güvenlik barları en alt pozisyonunun hemen altına ayarlı bir rack'in içinde yap.",
+        "cues": [
+          "Otur, bekle, it"
+        ]
       }
     }
   },
@@ -1049,6 +1447,28 @@
         ],
         "cues": [
           "Hips back, chest up"
+        ]
+      },
+      "tr": {
+        "name": "Lateral Lunge",
+        "aliases": [
+          "Side Lunge",
+          "Yan lunge"
+        ],
+        "setup": [
+          "Ayakların bitişik dur.",
+          "Ellerini göğsünün önünde tut."
+        ],
+        "execution": [
+          "Yana büyük bir adım at ve diğer bacağın düzken kalçanı o ayağın üstüne geriye oturt.",
+          "Geri dönmek için it ve taraf değiştir."
+        ],
+        "mistakes": [
+          "Dizin içe çökmesine izin vermek.",
+          "Sırtı yuvarlamak."
+        ],
+        "cues": [
+          "Kalça geri, göğüs dik"
         ]
       }
     }
@@ -1106,6 +1526,27 @@
         "cues": [
           "Step back, drop down"
         ]
+      },
+      "tr": {
+        "name": "Dumbbell Reverse Lunge",
+        "aliases": [
+          "Dambıl geri lunge"
+        ],
+        "setup": [
+          "Her elinde bir dambıl, dik dur.",
+          "Ayaklar kalça genişliğinde."
+        ],
+        "execution": [
+          "Geri adım at ve arka dizini yere doğru indir.",
+          "Geri dönmek için öndeki ayağınla it."
+        ],
+        "mistakes": [
+          "Kısa adımlar.",
+          "Öndeki dizin içe çökmesi."
+        ],
+        "cues": [
+          "Geri adım, aşağı in"
+        ]
       }
     }
   },
@@ -1155,6 +1596,27 @@
         ],
         "cues": [
           "Knee over toes"
+        ]
+      },
+      "tr": {
+        "name": "Single-Leg Leg Press",
+        "aliases": [
+          "Tek bacak leg press"
+        ],
+        "setup": [
+          "Leg press'e otur ve bir ayağını platformun ortasına koy.",
+          "Diğer ayağını yere ya da çerçeveye koy."
+        ],
+        "execution": [
+          "Platformu kontrollü şekilde indir.",
+          "Geri it."
+        ],
+        "mistakes": [
+          "Kalçanın koltuktan kalkması.",
+          "Dizin içe çökmesi."
+        ],
+        "cues": [
+          "Diz parmakların üstünde"
         ]
       }
     }
@@ -1209,6 +1671,25 @@
         "cues": [
           "Chest on the bar"
         ]
+      },
+      "tr": {
+        "name": "Landmine Squat",
+        "aliases": [],
+        "setup": [
+          "Landmine barının ucunu iki elinle göğsünde tut.",
+          "Ayakların omuz genişliğinde, bara hafifçe yaslanarak dur."
+        ],
+        "execution": [
+          "Barı göğsüne dayalı tutarak çömel.",
+          "Geri it."
+        ],
+        "mistakes": [
+          "Barın göğüsten uzaklaşmasına izin vermek.",
+          "Topukların kalkması."
+        ],
+        "cues": [
+          "Göğüs barda"
+        ]
       }
     }
   },
@@ -1262,6 +1743,27 @@
         ],
         "cues": [
           "Hips face forward"
+        ]
+      },
+      "tr": {
+        "name": "Curtsy Lunge",
+        "aliases": [
+          "Çapraz lunge"
+        ],
+        "setup": [
+          "Ayakların kalça genişliğinde, dik dur.",
+          "Ellerini beline koy."
+        ],
+        "execution": [
+          "Bir bacağını diğerinin arkasına çapraz olarak at ve lunge'a in.",
+          "Başlangıca geri it ve değiştir."
+        ],
+        "mistakes": [
+          "Kalçayı çok döndürmek.",
+          "Öndeki dizin içe çökmesi."
+        ],
+        "cues": [
+          "Kalça öne baksın"
         ]
       }
     }
@@ -1319,6 +1821,28 @@
         "safety": "Start well below your squat weight; with a bar on your back, balance is the limit.",
         "cues": [
           "Tall and steady"
+        ]
+      },
+      "tr": {
+        "name": "Barbell Reverse Lunge",
+        "aliases": [
+          "Halterle geri lunge"
+        ],
+        "setup": [
+          "Squat'taki gibi halter üst sırtında pozisyon al.",
+          "Ayakların kalça genişliğinde, dik dur."
+        ],
+        "execution": [
+          "Geri adım at ve arka dizini yere doğru indir.",
+          "Geri dönmek için öndeki ayağınla it."
+        ],
+        "mistakes": [
+          "Kısa adımlar yüzünden dengeyi kaybetmek.",
+          "Öne eğilmek."
+        ],
+        "safety": "Squat ağırlığının epey altında başla; sırtında barla sınırı denge belirler.",
+        "cues": [
+          "Dik ve dengeli"
         ]
       }
     }
@@ -1381,6 +1905,27 @@
         "cues": [
           "Knees out"
         ]
+      },
+      "tr": {
+        "name": "Dumbbell Sumo Squat",
+        "aliases": [
+          "Plie Squat"
+        ],
+        "setup": [
+          "Ayakların geniş, parmakların dışa dönük dur.",
+          "Bir dambılı ucundan tutarak bacaklarının arasında sarkıt."
+        ],
+        "execution": [
+          "Dizlerini parmaklarının üstüne doğru dışa iterek çömel.",
+          "Ayağa geri kalk."
+        ],
+        "mistakes": [
+          "Dizlerin içe çökmesi.",
+          "Öne eğilmek."
+        ],
+        "cues": [
+          "Dizler dışa"
+        ]
       }
     }
   },
@@ -1430,6 +1975,26 @@
         "safety": "Start with a small range; this exercise loads the knees heavily.",
         "cues": [
           "Knees forward, hips straight"
+        ]
+      },
+      "tr": {
+        "name": "Sissy Squat",
+        "aliases": [],
+        "setup": [
+          "Bir elinle bir desteğe tutun.",
+          "Ayak tabanlarının ön kısmına yüksel."
+        ],
+        "execution": [
+          "Dizlerinden omuzlarına düz bir çizgi koruyarak inerken geriye yaslan ve dizlerini öne it.",
+          "Dizlerini düzleştirerek geri dön."
+        ],
+        "mistakes": [
+          "Kalçadan bükülmek.",
+          "Dizlerinin kaldırabileceğinden daha derine inmek."
+        ],
+        "safety": "Küçük bir açıklıkla başla; bu hareket dizleri çok yükler.",
+        "cues": [
+          "Dizler önde, kalça düz"
         ]
       }
     }
@@ -1487,6 +2052,28 @@
         "cues": [
           "Arms forward, heel down"
         ]
+      },
+      "tr": {
+        "name": "Pistol Squat",
+        "aliases": [
+          "Single-Leg Squat",
+          "Tek bacak squat"
+        ],
+        "setup": [
+          "Diğer bacağın önde düz şekilde, tek bacak üstünde dur.",
+          "Denge için kollarını öne uzat."
+        ],
+        "execution": [
+          "Destek bacağının üstünde sonuna kadar çömel.",
+          "Diğer ayağın yere değmeden geri kalk."
+        ],
+        "mistakes": [
+          "Topuğun kalkması.",
+          "Dizin içe çökmesi."
+        ],
+        "cues": [
+          "Kollar önde, topuk yerde"
+        ]
       }
     }
   },
@@ -1540,6 +2127,27 @@
         ],
         "cues": [
           "Top foot drives"
+        ]
+      },
+      "tr": {
+        "name": "Lateral Step-Up",
+        "aliases": [
+          "Yana basamak çıkma"
+        ],
+        "setup": [
+          "Bir sehpaya ya da kutuya yan dur.",
+          "Yakın ayağını üstüne koy."
+        ],
+        "execution": [
+          "Kutunun üstünde dik durmak için üstteki ayağınla it.",
+          "Yavaşça in."
+        ],
+        "mistakes": [
+          "Yerdeki ayaktan itmek.",
+          "Dizin içe çökmesi."
+        ],
+        "cues": [
+          "Üstteki ayak itsin"
         ]
       }
     }
@@ -1600,6 +2208,27 @@
         "cues": [
           "Sit back"
         ]
+      },
+      "tr": {
+        "name": "Goblet Lateral Lunge",
+        "aliases": [
+          "Goblet yan lunge"
+        ],
+        "setup": [
+          "Bir dambılı göğsünde tut.",
+          "Ayakların bitişik dur."
+        ],
+        "execution": [
+          "Bir yana geniş adım at ve o ayağın üstüne geriye otur.",
+          "Geri it ve değiştir."
+        ],
+        "mistakes": [
+          "Sırtı yuvarlamak.",
+          "Dizin içe çökmesi."
+        ],
+        "cues": [
+          "Geriye otur"
+        ]
       }
     }
   },
@@ -1652,6 +2281,29 @@
         "cues": [
           "Straight from knees to head"
         ]
+      },
+      "tr": {
+        "name": "Reverse Nordic",
+        "aliases": [
+          "Reverse Nordic Curl",
+          "Ters Nordic"
+        ],
+        "setup": [
+          "Dizlerin kalça genişliğinde, yumuşak bir zeminde diz çök.",
+          "Dizlerinden başına düz bir çizgi koru."
+        ],
+        "execution": [
+          "Kalçadan bükülmeden yavaşça geriye yaslan.",
+          "Ön bacaklarınla dik pozisyona geri dön."
+        ],
+        "mistakes": [
+          "Kalçadan bükülmek.",
+          "Çok fazla yaslanmak."
+        ],
+        "safety": "Küçük bir açıklıkla başla; bu hareket dizleri çok yükler.",
+        "cues": [
+          "Dizlerden başa düz"
+        ]
       }
     }
   },
@@ -1701,6 +2353,27 @@
         "cues": [
           "Squeeze the quad"
         ]
+      },
+      "tr": {
+        "name": "Band Leg Extension",
+        "aliases": [
+          "Lastikle bacak açma"
+        ],
+        "setup": [
+          "Bir sehpaya ya da sandalyeye otur ve bandı arkasına bağla.",
+          "Bandı bir ayak bileğine dola."
+        ],
+        "execution": [
+          "Banda karşı dizini düzleştir.",
+          "Yavaşça geri dön."
+        ],
+        "mistakes": [
+          "Savurmak.",
+          "Uyluğu kaldırmak."
+        ],
+        "cues": [
+          "Ön bacağı sık"
+        ]
       }
     }
   },
@@ -1748,6 +2421,27 @@
         ],
         "cues": [
           "Shins vertical"
+        ]
+      },
+      "tr": {
+        "name": "Spanish Squat",
+        "aliases": [
+          "İspanyol squat"
+        ],
+        "setup": [
+          "Kalın bir bandı sabit bir direğe dola ve bant dizlerinin arkasına gelecek şekilde içine gir.",
+          "Bant gerilene kadar geri yürü."
+        ],
+        "execution": [
+          "Kaval kemiklerin dik, bandın dizlerini tutmasına izin vererek squat'a geriye otur.",
+          "Belirlenen süre boyunca tut."
+        ],
+        "mistakes": [
+          "Kaval kemiklerinin öne eğilmesine izin vermek.",
+          "Bant geriliminin çok az olması."
+        ],
+        "cues": [
+          "Kaval kemikleri dik"
         ]
       }
     }
@@ -1800,6 +2494,27 @@
         ],
         "cues": [
           "Soft touch"
+        ]
+      },
+      "tr": {
+        "name": "Skater Squat",
+        "aliases": [
+          "Patenci squat"
+        ],
+        "setup": [
+          "Diğer dizin arkada bükülü, tek bacak üstünde dur.",
+          "Kollarını öne uzat."
+        ],
+        "execution": [
+          "Arka dizin yere hafifçe değene kadar in.",
+          "Geri it."
+        ],
+        "mistakes": [
+          "Destek topuğunun kalkması.",
+          "Hızla düşmek."
+        ],
+        "cues": [
+          "Hafifçe değdir"
         ]
       }
     }
@@ -1855,6 +2570,28 @@
         ],
         "cues": [
           "Legs first, arms help"
+        ]
+      },
+      "tr": {
+        "name": "Assisted Pistol Squat",
+        "aliases": [
+          "TRX Pistol Squat",
+          "Destekli tek bacak squat"
+        ],
+        "setup": [
+          "Bir TRX'in tutamaklarını önünde tut.",
+          "Diğer bacağın önde, tek bacak üstünde dur."
+        ],
+        "execution": [
+          "Kayışları yalnızca gerektiği kadar kullanarak tek bacak üstünde çömel.",
+          "Geri kalk."
+        ],
+        "mistakes": [
+          "Kollarla sertçe çekmek.",
+          "Dizin içe çökmesi."
+        ],
+        "cues": [
+          "Önce bacaklar, kollar yardım etsin"
         ]
       }
     }
@@ -1917,6 +2654,28 @@
         "cues": [
           "Push the bar up"
         ]
+      },
+      "tr": {
+        "name": "Overhead Squat",
+        "aliases": [
+          "Baş üstü squat"
+        ],
+        "setup": [
+          "Halteri geniş snatch tutuşuyla başının üstünde tut.",
+          "Ayakların omuz genişliğinde dur."
+        ],
+        "execution": [
+          "Bar ayağının ortasının üstünde, kolların kilitliyken çömel.",
+          "Ayağa geri kalk."
+        ],
+        "mistakes": [
+          "Barın öne kayması.",
+          "Dirseklerin bükülmesi."
+        ],
+        "safety": "Mobiliten sağlam bir alt pozisyona izin verene kadar boş bir barla ya da çubukla çalış.",
+        "cues": [
+          "Barı yukarı it"
+        ]
       }
     }
   },
@@ -1977,6 +2736,28 @@
         "cues": [
           "Tall chest"
         ]
+      },
+      "tr": {
+        "name": "Kettlebell Front Squat",
+        "aliases": [
+          "Double Kettlebell Front Squat",
+          "Kettlebell önden squat"
+        ],
+        "setup": [
+          "İki kettlebell'ı clean ile göğsünde rack pozisyonuna getir.",
+          "Ayakların omuz genişliğinde dur."
+        ],
+        "execution": [
+          "Dirseklerin içte, göğsün dik çömel.",
+          "Geri it."
+        ],
+        "mistakes": [
+          "Dirseklerin dışa açılması.",
+          "Göğsün düşmesi."
+        ],
+        "cues": [
+          "Göğüs dik"
+        ]
       }
     }
   },
@@ -2035,6 +2816,29 @@
           "Elbows up",
           "Sit between your heels"
         ]
+      },
+      "tr": {
+        "name": "Dumbbell Front Squat",
+        "aliases": [
+          "DB Front Squat",
+          "Dambıl önden squat"
+        ],
+        "setup": [
+          "Ayakların omuz genişliğinde dur.",
+          "Dirseklerin öne bakacak şekilde her omzunun önüne bir dambıl yerleştir."
+        ],
+        "execution": [
+          "Göğsünü dik, dirseklerini yukarıda tutarak çömel.",
+          "Kalkmak için tüm ayağınla it."
+        ],
+        "mistakes": [
+          "Dirseklerin düşüp gövdenin öne devrilmesi.",
+          "Dizlerin içe çökmesi."
+        ],
+        "cues": [
+          "Dirsekler yukarı",
+          "Topuklarının arasına otur"
+        ]
       }
     }
   },
@@ -2091,6 +2895,28 @@
         ],
         "cues": [
           "Down, not forward"
+        ]
+      },
+      "tr": {
+        "name": "Smith Machine Split Squat",
+        "aliases": [
+          "Smith Split Squat",
+          "Smith makinesinde sabit lunge"
+        ],
+        "setup": [
+          "Barı omuz hizasına ayarla ve üst sırtına gelecek şekilde altına gir.",
+          "Barı çıkar ve bir ayak önde, diğeri arkada parmak ucunda uzun bir duruş al."
+        ],
+        "execution": [
+          "Öndeki kaval kemiğini oldukça dik tutarak arka dizini yere doğru indir.",
+          "Kalkmak için öndeki ayağınla it, set bitince bacak değiştir."
+        ],
+        "mistakes": [
+          "Duruşun çok kısa olup öndeki topuğun kalkması.",
+          "Arka ayaktan itmek."
+        ],
+        "cues": [
+          "Öne değil, aşağı"
         ]
       }
     }

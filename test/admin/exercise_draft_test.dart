@@ -15,11 +15,17 @@ void main() {
     final report = validateContent(Directory('content/exercises'));
     expect(report.exercises, isNotEmpty);
     for (final entry in report.exercises) {
+      // The editor manages English; the repository keeps the other
+      // languages when it saves.
+      final english = {
+        ...entry.data,
+        'l10n': {'en': (entry.data['l10n']! as Map)['en']},
+      };
       final json = ExerciseDraft.fromJson(entry.data).toJson();
-      expect(json, entry.data, reason: entry.id);
+      expect(json, english, reason: entry.id);
       expect(
         contentHash(exerciseContent(json)),
-        contentHash(exerciseContent(entry.data)),
+        contentHash(exerciseContent(english)),
         reason: entry.id,
       );
     }

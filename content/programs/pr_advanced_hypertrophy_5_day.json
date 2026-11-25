@@ -48,6 +48,10 @@
     "en": {
       "name": "Advanced Hypertrophy 5-Day",
       "summary": "Chest and back twice, legs twice with a quad day and a hamstring-and-glute day, plus a dedicated shoulders and arms session. High weekly volume with supersets for experienced lifters."
+    },
+    "tr": {
+      "name": "İleri Seviye Hipertrofi 5 Gün",
+      "summary": "Göğüs ve sırt iki kez, bacaklar bir ön bacak günü ve bir arka bacak-kalça günüyle iki kez, ayrıca omuz ve kola ayrılmış bir antrenman. Deneyimli sporcular için superset'lerle yüksek haftalık hacim."
     }
   },
   "days": [

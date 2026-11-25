@@ -29,7 +29,7 @@ final gripWidths = _codes(GripWidth.values);
 final statuses = _codes(ExerciseStatus.values);
 final generatorTiers = _codes(GeneratorTier.values);
 final sensitiveAreas = _codes(SensitiveArea.values);
-const languages = {'en'};
+const languages = {'en', 'tr'};
 
 // Per-exercise limits.
 const maxEquipmentAlternatives = 3;

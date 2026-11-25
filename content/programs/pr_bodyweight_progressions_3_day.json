@@ -35,6 +35,10 @@
     "en": {
       "name": "Bodyweight Progressions 3-Day",
       "summary": "The step between the basics and advanced calisthenics: full pull-ups, dips, single-leg squats and harder push-up variations on a pull-up bar and dip bars. Side delts and biceps get less direct work, since bodyweight training has few ways to load them."
+    },
+    "tr": {
+      "name": "Vücut Ağırlığı İlerleme 3 Gün",
+      "summary": "Temellerle ileri seviye kalistenik arasındaki basamak: barfiks barı ve paralel barlarda tam barfiks, dips, tek bacak squat ve daha zor şınav varyasyonları. Vücut ağırlığıyla yüklemenin az yolu olduğundan yan omuz ve ön kol daha az doğrudan çalışır."
     }
   },
   "days": [
