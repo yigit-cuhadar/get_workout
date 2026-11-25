@@ -813,6 +813,42 @@ Open after Group 11 (the per-group build history is in git and the PRs
   all linked, none tracking; custom EULA = the Terms; review notes: guest
   sign-in, no demo account. Sold in the US, UK, Canada, Australia, New
   Zealand and Ireland only; iPhone only (#216).
+- Turkish App Store listing (2026-11-25, owner approved; entered once
+  1.0.0's review ends, with Turkey added and Turkish screenshots): name
+  "GetWorkout: Spor ve Fitness", subtitle "Antrenman programı ve takibi",
+  keywords "egzersiz,vücut geliştirme,kas,ağırlık,güç,kayıt,takip,plan,
+  halter,dambıl,gym,workout,pazu,kardiyo", promotional text "Spor salonu
+  için antrenman takibi: 420+ egzersiz, 29 hazır antrenman programı ya da
+  kendi planın ve her sette geçen seferki değerleri gösteren kayıt.",
+  subscription description "Antrenman programı oluşturucu + 29 hazır
+  program". "Program" is always "antrenman programı" in the listing
+  (owner). Description:
+
+    Doğru egzersizi bul, haftana uyan bir antrenman programını takip et ve her seti kaydet.
+
+    420+ EGZERSİZ
+    Ekipmanı, seviyesi, kurulumu, adım adım yapılışı, sık yapılan hataları ve ipuçlarıyla 422 egzersiz. Ara, filtrele, favorilerini kaydet, kendi egzersizini ekle ya da sana benzeyen 3D vücut modelinde kasa dokunarak egzersiz bul.
+
+    29 ANTRENMAN PROGRAMI YA DA KENDİ PLANIN
+    Dokuz kısa soruyu cevapla, bugün başlayacağın bir antrenman programı al. Salon, ev, dambıl, kettlebell, bant ve vücut ağırlığı için 29 hazır antrenman programından birini seç, antrenman programı oluşturucuya kendine göre bir tane hazırlat ya da superset ve circuit'lerle kendi antrenman programını kur.
+
+    ANTRENMAN TAKİBİ
+    Her sette geçen sefer ne kaldırdığını görürsün. Ağırlık ve tekrar için artı-eksi düğmeleri, tek dokunuşla zorluk ve kilit ekranında dinlenme sayacı.
+
+    İLERLEME
+    Kişisel rekorlar, tahmini 1RM, kas başına haftalık set, vücut ağırlığı, ölçüler ve önceki fotoğrafın üstüne bindirmeli ilerleme fotoğrafları. Adım ve kardiyo Apple Sağlık'tan gelir.
+
+    ÜCRETSİZ
+    Kayıt, geçmiş, bütün grafikler, egzersiz kütüphanesi, 6 hazır antrenman programı, vücut takibi, ilerleme fotoğrafları, kardiyo, adım ve hesaplayıcılar.
+
+    PREMIUM
+    - Antrenman programı oluşturucu
+    - 23 hazır antrenman programı daha
+
+    GetWorkout Premium, Aylık ve Yıllık planı olan, otomatik yenilenen bir aboneliktir; Yıllık plan 7 günlük ücretsiz denemeyle başlar. Ödeme, satın almayı onayladığında ya da deneme bittiğinde Apple Kimliğinden alınır. Abonelik, geçerli dönemin bitiminden en az 24 saat önce iptal edilmezse kendiliğinden yenilenir ve yenileme ücreti dönemin bitiminden önceki 24 saat içinde hesabından alınır. Ücret ödememek için denemeyi bitiminden en az 24 saat önce iptal et. Aboneliğini istediğin zaman Apple Kimliği › Abonelikler'den yönetebilir ya da iptal edebilirsin. Abone olduğunda ücretsiz denemenin kullanılmayan kısmı geçersiz olur.
+
+    Gizlilik Politikası: https://getworkout-prod.web.app/privacy
+    Kullanım Şartları: https://getworkout-prod.web.app/terms
 
 Group 12, analytics (owner's plan, 2026-11-20; before the admin panel rework)
 - [x] Opt-out collection — analytics and crash reports on by default for every user, the Profile → Privacy switch turns them off; the onboarding and over-the-tabs consent page removed; privacy policy and labels updated
