@@ -45,6 +45,10 @@
     "en": {
       "name": "Shoulders and Back Focus 4-Day",
       "summary": "Two upper days that lead with rows, pulldowns, presses and raises, and two lower days to keep the legs moving forward. Back and shoulder volume runs above a standard program on purpose."
+    },
+    "tr": {
+      "name": "Omuz ve Sırt Odaklı 4 Gün",
+      "summary": "Row, pulldown, press ve kaldırışlarla başlayan iki üst vücut günü ve bacakların gelişmeye devam etmesi için iki alt vücut günü. Sırt ve omuz hacmi bilerek standart bir programın üstünde."
     }
   },
   "days": [

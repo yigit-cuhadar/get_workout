@@ -31,6 +31,10 @@ void main() {
     );
   });
 
+  test('the language is automatic by default', () {
+    expect(UserSettings.defaultsFor('TR').language, AppLanguage.automatic);
+  });
+
   group('week start', () {
     test('is automatic by default', () {
       expect(UserSettings.defaultsFor('US').weekStart, WeekStart.automatic);

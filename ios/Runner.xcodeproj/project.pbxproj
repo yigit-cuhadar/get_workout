@@ -17,6 +17,8 @@
 		97C146FE1CF9000F007C117D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FD1CF9000F007C117D /* Assets.xcassets */; };
 		9E1A00000000000000000001 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 9E1A00000000000000000002 /* PrivacyInfo.xcprivacy */; };
 		7C5A1E000000000000000001 /* chime.caf in Resources */ = {isa = PBXBuildFile; fileRef = 7C5A1E000000000000000002 /* chime.caf */; };
+		7A10C0000000000000000001 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 7A10C0000000000000000002 /* InfoPlist.strings */; };
+		7A10C0000000000000000004 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 7A10C0000000000000000005 /* Localizable.strings */; };
 		97C147011CF9000F007C117D /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FF1CF9000F007C117D /* LaunchScreen.storyboard */; };
 		5A1C0D000000000000000005 /* WorkoutActivityContent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A1C0D000000000000000001 /* WorkoutActivityContent.swift */; };
 		5A1C0D000000000000000006 /* WorkoutActivityContent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A1C0D000000000000000001 /* WorkoutActivityContent.swift */; };
@@ -95,6 +97,8 @@
 		5A1C0D000000000000000018 /* ForgeLiveActivityAttributes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ForgeLiveActivityAttributes.swift; sourceTree = "<group>"; };
 		5A1C0D000000000000000003 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		5A1C0D000000000000000004 /* RestTimer.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = RestTimer.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		7A10C0000000000000000003 /* tr */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = tr; path = tr.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		7A10C0000000000000000006 /* tr */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = tr; path = tr.lproj/Localizable.strings; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -165,6 +169,7 @@
 				7C5A1E000000000000000002 /* chime.caf */,
 				97C146FF1CF9000F007C117D /* LaunchScreen.storyboard */,
 				97C147021CF9000F007C117D /* Info.plist */,
+				7A10C0000000000000000002 /* InfoPlist.strings */,
 				7884E8692EC3CC0400C636F2 /* Runner.entitlements */,
 				9E1A00000000000000000002 /* PrivacyInfo.xcprivacy */,
 				1498D2321E8E86230040F4C2 /* GeneratedPluginRegistrant.h */,
@@ -184,6 +189,7 @@
 				5A1C0D000000000000000015 /* WorkoutActivityIntents.swift */,
 				5A1C0D000000000000000018 /* ForgeLiveActivityAttributes.swift */,
 				5A1C0D000000000000000003 /* Info.plist */,
+				7A10C0000000000000000005 /* Localizable.strings */,
 			);
 			path = RestTimer;
 			sourceTree = "<group>";
@@ -282,6 +288,7 @@
 			knownRegions = (
 				en,
 				Base,
+				tr,
 			);
 			mainGroup = 97C146E51CF9000F007C117D;
 			packageReferences = (
@@ -316,6 +323,7 @@
 				7C5A1E000000000000000001 /* chime.caf in Resources */,
 				9E1A00000000000000000001 /* PrivacyInfo.xcprivacy in Resources */,
 				97C146FC1CF9000F007C117D /* Main.storyboard in Resources */,
+				7A10C0000000000000000001 /* InfoPlist.strings in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -323,6 +331,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				7A10C0000000000000000004 /* Localizable.strings in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -460,6 +469,22 @@
 				97C147001CF9000F007C117D /* Base */,
 			);
 			name = LaunchScreen.storyboard;
+			sourceTree = "<group>";
+		};
+		7A10C0000000000000000002 /* InfoPlist.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				7A10C0000000000000000003 /* tr */,
+			);
+			name = InfoPlist.strings;
+			sourceTree = "<group>";
+		};
+		7A10C0000000000000000005 /* Localizable.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				7A10C0000000000000000006 /* tr */,
+			);
+			name = Localizable.strings;
 			sourceTree = "<group>";
 		};
 /* End PBXVariantGroup section */

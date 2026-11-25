@@ -45,6 +45,10 @@
     "en": {
       "name": "Strength Builder 4-Day",
       "summary": "Four sessions a week, each led by one of the squat, bench press, deadlift and overhead press in heavy sets of 3-5. Targeted assistance work supports the main lift of the day."
+    },
+    "tr": {
+      "name": "Kuvvet Geliştirme 4 Gün",
+      "summary": "Haftada dört antrenman; her birine squat, bench press, deadlift ve omuz press'ten biri, 3-5 tekrarlık ağır setlerle öncülük eder. Hedefli yardımcı çalışmalar günün ana hareketini destekler."
     }
   },
   "days": [

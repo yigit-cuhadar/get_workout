@@ -165,6 +165,51 @@ void main() {
     });
   });
 
+  group('language', () {
+    test('is stored as a language code and read back', () async {
+      for (final (language, code) in [
+        (AppLanguage.english, 'en'),
+        (AppLanguage.turkish, 'tr'),
+      ]) {
+        final settings = defaults.copyWith(language: language);
+        await repository.saveSettings('u1', settings);
+        expect(
+          ((await user().get()).data()!['settings'] as Map)['language'],
+          code,
+        );
+        expect(await repository.watchSettings('u1').first, settings);
+      }
+    });
+
+    test('automatic is not stored', () async {
+      await user().set({
+        'settings': {'language': 'tr'},
+      });
+
+      await repository.saveSettings('u1', defaults);
+
+      final stored = (await user().get()).data()!['settings'] as Map;
+      expect(stored.containsKey('language'), isFalse);
+      expect(
+        (await repository.watchSettings('u1').first).language,
+        AppLanguage.automatic,
+      );
+    });
+
+    test('missing, unknown or malformed reads as automatic', () async {
+      for (final raw in [null, 'de', 'automatic', 'TR', 1]) {
+        await user().set({
+          'settings': {'language': raw},
+        });
+        expect(
+          (await repository.watchSettings('u1').first).language,
+          AppLanguage.automatic,
+          reason: '$raw',
+        );
+      }
+    });
+  });
+
   group('reminders', () {
     test('are stored and read back', () async {
       final settings = defaults.copyWith(

@@ -41,6 +41,10 @@
     "en": {
       "name": "Home Gym Upper/Lower 4-Day",
       "summary": "Two upper-body and two lower-body sessions a week for a home gym with a barbell, a rack, dumbbells, a bench and a pull-up bar. Heavy barbell lifts lead three of the four days and dumbbell work fills in the rest."
+    },
+    "tr": {
+      "name": "Ev Salonu Upper/Lower 4 Gün",
+      "summary": "Halter, rack, dambıl, sehpa ve barfiks barı olan bir ev salonu için haftada iki üst vücut ve iki alt vücut antrenmanı. Dört günün üçüne ağır halter hareketleri öncülük eder, gerisini dambıl çalışması tamamlar."
     }
   },
   "days": [

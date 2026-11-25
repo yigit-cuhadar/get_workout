@@ -194,14 +194,17 @@ void main() {
       openSettings: OpenNotificationSettings(device),
       refreshTimeZone: RefreshTimeZone(device),
       followAnnouncements: announcements,
-      workoutText: (reminder) => (
-        title: 'Workout',
+      workoutText: (reminder, language) => (
+        title: language == AppLanguage.turkish ? 'Antrenman' : 'Workout',
         body: reminder.day == null
             ? reminder.programName
             : '${reminder.day!.day.name} · ${reminder.programName}',
       ),
-      measurementText: () => (title: 'Measure', body: 'Log it'),
-      language: () => 'en',
+      measurementText: (language) => (
+        title: language == AppLanguage.turkish ? 'Ölçüm' : 'Measure',
+        body: 'Log it',
+      ),
+      language: (language) => language.code ?? 'en',
       clock: () => at ?? now,
     );
   }
@@ -587,6 +590,21 @@ void main() {
     await cubit.close();
   });
 
+  test('writes reminders in the language of the user\'s settings', () async {
+    final cubit = build();
+    signIn('u1');
+    emitPrograms(ready());
+    emitSettings('u1', reminding);
+    await pumpEventQueue();
+    expect(lastOf(ReminderKind.measurement).first.title, 'Measure');
+
+    emitSettings('u1', reminding.copyWith(language: AppLanguage.turkish));
+    await pumpEventQueue();
+    expect(lastOf(ReminderKind.workout).first.title, 'Antrenman');
+    expect(lastOf(ReminderKind.measurement).first.title, 'Ölçüm');
+    await cubit.close();
+  });
+
   group('access', () {
     test('known at start; announcements followed once allowed', () async {
       final cubit = build();
@@ -724,6 +742,33 @@ void main() {
         await cubit.close();
       },
     );
+
+    test('follows the language of the signed-in user\'s settings, once they '
+        'arrive, and its changes', () async {
+      final cubit = build();
+      await pumpEventQueue();
+      verify(() => announcements(_en)).called(1);
+
+      signIn('u1');
+      await pumpEventQueue();
+      verifyNever(() => announcements(any()));
+
+      emitSettings('u1', reminding.copyWith(language: AppLanguage.turkish));
+      await pumpEventQueue();
+      verify(() => announcements((language: 'tr', premium: null))).called(1);
+
+      emitSettings(
+        'u1',
+        reminding.copyWith(language: AppLanguage.turkish, stepGoal: 9000),
+      );
+      await pumpEventQueue();
+      verifyNever(() => announcements(any()));
+
+      emitSettings('u1', reminding);
+      await pumpEventQueue();
+      verify(() => announcements(_en)).called(1);
+      await cubit.close();
+    });
 
     test('topic changes of two Premium states never overlap', () async {
       final first = Completer<Result<void>>();

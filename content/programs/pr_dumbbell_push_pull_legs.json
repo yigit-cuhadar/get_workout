@@ -34,6 +34,10 @@
     "en": {
       "name": "Dumbbell Push Pull Legs 3-Day",
       "summary": "A push, a pull and a leg day using nothing but dumbbells and a bench. Every muscle gets one focused session a week, with compound lifts first and isolation work after."
+    },
+    "tr": {
+      "name": "Dambıl Push Pull Legs 3 Gün",
+      "summary": "Sadece dambıl ve sehpayla bir itiş, bir çekiş ve bir bacak günü. Her kas haftada bir odaklı antrenman alır; önce bileşik hareketler, sonra izolasyon çalışması gelir."
     }
   },
   "days": [

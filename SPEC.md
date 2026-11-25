@@ -24,9 +24,25 @@ App-wide decisions only. How each feature behaves is under Feature notes.
   account files are ever committed. Firebase client config files are not
   secrets; security rests on Firestore and Storage rules.
 - **Platforms**: iOS + Android. Admin panel is Flutter web from this repo.
-- **Language**: English only in v1. Every UI string goes through `gen_l10n`
-  ARB files; exercise and program text is stored per language (`l10n.en`), so
-  a language is added without schema or code changes.
+- **Language**: English and Turkish (Turkish added 2026-11-25). Every UI
+  string goes through `gen_l10n` ARB files; exercise and program text is
+  stored per language (`l10n.en`, `l10n.tr`). The app follows the phone's
+  language (anything but Turkish gives English) and Profile › Appearance ›
+  Language overrides it. Turkish, the owner's picks (2026-11-25): the UI and
+  the content are translated; the user is addressed as "sen"; exercise names
+  stay English, their texts are Turkish; program and split names keep the
+  English split term with Turkish around it ("Upper/Lower 4 Gün"); day names
+  stay as stored; muscles are Turkish in gym usage (biceps "Ön kol",
+  triceps "Arka kol", forearm "Bilek", lats "Sırt", quadriceps "Ön bacak",
+  hamstrings "Arka bacak", glutes "Kalça"; body measurements keep "Ön kol"
+  for the forearm, where the tape goes); established training terms stay
+  English (set, superset, drop set, circuit, RIR, RPE, 1RM; Squat, Hinge,
+  Lunge as movement patterns), the rest is Turkish (tekrar, dinlenme,
+  ısınma seti); equipment Halter, Dambıl, Kablo, Makine, Sehpa;
+  Apple Health "Apple Sağlık". Privacy policy and terms stay English (the
+  KVKK text is Turkish). The App Store adds Turkey and a Turkish listing
+  after 1.0.0's review. Announcements follow one topic per language, so the
+  panel must send a Turkish version for Turkish users.
 - **Accounts**: starts as an anonymous Firebase user. Linking email, Google or
   Apple keeps the uid and all data. Signing in to an *existing* account from a
   guest session discards the guest data after a warning; there is no merge.
@@ -232,7 +248,7 @@ reader has an active entitlement.
 **`users/{uid}`**: `profile` (goal, level, daysPerWeek, equipment[], sex,
 birthYear, heightCm, weightKg, targetWeightKg), `settings` (units,
 effortScale, askEffort (absent is true), weekStart (`monday` \| `sunday` \| `saturday`; absent, or a
-value this version does not know, is automatic), restTimer, warmups
+value this version does not know, is automatic), language (`en` \| `tr`; absent or unknown is automatic), restTimer, warmups
 (autoWarmups for older versions), seenTips[],
 keepScreenOn, bar and plates (`barWeightKg`, `ezBarWeightKg`, `trapBarWeightKg`,
 `plates[]`; each only while customised), stepGoal,
@@ -849,6 +865,9 @@ before drawing) are in AGENTS.md › Design studios.
 - GetWorkout Studio https://claude.ai/artifact/PuK5WUbeyhVHMxA6THNDC2: the
   app's presets, rules, components and every screen with its states. Its
   saved settings download as tokens.json, which `lib/app/theme.dart` follows.
+- Language setting (2026-11-25): https://claude.ai/artifact/F51NiEKmssC2zSSXk8b3Ba
+  (L1 A: Language under Week starts on in Appearance; L2 A: the choice
+  sheet lists each language in its own name).
 - MobileAppForge Studio https://claude.ai/artifact/6G4XXrCwoijEmEcFhNQDCU:
   the shared Forge components, drawn once; each card is that component's rule.
 
@@ -2907,8 +2926,8 @@ the feature you are about to touch, and keep it true when you change it.
   the measurement reminder's day. Settings → Appearance → "Week starts on":
   Automatic (default, shown as "Automatic (Monday)" with the day it gives),
   Monday, Sunday or Saturday (`settings.weekStart`, written only when not
-  automatic). Automatic is the phone's region, not the app's language
-  (English only, so Sunday for everyone): the device locale
+  automatic). Automatic is the phone's region, not the app's language:
+  the device locale
   (`PlatformDispatcher.locale`, followed on change). With a region, CLDR's
   weekData `firstDay` for it (CLDR 49, a const table in
   `regionFirstWeekday`; unlisted regions Monday): `en_TR`, `tr_TR`,
@@ -2927,6 +2946,26 @@ the feature you are about to touch, and keep it true when you change it.
   not while the list shows a failure. Only views change: stored dates,
   program weekdays and schedules, `nextDate` and program lengths (counted
   from the start date) never depend on it.
+- **Language** (owner, L1 A, L2 A): Settings → Appearance → "Language",
+  under "Week starts on": Automatic (default; the row shows "Automatic
+  (English)" with the language it gives, the sheet "Automatic" with that
+  language muted beside it), English or Türkçe, each language in its own
+  name, never translated (`settings.language`, `en` \| `tr`, written only
+  when not automatic; absent or unknown is automatic, so per user like the
+  week start, and automatic while signed out). Automatic is the phone's
+  first language the app has, else English (`devicePickedLocale`, as
+  `MaterialApp` picks it). The choice is `MaterialApp.locale` (null for
+  automatic), so the app switches at once with no restart; everything
+  that reads the language goes through it: `Localizations.localeOf` and
+  `l10n.localeName` in widgets (content, generator `lang`, dates,
+  numbers), and outside widgets `localizationsIn` / `currentLocalizations`
+  for the rest, rest-over, lock-screen and self-ended-workout texts.
+  `NotificationsCubit` writes reminders and follows the announcement topic
+  in the user's settings' language, again when it changes; while a
+  signed-in user's settings load it follows nothing. Not routed: the
+  Android channel names (made at start, in the phone's language), the
+  week start (the phone's region) and the support details' `locale` (the
+  phone's).
 - **Onboarding questions** (UX pass, 2026-11-13): a welcome page, then one
   question per page, all nine needing an answer: goal, level, days per
   week, equipment, sex, birth year, height, weight, target weight. There

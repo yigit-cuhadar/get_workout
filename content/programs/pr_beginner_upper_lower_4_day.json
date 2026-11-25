@@ -41,6 +41,10 @@
     "en": {
       "name": "Beginner Upper/Lower 4-Day",
       "summary": "Two upper-body and two lower-body sessions a week on machines, cables and dumbbells, so every muscle is trained twice with simple lifts. For beginners who can train four days and want more than a full-body plan."
+    },
+    "tr": {
+      "name": "Başlangıç Upper/Lower 4 Gün",
+      "summary": "Haftada makine, kablo ve dambıl ile iki üst vücut ve iki alt vücut antrenmanı; her kas basit hareketlerle iki kez çalışır. Dört gün antrenman yapabilen ve full body plandan fazlasını isteyen yeni başlayanlar için."
     }
   },
   "days": [

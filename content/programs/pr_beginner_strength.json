@@ -38,6 +38,10 @@
     "en": {
       "name": "Beginner Strength 3-Day",
       "summary": "Learn and progress the big barbell lifts with three full-body sessions of low-rep sets. Each session adds a little weight to the squat, press or pull while the rest stays simple."
+    },
+    "tr": {
+      "name": "Başlangıç Kuvvet 3 Gün",
+      "summary": "Düşük tekrarlı setlerden oluşan üç full body antrenmanla temel halter hareketlerini öğren ve geliştir. Her antrenmanda squat, press ya da çekişe biraz ağırlık eklenir, gerisi basit kalır."
     }
   },
   "days": [

@@ -48,6 +48,29 @@
         "cues": [
           "Stretch, pause, squeeze"
         ]
+      },
+      "tr": {
+        "name": "Standing Calf Raise",
+        "aliases": [
+          "Machine Calf Raise",
+          "Standing Calf Raise Machine",
+          "Ayakta baldır kaldırma"
+        ],
+        "setup": [
+          "Ayak tabanlarının ön kısmı platformun kenarında, pedler omuzlarında olacak şekilde dur.",
+          "Dizlerin hafif bükülü, bacaklarını düzleştir."
+        ],
+        "execution": [
+          "Tam esneme için topuklarını olabildiğince aşağı indir.",
+          "Parmak uçlarında olabildiğince yükseğe kalk ve bekle."
+        ],
+        "mistakes": [
+          "Altta sekmek.",
+          "Ağırlığı itmek için dizleri bükmek."
+        ],
+        "cues": [
+          "Esnet, bekle, sık"
+        ]
       }
     }
   },
@@ -98,6 +121,28 @@
         ],
         "cues": [
           "Full stretch every rep"
+        ]
+      },
+      "tr": {
+        "name": "Seated Calf Raise",
+        "aliases": [
+          "Seated Calf Machine",
+          "Oturarak baldır kaldırma"
+        ],
+        "setup": [
+          "Ayak tabanlarının ön kısmı platformda, makineye otur.",
+          "Pedi uyluklarının alt kısmına sıkıca yerleştir."
+        ],
+        "execution": [
+          "Topuklarını derin bir esnemeye indir.",
+          "Parmak uçlarına kalk ve bekle."
+        ],
+        "mistakes": [
+          "Kısa, yaylanan tekrarlar.",
+          "Ellerle kaldırmak."
+        ],
+        "cues": [
+          "Her tekrarda tam esneme"
         ]
       }
     }
@@ -150,6 +195,30 @@
         "cues": [
           "High on the big toe"
         ]
+      },
+      "tr": {
+        "name": "Bodyweight Calf Raise",
+        "aliases": [
+          "Calf Raise",
+          "Heel Raise",
+          "Baldır kaldırma",
+          "Parmak ucunda yükselme"
+        ],
+        "setup": [
+          "Topukların boşta, bir basamağın kenarında ya da düz zeminde dur.",
+          "Denge için bir duvara ya da tırabzana tutun."
+        ],
+        "execution": [
+          "Topuklarını olabildiğince aşağı indir.",
+          "Parmak uçlarında olabildiğince yükseğe kalk ve bekle."
+        ],
+        "mistakes": [
+          "Acele etmek.",
+          "Ayağın dış kenarına yuvarlanmak."
+        ],
+        "cues": [
+          "Başparmak üstünde yüksel"
+        ]
       }
     }
   },
@@ -197,6 +266,27 @@
         ],
         "cues": [
           "Slow down, high up"
+        ]
+      },
+      "tr": {
+        "name": "Single-Leg Calf Raise",
+        "aliases": [
+          "Tek bacak baldır kaldırma"
+        ],
+        "setup": [
+          "Bir basamağın kenarında tek ayak üstünde dur.",
+          "Denge için bir desteğe tutun."
+        ],
+        "execution": [
+          "Topuğu yavaşça indir.",
+          "Olabildiğince yükseğe kalk."
+        ],
+        "mistakes": [
+          "Yaylanmak için dizi bükmek.",
+          "Yarım tekrarlar."
+        ],
+        "cues": [
+          "Yavaş in, yükseğe çık"
         ]
       }
     }
@@ -250,6 +340,29 @@
         "cues": [
           "Toes push, knees still"
         ]
+      },
+      "tr": {
+        "name": "Leg Press Calf Raise",
+        "aliases": [
+          "Calf Press",
+          "Leg press'te baldır"
+        ],
+        "setup": [
+          "Ayak tabanlarının ön kısmı platformun alt kenarında, leg press'e otur.",
+          "Bacaklarını kilitlemeden düzleştir."
+        ],
+        "execution": [
+          "Esneme için platformun parmak uçlarını geriye itmesine izin ver.",
+          "Parmak uçlarınla platformu ileri it."
+        ],
+        "mistakes": [
+          "Ayakların kaymasına izin vermek.",
+          "Dizleri bükmek."
+        ],
+        "safety": "Platform parmak uçlarından kaymasın diye ayaklarını sağlam yerleştir.",
+        "cues": [
+          "Parmaklar iter, dizler sabit"
+        ]
       }
     }
   },
@@ -298,6 +411,27 @@
         ],
         "cues": [
           "Full range"
+        ]
+      },
+      "tr": {
+        "name": "Dumbbell Single-Leg Calf Raise",
+        "aliases": [
+          "Dambıl tek bacak baldır kaldırma"
+        ],
+        "setup": [
+          "Bir elinde dambıl tut ve aynı taraftaki ayağınla bir basamağa çık.",
+          "Diğer elinle bir desteğe tutun."
+        ],
+        "execution": [
+          "Topuğu indir.",
+          "Yükseğe kalk ve bekle."
+        ],
+        "mistakes": [
+          "Sekmek.",
+          "Desteğe fazla yaslanmak."
+        ],
+        "cues": [
+          "Tam açıklık"
         ]
       }
     }
@@ -348,6 +482,27 @@
         "cues": [
           "Pause at the top"
         ]
+      },
+      "tr": {
+        "name": "Smith Machine Calf Raise",
+        "aliases": [
+          "Smith makinesinde baldır kaldırma"
+        ],
+        "setup": [
+          "Smith barının altına bir plaka ya da basamak koy ve topukların boşta, üstüne çık.",
+          "Barı üst sırtına yerleştir."
+        ],
+        "execution": [
+          "Topukları indir.",
+          "Parmak uçlarına kalk ve bekle."
+        ],
+        "mistakes": [
+          "Kısa hareket açıklığı.",
+          "Dizleri bükmek."
+        ],
+        "cues": [
+          "Tepede bekle"
+        ]
       }
     }
   },
@@ -395,6 +550,28 @@
         ],
         "cues": [
           "Toes to shins"
+        ]
+      },
+      "tr": {
+        "name": "Tibialis Raise",
+        "aliases": [
+          "Tib Raise",
+          "Kaval kemiği kaldırma"
+        ],
+        "setup": [
+          "Sırtını duvara yasla, ayakların yaklaşık 30 cm önde olsun.",
+          "Bacaklarını düz tut."
+        ],
+        "execution": [
+          "Parmak uçlarını olabildiğince yükseğe, kaval kemiklerine doğru kaldır.",
+          "Yavaşça indir."
+        ],
+        "mistakes": [
+          "Dizleri bükmek.",
+          "Acele etmek."
+        ],
+        "cues": [
+          "Parmaklar kaval kemiğine"
         ]
       }
     }
@@ -445,6 +622,27 @@
         ],
         "cues": [
           "Big stretch"
+        ]
+      },
+      "tr": {
+        "name": "Seated Dumbbell Calf Raise",
+        "aliases": [
+          "Oturarak dambıl baldır kaldırma"
+        ],
+        "setup": [
+          "Ayak tabanlarının ön kısmı bir plakada ya da basamakta, sehpaya otur.",
+          "Dambılları uyluklarının alt kısmına koy."
+        ],
+        "execution": [
+          "Topuklarını indir.",
+          "Parmak uçlarına kalk."
+        ],
+        "mistakes": [
+          "Kısa hareket açıklığı.",
+          "Ellerle kaldırmak."
+        ],
+        "cues": [
+          "Büyük esneme"
         ]
       }
     }
@@ -501,6 +699,31 @@
         "cues": [
           "Quick, springy contacts"
         ]
+      },
+      "tr": {
+        "name": "Pogo Hop",
+        "aliases": [
+          "Pogo Jump",
+          "Ankle Hop",
+          "Pogo zıplama",
+          "Bilek zıplaması"
+        ],
+        "setup": [
+          "Ayakların kalça genişliğinde, dik dur.",
+          "Dizlerini neredeyse düz tut."
+        ],
+        "execution": [
+          "Bilekler sert, ayak tabanlarının ön kısmıyla hızla zıpla.",
+          "Her yere temasını olabildiğince kısa tut."
+        ],
+        "mistakes": [
+          "Dizleri çok bükmek.",
+          "Topuklara inmek."
+        ],
+        "safety": "Aşil tendonlarını korumak için hacmi kademeli artır.",
+        "cues": [
+          "Hızlı, yaylı temaslar"
+        ]
       }
     }
   },
@@ -548,6 +771,28 @@
         ],
         "cues": [
           "Point and return"
+        ]
+      },
+      "tr": {
+        "name": "Band Calf Press",
+        "aliases": [
+          "Band Plantar Flexion",
+          "Lastikle baldır"
+        ],
+        "setup": [
+          "Bacakların düz şekilde yere otur.",
+          "Bandı ayak tabanlarının ön kısmına dola ve uçlarını tut."
+        ],
+        "execution": [
+          "Banda karşı parmak uçlarını ileri uzat.",
+          "Yavaşça geri dön."
+        ],
+        "mistakes": [
+          "Dizleri bükmek.",
+          "Bandın geri fırlamasına izin vermek."
+        ],
+        "cues": [
+          "Uzat ve geri dön"
         ]
       }
     }
@@ -602,6 +847,28 @@
         ],
         "cues": [
           "Low hops, wrists turn"
+        ]
+      },
+      "tr": {
+        "name": "Jump Rope",
+        "aliases": [
+          "Skipping Rope",
+          "İp atlama"
+        ],
+        "setup": [
+          "İp saplarını kalça hizasında tut.",
+          "İpi topuklarının arkasına yerleştir."
+        ],
+        "execution": [
+          "İpi bileklerinle çevir ve ayak tabanlarının ön kısmıyla üzerinden zıpla.",
+          "Zıplamaları alçak ve düzenli tut."
+        ],
+        "mistakes": [
+          "Çok yükseğe zıplamak.",
+          "İpi tüm kolla çevirmek."
+        ],
+        "cues": [
+          "Alçak zıpla, bilekler çevirsin"
         ]
       }
     }

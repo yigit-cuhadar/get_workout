@@ -34,6 +34,10 @@
     "en": {
       "name": "Minimalist Full Body 2-Day",
       "summary": "Two full-body gym sessions a week that cover every major muscle with a handful of compound lifts. For weeks when time is short, volume sits at the low end of what keeps you progressing."
+    },
+    "tr": {
+      "name": "Minimalist Full Body 2 Gün",
+      "summary": "Birkaç bileşik hareketle tüm büyük kasları kapsayan haftada iki full body salon antrenmanı. Zamanın kısıtlı olduğu haftalar için; hacim, ilerlemeyi sürdürecek düzeyin alt sınırında."
     }
   },
   "days": [

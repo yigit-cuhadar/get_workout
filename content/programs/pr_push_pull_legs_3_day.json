@@ -39,6 +39,10 @@
     "en": {
       "name": "Push Pull Legs 3-Day",
       "summary": "One push, one pull and one leg session a week, each built around a heavy compound lift and finished with higher-rep accessories. Suits a busy week while still training every muscle hard."
+    },
+    "tr": {
+      "name": "Push Pull Legs 3 Gün",
+      "summary": "Haftada bir itiş, bir çekiş ve bir bacak antrenmanı; her biri ağır bir bileşik hareket üzerine kurulu ve yüksek tekrarlı yardımcı hareketlerle biter. Her kası yine de sıkı çalıştırırken yoğun bir haftaya uyar."
     }
   },
   "days": [

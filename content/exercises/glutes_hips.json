@@ -54,6 +54,33 @@
           "Chin tucked, ribs down",
           "Squeeze at the top"
         ]
+      },
+      "tr": {
+        "name": "Barbell Hip Thrust",
+        "aliases": [
+          "Hip Thrust",
+          "Barbell Glute Thrust",
+          "Halter hip thrust",
+          "Kalça itme"
+        ],
+        "setup": [
+          "Üst sırtın bir sehpanın kenarına dayalı, yere otur.",
+          "Pedli bir halteri kalçanın üstüne yuvarla.",
+          "Ayaklarını yaklaşık kalça genişliğinde, tepede kaval kemiklerin dikey olacak şekilde yere bas."
+        ],
+        "execution": [
+          "Vücudun omuzlardan dizlere düz olana kadar topuklarınla iterek kalçanı kaldır.",
+          "Tepede çenen içeride, kalçanı sık.",
+          "Kalçanı kontrollü şekilde indir."
+        ],
+        "mistakes": [
+          "Tepede kalçayı sıkmak yerine beli kavislendirmek.",
+          "Ayakları, işi arka bacaklar devralacak kadar uzağa koymak."
+        ],
+        "cues": [
+          "Çene içeride, kaburgalar aşağı",
+          "Tepede sık"
+        ]
       }
     }
   },
@@ -104,6 +131,30 @@
         ],
         "cues": [
           "Heels down, hips up"
+        ]
+      },
+      "tr": {
+        "name": "Glute Bridge",
+        "aliases": [
+          "Floor Bridge",
+          "Bridge",
+          "Köprü",
+          "Kalça köprüsü"
+        ],
+        "setup": [
+          "Dizlerin bükülü, ayakların yerde ve kalça genişliğinde sırtüstü uzan.",
+          "Kollarını yanlarına koy."
+        ],
+        "execution": [
+          "Vücudun omuzlardan dizlere düz olana kadar topuklarınla iterek kalçanı kaldır.",
+          "Kalçanı sık, sonra yavaşça indir."
+        ],
+        "mistakes": [
+          "Parmak uçlarıyla itmek.",
+          "Beli aşırı kavislendirmek."
+        ],
+        "cues": [
+          "Topuklar yerde, kalça yukarı"
         ]
       }
     }
@@ -156,6 +207,30 @@
         ],
         "cues": [
           "Push out, return slow"
+        ]
+      },
+      "tr": {
+        "name": "Hip Abduction Machine",
+        "aliases": [
+          "Seated Hip Abduction",
+          "Outer Thigh Machine",
+          "Abductor makinesi",
+          "Dış bacak makinesi"
+        ],
+        "setup": [
+          "Pedler dizlerinin dış tarafında, makineye otur.",
+          "Dik otur ve tutamakları tut."
+        ],
+        "execution": [
+          "Dizlerini olabildiğince iki yana aç.",
+          "Ağırlıkların değmesine izin vermeden yavaşça geri dön."
+        ],
+        "mistakes": [
+          "Ağırlığın geri çarpmasına izin vermek.",
+          "Gövdeyi sallamak."
+        ],
+        "cues": [
+          "Dışa it, yavaş dön"
         ]
       }
     }
@@ -210,6 +285,30 @@
         "cues": [
           "Squeeze, then slow"
         ]
+      },
+      "tr": {
+        "name": "Hip Adduction Machine",
+        "aliases": [
+          "Seated Hip Adduction",
+          "Inner Thigh Machine",
+          "Adductor makinesi",
+          "İç bacak makinesi"
+        ],
+        "setup": [
+          "Pedler dizlerinin iç tarafında, makineye otur.",
+          "Başlangıçta hafif bir esneme veren bir açıklık ayarla."
+        ],
+        "execution": [
+          "Dizlerini birbirine sık.",
+          "Yavaşça başlangıca aç."
+        ],
+        "mistakes": [
+          "Kasığı zorlayacak kadar geniş bir esnemeyle başlamak.",
+          "Esnemeden sekerek çıkmak."
+        ],
+        "cues": [
+          "Sık, sonra yavaş"
+        ]
       }
     }
   },
@@ -261,6 +360,28 @@
         "cues": [
           "Squeeze the glute, not the back"
         ]
+      },
+      "tr": {
+        "name": "Cable Glute Kickback",
+        "aliases": [
+          "Glute Kickback",
+          "Kablo kickback"
+        ],
+        "setup": [
+          "Alçak makaraya bir ayak bileği kayışı tak ve bir bileğine bağla.",
+          "Ağırlık bloğuna dön, çerçeveyi tut ve hafifçe öne eğil."
+        ],
+        "execution": [
+          "Kalçan tamamen sıkılana kadar kalçadan açarak bacağını geriye it.",
+          "Yavaşça geri dön."
+        ],
+        "mistakes": [
+          "Daha yükseğe tekme atmak için beli kavislendirmek.",
+          "Bacağı savurmak."
+        ],
+        "cues": [
+          "Beli değil, kalçayı sık"
+        ]
       }
     }
   },
@@ -308,6 +429,27 @@
         ],
         "cues": [
           "Hips level"
+        ]
+      },
+      "tr": {
+        "name": "Single-Leg Glute Bridge",
+        "aliases": [
+          "Tek bacak köprü"
+        ],
+        "setup": [
+          "Bir dizin bükülü, o ayağın yerde olacak şekilde sırtüstü uzan.",
+          "Diğer bacağını düz kaldır ya da o dizini göğsüne doğru tut."
+        ],
+        "execution": [
+          "Yerdeki topuğunla iterek kalçanı kaldır.",
+          "Kalçanı düz tut, sonra yavaşça indir."
+        ],
+        "mistakes": [
+          "Kalçanın bir yana yatmasına izin vermek.",
+          "Parmak uçlarıyla itmek."
+        ],
+        "cues": [
+          "Kalça düz"
         ]
       }
     }
@@ -360,6 +502,29 @@
         "cues": [
           "Stay low, band tight"
         ]
+      },
+      "tr": {
+        "name": "Band Lateral Walk",
+        "aliases": [
+          "Lateral Band Walk",
+          "Side Band Walk",
+          "Lastikle yan yürüyüş"
+        ],
+        "setup": [
+          "Dizlerinin üstüne ya da ayak bileklerine bir mini bant geçir.",
+          "Dizlerini hafifçe bükerek çeyrek squat'a geç."
+        ],
+        "execution": [
+          "Bir ayağınla yana adım at, sonra bandı gevşetmeden diğeriyle takip et.",
+          "Belirlenen mesafeyi yürü, sonra geri dön."
+        ],
+        "mistakes": [
+          "Dimdik doğrulmak.",
+          "Dizlerin içe çökmesine izin vermek."
+        ],
+        "cues": [
+          "Alçak kal, bant gergin"
+        ]
       }
     }
   },
@@ -409,6 +574,28 @@
         ],
         "cues": [
           "Feet together, hips still"
+        ]
+      },
+      "tr": {
+        "name": "Clamshell",
+        "aliases": [
+          "Clam",
+          "İstiridye"
+        ],
+        "setup": [
+          "Kalçan ve dizlerin bükülü, ayakların bitişik şekilde yan yat.",
+          "Başını kolunun üstüne koy."
+        ],
+        "execution": [
+          "Ayaklarını bitişik tutarak, geriye dönmeden üstteki dizini olabildiğince yükseğe kaldır.",
+          "Yavaşça indir."
+        ],
+        "mistakes": [
+          "Kalçayı geriye döndürmek.",
+          "Tekrarları aceleye getirmek."
+        ],
+        "cues": [
+          "Ayaklar bitişik, kalça sabit"
         ]
       }
     }
@@ -461,6 +648,29 @@
         "cues": [
           "Push the heel to the ceiling"
         ]
+      },
+      "tr": {
+        "name": "Donkey Kick",
+        "aliases": [
+          "Quadruped Hip Extension",
+          "Donkey Kickback",
+          "Eşek tekmesi"
+        ],
+        "setup": [
+          "Ellerin omuzlarının, dizlerin kalçanın altında, dört ayak üstüne gel.",
+          "Karnını sık."
+        ],
+        "execution": [
+          "Dizin bükülü, uyluğun vücudunla aynı hizaya gelene kadar bir bacağını kaldır.",
+          "Yavaşça indir."
+        ],
+        "mistakes": [
+          "Beli kavislendirmek.",
+          "Bacağı savurmak."
+        ],
+        "cues": [
+          "Topuğu tavana it"
+        ]
       }
     }
   },
@@ -507,6 +717,25 @@
         ],
         "cues": [
           "Knee out, hips square"
+        ]
+      },
+      "tr": {
+        "name": "Fire Hydrant",
+        "aliases": [],
+        "setup": [
+          "Sırtın düz, dört ayak üstüne gel.",
+          "Karnını sık."
+        ],
+        "execution": [
+          "Kalçanı yatırmadan, bükülü dizini olabildiğince yükseğe yana kaldır.",
+          "Yavaşça indir."
+        ],
+        "mistakes": [
+          "Vücudu ters yöne eğmek.",
+          "Kalçayı döndürmek."
+        ],
+        "cues": [
+          "Diz dışarı, kalça düz"
         ]
       }
     }
@@ -560,6 +789,28 @@
           "Chin tucked",
           "Squeeze at the top"
         ]
+      },
+      "tr": {
+        "name": "Dumbbell Hip Thrust",
+        "aliases": [
+          "Dambıl kalça itme"
+        ],
+        "setup": [
+          "Üst sırtın bir sehpaya dayalı otur.",
+          "Bir dambılı kalçanın üstüne koy ve yerinde tut."
+        ],
+        "execution": [
+          "Topuklarınla iterek kalçanı omuzların ve dizlerinle aynı hizaya kaldır.",
+          "Yavaşça indir."
+        ],
+        "mistakes": [
+          "Beli kavislendirmek.",
+          "Dizlerin içe çökmesine izin vermek."
+        ],
+        "cues": [
+          "Çene içeride",
+          "Tepede sık"
+        ]
       }
     }
   },
@@ -611,6 +862,28 @@
         "cues": [
           "Squeeze the glute"
         ]
+      },
+      "tr": {
+        "name": "Glute Kickback Machine",
+        "aliases": [
+          "Machine Glute Kickback",
+          "Kalça kickback makinesi"
+        ],
+        "setup": [
+          "Makineyi ayarla ve bir ayağını pede yerleştir.",
+          "Göğsün destekli, tutamakları tut."
+        ],
+        "execution": [
+          "Kalçanı açarak pedi geriye it.",
+          "Yavaşça geri dön."
+        ],
+        "mistakes": [
+          "Beli kavislendirmek.",
+          "Savurmak."
+        ],
+        "cues": [
+          "Kalçanı sık"
+        ]
       }
     }
   },
@@ -661,6 +934,29 @@
         ],
         "cues": [
           "Heel leads, toes forward"
+        ]
+      },
+      "tr": {
+        "name": "Side-Lying Leg Raise",
+        "aliases": [
+          "Side-Lying Hip Abduction",
+          "Lying Lateral Leg Raise",
+          "Yan yatarak bacak kaldırma"
+        ],
+        "setup": [
+          "Bacakların düz ve üst üste, yan yat.",
+          "Başını kolunun üstüne koy."
+        ],
+        "execution": [
+          "Topuğun önde, üstteki bacağını yaklaşık 45 dereceye kaldır.",
+          "Yavaşça indir."
+        ],
+        "mistakes": [
+          "Kalçayı geriye döndürmek.",
+          "Bacağı yükseğe savurmak."
+        ],
+        "cues": [
+          "Topuk önde, parmaklar ileri"
         ]
       }
     }
@@ -714,6 +1010,28 @@
         "cues": [
           "Hips back, hips through"
         ]
+      },
+      "tr": {
+        "name": "Cable Pull-Through",
+        "aliases": [
+          "Rope Pull-Through",
+          "Kablo pull-through"
+        ],
+        "setup": [
+          "Alçak makaraya bir halat tak ve makaraya arkanı dön.",
+          "Halatı bacaklarının arasından tut ve birkaç adım öne yürü."
+        ],
+        "execution": [
+          "Halatın ellerini bacaklarının arasından geriye çekmesine izin vererek kalçadan eğil.",
+          "Dik durmak için kalçanı öne sür ve kalçanı sık."
+        ],
+        "mistakes": [
+          "Kalçadan eğilmek yerine çömelmek.",
+          "Kollarla çekmek."
+        ],
+        "cues": [
+          "Kalça geri, kalça ileri"
+        ]
       }
     }
   },
@@ -761,6 +1079,25 @@
         ],
         "cues": [
           "Wide, low steps"
+        ]
+      },
+      "tr": {
+        "name": "Monster Walk",
+        "aliases": [],
+        "setup": [
+          "Ayak bileklerine ya da dizlerinin üstüne bir mini bant geçir.",
+          "Ayakların kalça genişliğinde, çeyrek squat'a geç."
+        ],
+        "execution": [
+          "Her ayakla geniş adım atarak çapraz şekilde ileri yürü.",
+          "Bandı baştan sona gergin tut."
+        ],
+        "mistakes": [
+          "Dizlerin içe çökmesine izin vermek.",
+          "Dik durmak."
+        ],
+        "cues": [
+          "Geniş, alçak adımlar"
         ]
       }
     }
@@ -822,6 +1159,29 @@
         "cues": [
           "Squeeze the top leg down"
         ]
+      },
+      "tr": {
+        "name": "Copenhagen Plank",
+        "aliases": [
+          "Copenhagen Adductor Plank",
+          "Kopenhag plank"
+        ],
+        "setup": [
+          "Bir sehpanın yanında yan yat ve üstteki ayağını sehpaya koy.",
+          "Alttaki bacağın aşağıda, alt kolunun üstüne yaslan."
+        ],
+        "execution": [
+          "Vücudun düz bir çizgi oluşturacak şekilde kalçanı ve alttaki bacağını kaldır.",
+          "Tut, sonra taraf değiştir."
+        ],
+        "mistakes": [
+          "Kalçanın düşmesine izin vermek.",
+          "Öne doğru dönmek."
+        ],
+        "safety": "Dizden destekli kısa kaldıraç versiyonuyla başla; kasığında ağrı hissedersen dur.",
+        "cues": [
+          "Üst bacağı aşağı bastır"
+        ]
       }
     }
   },
@@ -877,6 +1237,28 @@
           "Heel down",
           "Chest up"
         ]
+      },
+      "tr": {
+        "name": "Cossack Squat",
+        "aliases": [
+          "Kazak squat"
+        ],
+        "setup": [
+          "Ayakların çok geniş, parmakların hafifçe dışa dönük dur.",
+          "Ağırlığını bir tarafa aktar."
+        ],
+        "execution": [
+          "Diğer bacak düz ve parmakları yukarı bakarken bir bacağın üstüne çömel.",
+          "Geri it ve diğer tarafa geç."
+        ],
+        "mistakes": [
+          "Bükülü bacağın topuğunu kaldırmak.",
+          "Sırtı yuvarlamak."
+        ],
+        "cues": [
+          "Topuk yerde",
+          "Göğüs dik"
+        ]
       }
     }
   },
@@ -927,6 +1309,27 @@
         ],
         "cues": [
           "Squeeze at the top"
+        ]
+      },
+      "tr": {
+        "name": "Smith Machine Hip Thrust",
+        "aliases": [
+          "Smith makinesinde hip thrust"
+        ],
+        "setup": [
+          "Smith makinesinin yanına bir sehpa koy ve üst sırtın üstünde olacak şekilde otur.",
+          "Pedli barı kalçanın üstüne hizala."
+        ],
+        "execution": [
+          "Barı kancasından çıkar ve kalçanı düz bir çizgiye kaldır.",
+          "Yavaşça indir ve tekrarla."
+        ],
+        "mistakes": [
+          "Beli aşırı kavislendirmek.",
+          "Barın kötü konumlanması."
+        ],
+        "cues": [
+          "Tepede sık"
         ]
       }
     }
@@ -979,6 +1382,28 @@
         "cues": [
           "Squeeze at the top"
         ]
+      },
+      "tr": {
+        "name": "Hip Thrust Machine",
+        "aliases": [
+          "Glute Drive Machine",
+          "Hip thrust makinesi"
+        ],
+        "setup": [
+          "Ped kalçanın üstünde, üst sırtın sırt dayamasında olacak şekilde makineye otur.",
+          "Ayaklarını platforma tam bas."
+        ],
+        "execution": [
+          "Kalçan omuzların ve dizlerinle aynı hizaya gelene kadar yukarı it.",
+          "Yavaşça indir."
+        ],
+        "mistakes": [
+          "Sırtı kavislendirmek.",
+          "Kısa tekrarlar."
+        ],
+        "cues": [
+          "Tepede sık"
+        ]
       }
     }
   },
@@ -1026,6 +1451,25 @@
         ],
         "cues": [
           "Soles together, squeeze"
+        ]
+      },
+      "tr": {
+        "name": "Frog Pump",
+        "aliases": [],
+        "setup": [
+          "Sırtüstü uzan, ayak tabanlarını birbirine bastır ve dizlerin dışa düşsün.",
+          "Topuklarını kalçana yakın çek."
+        ],
+        "execution": [
+          "Kalçanı sıkarak yukarı kaldır.",
+          "İndir ve hızla tekrarla."
+        ],
+        "mistakes": [
+          "Beli kavislendirmek.",
+          "Ayakların ayrılmasına izin vermek."
+        ],
+        "cues": [
+          "Tabanlar bitişik, sık"
         ]
       }
     }
@@ -1075,6 +1519,27 @@
         ],
         "cues": [
           "Knees out, hips up"
+        ]
+      },
+      "tr": {
+        "name": "Banded Glute Bridge",
+        "aliases": [
+          "Lastikli köprü"
+        ],
+        "setup": [
+          "Dizlerinin hemen üstüne bir mini bant geçir.",
+          "Dizlerin bükülü, ayakların yerde sırtüstü uzan."
+        ],
+        "execution": [
+          "Dizlerini banda karşı dışa it ve kalçanı kaldır.",
+          "Dizlerin içe çökmeden yavaşça indir."
+        ],
+        "mistakes": [
+          "Dizlerin içe düşmesi.",
+          "Parmak uçlarıyla itmek."
+        ],
+        "cues": [
+          "Dizler dışa, kalça yukarı"
         ]
       }
     }
@@ -1126,6 +1591,28 @@
         ],
         "cues": [
           "Stay tall"
+        ]
+      },
+      "tr": {
+        "name": "Cable Hip Abduction",
+        "aliases": [
+          "Standing Cable Abduction",
+          "Kablo abduction"
+        ],
+        "setup": [
+          "Alçak makaraya bir ayak bileği kayışı tak ve uzaktaki bileğine bağla.",
+          "Yan dur ve çerçeveyi tut."
+        ],
+        "execution": [
+          "Kayışlı bacağını yana kaldır.",
+          "Yavaşça geri dön."
+        ],
+        "mistakes": [
+          "Gövdeyi eğmek.",
+          "Savurmak."
+        ],
+        "cues": [
+          "Dik dur"
         ]
       }
     }
@@ -1179,6 +1666,28 @@
         "cues": [
           "Squeeze the inner thigh"
         ]
+      },
+      "tr": {
+        "name": "Cable Hip Adduction",
+        "aliases": [
+          "Standing Cable Adduction",
+          "Kablo adduction"
+        ],
+        "setup": [
+          "Alçak makaraya bir ayak bileği kayışı tak ve yakın bileğine bağla.",
+          "Yan dur ve denge için çerçeveyi tut."
+        ],
+        "execution": [
+          "Kayışlı bacağını destek bacağının önünden çapraz çek.",
+          "Yavaşça geri dön."
+        ],
+        "mistakes": [
+          "Eğilmek.",
+          "Savurmak."
+        ],
+        "cues": [
+          "İç uyluğu sık"
+        ]
       }
     }
   },
@@ -1231,6 +1740,28 @@
         "cues": [
           "Lift with the glutes"
         ]
+      },
+      "tr": {
+        "name": "Reverse Hyperextension Machine",
+        "aliases": [
+          "Reverse Hyper",
+          "Ters hiperekstansiyon"
+        ],
+        "setup": [
+          "Kalçan kenarda, ters hiperekstansiyon pedine yüzüstü uzan.",
+          "Ayak bileklerini kayışa geçir ve tutamakları tut."
+        ],
+        "execution": [
+          "Bacaklarını vücudunla aynı hizaya gelene kadar kaldır.",
+          "Kontrollü şekilde indir."
+        ],
+        "mistakes": [
+          "Altta kontrolsüzce sallanmak.",
+          "Tepede sırtı aşırı açmak."
+        ],
+        "cues": [
+          "Kalçayla kaldır"
+        ]
       }
     }
   },
@@ -1278,6 +1809,27 @@
         ],
         "cues": [
           "Squeeze the glute"
+        ]
+      },
+      "tr": {
+        "name": "Band Glute Kickback",
+        "aliases": [
+          "Lastikle kickback"
+        ],
+        "setup": [
+          "Bandı alçağa bağla ya da bir ayağına dola.",
+          "Bir desteğe tutunarak dik dur."
+        ],
+        "execution": [
+          "Kalçanı sıkarak bacağını geriye it.",
+          "Yavaşça geri dön."
+        ],
+        "mistakes": [
+          "Sırtı kavislendirmek.",
+          "Savurmak."
+        ],
+        "cues": [
+          "Kalçanı sık"
         ]
       }
     }
@@ -1327,6 +1879,27 @@
         ],
         "cues": [
           "Hips level"
+        ]
+      },
+      "tr": {
+        "name": "Single-Leg Hip Thrust",
+        "aliases": [
+          "Tek bacak hip thrust"
+        ],
+        "setup": [
+          "Üst sırtın bir sehpaya dayalı, bir ayağın yerde otur.",
+          "Diğer bacağını yerden kaldır."
+        ],
+        "execution": [
+          "Yerdeki topuğunla iterek kalçanı düz bir hizaya kaldır.",
+          "Yavaşça indir."
+        ],
+        "mistakes": [
+          "Kalçayı yana yatırmak.",
+          "Sırtı kavislendirmek."
+        ],
+        "cues": [
+          "Kalça düz"
         ]
       }
     }
@@ -1387,6 +1960,27 @@
         "cues": [
           "Chest up"
         ]
+      },
+      "tr": {
+        "name": "Goblet Cossack Squat",
+        "aliases": [
+          "Goblet Kazak squat"
+        ],
+        "setup": [
+          "Bir kettlebell ya da dambılı göğsünde tut.",
+          "Ayakların çok geniş dur."
+        ],
+        "execution": [
+          "Diğer bacak düzken bir bacağın üstüne çömel.",
+          "Geri it ve taraf değiştir."
+        ],
+        "mistakes": [
+          "Topuğun kalkması.",
+          "Çok öne eğilmek."
+        ],
+        "cues": [
+          "Göğüs dik"
+        ]
       }
     }
   },
@@ -1445,6 +2039,28 @@
         "cues": [
           "Press the knee down"
         ]
+      },
+      "tr": {
+        "name": "Short-Lever Copenhagen Plank",
+        "aliases": [
+          "Kneeling Copenhagen Plank",
+          "Dizden Kopenhag plank"
+        ],
+        "setup": [
+          "Bir sehpanın yanında yan yat ve üstteki dizini sehpaya koy.",
+          "Alt kolunun üstüne yaslan."
+        ],
+        "execution": [
+          "Vücudun düz olacak şekilde kalçanı ve alttaki bacağını kaldır.",
+          "Tut, sonra taraf değiştir."
+        ],
+        "mistakes": [
+          "Kalçayı düşürmek.",
+          "Öne doğru dönmek."
+        ],
+        "cues": [
+          "Dizi aşağı bastır"
+        ]
       }
     }
   },
@@ -1496,6 +2112,28 @@
         "cues": [
           "Lift from the inner thigh"
         ]
+      },
+      "tr": {
+        "name": "Side-Lying Hip Adduction",
+        "aliases": [
+          "Inner Thigh Raise",
+          "İç bacak kaldırma"
+        ],
+        "setup": [
+          "Yan yat ve üstteki bacağını öne çaprazla, ayağın alttaki dizinin önünde yere bassın.",
+          "Alttaki bacağını düz tut."
+        ],
+        "execution": [
+          "Alttaki bacağını olabildiğince yükseğe kaldır.",
+          "Yavaşça indir."
+        ],
+        "mistakes": [
+          "Kalçayı geriye döndürmek.",
+          "Savurmak."
+        ],
+        "cues": [
+          "İç uyluktan kaldır"
+        ]
       }
     }
   },
@@ -1543,6 +2181,27 @@
         ],
         "cues": [
           "Stay tall"
+        ]
+      },
+      "tr": {
+        "name": "Standing Band Hip Abduction",
+        "aliases": [
+          "Lastikle ayakta yana bacak açma"
+        ],
+        "setup": [
+          "İki ayak bileğine bir bant geçir.",
+          "Bir desteğe tutunarak dik dur."
+        ],
+        "execution": [
+          "Banda karşı bir bacağını yana kaldır.",
+          "Yavaşça geri dön."
+        ],
+        "mistakes": [
+          "Yana eğilmek.",
+          "Ayağı dışa çevirmek."
+        ],
+        "cues": [
+          "Dik dur"
         ]
       }
     }
@@ -1592,6 +2251,27 @@
         "cues": [
           "Knees out"
         ]
+      },
+      "tr": {
+        "name": "Seated Band Abduction",
+        "aliases": [
+          "Lastikle oturarak bacak açma"
+        ],
+        "setup": [
+          "Dizlerinin üstünde bir mini bantla bir sehpaya ya da sandalyeye otur.",
+          "Ayaklarını kalça genişliğinde yere bas."
+        ],
+        "execution": [
+          "Dizlerini banda karşı iki yana aç.",
+          "Yavaşça geri dön."
+        ],
+        "mistakes": [
+          "Gövdeyi sallamak.",
+          "Bandın geri fırlamasına izin vermek."
+        ],
+        "cues": [
+          "Dizler dışa"
+        ]
       }
     }
   },
@@ -1639,6 +2319,27 @@
         ],
         "cues": [
           "Feet together"
+        ]
+      },
+      "tr": {
+        "name": "Banded Clamshell",
+        "aliases": [
+          "Lastikli istiridye"
+        ],
+        "setup": [
+          "Dizlerinin üstüne bir mini bant geçir.",
+          "Dizlerin bükülü, ayakların bitişik yan yat."
+        ],
+        "execution": [
+          "Geriye dönmeden üstteki dizini banda karşı kaldır.",
+          "Yavaşça indir."
+        ],
+        "mistakes": [
+          "Kalçayı döndürmek.",
+          "Acele etmek."
+        ],
+        "cues": [
+          "Ayaklar bitişik"
         ]
       }
     }
@@ -1691,6 +2392,28 @@
         "cues": [
           "Hips high"
         ]
+      },
+      "tr": {
+        "name": "Side Plank Leg Raise",
+        "aliases": [
+          "Side Plank Abduction",
+          "Yan plank bacak kaldırma"
+        ],
+        "setup": [
+          "Alt kolunun üstünde yan plank pozisyonuna geç.",
+          "Kalçanı düz bir çizgiye kaldır."
+        ],
+        "execution": [
+          "Üstteki bacağını tavana doğru kaldır.",
+          "Kalçayı düşürmeden indir."
+        ],
+        "mistakes": [
+          "Kalçanın düşmesi.",
+          "Dönmek."
+        ],
+        "cues": [
+          "Kalça yüksek"
+        ]
       }
     }
   },
@@ -1742,6 +2465,28 @@
         "cues": [
           "Squeeze the glutes"
         ]
+      },
+      "tr": {
+        "name": "Bench Reverse Hyperextension",
+        "aliases": [
+          "Reverse Hyper on Bench",
+          "Sehpada ters hiperekstansiyon"
+        ],
+        "setup": [
+          "Kalçan sehpanın ucunda, yüzüstü uzan.",
+          "Sehpayı tut ve bacaklarının sarkmasına izin ver."
+        ],
+        "execution": [
+          "Düz bacaklarını vücudunla aynı hizaya gelene kadar kaldır.",
+          "Yavaşça indir."
+        ],
+        "mistakes": [
+          "Tepede aşırı kavislenmek.",
+          "Savurmak."
+        ],
+        "cues": [
+          "Kalçanı sık"
+        ]
       }
     }
   },
@@ -1788,6 +2533,27 @@
         ],
         "cues": [
           "Hips through"
+        ]
+      },
+      "tr": {
+        "name": "Band Pull-Through",
+        "aliases": [
+          "Lastikle pull-through"
+        ],
+        "setup": [
+          "Bandı arkanda alçağa bağla.",
+          "Bandı bacaklarının arasından tut ve öne yürü."
+        ],
+        "execution": [
+          "Kalçadan eğil.",
+          "Dik durmak için kalçanı öne sür."
+        ],
+        "mistakes": [
+          "Çömelmek.",
+          "Kollarla çekmek."
+        ],
+        "cues": [
+          "Kalça ileri"
         ]
       }
     }
@@ -1838,6 +2604,27 @@
         "cues": [
           "Inner thigh squeeze"
         ]
+      },
+      "tr": {
+        "name": "Band Hip Adduction",
+        "aliases": [
+          "Lastikle adduction"
+        ],
+        "setup": [
+          "Bandı ayak bileği hizasında bağla ve yakın bileğine dola.",
+          "Bir desteğe tutunarak yan dur."
+        ],
+        "execution": [
+          "Bacağını vücudunun önünden çapraz çek.",
+          "Yavaşça geri dön."
+        ],
+        "mistakes": [
+          "Eğilmek.",
+          "Savurmak."
+        ],
+        "cues": [
+          "İç uyluğu sık"
+        ]
       }
     }
   },
@@ -1885,6 +2672,28 @@
         ],
         "cues": [
           "Steady squeeze"
+        ]
+      },
+      "tr": {
+        "name": "Medicine Ball Adductor Squeeze",
+        "aliases": [
+          "Ball Squeeze",
+          "Dizler arasında top sıkma"
+        ],
+        "setup": [
+          "Dizlerin bükülü sırtüstü uzan.",
+          "Dizlerinin arasına bir sağlık topu ya da yumuşak bir top koy."
+        ],
+        "execution": [
+          "Topu sıkıca sık ve tut.",
+          "Yavaşça bırak."
+        ],
+        "mistakes": [
+          "Kalçayı kaldırmak.",
+          "Nefesi tutmak."
+        ],
+        "cues": [
+          "Sabit sıkış"
         ]
       }
     }
@@ -1934,6 +2743,28 @@
         ],
         "cues": [
           "Knee up, stay tall"
+        ]
+      },
+      "tr": {
+        "name": "Cable Hip Flexion",
+        "aliases": [
+          "Standing Cable Knee Raise",
+          "Kablo diz çekme"
+        ],
+        "setup": [
+          "Alçak makaraya bir ayak bileği kayışı tak ve bir bileğine bağla.",
+          "Ağırlık bloğuna arkanı dön ve bir desteğe tutun."
+        ],
+        "execution": [
+          "Dizini kalça hizasına kaldır.",
+          "Yavaşça indir."
+        ],
+        "mistakes": [
+          "Geriye yaslanmak.",
+          "Savurmak."
+        ],
+        "cues": [
+          "Diz yukarı, dik dur"
         ]
       }
     }
@@ -1985,6 +2816,28 @@
         "cues": [
           "Back flat"
         ]
+      },
+      "tr": {
+        "name": "Band Supine March",
+        "aliases": [
+          "Banded March",
+          "Lastikle yerde yürüyüş"
+        ],
+        "setup": [
+          "Ayaklarına bir mini bant geçir.",
+          "Belin yere bastırılmış, sırtüstü uzan."
+        ],
+        "execution": [
+          "Banda karşı bir dizini göğsüne doğru çek.",
+          "İndir ve değiştir."
+        ],
+        "mistakes": [
+          "Sırtı kavislendirmek.",
+          "Acele etmek."
+        ],
+        "cues": [
+          "Sırt düz"
+        ]
       }
     }
   },
@@ -2032,6 +2885,27 @@
         ],
         "cues": [
           "Stand tall, press firm"
+        ]
+      },
+      "tr": {
+        "name": "Glute Medius Wall Press",
+        "aliases": [
+          "Duvara diz bastırma"
+        ],
+        "setup": [
+          "Yakın dizin bükülü ve duvara kalça hizasında bastırılmış şekilde duvara yan dur.",
+          "Dıştaki bacağının üstünde dik dur."
+        ],
+        "execution": [
+          "Destek kalçan seni düz tutmak için çalışırken bükülü dizini duvara bastır.",
+          "Tut, sonra değiştir."
+        ],
+        "mistakes": [
+          "Duvara yaslanmak.",
+          "Destek dizinin içe çökmesine izin vermek."
+        ],
+        "cues": [
+          "Dik dur, sıkıca bastır"
         ]
       }
     }
@@ -2085,6 +2959,28 @@
         ],
         "cues": [
           "Ribs down, squeeze"
+        ]
+      },
+      "tr": {
+        "name": "Barbell Glute Bridge",
+        "aliases": [
+          "Loaded Glute Bridge",
+          "Halterli köprü"
+        ],
+        "setup": [
+          "Pedli bir halter kalçanın üstünde, yere otur.",
+          "Dizlerin bükülü, ayakların yaklaşık kalça genişliğinde yerde olacak şekilde sırtüstü uzan."
+        ],
+        "execution": [
+          "Topuklarınla it ve vücudun omuzlardan dizlere düz olana kadar kalçanı kaldır.",
+          "Tepede kalçanı sık, sonra barı kontrollü şekilde yere indir."
+        ],
+        "mistakes": [
+          "Tepede beli kavislendirmek.",
+          "Parmak uçlarıyla itmek."
+        ],
+        "cues": [
+          "Kaburgalar aşağı, sık"
         ]
       }
     }

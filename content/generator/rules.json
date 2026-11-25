@@ -6,6 +6,10 @@
         "en": {
           "name": "Full body",
           "info": "Every session trains the whole body."
+        },
+        "tr": {
+          "name": "Full Body",
+          "info": "Her antrenman tüm vücudu çalıştırır."
         }
       }
     },
@@ -15,6 +19,10 @@
         "en": {
           "name": "Upper / Lower",
           "info": "Upper-body and lower-body sessions take turns."
+        },
+        "tr": {
+          "name": "Upper / Lower",
+          "info": "Üst vücut ve alt vücut antrenmanları sırayla gelir."
         }
       }
     },
@@ -24,6 +32,10 @@
         "en": {
           "name": "Push / Pull / Legs",
           "info": "Pushing muscles, pulling muscles and legs each get a session."
+        },
+        "tr": {
+          "name": "Push / Pull / Legs",
+          "info": "İtiş kasları, çekiş kasları ve bacaklar ayrı birer antrenman alır."
         }
       }
     },
@@ -33,6 +45,10 @@
         "en": {
           "name": "Upper / Lower + Push / Pull / Legs",
           "info": "Two broad sessions, then three focused ones, so every muscle is trained twice."
+        },
+        "tr": {
+          "name": "Upper / Lower + Push / Pull / Legs",
+          "info": "İki geniş antrenman, ardından üç odaklı antrenman; böylece her kas iki kez çalışır."
         }
       }
     },
@@ -42,6 +58,10 @@
         "en": {
           "name": "Body part split",
           "info": "One session each for chest, back, legs, shoulders and arms."
+        },
+        "tr": {
+          "name": "Bölgesel split",
+          "info": "Göğüs, sırt, bacak, omuz ve kol için birer antrenman."
         }
       }
     }
@@ -61,6 +81,9 @@
         {
           "l10n": {
             "en": {
+              "name": "Full Body A"
+            },
+            "tr": {
               "name": "Full Body A"
             }
           },
@@ -187,6 +210,9 @@
         {
           "l10n": {
             "en": {
+              "name": "Full Body B"
+            },
+            "tr": {
               "name": "Full Body B"
             }
           },
@@ -339,6 +365,9 @@
           "l10n": {
             "en": {
               "name": "Full Body A"
+            },
+            "tr": {
+              "name": "Full Body A"
             }
           },
           "slots": [
@@ -452,6 +481,9 @@
         {
           "l10n": {
             "en": {
+              "name": "Full Body B"
+            },
+            "tr": {
               "name": "Full Body B"
             }
           },
@@ -569,6 +601,9 @@
         {
           "l10n": {
             "en": {
+              "name": "Full Body C"
+            },
+            "tr": {
               "name": "Full Body C"
             }
           },
@@ -713,6 +748,9 @@
           "l10n": {
             "en": {
               "name": "Full Body A"
+            },
+            "tr": {
+              "name": "Full Body A"
             }
           },
           "slots": [
@@ -819,6 +857,9 @@
           "l10n": {
             "en": {
               "name": "Full Body B"
+            },
+            "tr": {
+              "name": "Full Body B"
             }
           },
           "slots": [
@@ -921,6 +962,9 @@
         {
           "l10n": {
             "en": {
+              "name": "Full Body C"
+            },
+            "tr": {
               "name": "Full Body C"
             }
           },
@@ -1038,6 +1082,9 @@
           "l10n": {
             "en": {
               "name": "Push"
+            },
+            "tr": {
+              "name": "Push"
             }
           },
           "slots": [
@@ -1141,6 +1188,9 @@
           "l10n": {
             "en": {
               "name": "Pull"
+            },
+            "tr": {
+              "name": "Pull"
             }
           },
           "slots": [
@@ -1242,6 +1292,9 @@
         {
           "l10n": {
             "en": {
+              "name": "Legs"
+            },
+            "tr": {
               "name": "Legs"
             }
           },
@@ -1379,6 +1432,9 @@
           "l10n": {
             "en": {
               "name": "Upper A"
+            },
+            "tr": {
+              "name": "Upper A"
             }
           },
           "slots": [
@@ -1497,6 +1553,9 @@
           "l10n": {
             "en": {
               "name": "Lower A"
+            },
+            "tr": {
+              "name": "Lower A"
             }
           },
           "slots": [
@@ -1607,6 +1666,9 @@
         {
           "l10n": {
             "en": {
+              "name": "Upper B"
+            },
+            "tr": {
               "name": "Upper B"
             }
           },
@@ -1725,6 +1787,9 @@
         {
           "l10n": {
             "en": {
+              "name": "Lower B"
+            },
+            "tr": {
               "name": "Lower B"
             }
           },
@@ -1850,6 +1915,9 @@
           "l10n": {
             "en": {
               "name": "Upper"
+            },
+            "tr": {
+              "name": "Upper"
             }
           },
           "slots": [
@@ -1968,6 +2036,9 @@
           "l10n": {
             "en": {
               "name": "Lower"
+            },
+            "tr": {
+              "name": "Lower"
             }
           },
           "slots": [
@@ -2079,6 +2150,9 @@
           "l10n": {
             "en": {
               "name": "Push"
+            },
+            "tr": {
+              "name": "Push"
             }
           },
           "slots": [
@@ -2181,6 +2255,9 @@
           "l10n": {
             "en": {
               "name": "Pull"
+            },
+            "tr": {
+              "name": "Pull"
             }
           },
           "slots": [
@@ -2282,6 +2359,9 @@
         {
           "l10n": {
             "en": {
+              "name": "Legs"
+            },
+            "tr": {
               "name": "Legs"
             }
           },
@@ -2416,6 +2496,9 @@
           "l10n": {
             "en": {
               "name": "Chest"
+            },
+            "tr": {
+              "name": "Göğüs"
             }
           },
           "slots": [
@@ -2520,6 +2603,9 @@
           "l10n": {
             "en": {
               "name": "Back"
+            },
+            "tr": {
+              "name": "Sırt"
             }
           },
           "slots": [
@@ -2621,6 +2707,9 @@
           "l10n": {
             "en": {
               "name": "Legs"
+            },
+            "tr": {
+              "name": "Bacak"
             }
           },
           "slots": [
@@ -2744,6 +2833,9 @@
           "l10n": {
             "en": {
               "name": "Shoulders"
+            },
+            "tr": {
+              "name": "Omuz"
             }
           },
           "slots": [
@@ -2847,6 +2939,9 @@
           "l10n": {
             "en": {
               "name": "Arms"
+            },
+            "tr": {
+              "name": "Kol"
             }
           },
           "slots": [
@@ -2964,6 +3059,9 @@
           "l10n": {
             "en": {
               "name": "Push A"
+            },
+            "tr": {
+              "name": "Push A"
             }
           },
           "slots": [
@@ -3067,6 +3165,9 @@
           "l10n": {
             "en": {
               "name": "Pull A"
+            },
+            "tr": {
+              "name": "Pull A"
             }
           },
           "slots": [
@@ -3168,6 +3269,9 @@
         {
           "l10n": {
             "en": {
+              "name": "Legs A"
+            },
+            "tr": {
               "name": "Legs A"
             }
           },
@@ -3292,6 +3396,9 @@
           "l10n": {
             "en": {
               "name": "Push B"
+            },
+            "tr": {
+              "name": "Push B"
             }
           },
           "slots": [
@@ -3394,6 +3501,9 @@
           "l10n": {
             "en": {
               "name": "Pull B"
+            },
+            "tr": {
+              "name": "Pull B"
             }
           },
           "slots": [
@@ -3495,6 +3605,9 @@
         {
           "l10n": {
             "en": {
+              "name": "Legs B"
+            },
+            "tr": {
               "name": "Legs B"
             }
           },

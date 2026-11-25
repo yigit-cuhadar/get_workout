@@ -39,6 +39,10 @@
     "en": {
       "name": "Dumbbell Upper/Lower 4-Day",
       "summary": "Two upper-body and two lower-body sessions a week with dumbbells and a bench, so every muscle is trained twice. A complete home plan that progresses through reps first, then weight."
+    },
+    "tr": {
+      "name": "Dambıl Upper/Lower 4 Gün",
+      "summary": "Haftada dambıl ve sehpayla iki üst vücut ve iki alt vücut antrenmanı; her kas iki kez çalışır. Önce tekrar, sonra ağırlık artırarak ilerleyen eksiksiz bir ev planı."
     }
   },
   "days": [

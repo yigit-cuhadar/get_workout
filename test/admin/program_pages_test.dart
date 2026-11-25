@@ -17,6 +17,7 @@ import 'package:get_workout/admin/programs/presentation/program_editor_cubit.dar
 import 'package:get_workout/admin/programs/presentation/program_editor_page.dart';
 import 'package:get_workout/admin/programs/presentation/program_list_cubit.dart';
 import 'package:get_workout/admin/programs/presentation/program_list_page.dart';
+import 'package:get_workout/features/exercises/domain/content_rules.dart';
 import 'package:get_workout/features/programs/domain/catalogue_rules.dart';
 import 'package:mocktail/mocktail.dart';
 
@@ -70,7 +71,8 @@ void main() {
   test('every field outside the days the editor has an input for is known', () {
     final known = {
       ...programKeys,
-      for (final key in programTextKeys) 'l10n.en.$key',
+      for (final language in languages)
+        for (final key in programTextKeys) 'l10n.$language.$key',
     };
     expect(known, containsAll(programEditorFields.keys));
   });

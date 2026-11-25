@@ -35,6 +35,10 @@
     "en": {
       "name": "Lean-Down Circuits 3-Day",
       "summary": "Dumbbell and bodyweight circuits with short rests between rounds, three times a week. A busy, sweaty way to train the whole body that pairs well with sensible eating."
+    },
+    "tr": {
+      "name": "Yağ Yakımı Circuit 3 Gün",
+      "summary": "Haftada üç kez, turlar arasında kısa dinlenmelerle dambıl ve vücut ağırlığı circuit'leri. Tüm vücudu çalıştıran, tempolu ve terleten bir yol; dengeli beslenmeyle iyi gider."
     }
   },
   "days": [

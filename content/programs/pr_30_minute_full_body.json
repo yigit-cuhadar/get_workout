@@ -36,6 +36,10 @@
     "en": {
       "name": "30-Minute Full Body 3-Day",
       "summary": "Three full-body sessions that fit in about half an hour. Each pairs a lower-body and an upper-body exercise in two supersets, then finishes with a short circuit for the shoulders, arms or core."
+    },
+    "tr": {
+      "name": "30 Dakikalık Full Body 3 Gün",
+      "summary": "Yaklaşık yarım saate sığan üç full body antrenman. Her biri iki superset'te bir alt vücut ve bir üst vücut hareketini eşleştirir, sonra omuz, kol ya da karın için kısa bir circuit ile biter."
     }
   },
   "days": [
