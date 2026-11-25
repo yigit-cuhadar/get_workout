@@ -2247,10 +2247,6 @@ Decisions (the canvases they were drawn on are deleted):
   - The Live Activity bridge (`AppDelegate.swift`'s `WorkoutActivity`,
     `WorkoutActivityTaps` and a generic attributes type) could move to a package with a native iOS
     plugin once a second app needs one; the widget views stay in the app.
-  - A messaging addition (to `forge_notifications` or a new package):
-    following a topic per language with leaving the others, foreground
-    display of pushed notifications, auto-init off until allowed (the
-    app's `FcmAnnouncementRepository`).
 - `forge_purchases` has no "unavailable" backend; the app swaps in its own
   repository for release builds without keys. Move it into the package when
   it is next changed.
@@ -4945,7 +4941,13 @@ the feature you are about to touch, and keep it true when you change it.
   2026-11-24). Follows run one at a time, so two Premium changes never
   interleave their topic changes. The install's push token is stored on
   its device record for the panel's test sends (see
-  `users/{uid}/devices`).
+  `users/{uid}/devices`). Code: forge_messaging holds the topic following
+  (`LanguageTopics`, `TopicRepository`), the foreground display and taps,
+  the auto-init rule and the push token (`PushTokenSource`); the app
+  passes in the prefix `announcements`, its languages, the segments
+  `free` and `premium`, id 300 and payload `announcement`
+  (`NotificationsModule`), and maps the Premium state to a segment
+  (`FollowAnnouncements`).
 - **Sending announcements**: the admin panel's Announcements page
   (`lib/admin/announcements`) calls `sendAnnouncement` after a confirmation
   that it reaches every user who allowed notifications and cannot be

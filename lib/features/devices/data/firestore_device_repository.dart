@@ -5,11 +5,11 @@ import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:forge_core/forge_core.dart';
 import 'package:forge_firebase/forge_firebase.dart';
+import 'package:forge_messaging/forge_messaging.dart';
 
 import '../../../core/device_details.dart';
 import '../domain/device.dart';
 import '../domain/device_repository.dart';
-import 'push_token_source.dart';
 
 /// Records the device in Firestore. The install id is a random one kept in
 /// [_directory] (the app's support directory: it survives updates, not a
