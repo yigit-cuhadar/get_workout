@@ -57,7 +57,9 @@
           "Dumbbell Biceps Curl",
           "DB Curl",
           "Dambıl ön kol curl",
-          "Ön kol curl"
+          "Ön kol curl",
+          "Dambıl pazu curl",
+          "Pazu curl"
         ],
         "setup": [
           "Her elinde bir dambıl, avuç içlerin öne bakacak şekilde dik dur.",
@@ -139,7 +141,8 @@
         "aliases": [
           "Standing Barbell Curl",
           "BB Curl",
-          "Halter ön kol curl"
+          "Halter ön kol curl",
+          "Halter pazu curl"
         ],
         "setup": [
           "Barı avuç içlerin öne bakacak şekilde, ellerin omuz genişliğinde tut.",
@@ -532,7 +535,8 @@
         "name": "EZ-Bar Curl",
         "aliases": [
           "EZ Curl",
-          "EZ bar ön kol curl"
+          "EZ bar ön kol curl",
+          "EZ bar pazu curl"
         ],
         "setup": [
           "EZ barı açılı kısımlarından, avuç içlerin yukarı bakacak şekilde tut.",
@@ -940,7 +944,8 @@
         "name": "Cable Curl",
         "aliases": [
           "Cable Biceps Curl",
-          "Kablo ön kol curl"
+          "Kablo ön kol curl",
+          "Kablo pazu curl"
         ],
         "setup": [
           "Alçak makaraya düz bir bar tak.",
@@ -2456,7 +2461,8 @@
         "name": "Machine Biceps Curl",
         "aliases": [
           "Biceps Curl Machine",
-          "Makine ön kol curl"
+          "Makine ön kol curl",
+          "Makine pazu curl"
         ],
         "setup": [
           "Koltuğu dirseklerin makinenin dönme noktasıyla hizalanacak şekilde ayarla.",
@@ -2530,7 +2536,9 @@
         "aliases": [
           "Resistance Band Curl",
           "Direnç bandı ön kol curl",
-          "Lastik ön kol curl"
+          "Lastik ön kol curl",
+          "Direnç bandı pazu curl",
+          "Lastik pazu curl"
         ],
         "setup": [
           "Ayakların kalça genişliğinde, bandın ortasına bas.",
@@ -3102,7 +3110,8 @@
         "name": "Suspension Trainer Biceps Curl",
         "aliases": [
           "TRX Biceps Curl",
-          "TRX ön kol curl"
+          "TRX ön kol curl",
+          "TRX pazu curl"
         ],
         "setup": [
           "Bağlantı noktasına dön, tutamakları avuç içlerin yukarı bakacak şekilde, kolların düz tut.",
