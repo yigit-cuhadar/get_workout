@@ -3318,13 +3318,15 @@ the feature you are about to touch, and keep it true when you change it.
   (back squat, bench press, pull-up, lat pulldown, deadlift) play in the app
   on the simulator from a debug page (Profile › Animation spike). Package:
   Forge #112 (draft, branch `feat/model-viewer-skinning`, worktree
-  `.claude/worktrees/model-viewer-skinning`). App: this branch
-  (`spike/exercise-animation`, worktree `apps/get_workout_anim`), which
-  points at the package through a gitignored `pubspec_overrides.yaml`, so
-  its CI fails until #112 is tagged (PR #271, draft). Recipes approved: 0 of
+  `.claude/worktrees/model-viewer-skinning`). App: PR #271 (draft, branch
+  `spike/exercise-animation`, worktree `apps/get_workout_anim`), which
+  holds the tools, the five exercises and the debug page, and points at
+  the package through a gitignored `pubspec_overrides.yaml`, so its CI
+  fails until #112 is tagged. Recipes approved: 0 of
   419 live exercises (which carry 852 mistakes). Review page of the spike:
   https://claude.ai/artifact/2FhtzLavcFCNdBh1rZeFHN
-- **Tools** (`tool/animation/`, need Blender 5.2 at `/Applications` and
+- **Tools** (`tool/animation/` on that branch; they need Blender 5.2 at
+  `/Applications` and
   python3 with numpy and Pillow): `rig.py` fits the skeleton to a body
   model and skins its 36 parts; `pose.py` solves a pose (two-bone IK for
   arms and legs, helper bones that turn half way at hip, knee, shoulder and
