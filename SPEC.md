@@ -821,9 +821,6 @@ Group 14, program generator rebuild (owner's picks, 2026-11-22; see Feature note
 Open after Group 14 (merged as #221–#230, live on dev and prod with
 rules version 1):
 - The app's generator offline state is not tried on a device.
-- Panel at about 800 px wide: with History open the draft banner wraps one
-  letter per line and the title breaks; an out-of-range error widens its
-  whole column.
 - For the owner to tune in the panel: the seed rules leave 69 of the 140
   standard answers with a target muscle without direct work and 83 with a
   day under half the session; the intermediate Upper/Lower gives glutes 21
@@ -5345,7 +5342,11 @@ not in a separate dashboard tool.
   seeds them and nothing is editable. Number fields write only text that
   reads as a number; scores take negative numbers; chip lists keep their
   stored order. App settings shares the publish bar, the change table
-  and the history pane (`lib/admin/shell/publishing.dart`).
+  and the history pane (`lib/admin/shell/publishing.dart`). The pane sits
+  beside the page while the page keeps 600 px, else over the page's right
+  side (an 800 px window); the bar's buttons move under its count when
+  both do not fit a line. A problem under a rules field asks its table
+  column for at most 160 px and wraps.
   The Simulator (AG4) runs `generateProgram` with `explain: true`. Its
   answers are its own (kept while switching tabs, never part of the
   draft): Rules ("Published vN" / "My changes", sent as `rules`; My

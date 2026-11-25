@@ -205,42 +205,29 @@ class _AppSettingsView extends StatelessWidget {
             default:
           }
         },
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(
-                      Gap.lg,
-                      Gap.lg,
-                      Gap.lg,
-                      0,
+        child: PageWithHistory(
+          page: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(Gap.lg, Gap.lg, Gap.lg, 0),
+                child: PageHeader(
+                  title: 'App settings',
+                  subtitle: 'Remote Config every app fetches',
+                  trailing: [
+                    OutlinedButton(
+                      onPressed: historyOpen
+                          ? cubit.closeHistory
+                          : cubit.openHistory,
+                      child: const Text('History'),
                     ),
-                    child: PageHeader(
-                      title: 'App settings',
-                      subtitle: 'Remote Config every app fetches',
-                      trailing: [
-                        OutlinedButton(
-                          onPressed: historyOpen
-                              ? cubit.closeHistory
-                              : cubit.openHistory,
-                          child: const Text('History'),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const Expanded(child: _Settings()),
-                ],
+                  ],
+                ),
               ),
-            ),
-            if (historyOpen) ...[
-              const VerticalDivider(width: 1),
-              const SizedBox(width: historyWidth, child: _History()),
+              const Expanded(child: _Settings()),
             ],
-          ],
+          ),
+          history: historyOpen ? const _History() : null,
         ),
       ),
     );
