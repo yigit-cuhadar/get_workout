@@ -22,8 +22,9 @@ where they stand. A kit is
            along `along` (a weight stack rising as the bar comes down)
 
 A point is [x, y, z] from the kit's own origin on the floor,
-{"grips": [along the bar, forward of it, above it]} between the two hands, or
-{"at": [x, y, z], "with": mover}.
+{"grips": [along the bar, forward of it, above it]} between the two hands,
+{"at": [x, y, z], "with": mover}, or {"between": [point, point], "t": how far
+from the first to the second, past it above 1}.
 """
 
 import json
@@ -121,6 +122,9 @@ def gear_of(uses):
                     along = unit(left - right)
                     up = unit((0, 0, 1) - along[2] * along)
                     return (left + right) / 2 + np.stack([along, np.cross(up, along), up], axis=1) @ spec["grips"]
+                if "between" in spec:
+                    a, b = (point(end, solved) for end in spec["between"])
+                    return a + (b - a) * spec["t"]
                 mover = movers[spec["with"]]
                 moved = point(mover["follows"]) - point(mover["follows"], first)
                 return turn @ (np.array(spec["at"], float) + np.array(mover["along"], float) * (moved @ (turn @ mover["axis"]))) + at

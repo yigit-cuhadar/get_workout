@@ -1,5 +1,5 @@
 {
-  "status": "draft",
+  "status": "review",
   "view": [35, 8],
   "poses": {
     "top": {
@@ -24,5 +24,25 @@
   },
   "keys": [[0, "top"], [1.6, "bottom"], [1.8, "bottom"], [2.8, "top"], [3.3, "top"]],
   "gear": [{"kit": "barbell"}],
-  "mistakes": []
+  "mistakes": [
+    {
+      "line": 0,
+      "status": "review",
+      "ring": ["knee_L", "knee_R"],
+      "poses": {"top": {"knee": [0.42, -0.91, 0]}, "bottom": {"knee": [0.04, -1, 0]}}
+    },
+    {
+      "line": 1,
+      "status": "review",
+      "ring": ["hip_L", "hip_R", "chest"],
+      "poses": {"rise": {"extends": "bottom", "pelvis": [0, 0.27, 0.76], "pelvis_rot": [62, 0, 0], "lumbar": 6, "chest": 6, "neck": -35}},
+      "keys": [[0, "top"], [1.6, "bottom"], [1.8, "bottom"], [2.4, "rise"], [3.1, "top"], [3.6, "top"]]
+    },
+    {
+      "line": 2,
+      "status": "review",
+      "ring": ["foot_L", "foot_R"],
+      "poses": {"bottom": {"foot": {"pitch": 28}}}
+    }
+  ]
 }

@@ -2003,7 +2003,7 @@ Decisions (the canvases they were drawn on are deleted):
   (ProgramCard name wraps beside its tags, Forge), G4 unchanged (Clear all
   keeps its own row); the Next/Done keyboard bar above set entry is
   removed (owner, Forge StepperField).
-- Exercise gear (2026-11-25), canvas https://claude.ai/artifact/6oF4mJVecSe7n2gtZyZ5fW: EK1 today's tones kept (frames in line, steel and pads in line-strong, plates in ink-muted; colour stays with the muscles), EK2 A (the barbell has thick sleeves and two plates a side), EK3 A (the flat bench is a pad on a beam with two posts and two cross feet), EK4 A (the pull-up bar is the bar and its end caps, no posts, so the body fills more of the card), EK5 today's lat pulldown machine kept (with its weight stack rising), EK6 B (a light round floor under the model with the body's soft shadow on it, for every exercise).
+- Exercise gear (2026-11-25), canvas https://claude.ai/artifact/6oF4mJVecSe7n2gtZyZ5fW: EK1 today's tones kept (frames in line, steel and pads in line-strong, plates in ink-muted; colour stays with the muscles), EK2 A (the barbell has thick sleeves and two plates a side), EK3 A (the flat bench is a pad on a beam with two posts and two cross feet), EK4 A (the pull-up bar is the bar and its end caps, no posts, so the body fills more of the card), EK5 today's lat pulldown machine kept (with its weight stack rising), EK6 B (a light round floor under the model with the body's soft shadow on it, for every exercise). EK7-EK9: the smith machine (two rails, a top bar, two feet), the squat box and the landmine (a floor pivot, the bar to the hands) approved as drawn.
 - Exercise animations (2026-11-25), canvas https://claude.ai/artifact/RGTHJ9yhTVxSxnX1LG3ZL2: HA1 B with the mistakes made together with the movement (every exercise gets its correct form and each of its `mistakes` a pose can show), HA2 C (the first card of Exercise detail gets two tabs, Hareket and Kaslar; Kaslar is today's front and back pair, the legend stays under both), HA3 A (chips under the animation, "Doğru" and one per mistake; the picked mistake plays in the same place, its faulty region ringed in danger, its text under it), HA4 A (a play button beside ⋯ on the open exercise card of the workout; it opens a bottom sheet with the animation, the cues and a link to the full detail). To draw in the studio before it is built. Not asked yet: playback controls.
 - Workout summary redesign (2026-11-23), canvas https://claude.ai/artifact/EAeojwrrTVCeAdhA58w1Qe: S1 unchanged, S2 A (records as one highlighted card with gain badges), S3 A then S3b B (front and back models over the top four muscles as set bars), S4 B (each exercise's sets as a table, two shown, the rest behind + n more).
 - App icon and launch (2026-11-23): the owner's own logo, two 1024 PNGs
@@ -3364,7 +3364,7 @@ the feature you are about to touch, and keep it true when you change it.
   uses it goes to review; a change to a kit changes every exercise using
   it, so those are rendered again. Approved so far (2026-11-25, Design ›
   Exercise gear): `barbell`, `flat_bench`, `pull_up_bar`,
-  `lat_pulldown_machine`. Every kit uses the same four tones (`gear`,
+  `lat_pulldown_machine`, `smith_machine`, `squat_box`, `landmine`. Every kit uses the same four tones (`gear`,
   `steel`, `pad`, `plate`). Under every exercise lies a light floor disc
   with the body's soft shadow; the preview paints it, the app's viewer does
   not draw it yet (part of Animations in the app).
