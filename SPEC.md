@@ -135,6 +135,15 @@ App-wide decisions only. How each feature behaves is under Feature notes.
   Console, RevenueCat. The Apple Developer account exists (2026-11-17,
   team A8J42TV74R); iOS push and Live Activity on a real device still need
   their setup. Development continues without them.
+- **Exercise animations** (owner's picks, 2026-11-25): every exercise is
+  shown as a skeletal animation on the app's own body model, not as video;
+  Claude writes them all. The rules live only in this SPEC (Feature notes ›
+  Exercise animations). Each exercise is one recipe file,
+  `content/animations/<id>.json`, which also carries its status. The owner
+  approves batch by batch from a review page, then a question; nothing
+  unapproved reaches `main`. The recipe (poses, timing, gear) is stored in
+  Firestore next to the catalogue and solved on the phone; body models and
+  the solver ship in the app. Batches follow the equipment families.
 
 ## Vocabulary
 
@@ -223,6 +232,12 @@ the user's equipment first (an exercise fits when `equipment` or any of its
 `equipmentAlternatives` sets fits), then popularity; pinned first, excluded
 removed.
 Variations are the other exercises of the same `family`, ordered by rank.
+
+**`exercises/{id}/animation/main`** (planned, Group 15): the exercise's
+animation recipe, a few KB: key poses with their times, the gear, the muscles
+are the exercise's own. Seeded from `content/animations/<id>.json` when its
+status is `approved`; `updatedAt`, `contentHash` as elsewhere. The recipe's
+fields are put to the owner before the first import.
 
 **`programs/{id}`** (catalog card): `status`, `premium`, `level`, `goal`,
 `daysPerWeek`, `lengthWeeks?`, `equipment[]` (the primary `equipment` of
@@ -846,6 +861,14 @@ rules version 1):
   sets, above the 20 band. The exercise ratings and seed rules are the
   Architect's first pass.
 
+Group 15, exercise animations (owner's picks, 2026-11-25; see Feature notes › Exercise animations)
+- [ ] Animated viewer — `forge_model_viewer` reads skins, joins models and plays looped clips (Forge #112, draft); studio card and Widgetbook use case — the package's tests pass and the catalog shows the animated form
+- [ ] Recipe files and tools — one `content/animations/<id>.json` per exercise with poses, timing, gear and status; a validator; the preview tool reads it and lists the next batch; the five spike exercises moved into it — the five render from their files as they do from `tool/animation/exercises.py`
+- [ ] Solver on the phone — the pose solver and the gear builder in Dart, in the package — for every approved recipe the phone's joints match the preview tool's within a millimetre
+- [ ] Recipes in Firestore — the import writes approved recipes to `exercises/{id}/animation/main`, rules, the app reads and caches them — an approved exercise plays on the simulator with no animation asset in the app
+- [ ] Animations in the app — which animations an exercise gets and where they show (to be drawn and picked), both body models — plays on the simulator and at 60 fps on the owner's phone
+- [ ] All exercises — batches of 10-15 by equipment family, each approved by the owner — every live exercise has an approved recipe
+
 After release (owner's list, 2026-11-19; not before the first release):
 - Health improvements.
 - Apple Watch improvements.
@@ -853,7 +876,7 @@ After release (owner's list, 2026-11-19; not before the first release):
 - Streaks, weekly goals, achievements and the like.
 - Progressive overload suggestions.
 - Quick routines and templates outside programs.
-- Exercise images and videos.
+- Exercise images and videos (animations: taken up as Group 15, 2026-11-25).
 - Turkish and other languages.
 - Timers for time-based sets and exercises, and rest set per series.
 
@@ -3286,6 +3309,79 @@ the feature you are about to touch, and keep it true when you change it.
   variation. Anything an exercise lacks is left out, so a custom exercise
   shows the model, its tag, equipment, Note and nothing below. Records and
   progress left the page; an exercise's strength page opens from Progress.
+
+### Exercise animations
+
+- **Where it stands** (keep this entry current): five spike exercises
+  (back squat, bench press, pull-up, lat pulldown, deadlift) play in the app
+  on the simulator from a debug page (Profile › Animation spike). Package:
+  Forge #112 (draft, branch `feat/model-viewer-skinning`, worktree
+  `.claude/worktrees/model-viewer-skinning`). App: this branch
+  (`spike/exercise-animation`, worktree `apps/get_workout_anim`), which
+  points at the package through a gitignored `pubspec_overrides.yaml`, so
+  its CI fails until #112 is tagged. Recipes approved: 0 of 419 live
+  exercises. Review page of the spike:
+  https://claude.ai/artifact/2FhtzLavcFCNdBh1rZeFHN
+- **Tools** (`tool/animation/`, need Blender 5.2 at `/Applications` and
+  python3 with numpy and Pillow): `rig.py` fits the skeleton to a body
+  model and skins its 36 parts; `pose.py` solves a pose (two-bone IK for
+  arms and legs, helper bones that turn half way at hip, knee, shoulder and
+  elbow, a thumb bone, finger curl); `exercises.py` holds the spike's five
+  exercises until recipes replace it; `preview.sh <exercise> [keys|loop]
+  [male|female]` renders into `build/animation/` (key poses in about 6 s);
+  `export.py` writes the skinned body, and per exercise the gear and a clip,
+  for the debug page.
+- **A recipe**: key poses with their times, the gear, a status. A pose
+  gives the pelvis, the spine's angles, where each hand grips and each foot
+  stands, where elbows and knees point; the solver does the rest, so hands
+  stay on the bar and feet on the floor. Gear is built from boxes and
+  cylinders: fixed, carried by the hands, or stretched between two points
+  (a cable). Muscles come from the catalogue's `mainMuscles` and
+  `secondaryMuscles`, never from the recipe.
+- **Status** (in the recipe file): `draft` (being written), `review`
+  (rendered, checked, waiting for the owner), `approved`, `fix` with the
+  owner's `note`. Only `approved` recipes are imported. This entry's count
+  and the next batch are the only state kept here.
+- **Order**: by equipment group, the catalogue's first matching code
+  deciding: barbell (barbell, ez_bar, trap_bar, smith_machine, landmine,
+  plate; 66 exercises), dumbbell and kettlebell (69), cable (36), machine
+  (machine, sled, back_extension_bench; 37), bars (pull_up_bar,
+  dip_station, rings, suspension_trainer; 39), bands (40), then bodyweight
+  and the rest (135). Inside a group whole families together, the family
+  with the most popular exercise first, then `familyRank`. A batch is 10-15
+  exercises and never splits a family.
+- **A batch, step by step**: (1) the Architect lists the batch and builds
+  any gear it needs first, once, as a reusable kit; (2) up to three
+  Implementers write recipes in parallel, one family each, so no two touch
+  a file; each renders the key poses, looks at them, and corrects until the
+  checks below pass; (3) the Reviewer looks at every sheet against the
+  checks and the exercise's own `setup`, `execution`, `mistakes` and `cues`
+  text; (4) the Architect renders the loops and publishes one review page
+  for the batch: each exercise with its loop from two angles and what to
+  look at; (5) the owner is asked in the question dialog, in Turkish: which
+  exercises need a fix (multi-select), then what to change in each; (6)
+  fixes go back through 2-4 and are shown again; (7) when the owner
+  approves, statuses become `approved`, the count here is updated, and the
+  batch's PR is merged. No recipe is marked `approved` and no batch is
+  merged without the owner's answer.
+- **Checks before the owner sees an exercise**: no limb is stretched past
+  its reach (the preview prints each limb's stretch; above 0.99 means the
+  target was not reached); feet that stand are flat on the floor and do not
+  slide; hands stay on the bar or handle through the whole loop; the bar or
+  handle moves on the path the exercise's text describes; gear does not
+  pass through the body or the floor; start and end pose are the same, so
+  the loop does not jump; the lowering is slower than the lifting; nothing
+  contradicts the exercise's `mistakes` list.
+- **What the body models taught**: at rest the palms face forward, not the
+  thighs; the arms are short for the height, so a deadlift starts with a
+  near-horizontal back; the female hand ends higher than the male one, so
+  landmarks are measured, not assumed. The viewer sorts whole triangles by
+  depth: gear is cut into cells of at most 9 cm and must not overlap the
+  body. The rig and export tools accept an already skinned body file.
+- **Open**: which animations an exercise gets (the movement, and perhaps
+  common mistakes) and where they show in the app, to be drawn and picked;
+  how gear, the floor and a shadow look; speed on a real phone; a
+  comparison with Tripo's rig if Blender's weights prove too weak.
 
 ### Programs
 

@@ -17,6 +17,7 @@ import '../features/account/presentation/consent_cubit.dart';
 import '../features/account/presentation/delete_account_cubit.dart';
 import '../features/analytics/domain/analytics.dart';
 import '../features/analytics/presentation/analytics_session.dart';
+import '../features/exercises/presentation/animation_spike_page.dart';
 import '../features/exercises/presentation/body_model_cubit.dart';
 import '../features/exercises/presentation/equipment_cubit.dart';
 import '../features/exercises/presentation/exercise_catalogue_cubit.dart';
@@ -53,7 +54,10 @@ class _AppState extends State<App> {
     sl<AuthCubit>(),
     sl<ProfileCubit>(),
     deletionUnderway: sl<DeletionUnderway>(),
-    profileDevTools: [if (kDebugMode) ?SubscriptionModule.debugControls(sl)],
+    profileDevTools: [
+      if (kDebugMode) ?SubscriptionModule.debugControls(sl),
+      if (kDebugMode) const AnimationSpikeEntry(),
+    ],
   );
   late final AppLifecycleListener _lifecycle;
   late final HardPaywallGate _hardPaywall;
