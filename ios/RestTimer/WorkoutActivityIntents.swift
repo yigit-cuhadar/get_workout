@@ -9,8 +9,9 @@ enum RestAction: String {
 
 /// Where the rest buttons' intents go. Compiled into both targets: the
 /// extension draws the buttons, and as Live Activity intents they run in
-/// the app's process, where the Runner sets [handler] at launch
-/// (AppDelegate.swift); the extension never sets it.
+/// the app's process, where the Runner sets [handler] at launch to hand
+/// them to forge_live_activity (AppDelegate.swift); the extension, which
+/// cannot link the plugin, never sets it.
 enum RestActions {
   @MainActor static var handler: ((RestAction) async -> Void)?
 

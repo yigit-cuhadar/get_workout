@@ -95,6 +95,11 @@ dependencies:
       url: https://github.com/yigit-cuhadar/MobileAppForge.git
       ref: 7a7bbd257017182597e2c41f146b2239658723aa
       path: packages/forge_review
+  forge_live_activity:
+    git:
+      url: https://github.com/yigit-cuhadar/MobileAppForge.git
+      ref: 7a7bbd257017182597e2c41f146b2239658723aa
+      path: packages/forge_live_activity
   forge_messaging:
     git:
       url: https://github.com/yigit-cuhadar/MobileAppForge.git

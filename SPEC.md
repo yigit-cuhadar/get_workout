@@ -2133,7 +2133,7 @@ Decisions (the canvases they were drawn on are deleted):
   (none duplicated) and without one removes the old; a tap in each
   presentation and mode opens the workout page, also from its minimized
   bar, from another tab with unsaved changes (no prompt: it is pushed),
-  and from a killed app (the launch URL reaches `WorkoutActivityTaps`
+  and from a killed app (the launch URL reaches `ForgeLiveActivityPlugin`
   through the late-registered scene delegate); with no workout in
   progress a tap only opens the app, and with the workout page open (also
   under the exercise picker or the paywall) it stays as it is; Google
@@ -2148,7 +2148,12 @@ Decisions (the canvases they were drawn on are deleted):
   it ran), none below iOS 17; a tap beside the buttons still opens the
   workout; a Live Activity started by the build before stays undrawable
   until the app updates it (its content state changed); "All sets done"
-  with "Finish in the app" once the last set is ticked (LA5).
+  with "Finish in the app" once the last set is ticked (LA5). Since the
+  bridge moved into `forge_live_activity` (2026-11-25; Swift only
+  type-checked with `swiftc` against the simulator SDK, the JSON content
+  round-tripped on macOS), every check above is to be repeated, and a
+  Live Activity started by the build before it (`WorkoutActivityAttributes`)
+  is no longer seen, like the older one below.
 - An activity started by an older build (`RestActivityAttributes`)
   is no longer seen by the app and stays until iOS ends it; only matters
   for a device that had one running across the update.
@@ -2231,11 +2236,6 @@ Decisions (the canvases they were drawn on are deleted):
   after the upgrade; check that they still fire and open their tab.
   `Notifications.openSettings` (the reminder tiles' "open settings") is
   not verified on either platform yet.
-- Forge tasks; the app's own versions are accepted deviations, to be
-  replaced once these exist:
-  - The Live Activity bridge (`AppDelegate.swift`'s `WorkoutActivity`,
-    `WorkoutActivityTaps` and a generic attributes type) could move to a package with a native iOS
-    plugin once a second app needs one; the widget views stay in the app.
 - App Check (2026-11-20), monitoring first (owner's decision). On
   2026-11-24 the owner moved enforcement after release: App Attest is
   registered for the iOS app on dev and prod (no service enforced), and
@@ -4107,10 +4107,19 @@ the feature you are about to touch, and keep it true when you change it.
   swipe them away while unlocked, until the next change.
   iOS (16.2+, below that nothing shows): one Live Activity for the whole
   workout from the `RestTimer` widget extension (target and bundle id kept
-  from when it showed rests only; `WorkoutActivityAttributes`,
-  `WorkoutLiveActivity`), started by the app in front through
-  `AppDelegate.swift` (`getworkout/workout_activity`), updated and ended
-  while the app runs; its texts come from the app. Owner's picks
+  from when it showed rests only; `WorkoutLiveActivity`), started by the
+  app in front through `forge_live_activity`, updated and ended while the
+  app runs; its texts come from the app. The package holds the generic
+  bridge: starting, updating and ending one activity (one across
+  relaunches, extras and iOS-ended ones removed), the stale date, taps,
+  and button presses kept until Dart takes them. Its
+  `ForgeLiveActivityAttributes` carries the content as JSON; the extension
+  declares the same type (`ForgeLiveActivityAttributes.swift`, extension
+  only) and decodes it as `WorkoutActivityContent`
+  (`WorkoutActivityContent.swift`, both targets, with the rest's move
+  rule), which `IosWorkoutLockScreen` writes. The views, the intents and
+  `AppDelegate.swift`'s wiring (tap URL, the move on a press, intents to
+  the package) stay in the app. Owner's picks
   2026-11-19 (LA1 A, LA2 A, LA3 B, LA4 B). Lock screen, on a dark card in
   every appearance: while a set is due, a top row with the app's mark (a
   dumbbell on the muted green), the exercise's place ("Exercise 3 of 6")
@@ -4137,8 +4146,8 @@ the feature you are about to touch, and keep it true when you change it.
   both targets, not shown in Shortcuts), so they run in the app's process
   without opening it: the Runner moves the rest shown at once (the app's
   rule: 15 s more up to 30 min ahead, 15 s less ending it when less is
-  left, Skip ending it) and hands the press to Dart on
-  `getworkout/workout_activity_rest`, which answers only once the press
+  left, Skip ending it) and hands the press to Dart through
+  forge_live_activity, which answers only once the press
   is applied and the rest notification moved (`LockScreenRestPress`, at
   most 5 s), so iOS keeps the app awake until then; Dart applies it to
   the workout's rest (`RestTimerCubit` through `WatchLockScreenRestActions`, waiting
@@ -4162,7 +4171,7 @@ the feature you are about to touch, and keep it true when you change it.
   modes) opens the app with `getworkout://workout` (its widgetURL; the
   `getworkout` scheme next to Google sign-in's in `CFBundleURLTypes`).
   The Runner takes that URL itself as a scene delegate
-  (`WorkoutActivityTaps`) and keeps it until Dart takes it, so a tap that
+  (`ForgeLiveActivityPlugin`) and keeps it until Dart takes it, so a tap that
   launched the app is not lost; Flutter's own deep linking is off
   (`FlutterDeepLinkingEnabled` false; the app has no other deep links).
   The tap joins the notification taps' path in `App`: kept until the app
@@ -4170,7 +4179,7 @@ the feature you are about to touch, and keep it true when you change it.
   pushed through the router as from the minimized workout bar (so the
   unsaved-changes guard sees it), unless it is open already or no workout
   is in progress (an activity left behind), where the tap only opens the
-  app. No App Group: the app's own ActivityKit bridge passes the content,
+  app. No App Group: forge_live_activity's ActivityKit bridge passes the content,
   so the `live_activities` plugin (App Group, iOS 16.1 minimum for the
   whole app) is not used, and the app keeps iOS 15 (ActivityKit
   weak-linked).

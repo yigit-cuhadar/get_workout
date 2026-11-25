@@ -22,8 +22,8 @@ struct RestTimerBundle: WidgetBundle {
 /// workout.
 struct WorkoutLiveActivity: Widget {
   var body: some WidgetConfiguration {
-    ActivityConfiguration(for: WorkoutActivityAttributes.self) { context in
-      let state = context.state
+    ActivityConfiguration(for: ForgeLiveActivityAttributes.self) { context in
+      let state = context.state.workout
       Group {
         if let rest = state.runningRest(isStale: context.isStale) {
           RestCard(rest: rest)
@@ -38,7 +38,7 @@ struct WorkoutLiveActivity: Widget {
       .activitySystemActionForegroundColor(.white)
       .widgetURL(WorkoutActivityLink.url)
     } dynamicIsland: { context in
-      let state = context.state
+      let state = context.state.workout
       let rest = state.runningRest(isStale: context.isStale)
       return DynamicIsland {
         DynamicIslandExpandedRegion(.leading) {
@@ -97,7 +97,7 @@ enum ActivityColors {
 /// "All sets done" and "Finish in the app" in their place, without dots
 /// (LA5 A); the workout's name shows only for content without a set.
 struct SetCard: View {
-  let state: WorkoutActivityAttributes.ContentState
+  let state: WorkoutActivityContent
 
   var body: some View {
     VStack(alignment: .leading, spacing: 10) {
@@ -130,7 +130,7 @@ struct SetCard: View {
 /// During a rest: "Rest" and the next set beside the countdown, the bar
 /// emptying over the rest, and −15 s, +15 s and Skip (iOS 17+).
 struct RestCard: View {
-  let rest: WorkoutActivityAttributes.ContentState.Rest
+  let rest: WorkoutActivityContent.Rest
 
   var body: some View {
     VStack(spacing: 10) {
@@ -155,7 +155,7 @@ struct RestCard: View {
 
 @available(iOS 17.0, *)
 struct RestButtons: View {
-  let rest: WorkoutActivityAttributes.ContentState.Rest
+  let rest: WorkoutActivityContent.Rest
 
   var body: some View {
     HStack(spacing: 8) {
@@ -194,7 +194,7 @@ struct AppMark: View {
 /// The compact and minimal island's symbol: the dumbbell, or during a rest
 /// a ring emptying over it.
 struct IslandMark: View {
-  let rest: WorkoutActivityAttributes.ContentState.Rest?
+  let rest: WorkoutActivityContent.Rest?
 
   var body: some View {
     if let rest {
@@ -214,7 +214,7 @@ struct IslandMark: View {
 
 /// A bar emptying over the rest, drawn by the system.
 struct RestBar: View {
-  let rest: WorkoutActivityAttributes.ContentState.Rest
+  let rest: WorkoutActivityContent.Rest
 
   var body: some View {
     ProgressView(
@@ -265,7 +265,7 @@ struct SetLine: View {
 /// The rest's time left, counted down by the system. Never an hours part:
 /// a rest ends within 30 min.
 struct RestClock: View {
-  let rest: WorkoutActivityAttributes.ContentState.Rest
+  let rest: WorkoutActivityContent.Rest
 
   var body: some View {
     let now = Date()
@@ -282,8 +282,8 @@ struct RestClock: View {
 /// offered, so it gets a fixed `width`, wide enough for 1:00:00, and scales
 /// down beyond.
 struct WorkoutClock: View {
-  let state: WorkoutActivityAttributes.ContentState
-  let rest: WorkoutActivityAttributes.ContentState.Rest?
+  let state: WorkoutActivityContent
+  let rest: WorkoutActivityContent.Rest?
   let width: CGFloat
 
   var body: some View {
@@ -303,7 +303,7 @@ struct WorkoutClock: View {
   }
 }
 
-extension WorkoutActivityAttributes.ContentState.Rest {
+extension WorkoutActivityContent.Rest {
   /// From its start to its end; never backwards, which would crash.
   var interval: ClosedRange<Date> {
     min(startsAt, endsAt)...endsAt

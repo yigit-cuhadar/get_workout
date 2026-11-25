@@ -1,8 +1,6 @@
-import 'dart:async';
-
-import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:forge_core/forge_core.dart';
+import 'package:forge_live_activity/forge_live_activity.dart';
 import 'package:forge_notifications/forge_notifications.dart';
 import 'package:get_workout/features/workout/data/android_workout_lock_screen.dart';
 import 'package:get_workout/features/workout/data/ios_workout_lock_screen.dart';
@@ -10,6 +8,8 @@ import 'package:get_workout/features/workout/domain/workout_lock_screen.dart';
 import 'package:mocktail/mocktail.dart';
 
 class MockNotifications extends Mock implements Notifications {}
+
+class MockLiveActivity extends Mock implements LiveActivity {}
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -39,7 +39,10 @@ void main() {
     set: squat,
     rest: rest,
   );
-  setUpAll(() => registerFallbackValue(DateTime(2000)));
+  setUpAll(() {
+    registerFallbackValue(DateTime(2000));
+    registerFallbackValue(<String, Object?>{});
+  });
 
   group('Android', () {
     late MockNotifications notifications;
@@ -211,36 +214,18 @@ void main() {
   });
 
   group('iOS', () {
-    const methods = MethodChannel('getworkout/workout_activity');
-    const restMethods = MethodChannel('getworkout/workout_activity_rest');
-    IosWorkoutLockScreen ios() => IosWorkoutLockScreen(
-      restButtons: () => (shorten: '−15 s', extend: '+15 s', skip: 'Skip'),
-    );
-    final messenger =
-        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
-    late List<MethodCall> calls;
-    late bool? shows;
-    late bool tapped;
+    late MockLiveActivity activity;
+    late IosWorkoutLockScreen ios;
 
     setUp(() {
-      calls = [];
-      shows = true;
-      tapped = false;
-      messenger.setMockMethodCallHandler(methods, (call) async {
-        calls.add(call);
-        switch (call.method) {
-          case 'end':
-            throw PlatformException(code: 'boom');
-          case 'takeTap':
-            final was = tapped;
-            tapped = false;
-            return was;
-        }
-        return shows;
-      });
+      activity = MockLiveActivity();
+      ios = IosWorkoutLockScreen(
+        restButtons: () => (shorten: '−15 s', extend: '+15 s', skip: 'Skip'),
+        activity: activity,
+      );
+      when(() => activity.show(any(), staleAt: any(named: 'staleAt')))
+          .thenAnswer((_) async => const Ok(null));
     });
-
-    tearDown(() => messenger.setMockMethodCallHandler(methods, null));
 
     final set = {
       'exercise': 'Squat',
@@ -250,153 +235,80 @@ void main() {
     };
 
     test('show sends the workout, times in milliseconds', () async {
-      expect((await ios().show(training)).isOk, isTrue);
-      expect(calls.single.method, 'show');
-      expect(calls.single.arguments, {
-        'name': 'Legs',
-        'startedAt': startedAt.millisecondsSinceEpoch,
-        'set': set,
-        'rest': null,
-      });
+      expect((await ios.show(training)).isOk, isTrue);
+      verify(
+        () => activity.show({
+          'name': 'Legs',
+          'startedAt': startedAt.millisecondsSinceEpoch,
+          'set': set,
+          'rest': null,
+        }),
+      ).called(1);
     });
 
-    test('and its rest with its buttons', () async {
-      await ios().show(resting);
-      expect(calls.single.arguments, {
-        'name': 'Legs',
-        'startedAt': startedAt.millisecondsSinceEpoch,
-        'set': set,
-        'rest': {
-          'startsAt': rest.startsAt.millisecondsSinceEpoch,
-          'endsAt': rest.endsAt.millisecondsSinceEpoch,
-          'title': 'Rest',
-          'detail': 'Next: Squat, set 2',
-          'shorten': '−15 s',
-          'extend': '+15 s',
-          'skip': 'Skip',
-        },
-      });
+    test('and its rest with its buttons, stale from its end', () async {
+      await ios.show(resting);
+      verify(
+        () => activity.show({
+          'name': 'Legs',
+          'startedAt': startedAt.millisecondsSinceEpoch,
+          'set': set,
+          'rest': {
+            'startsAt': rest.startsAt.millisecondsSinceEpoch,
+            'endsAt': rest.endsAt.millisecondsSinceEpoch,
+            'title': 'Rest',
+            'detail': 'Next: Squat, set 2',
+            'shorten': '−15 s',
+            'extend': '+15 s',
+            'skip': 'Skip',
+          },
+        }, staleAt: rest.endsAt),
+      ).called(1);
     });
 
     test('without a set left it sends none', () async {
-      await ios().show(LockScreenWorkout(name: 'Legs', startedAt: startedAt));
-      expect((calls.single.arguments as Map)['set'], isNull);
+      await ios.show(LockScreenWorkout(name: 'Legs', startedAt: startedAt));
+      final content =
+          verify(() => activity.show(captureAny(), staleAt: null))
+                  .captured
+                  .single
+              as Map;
+      expect(content['set'], isNull);
     });
 
-    test('Live Activities turned off is a failure, to try again', () async {
-      shows = false;
-      final result = await ios().show(training);
+    test('a failure to show is passed on, to try again', () async {
+      when(() => activity.show(any(), staleAt: any(named: 'staleAt')))
+          .thenAnswer((_) async => const Err(UnknownFailure('turned off')));
+      final result = await ios.show(training);
       expect(result.failureOrNull, isA<UnknownFailure>());
     });
 
-    test('below iOS 16.2 (no answer) is no failure', () async {
-      shows = null;
-      expect((await ios().show(training)).isOk, isTrue);
+    test('clear ends it', () async {
+      when(activity.end).thenAnswer((_) async => const Ok(null));
+      expect((await ios.clear()).isOk, isTrue);
+      verify(activity.end).called(1);
     });
 
-    test('a native failure is a failure, not a throw', () async {
-      final result = await ios().clear();
-      expect(calls.single.method, 'end');
-      expect(result.failureOrNull, isA<UnknownFailure>());
+    test('taps are the activity\'s', () async {
+      when(activity.taps).thenAnswer((_) => Stream.value(null));
+      expect(await ios.taps().length, 1);
     });
 
-    group('taps', () {
-      Future<void> nativeSays(String method) => messenger.handlePlatformMessage(
-        methods.name,
-        methods.codec.encodeMethodCall(MethodCall(method)),
-        (_) {},
+    test('rest presses become rest actions, answered when handled; '
+        'unknown ones are answered and dropped', () async {
+      final handled = <String>[];
+      LiveActivityPress press(String action) =>
+          LiveActivityPress(action, onHandled: () => handled.add(action));
+      when(activity.presses).thenAnswer(
+        (_) => Stream.fromIterable([press('extend'), press('unknown')]),
       );
 
-      test('the one that launched the app is taken on listening', () async {
-        tapped = true;
-        final taps = <void>[];
-        final subscription = ios().taps().listen(taps.add);
-        await pumpEventQueue();
-        expect(taps, hasLength(1));
-        expect(calls.single.method, 'takeTap');
-        await subscription.cancel();
-      });
+      final presses = await ios.restActions().toList();
 
-      test('a later one is taken when the Runner says so, once', () async {
-        final taps = <void>[];
-        final subscription = ios().taps().listen(taps.add);
-        await pumpEventQueue();
-        expect(taps, isEmpty);
-
-        tapped = true;
-        await nativeSays('tapped');
-        await nativeSays('tapped');
-        await pumpEventQueue();
-        expect(taps, hasLength(1));
-        await subscription.cancel();
-      });
-    });
-
-    group('rest buttons', () {
-      late List<String> kept;
-
-      setUp(() {
-        kept = [];
-        messenger.setMockMethodCallHandler(restMethods, (call) async {
-          calls.add(call);
-          final taken = kept;
-          kept = [];
-          return taken;
-        });
-      });
-
-      tearDown(() => messenger.setMockMethodCallHandler(restMethods, null));
-
-      Future<void> nativeSays(String action) => messenger.handlePlatformMessage(
-        restMethods.name,
-        restMethods.codec.encodeMethodCall(MethodCall('restAction', action)),
-        (_) {},
-      );
-
-      test('those pressed while the app did not run are taken on '
-          'listening', () async {
-        kept = ['extend', 'skip'];
-        final actions = <LockScreenRestAction>[];
-        final subscription = ios().restActions().listen(
-          (press) => actions.add(press.action),
-        );
-        await pumpEventQueue();
-        expect(calls.single.method, 'takeRestActions');
-        expect(actions, [
-          LockScreenRestAction.extend,
-          LockScreenRestAction.skip,
-        ]);
-        await subscription.cancel();
-      });
-
-      test('later ones come as the Runner sends them', () async {
-        final actions = <LockScreenRestAction>[];
-        final subscription = ios().restActions().listen((press) {
-          actions.add(press.action);
-          press.handled();
-        });
-        await pumpEventQueue();
-        await nativeSays('shorten');
-        await nativeSays('unknown');
-        await pumpEventQueue();
-        expect(actions, [LockScreenRestAction.shorten]);
-        await subscription.cancel();
-      });
-
-      test('the Runner is answered once the press is handled', () async {
-        final presses = <LockScreenRestPress>[];
-        final subscription = ios().restActions().listen(presses.add);
-        await pumpEventQueue();
-        var answered = false;
-        unawaited(nativeSays('extend').then((_) => answered = true));
-        await pumpEventQueue();
-        expect(presses.single.action, LockScreenRestAction.extend);
-        expect(answered, isFalse);
-        presses.single.handled();
-        await pumpEventQueue();
-        expect(answered, isTrue);
-        await subscription.cancel();
-      });
+      expect(presses.single.action, LockScreenRestAction.extend);
+      expect(handled, ['unknown']);
+      presses.single.handled();
+      expect(handled, ['unknown', 'extend']);
     });
   });
 }
