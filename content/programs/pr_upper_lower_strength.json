@@ -44,6 +44,10 @@
     "en": {
       "name": "Upper/Lower Strength 4-Day",
       "summary": "A heavy day for the upper and the lower body puts the bench press, overhead press, squat and deadlift in sets of 3-6 with long rests. A volume day for each follows with related lifts in sets of 5-10."
+    },
+    "tr": {
+      "name": "Upper/Lower Kuvvet 4 Gün",
+      "summary": "Üst ve alt vücut için birer ağır gün; bench press, omuz press, squat ve deadlift uzun dinlenmelerle 3-6 tekrarlık setlerde yapılır. Ardından her biri için ilgili hareketlerle 5-10 tekrarlık setlerden oluşan bir hacim günü gelir."
     }
   },
   "days": [

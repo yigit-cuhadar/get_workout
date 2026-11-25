@@ -42,6 +42,10 @@
     "en": {
       "name": "Glute Focus 4-Day",
       "summary": "Two lower-body days built around hip thrusts, hinges and single-leg work, plus two lighter upper-body days. Glute volume is set well above a standard program on purpose, while the upper body gets enough to keep progressing."
+    },
+    "tr": {
+      "name": "Kalça Odaklı 4 Gün",
+      "summary": "Hip thrust, hinge ve tek bacak hareketleri üzerine kurulu iki alt vücut günü, ayrıca iki hafif üst vücut günü. Kalça hacmi bilerek standart bir programın epey üstünde; üst vücut da ilerlemeye yetecek kadar çalışır."
     }
   },
   "days": [

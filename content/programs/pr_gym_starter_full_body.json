@@ -38,6 +38,10 @@
     "en": {
       "name": "Gym Starter: Full Body 3-Day",
       "summary": "Three full-body sessions a week on machines, cables and dumbbells, covering every main movement pattern. A steady first program for learning the gym floor and building the habit."
+    },
+    "tr": {
+      "name": "Salona Başlangıç: Full Body 3 Gün",
+      "summary": "Haftada makine, kablo ve dambıl ile tüm temel hareket kalıplarını kapsayan üç full body antrenman. Salonu tanımak ve alışkanlık kazanmak için istikrarlı bir ilk program."
     }
   },
   "days": [

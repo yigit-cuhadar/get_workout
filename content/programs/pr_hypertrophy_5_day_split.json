@@ -47,6 +47,10 @@
     "en": {
       "name": "Five-Day Hypertrophy Split",
       "summary": "An upper and lower day followed by push, pull and legs, so every muscle is trained about twice a week. Moderate weights in the 6-15 rep range with a steady weekly increase."
+    },
+    "tr": {
+      "name": "Beş Günlük Hipertrofi Split",
+      "summary": "Bir üst ve bir alt vücut gününü itiş, çekiş ve bacak günleri izler; her kas haftada yaklaşık iki kez çalışır. 6-15 tekrar aralığında orta ağırlıklar ve düzenli haftalık artış."
     }
   },
   "days": [

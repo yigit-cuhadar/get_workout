@@ -52,6 +52,10 @@
     "en": {
       "name": "Advanced Hypertrophy 6-Day",
       "summary": "An antagonist split run twice a week: chest with back, legs, then shoulders with arms. The second chest day leans on flyes, so pressing muscles are never loaded heavily two days in a row."
+    },
+    "tr": {
+      "name": "İleri Seviye Hipertrofi 6 Gün",
+      "summary": "Haftada iki kez dönen antagonist bir split: sırtla göğüs, bacak, sonra kolla omuz. İkinci göğüs günü açış hareketlerine dayanır; böylece itiş kasları hiçbir zaman art arda iki gün ağır yüklenmez."
     }
   },
   "days": [

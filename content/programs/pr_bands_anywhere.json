@@ -34,6 +34,10 @@
     "en": {
       "name": "Bands Anywhere 3-Day",
       "summary": "A full-body plan for a set of resistance bands and a door anchor, ideal for travel or a small room. Three sessions a week mix band work with simple bodyweight moves."
+    },
+    "tr": {
+      "name": "Bantlarla Her Yerde 3 Gün",
+      "summary": "Bir direnç bandı seti ve bir kapı bağlantısıyla yapılan, seyahat ya da küçük bir oda için ideal bir full body plan. Haftada üç antrenman bant çalışmasını basit vücut ağırlığı hareketleriyle birleştirir."
     }
   },
   "days": [

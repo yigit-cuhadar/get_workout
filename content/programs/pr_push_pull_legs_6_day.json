@@ -51,6 +51,10 @@
     "en": {
       "name": "Push Pull Legs 6-Day",
       "summary": "Push, pull and legs twice a week: a heavier first round built on low-rep compounds and a second round with more volume and isolation work. Written for experienced lifters who recover well from six sessions."
+    },
+    "tr": {
+      "name": "Push Pull Legs 6 Gün",
+      "summary": "Haftada iki kez itiş, çekiş ve bacak: düşük tekrarlı bileşik hareketlere dayanan daha ağır bir ilk tur ve daha fazla hacim ile izolasyon içeren ikinci bir tur. Altı antrenmandan iyi toparlanan deneyimli sporcular için."
     }
   },
   "days": [

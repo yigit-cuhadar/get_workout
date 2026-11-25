@@ -34,6 +34,10 @@
     "en": {
       "name": "Bodyweight Basics 3-Day",
       "summary": "Learn squats, lunges, push-ups and pulling with your own bodyweight and a pull-up bar. Three short sessions a week that you can do at home or in a park."
+    },
+    "tr": {
+      "name": "Vücut Ağırlığı Temelleri 3 Gün",
+      "summary": "Kendi vücut ağırlığın ve bir barfiks barıyla squat, lunge, şınav ve çekiş hareketlerini öğren. Evde ya da parkta yapabileceğin haftada üç kısa antrenman."
     }
   },
   "days": [

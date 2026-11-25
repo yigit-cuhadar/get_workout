@@ -47,6 +47,10 @@
     "en": {
       "name": "Lean-Down Circuits 4-Day",
       "summary": "Four gym sessions of supersets and circuits with short rests, alternating lower-body, upper-body and full-body days. Built to keep your heart rate up while you keep training for strength and muscle."
+    },
+    "tr": {
+      "name": "Sıkılaşma Circuit 4 Gün",
+      "summary": "Kısa dinlenmeli superset ve circuit'lerden oluşan dört salon antrenmanı; alt vücut, üst vücut ve full body günleri sırayla gelir. Kuvvet ve kas için çalışmayı sürdürürken nabzını yüksek tutmak üzere kurgulandı."
     }
   },
   "days": [

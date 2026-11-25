@@ -35,6 +35,10 @@
     "en": {
       "name": "Dumbbell Starter: Full Body 3-Day",
       "summary": "A beginner full-body plan that needs only a pair of dumbbells and a bench. Each session trains legs, push and pull with simple, repeatable exercises."
+    },
+    "tr": {
+      "name": "Dambıl ile Başlangıç: Full Body 3 Gün",
+      "summary": "Sadece bir çift dambıl ve bir sehpa gerektiren, yeni başlayanlar için full body plan. Her antrenman bacak, itiş ve çekişi basit, tekrarlanabilir hareketlerle çalıştırır."
     }
   },
   "days": [

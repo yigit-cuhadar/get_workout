@@ -35,6 +35,10 @@
     "en": {
       "name": "Kettlebell Full Body 3-Day",
       "summary": "Swings, squats, presses and rows with one or two kettlebells three times a week, and every movement also works with a dumbbell. Hips and core get the most work, while side delts and biceps get less than in a gym program, since there are no raises or curls."
+    },
+    "tr": {
+      "name": "Kettlebell Full Body 3 Gün",
+      "summary": "Haftada üç kez bir ya da iki kettlebell ile swing, squat, press ve row; her hareket dambıl ile de yapılabilir. En çok kalça ve karın çalışır; kaldırış ve curl olmadığından yan omuz ve ön kol salon programından daha az çalışır."
     }
   },
   "days": [
