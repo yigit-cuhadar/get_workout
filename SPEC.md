@@ -826,9 +826,6 @@ rules version 1):
   day under half the session; the intermediate Upper/Lower gives glutes 21
   sets, above the 20 band. The exercise ratings and seed rules are the
   Architect's first pass.
-- GetWorkout Studio's published link does not yet match
-  `design/studio.html` (the generator boards and the AreaPicker card):
-  publish it from the owner's account.
 
 After release (owner's list, 2026-11-19; not before the first release):
 - Health improvements.
@@ -2025,14 +2022,6 @@ Decisions (the canvases they were drawn on are deleted):
 
 ## Open questions
 
-- Studios not published (2026-11-24, owner: later). Both published pages
-  are owned by a Claude account other than the one Claude Code uses, so
-  they could not be read or updated. Publish from the owning account, or
-  share edit access with it: MobileAppForge Studio from Forge
-  `design/studio.html` at 4d3bcc3 (#105: StatTile, Menu, AppearanceSetting,
-  BenefitList, SubscriptionPlans, figures style), GetWorkout Studio from
-  this repo's `design/studio.html` at 60de643 (#251: the 2026-11-24 screen
-  review picks). Whether earlier changes reached the pages is unknown.
 - Google sign-in is offered next to email (`socialProviders` in
   `lib/app/router.dart`); both providers are enabled in both Firebase
   projects. On the phones it is native (forge_auth's `NativeGoogleSignIn`):
