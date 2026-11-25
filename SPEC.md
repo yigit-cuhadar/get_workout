@@ -2155,8 +2155,12 @@ Decisions (the canvases they were drawn on are deleted):
   opens the workout page, also from a killed app; discard removes it.
   The expanded island puts the exercise's name on its own line under the
   dumbbell and the time (the region beside the camera cut it to
-  "Barbell…"). Not checked yet: the clocks at 1:00:00, a
-  drop set, "All sets done" (LA5), a tap with the workout page under the
+  "Barbell…"), inset from the island's rounded lower corners. Also
+  checked: the clocks past 1:00:00 fit the compact and expanded island
+  and the lock screen; a drop set shows "Drop set 1/2" and its dots
+  without values; with every set done the card reads "All sets done ·
+  Finish in the app" (LA5), in Turkish too. Not checked yet: a tap with
+  the workout page under the
   picker or paywall, below iOS 17, a real device. A Live Activity started
   by a build before the move (`WorkoutActivityAttributes`) is no longer
   seen and stays until iOS ends it. Content the extension cannot decode

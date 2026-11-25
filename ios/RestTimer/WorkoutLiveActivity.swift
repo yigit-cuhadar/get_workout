@@ -73,6 +73,8 @@ struct WorkoutLiveActivity: Widget {
                 }
               }
             }
+            // Clear of the island's rounded lower corners.
+            .padding(.horizontal, 8)
           }
         }
       } compactLeading: {
