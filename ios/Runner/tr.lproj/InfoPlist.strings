@@ -1,0 +1,4 @@
+/* Turkish texts of Info.plist. */
+"NSCameraUsageDescription" = "GetWorkout, ilerleme fotoğrafların için kamerayı kullanır. Fotoğraflar uygulamada gizli kalır ve fotoğraf arşivine asla kaydedilmez.";
+"NSHealthShareUsageDescription" = "GetWorkout, etkinliğini göstermek için Apple Sağlık'tan adımlarını, antrenmanlarını ve nabzını okur. Apple Sağlık'a asla yazmaz.";
+"NSHealthUpdateUsageDescription" = "GetWorkout, etkinliğini göstermek için Apple Sağlık'tan yalnızca okur. Apple Sağlık verilerinin hiçbirini kaydetmez ya da değiştirmez.";

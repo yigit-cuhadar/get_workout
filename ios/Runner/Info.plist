@@ -23,6 +23,11 @@
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
 	<string>GetWorkout</string>
+	<key>CFBundleLocalizations</key>
+	<array>
+		<string>en</string>
+		<string>tr</string>
+	</array>
 	<key>FirebaseMessagingAutoInitEnabled</key>
 	<false/>
 	<key>CFBundleExecutable</key>
