@@ -1,4 +1,7 @@
+import 'dart:math';
+
 import 'package:material_ui/material_ui.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:forge_ui/forge_ui.dart';
@@ -187,10 +190,33 @@ class _Field extends StatelessWidget {
       children: [
         child,
         WasText(state.wasAt(path)),
-        FieldProblems(state.problemsAt(path, exact: exact)),
+        _CappedIntrinsicWidth(
+          child: FieldProblems(state.problemsAt(path, exact: exact)),
+        ),
       ],
     );
   }
+}
+
+/// Tells a table sizing its columns that its child needs at most
+/// [GeneratorSizes.medium], yet lays it out at the width it is given: a
+/// long problem under a narrow field wraps instead of widening the column.
+class _CappedIntrinsicWidth extends SingleChildRenderObjectWidget {
+  const _CappedIntrinsicWidth({required super.child});
+
+  @override
+  RenderObject createRenderObject(BuildContext context) =>
+      _RenderCappedIntrinsicWidth();
+}
+
+class _RenderCappedIntrinsicWidth extends RenderProxyBox {
+  @override
+  double computeMinIntrinsicWidth(double height) =>
+      min(super.computeMinIntrinsicWidth(height), GeneratorSizes.medium);
+
+  @override
+  double computeMaxIntrinsicWidth(double height) =>
+      min(super.computeMaxIntrinsicWidth(height), GeneratorSizes.medium);
 }
 
 /// The number at [path] of the draft.

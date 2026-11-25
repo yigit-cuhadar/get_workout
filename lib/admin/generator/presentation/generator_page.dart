@@ -171,15 +171,9 @@ class _GeneratorView extends StatelessWidget {
             default:
           }
         },
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            const Expanded(child: _Rules()),
-            if (historyOpen) ...[
-              const VerticalDivider(width: 1),
-              const SizedBox(width: historyWidth, child: HistoryPanel()),
-            ],
-          ],
+        child: PageWithHistory(
+          page: const _Rules(),
+          history: historyOpen ? const HistoryPanel() : null,
         ),
       ),
     );

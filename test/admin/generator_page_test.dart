@@ -5,6 +5,8 @@ import 'package:forge_ui/forge_ui.dart';
 import 'package:get_workout/admin/generator/domain/generator_rules.dart';
 import 'package:get_workout/admin/generator/presentation/generator_page.dart';
 import 'package:get_workout/admin/generator/presentation/generator_rules_cubit.dart';
+import 'package:get_workout/admin/generator/presentation/generator_sizes.dart';
+import 'package:get_workout/admin/shell/publishing.dart';
 import 'package:get_workout/admin/shell/unload_guard.dart';
 import 'package:mocktail/mocktail.dart';
 
@@ -56,9 +58,13 @@ void main() {
 
   tearDown(sl.reset);
 
-  Future<void> pumpPage(WidgetTester tester, {Key? key}) async {
+  Future<void> pumpPage(
+    WidgetTester tester, {
+    Key? key,
+    Size size = const Size(1600, 2400),
+  }) async {
     tester.view
-      ..physicalSize = const Size(1600, 2400)
+      ..physicalSize = size
       ..devicePixelRatio = 1;
     addTearDown(tester.view.reset);
     await tester.pumpWidget(
@@ -155,9 +161,37 @@ void main() {
     await tester.tap(find.text('Dosing · Build muscle · Primary · rest'));
     await tester.pumpAndSettle();
     expect(cubit.state.tab.label, 'Dosing');
-    // On the card and under the field.
-    expect(find.text('must be a whole number from 0 to 600'), findsNWidgets(2));
+    // On the card and under the field, where it wraps instead of widening
+    // the column.
+    final problem = find.text('must be a whole number from 0 to 600');
+    expect(problem, findsNWidgets(2));
+    expect(
+      tester.getSize(problem.last).width,
+      lessThanOrEqualTo(GeneratorSizes.medium),
+    );
     semantics.dispose();
+  });
+
+  testWidgets('beside an 800 px window\'s menu, History lies over the rules', (
+    tester,
+  ) async {
+    when(() => repository.history())
+        .thenAnswer((_) async => Ok([storedRules(rules: seed)]));
+    // An 800 px window less the panel's menu.
+    await pumpPage(tester, size: const Size(567, 900));
+    cubit.setValue(_rest, 165);
+    await settleCheck(tester);
+    await tester.tap(find.text('History'));
+    await tester.pumpAndSettle();
+
+    final page = tester.getRect(find.byType(PageWithHistory));
+    expect(tester.getRect(find.byType(HistoryPane)).right, page.right);
+    // The rules keep the page's width under the pane (and nothing
+    // overflows, which would fail the test).
+    expect(
+      tester.getSize(find.text('1 unpublished change · Dosing')).width,
+      greaterThan(page.width / 2),
+    );
   });
 
   testWidgets('the Dosing table edits a number and shows what it was', (
