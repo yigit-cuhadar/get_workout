@@ -10,6 +10,7 @@ import '../../../core/widgets/settings_group.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../programs/presentation/program_text.dart';
 import '../domain/user_settings.dart';
+import 'app_language.dart';
 import 'first_weekday.dart';
 import 'settings_cubit.dart';
 import 'warmup_settings_page.dart';
@@ -128,8 +129,8 @@ class WorkoutSettingsGroups extends StatelessWidget {
 /// question.
 enum _EffortChoice { off, byFeel, rir, rpe }
 
-/// The Appearance group: light, dark or the system's, and the first day
-/// of the week. Needs [SettingsCubit] above it.
+/// The Appearance group: light, dark or the system's, the first day of
+/// the week and the app's language. Needs [SettingsCubit] above it.
 class AppearanceGroup extends StatelessWidget {
   const AppearanceGroup({super.key});
 
@@ -141,6 +142,7 @@ class AppearanceGroup extends StatelessWidget {
     );
     final cubit = context.read<SettingsCubit>();
     final phoneFirstWeekday = context.watchDeviceFirstWeekday();
+    final devicePicked = devicePickedLocale();
     return SettingsGroup(
       title: l10n.settingsAppearance,
       rows: [
@@ -178,6 +180,34 @@ class AppearanceGroup extends StatelessWidget {
           },
           onChanged: (start) =>
               cubit.update(settings.copyWith(weekStart: start)),
+        ),
+        ListRow(
+          title: l10n.settingsLanguage,
+          value: switch (settings.language) {
+            AppLanguage.automatic => l10n.languageAutomatic(
+              languageOwnName(AppLanguage.automatic, devicePicked),
+            ),
+            final language => languageOwnName(language, devicePicked),
+          },
+          end: ListRowEnd.chevron,
+          onTap: () async {
+            final picked = await showChoiceSheet(
+              context,
+              title: l10n.settingsLanguage,
+              values: AppLanguage.values,
+              selected: settings.language,
+              labelOf: (language) => language == AppLanguage.automatic
+                  ? l10n.settingAutomatic
+                  : languageOwnName(language, devicePicked),
+              detailOf: (language) => language == AppLanguage.automatic
+                  ? '(${languageOwnName(language, devicePicked)})'
+                  : null,
+              form: ChoiceListForm.inline,
+            );
+            if (picked != null) {
+              await cubit.update(settings.copyWith(language: picked));
+            }
+          },
         ),
       ],
     );

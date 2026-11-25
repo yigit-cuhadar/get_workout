@@ -2927,6 +2927,26 @@ the feature you are about to touch, and keep it true when you change it.
   not while the list shows a failure. Only views change: stored dates,
   program weekdays and schedules, `nextDate` and program lengths (counted
   from the start date) never depend on it.
+- **Language** (owner, L1 A, L2 A): Settings → Appearance → "Language",
+  under "Week starts on": Automatic (default; the row shows "Automatic
+  (English)" with the language it gives, the sheet "Automatic" with that
+  language muted beside it), English or Türkçe, each language in its own
+  name, never translated (`settings.language`, `en` \| `tr`, written only
+  when not automatic; absent or unknown is automatic, so per user like the
+  week start, and automatic while signed out). Automatic is the phone's
+  first language the app has, else English (`devicePickedLocale`, as
+  `MaterialApp` picks it). The choice is `MaterialApp.locale` (null for
+  automatic), so the app switches at once with no restart; everything
+  that reads the language goes through it: `Localizations.localeOf` and
+  `l10n.localeName` in widgets (content, generator `lang`, dates,
+  numbers), and outside widgets `localizationsIn` / `currentLocalizations`
+  for the rest, rest-over, lock-screen and self-ended-workout texts.
+  `NotificationsCubit` writes reminders and follows the announcement topic
+  in the user's settings' language, again when it changes; while a
+  signed-in user's settings load it follows nothing. Not routed: the
+  Android channel names (made at start, in the phone's language), the
+  week start (the phone's region) and the support details' `locale` (the
+  phone's).
 - **Onboarding questions** (UX pass, 2026-11-13): a welcome page, then one
   question per page, all nine needing an answer: goal, level, days per
   week, equipment, sex, birth year, height, weight, target weight. There

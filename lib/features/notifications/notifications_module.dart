@@ -4,9 +4,10 @@ import 'package:forge_notifications/forge_notifications.dart';
 import 'package:get_it/get_it.dart';
 import 'package:path_provider/path_provider.dart';
 
-import '../../core/device_localizations.dart';
 import '../../l10n/app_localizations.dart';
 import '../programs/presentation/program_text.dart';
+import '../settings/domain/user_settings.dart';
+import '../settings/presentation/app_language.dart';
 import 'data/device_notification_repository.dart';
 import 'data/notification_payloads.dart';
 import 'data/notifications_asked_marker.dart';
@@ -36,7 +37,8 @@ class NotificationsModule implements FeatureModule {
     sl
       ..registerSingleton(taps)
       ..registerSingletonAsync<Notifications>(() async {
-        final l10n = deviceLocalizations();
+        // At start, before any user's settings: the phone's language.
+        final l10n = localizationsIn(AppLanguage.automatic);
         final notifications = LocalNotifications(
           channel: NotificationChannel(
             id: 'workout',
@@ -94,8 +96,8 @@ class NotificationsModule implements FeatureModule {
           openSettings: sl(),
           refreshTimeZone: sl(),
           followAnnouncements: sl(),
-          workoutText: (reminder) {
-            final l10n = deviceLocalizations();
+          workoutText: (reminder, language) {
+            final l10n = localizationsIn(language);
             final day = reminder.day;
             return (
               title: l10n.workoutReminderTitle,
@@ -107,14 +109,14 @@ class NotificationsModule implements FeatureModule {
                     ),
             );
           },
-          measurementText: () {
-            final l10n = deviceLocalizations();
+          measurementText: (language) {
+            final l10n = localizationsIn(language);
             return (
               title: l10n.measurementReminderTitle,
               body: l10n.measurementReminderBody,
             );
           },
-          language: () => deviceLocalizations().localeName,
+          language: (language) => localizationsIn(language).localeName,
         ),
       );
     MessagingModule(

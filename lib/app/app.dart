@@ -26,6 +26,7 @@ import '../features/exercises/presentation/favorites_cubit.dart';
 import '../features/notifications/data/notification_payloads.dart';
 import '../features/notifications/presentation/notifications_cubit.dart';
 import '../features/settings/domain/user_settings.dart';
+import '../features/settings/presentation/app_language.dart';
 import '../features/settings/presentation/first_weekday.dart';
 import '../features/settings/presentation/settings_cubit.dart';
 import '../features/workout/domain/rest_usecases.dart';
@@ -266,17 +267,25 @@ class _AppState extends State<App> {
                 if (alert.vibrates) unawaited(HapticFeedback.heavyImpact());
               },
               child:
-                  BlocSelector<SettingsCubit, SettingsState, ThemePreference>(
-                    selector: (state) => state.settings.themePreference,
-                    builder: (context, theme) => MaterialApp.router(
+                  BlocSelector<
+                    SettingsCubit,
+                    SettingsState,
+                    (ThemePreference, AppLanguage)
+                  >(
+                    selector: (state) => (
+                      state.settings.themePreference,
+                      state.settings.language,
+                    ),
+                    builder: (context, appearance) => MaterialApp.router(
                       onGenerateTitle: (context) =>
                           AppLocalizations.of(context).appTitle,
+                      locale: appLocale(appearance.$2),
                       localizationsDelegates:
                           AppLocalizations.localizationsDelegates,
                       supportedLocales: AppLocalizations.supportedLocales,
                       theme: AppPreset.shipped.lightTheme(),
                       darkTheme: AppPreset.shipped.darkTheme(),
-                      themeMode: switch (theme) {
+                      themeMode: switch (appearance.$1) {
                         ThemePreference.system => ThemeMode.system,
                         ThemePreference.light => ThemeMode.light,
                         ThemePreference.dark => ThemeMode.dark,

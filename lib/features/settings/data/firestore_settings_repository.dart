@@ -39,6 +39,11 @@ class FirestoreSettingsRepository implements SettingsRepository {
     WeekStart.sunday: 'sunday',
     WeekStart.saturday: 'saturday',
   };
+
+  /// [AppLanguage.automatic] is stored as no value.
+  static final _languageCodes = {
+    for (final language in AppLanguage.values) language: ?language.code,
+  };
   static const _alertCodes = {
     RestAlert.chimeVibrate: 'chimeVibrate',
     RestAlert.chime: 'chime',
@@ -109,6 +114,7 @@ class FirestoreSettingsRepository implements SettingsRepository {
         _ => defaults.askEffort,
       },
       weekStart: _decode(_weekStartCodes, map['weekStart'], defaults.weekStart),
+      language: _decode(_languageCodes, map['language'], defaults.language),
       restTimer: _restTimer(map['restTimer']),
       keepScreenOn: switch (map['keepScreenOn']) {
         final bool on => on,
@@ -127,9 +133,9 @@ class FirestoreSettingsRepository implements SettingsRepository {
     );
   }
 
-  /// The week start, bars, plates and tracked measurements are written only
-  /// while chosen or customised; deleting them returns the user to the
-  /// default. Seen tips are only ever added, by [markTipSeen].
+  /// The week start, language, bars, plates and tracked measurements are
+  /// written only while chosen or customised; deleting them returns the
+  /// user to the default. Seen tips are only ever added, by [markTipSeen].
   @override
   Future<Result<void>> markTipSeen(String uid, Tip tip) => guard(
     () => _user(uid).set({
@@ -147,6 +153,7 @@ class FirestoreSettingsRepository implements SettingsRepository {
     'effortScale': _effortCodes[settings.effortScale],
     'askEffort': settings.askEffort,
     'weekStart': _weekStartCodes[settings.weekStart] ?? FieldValue.delete(),
+    'language': _languageCodes[settings.language] ?? FieldValue.delete(),
     'restTimer': {
       'enabled': settings.restTimer.enabled,
       'defaultS': settings.restTimer.defaultS,

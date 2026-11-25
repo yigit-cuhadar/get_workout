@@ -1,0 +1,4 @@
+/* Titles of the rest buttons' intents; the visible labels come from Dart. */
+"Shorten rest" = "Dinlenmeyi kısalt";
+"Extend rest" = "Dinlenmeyi uzat";
+"Skip rest" = "Dinlenmeyi atla";

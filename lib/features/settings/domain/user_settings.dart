@@ -32,6 +32,19 @@ enum WeekStart {
   };
 }
 
+/// The app's language (`settings.language`).
+enum AppLanguage {
+  /// The phone's, when the app has it; else English.
+  automatic(null),
+  english('en'),
+  turkish('tr');
+
+  const AppLanguage(this.code);
+
+  /// The language code; null when [automatic].
+  final String? code;
+}
+
 /// The first day of the week in region [countryCode] (ISO 3166, e.g.
 /// `TR`) as an ISO weekday: Monday unless CLDR lists another.
 int regionFirstWeekday(String countryCode) {
@@ -428,6 +441,7 @@ class UserSettings extends Equatable {
     this.effortScale = EffortScale.byFeel,
     this.askEffort = true,
     this.weekStart = WeekStart.automatic,
+    this.language = AppLanguage.automatic,
     this.restTimer = const RestTimerSettings(),
     this.keepScreenOn = true,
     this.warmups = const WarmupSettings(),
@@ -462,6 +476,7 @@ class UserSettings extends Equatable {
   /// shown and picked in [effortScale].
   final bool askEffort;
   final WeekStart weekStart;
+  final AppLanguage language;
   final RestTimerSettings restTimer;
 
   /// Whether the screen stays awake while a workout is in progress.
@@ -559,6 +574,7 @@ class UserSettings extends Equatable {
     EffortScale? effortScale,
     bool? askEffort,
     WeekStart? weekStart,
+    AppLanguage? language,
     RestTimerSettings? restTimer,
     bool? keepScreenOn,
     WarmupSettings? warmups,
@@ -578,6 +594,7 @@ class UserSettings extends Equatable {
     effortScale: effortScale ?? this.effortScale,
     askEffort: askEffort ?? this.askEffort,
     weekStart: weekStart ?? this.weekStart,
+    language: language ?? this.language,
     restTimer: restTimer ?? this.restTimer,
     keepScreenOn: keepScreenOn ?? this.keepScreenOn,
     warmups: warmups ?? this.warmups,
@@ -609,6 +626,7 @@ class UserSettings extends Equatable {
     effortScale: effortScale,
     askEffort: askEffort,
     weekStart: weekStart,
+    language: language,
     restTimer: restTimer,
     keepScreenOn: keepScreenOn,
     warmups: warmups,
@@ -627,6 +645,7 @@ class UserSettings extends Equatable {
     effortScale,
     askEffort,
     weekStart,
+    language,
     restTimer,
     keepScreenOn,
     warmups,
