@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:forge_core/forge_core.dart';
 import 'package:forge_messaging/forge_messaging.dart';
+import 'package:get_workout/features/notifications/domain/notification_repository.dart';
 import 'package:get_workout/features/notifications/domain/notifications_usecases.dart';
 import 'package:mocktail/mocktail.dart';
 
@@ -31,5 +32,23 @@ void main() {
       () => topics.follow('en', segment: 'free'),
       () => topics.follow('en', segment: 'premium'),
     ]);
+  });
+
+  test('names the topics sendAnnouncement sends to', () {
+    const topics = LanguageTopics(
+      AnnouncementTopics.prefix,
+      languages: ['en'],
+      segments: [AnnouncementTopics.free, AnnouncementTopics.premium],
+    );
+
+    expect(topics.topic('en'), 'announcements_en');
+    expect(
+      topics.topic('en', segment: AnnouncementTopics.free),
+      'announcements_en_free',
+    );
+    expect(
+      topics.topic('en', segment: AnnouncementTopics.premium),
+      'announcements_en_premium',
+    );
   });
 }
