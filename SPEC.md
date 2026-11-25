@@ -2134,8 +2134,9 @@ Decisions (the canvases they were drawn on are deleted):
   rest that runs out with the app in the background turns back into the
   workout; relaunching keeps one activity and the elapsed time; a tap
   opens the workout page, also from a killed app; discard removes it.
-  Seen: the expanded island cuts the exercise name ("Barbell…") although
-  the line has room; to fix. Not checked yet: the clocks at 1:00:00, a
+  The expanded island puts the exercise's name on its own line under the
+  dumbbell and the time (the region beside the camera cut it to
+  "Barbell…"). Not checked yet: the clocks at 1:00:00, a
   drop set, "All sets done" (LA5), a tap with the workout page under the
   picker or paywall, below iOS 17, a real device. A Live Activity started
   by a build before the move (`WorkoutActivityAttributes`) is no longer

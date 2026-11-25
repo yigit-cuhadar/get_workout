@@ -41,11 +41,13 @@ struct WorkoutLiveActivity: Widget {
       let state = context.state.workout
       let rest = state.runningRest(isStale: context.isStale)
       return DynamicIsland {
+        // Beside the camera the region is too narrow for an exercise's
+        // name, which therefore heads the bottom region.
         DynamicIslandExpandedRegion(.leading) {
           if let rest {
             Label(rest.title, systemImage: "timer").lineLimit(1)
           } else {
-            Label(state.set?.exercise ?? state.name, systemImage: "dumbbell").lineLimit(1)
+            Image(systemName: "dumbbell")
           }
         }
         DynamicIslandExpandedRegion(.trailing) {
@@ -60,11 +62,16 @@ struct WorkoutLiveActivity: Widget {
                 SetLine(line: detail).foregroundStyle(.secondary)
               }
             }
-          } else if let set = state.set {
-            HStack(spacing: 12) {
-              Text(set.line).monospacedDigit().lineLimit(1).foregroundStyle(.secondary)
-              Spacer(minLength: 0)
-              SetDots(done: set.done)
+          } else {
+            VStack(alignment: .leading, spacing: 4) {
+              Text(state.set?.exercise ?? state.name).font(.headline).lineLimit(1)
+              if let set = state.set {
+                HStack(spacing: 12) {
+                  Text(set.line).monospacedDigit().lineLimit(1).foregroundStyle(.secondary)
+                  Spacer(minLength: 0)
+                  SetDots(done: set.done)
+                }
+              }
             }
           }
         }
