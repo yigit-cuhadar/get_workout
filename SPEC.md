@@ -236,11 +236,17 @@ the user's equipment first (an exercise fits when `equipment` or any of its
 removed.
 Variations are the other exercises of the same `family`, ordered by rank.
 
-**`exercises/{id}/animation/main`** (planned, Group 15): the exercise's
-animation recipe, a few KB: key poses with their times, the gear, the muscles
-are the exercise's own. Seeded from `content/animations/<id>.json` when its
-status is `approved`; `updatedAt`, `contentHash` as elsewhere. The recipe's
-fields are put to the owner before the first import.
+**`exercises/{id}/animation/main`** (planned, Group 15; fields approved by
+the owner 2026-11-25): the exercise's animation recipe, a few KB. `view`
+(the camera's starting yaw and pitch), `poses` (name → pelvis, spine
+angles, where the hands grip and the feet stand, where elbows and knees
+point), `keys` (seconds and pose name, looping), `gear` (kits by name with
+where each stands), `mistakes` (per catalogue `mistakes` line: the pose
+fields that go wrong and the joints to ring, or that no pose can show it).
+Muscles are the exercise's own; kits are stored once, apart from the
+recipes. Seeded from `content/animations/<id>.json` when its status is
+`approved` (a mistake when its own status is); `updatedAt`, `contentHash`
+as elsewhere.
 
 **`programs/{id}`** (catalog card): `status`, `premium`, `level`, `goal`,
 `daysPerWeek`, `lengthWeeks?`, `equipment[]` (the primary `equipment` of
