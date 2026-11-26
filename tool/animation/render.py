@@ -46,6 +46,10 @@ rig = Rig(rig_path)
 spec, entry = recipe.load(name), recipe.catalogue()[name]
 gear_at = recipe.gear_of(spec["gear"])
 views = [tuple(spec["view"]), (90, 4)]
+if mode == "hands":
+    # The left hand from close by: along the bar, from the front, from above.
+    views = [(90, 0), (0, 5), (0, 80)]
+focus = None
 
 # (label, keys, joints to ring) for the correct form and every shown mistake.
 clips = [(name, recipe.clip(spec), [])]
@@ -158,8 +162,8 @@ def aim(azimuth, elevation):
     turn = (-direction).to_track_quat("-Z", "Y")
     right, up = np.array(turn @ Vector((1, 0, 0))), np.array(turn @ Vector((0, 1, 0)))
     wide, tall = (np.ptp((corners - centre) @ axis) for axis in (right, up))
-    camera_data.ortho_scale = max(tall, wide * SIZE[1] / SIZE[0]) * 1.06
-    camera.location = Vector(centre) + direction * 20
+    camera_data.ortho_scale = 0.42 if mode == "hands" else max(tall, wide * SIZE[1] / SIZE[0]) * 1.06
+    camera.location = Vector(focus if mode == "hands" else centre) + direction * 20
     camera.rotation_euler = turn.to_euler()
     return direction, turn
 
@@ -188,13 +192,16 @@ gear = []
 
 
 def show(solved, first, ring, label):
+    global focus
     body, pieces = placed(solved, first)
+    focus = rig.grip(*solved, "L")
     body_mesh.vertices.foreach_set("co", body[welded_first].ravel())
     body_mesh.update()
     for i, (kind, matrix, color) in enumerate(pieces):
         if i == len(gear):
             gear.append(add_object(f"gear{i}", unit_mesh(kind), [color]))
         gear[i].matrix_world = Matrix(matrix.tolist())
+        gear[i].hide_render = mode == "hands" and color == "plate"
     while len(rings) < len(ring):
         rings.append(add_object(f"ring{len(rings)}", ring_mesh.copy(), ["wrong"]))
     for v, view in enumerate(views):
@@ -208,7 +215,8 @@ def show(solved, first, ring, label):
         scene.render.filepath = os.path.join(out_dir, f"{label}_v{v}.png")
         bpy.ops.render.render(write_still=True)
         with open(os.path.join(out_dir, f"{label}_v{v}.json"), "w") as f:
-            json.dump(floor(view, body), f)
+            off = [-9999, -9999, 1, 1]
+            json.dump({"disc": off, "shadow": off} if mode == "hands" else floor(view, body), f)
 
 
 def report(solved):
@@ -224,7 +232,7 @@ def report(solved):
 
 for label, keys, ring in clips:
     first = rig.solve(keys[0][1])
-    if mode == "keys":
+    if mode != "loop":
         for i, pose in enumerate({id(p): p for _, p in keys}.values()):
             solved = rig.solve(pose)
             print(f"KEY {label} {i}: {report(solved)}")

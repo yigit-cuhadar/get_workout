@@ -7,9 +7,9 @@
       "pelvis_rot": [75, 0, 0],
       "neck": -40,
       "foot": {"at": [0.13, 0.037], "floor": 0, "yaw": 12},
-      "hand": {"pos": [0.27, -0.10, 0.225], "fingers": [0, 0, -1], "palm": [0, 1, 0], "curl": 80},
+      "hand": {"pos": [0.27, -0.10, 0.225], "fingers": [0, 0, -1], "palm": [0, 1, 0], "curl": 75},
       "elbow": [0.3, 1, 0],
-      "clavicle": [-5, 5]
+      "clavicle": [-5, 9]
     },
     "top": {
       "extends": "bottom",

@@ -3396,7 +3396,9 @@ the feature you are about to touch, and keep it true when you change it.
   knee, shoulder and elbow, a thumb bone, finger curl); `recipe.py` reads
   recipes and kits (its header is the format's reference); `preview.sh
   <exercise id> [keys|loop] [male|female]` renders the correct form and
-  every mistake into `build/animation/` (key poses in a few seconds);
+  every mistake into `build/animation/` (key poses in a few seconds;
+  `hands` shows each key pose's left hand close up, along the bar, from
+  the front and from above, with the plates hidden);
   `validate.py` checks the recipes on both bodies; `page.py` builds a
   batch's review page from the rendered loops (after a fix, render the
   loops again and look at a frame of the page's own copy before
@@ -3457,7 +3459,11 @@ the feature you are about to touch, and keep it true when you change it.
 - **Checks before the owner sees an exercise**: a standing pose has locked
   knees (leg stretch 0.995 or more; the owner sent the first batch back for
   bent knees at the top); a grip matches how the bar is really held, looked
-  at from the front, not only solved; no limb is stretched past
+  at in the `hands` close-ups of both bodies, not only solved (the owner
+  sent batch 2 and batch 1 back on 2026-11-26: the bar lay outside the
+  fist in every exercise): the bar runs through the closed fist at the
+  base of the fingers, the fingers wrap it, the thumb closes with them,
+  the wrist is straight or stacked over the forearm; no limb is stretched past
   its reach (the preview prints each limb's stretch; above 0.99 means the
   target was not reached); feet that stand are flat on the floor and do not
   slide; hands stay on the bar or handle through the whole loop; the bar or
@@ -3465,6 +3471,15 @@ the feature you are about to touch, and keep it true when you change it.
   pass through the body or the floor; start and end pose are the same, so
   the loop does not jump; the lowering is slower than the lifting; nothing
   contradicts the exercise's `mistakes` list.
+- **Hands** (2026-11-26): the grip point is 6.4 cm from the wrist along
+  the fingers and 3.6 cm into the palm, where two finger joints curled 75
+  degrees each close round a 28 mm bar; the thumb turns about its base by
+  1.2 times the curl. A bar grip uses `curl` 75. A hand that holds the bar
+  elsewhere says so with `hold` ([along the fingers, into the palm]): the
+  front squat's rack rests the bar on the fingers (`hold` [0.10, 0.028],
+  `curl` 30). The same numbers live in `forge_motion`; the two change
+  together. An EZ bar does not turn with the hands (owner, EK10), so its
+  bends lie across the palm only at the bottom.
 - **What the body models taught**: at rest the palms face forward, not the
   thighs; the arms are short for the height, so a deadlift starts with a
   near-horizontal back; the female hand ends higher than the male one, so
