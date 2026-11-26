@@ -1,0 +1,150 @@
+{
+  "status": "draft",
+  "view": [
+    50,
+    15
+  ],
+  "poses": {
+    "down": {
+      "pelvis": [
+        0,
+        0,
+        0.228
+      ],
+      "pelvis_rot": [
+        90,
+        0,
+        0
+      ],
+      "lumbar": 0,
+      "chest": 0,
+      "neck": -5,
+      "clavicle": [
+        20,
+        0
+      ],
+      "elbow": [
+        0.3,
+        0,
+        1
+      ],
+      "foot": {
+        "pos": [
+          0.1,
+          0.85,
+          0.05
+        ],
+        "yaw": 10,
+        "pitch": 170
+      },
+      "knee": [
+        0,
+        0,
+        -1
+      ],
+      "hand": {
+        "pos": [
+          0.269,
+          -1.007,
+          0.066
+        ],
+        "fingers": [
+          0,
+          -1,
+          0
+        ],
+        "palm": [
+          0,
+          0,
+          -1
+        ],
+        "curl": 5,
+        "hold": [
+          0.05,
+          0
+        ]
+      }
+    },
+    "up": {
+      "extends": "down",
+      "lumbar": -8,
+      "chest": -5,
+      "neck": -6,
+      "foot": {
+        "pos": [
+          0.1,
+          0.85,
+          0.15
+        ],
+        "yaw": 10,
+        "pitch": 170
+      },
+      "hand": {
+        "pos": [
+          0.269,
+          -0.991,
+          0.274
+        ],
+        "fingers": [
+          0,
+          -1,
+          0
+        ],
+        "palm": [
+          0,
+          0,
+          -1
+        ],
+        "curl": 5,
+        "hold": [
+          0.05,
+          0
+        ]
+      }
+    }
+  },
+  "keys": [
+    [
+      0,
+      "down"
+    ],
+    [
+      1.0,
+      "up"
+    ],
+    [
+      2.2,
+      "up"
+    ],
+    [
+      3.4,
+      "down"
+    ],
+    [
+      3.8,
+      "down"
+    ]
+  ],
+  "gear": [],
+  "mistakes": [
+    {
+      "line": 0,
+      "status": "draft",
+      "ring": [
+        "neck",
+        "head"
+      ],
+      "poses": {
+        "up": {
+          "neck": -40,
+          "head": -10
+        }
+      }
+    },
+    {
+      "line": 1,
+      "shown": false,
+      "why": "Swinging is momentum, a matter of tempo that a pose cannot show."
+    }
+  ]
+}
