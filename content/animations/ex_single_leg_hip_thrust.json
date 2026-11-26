@@ -1,0 +1,47 @@
+{
+  "status": "draft",
+  "view": [50, 14],
+  "poses": {
+    "top": {
+      "pelvis": [0, -0.15, 0.545],
+      "pelvis_rot": [-90, 0, 0],
+      "lumbar": 0,
+      "chest": 0,
+      "neck": 20,
+      "knee": [0.2, 0, 1],
+      "clavicle": [0, 0],
+      "hand": {"pos": [0.5, 0.42, 0.455], "fingers": [0.3, 0.95, 0], "palm": [0, 0, -1], "curl": 10, "hold": [0.05, 0]},
+      "elbow": [0, 1, 0.5],
+      "foot_L": {"at": [0.12, -0.55], "floor": 0, "yaw": 10},
+      "foot_R": {"pos": [-0.12, -0.95, 0.78], "yaw": 0, "pitch": -20},
+      "knee_R": [0, 0, 1]
+    },
+    "bottom": {
+      "extends": "top",
+      "pelvis": [0, 0.04, 0.251],
+      "pelvis_rot": [-40, 0, 0],
+      "lumbar": 8,
+      "chest": 8,
+      "neck": 5,
+      "foot_R": {"pos": [-0.12, -0.42, 0.42], "yaw": 0, "pitch": 0},
+      "knee_R": [0, -0.3, 1]
+    }
+  },
+  "keys": [[0, "bottom"], [0.9, "top"], [1.4, "top"], [2.7, "bottom"], [3.1, "bottom"]],
+  "gear": [{"kit": "flat_bench", "at": [0, 0.45, 0], "turn": 90}],
+  "mistakes": [
+    {
+      "line": 0,
+      "shown": false,
+      "why": "The solver cannot tilt a lying pelvis about its long axis (its angles lock at a pitch of -90), so the hips cannot drop to one side."
+    },
+    {
+      "line": 1,
+      "status": "draft",
+      "ring": ["lumbar"],
+      "poses": {
+        "top": {"pelvis": [0, -0.13, 0.594], "pelvis_rot": [-80, 0, 0], "lumbar": -18, "chest": -10}
+      }
+    }
+  ]
+}
