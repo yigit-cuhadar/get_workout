@@ -20,7 +20,7 @@
     }
   },
   "keys": [[0, "top"], [1.5, "bottom"], [1.7, "bottom"], [2.6, "top"], [3.1, "top"]],
-  "gear": [{"kit": "barbell"}, {"kit": "flat_bench", "at": [0, 0.48, 0]}],
+  "gear": [{"kit": "barbell"}, {"kit": "flat_bench", "at": [0, 0.35, 0]}],
   "mistakes": [
     {
       "line": 0,
