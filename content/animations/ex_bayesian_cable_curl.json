@@ -169,9 +169,10 @@
       ],
       "turn": 180,
       "pulley": 0.15,
-      "ay": -1,
+      "ay": 1,
       "one": 1,
-      "side": "L"
+      "side": "L",
+      "az": 0.3
     },
     {
       "kit": "cable_handle",
