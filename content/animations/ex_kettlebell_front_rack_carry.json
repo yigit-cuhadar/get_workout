@@ -7,8 +7,8 @@
     "c": {"pelvis": [0, 0, 0.965], "pelvis_rot": [2, -4, 0], "knee_L": [0.1, -1, 0], "knee_R": [-0.1, -1, 0], "lumbar": 0, "chest": 0, "neck": 0, "clavicle": [0, 0], "hand": {"pos": [0.12, -0.22, 0.14], "rel": "chest", "fingers": [-0.256, -0.478, 0.84], "palm": [-0.967, 0.126, -0.223], "curl": 75}, "elbow": [0.1, -0.5, -1], "foot": {"pos": [0.12, 0.17, 0.19], "yaw": 8, "pitch": 30}, "foot_R": {"pos": [-0.12, -0.15, 0.11], "yaw": 8, "pitch": 0}},
     "d": {"pelvis": [0, 0, 0.985], "pelvis_rot": [2, 0, 0], "knee_L": [0.1, -1, 0], "knee_R": [-0.1, -1, 0], "lumbar": 0, "chest": 0, "neck": 0, "clavicle": [0, 0], "hand": {"pos": [0.12, -0.22, 0.14], "rel": "chest", "fingers": [-0.256, -0.478, 0.84], "palm": [-0.967, 0.126, -0.223], "curl": 75}, "elbow": [0.1, -0.5, -1], "foot": {"pos": [0.12, -0.02, 0.19], "yaw": 8, "pitch": 0}, "foot_R": {"pos": [-0.12, 0.0, 0.11], "yaw": 8, "pitch": 0}}
   },
-  "keys": [[0, "a"], [0.35, "b"], [0.7, "c"], [1.05, "d"], [1.4, "a"]],
-  "gear": [{"kit": "kettlebell", "side": "L", "other": "L", "bell": [-0.15, -0.12, 0]}, {"kit": "kettlebell", "side": "R", "other": "R", "bell": [-0.15, -0.12, 0]}],
+  "keys": [[0, "a"], [0.35, "b"], [0.7, "c"], [1.05, "d"], [1.4, "a"], [1.75, "b"], [2.1, "c"], [2.45, "d"], [2.8, "a"]],
+  "gear": [{"kit": "kettlebell", "side": "L", "other": "L", "bell": [-0.15, -0.16, 0]}, {"kit": "kettlebell", "side": "R", "other": "R", "bell": [-0.15, -0.16, 0]}],
   "mistakes": [
     {
       "line": 0,
