@@ -236,17 +236,25 @@ the user's equipment first (an exercise fits when `equipment` or any of its
 removed.
 Variations are the other exercises of the same `family`, ordered by rank.
 
-**`exercises/{id}/animation/main`** (planned, Group 15; fields approved by
-the owner 2026-11-25): the exercise's animation recipe, a few KB. `view`
-(the camera's starting yaw and pitch), `poses` (name → pelvis, spine
-angles, where the hands grip and the feet stand, where elbows and knees
-point), `keys` (seconds and pose name, looping), `gear` (kits by name with
-where each stands), `mistakes` (per catalogue `mistakes` line: the pose
-fields that go wrong and the joints to ring, or that no pose can show it).
-Muscles are the exercise's own; kits are stored once, apart from the
-recipes. Seeded from `content/animations/<id>.json` when its status is
-`approved` (a mistake when its own status is); `updatedAt`, `contentHash`
-as elsewhere.
+**`exercises/{id}/animation/main`** (Group 15; fields approved by the
+owner 2026-11-25): the exercise's animation recipe, a few KB, as `recipe`
+(string): the recipe file as compact JSON text, because Firestore has no
+arrays of arrays and a recipe is full of them (key poses as `[seconds,
+pose]`, points as `[x, y, z]`). In it: `view` (the camera's starting yaw
+and pitch), `poses` (name → pelvis, spine angles, where the hands grip and
+the feet stand, where elbows and knees point), `keys` (seconds and pose
+name, looping), `gear` (kits by name with where each stands), `mistakes`
+(per catalogue `mistakes` line: the pose fields that go wrong and the
+joints to ring, or `shown: false` when no pose can show it); without the
+file's `status` and `note`, and without the mistakes not approved
+themselves. Muscles are the exercise's own. Written by the import from
+`content/animations/<id>.json` when its status is `approved`, deleted when
+it no longer is; `updatedAt`, `contentHash` as elsewhere.
+
+**`animationKits/main`**: `kits` (string), the approved gear kits of
+`content/animations/_kits.json` (name → kit, without `status`) as compact
+JSON text, for the same reason; stored once for every recipe. `updatedAt`,
+`contentHash`.
 
 **`programs/{id}`** (catalog card): `status`, `premium`, `level`, `goal`,
 `daysPerWeek`, `lengthWeeks?`, `equipment[]` (the primary `equipment` of
@@ -3419,6 +3427,21 @@ the feature you are about to touch, and keep it true when you change it.
   landmarks are measured, not assumed. The viewer sorts whole triangles by
   depth: gear is cut into cells of at most 9 cm and must not overlap the
   body. The rig and export tools accept an already skinned body file.
+- **In Firestore**: `tool/validate_content.dart` checks the recipe files
+  against the catalogue and the kits (the file names an exercise; known
+  statuses; kits exist, only approved kits in an approved recipe; `keys`
+  name poses, start at 0 and end on the first pose; mistake lines unique and
+  within the exercise's `mistakes`); geometry stays with `validate.py`.
+  `tool/import_content.dart` writes `animationKits/main` and every approved
+  recipe's `exercises/{id}/animation/main` after the other content, skips
+  unchanged ones by `contentHash`, and deletes the document of a recipe that
+  is no longer approved (a recipe file removed leaves its document alone).
+  The app's `GetExerciseAnimation` reads the animation and the kits from
+  Firestore's cache when it holds them (a known absence included) and
+  refreshes them from the server for the next read; otherwise from the
+  server. So an animation opened once plays offline, and a fixed recipe
+  shows from the second opening on. No animation document means none;
+  missing kits or text that is not a JSON object is a failure.
 - **In the app** (owner's picks, 2026-11-25; Design › Exercise animations):
   Exercise detail's first card has two tabs, the animation and today's
   front and back muscle pair; chips under the animation switch between the

@@ -51,6 +51,7 @@ class ExercisesModule implements FeatureModule {
       )
       ..registerFactory(() => WatchExercises(sl()))
       ..registerFactory(() => SyncExercises(sl()))
+      ..registerFactory(() => GetExerciseAnimation(sl()))
       ..registerFactory(() => WatchOwnedEquipment(sl()))
       ..registerFactory(() => SaveOwnedEquipment(sl()))
       ..registerFactory(() => WatchFavorites(sl()))

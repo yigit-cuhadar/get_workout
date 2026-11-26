@@ -3,6 +3,7 @@ import 'package:forge_core/forge_core.dart';
 import 'custom_exercise.dart';
 import 'custom_exercise_repository.dart';
 import 'exercise.dart';
+import 'exercise_animation.dart';
 import 'exercise_repository.dart';
 import 'user_library_repository.dart';
 import 'vocabulary.dart';
@@ -21,6 +22,15 @@ class SyncExercises implements UseCase<void, NoParams> {
   @override
   Future<Result<void>> call([NoParams params = const NoParams()]) =>
       _repository.sync();
+}
+
+class GetExerciseAnimation implements UseCase<ExerciseAnimation?, String> {
+  const GetExerciseAnimation(this._repository);
+  final ExerciseRepository _repository;
+
+  @override
+  Future<Result<ExerciseAnimation?>> call(String exerciseId) =>
+      _repository.getAnimation(exerciseId);
 }
 
 typedef EquipmentUpdate = ({String uid, Set<Equipment> equipment});

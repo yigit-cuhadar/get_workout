@@ -1,10 +1,12 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:forge_core/forge_core.dart';
 import 'package:forge_firebase/forge_firebase.dart';
 
 import '../domain/exercise.dart';
+import '../domain/exercise_animation.dart';
 import '../domain/exercise_queries.dart';
 import '../domain/exercise_repository.dart';
 import '../domain/vocabulary.dart';
@@ -77,6 +79,62 @@ class FirestoreExerciseRepository implements ExerciseRepository {
     // After a failure, whatever arrived before it is still worth showing.
     if (result.isOk || documents.isNotEmpty) _publish(documents.values);
     return result;
+  }
+
+  /// The cached animation when the cache holds one (or knows there is
+  /// none), refreshed from the server for the next read; the server's
+  /// otherwise.
+  @override
+  Future<Result<ExerciseAnimation?>> getAnimation(String exerciseId) =>
+      guard(() async {
+        final cached = await _cachedAnimation(exerciseId);
+        if (cached == null) return _readAnimation(exerciseId, Source.server);
+        unawaited(
+          _readAnimation(exerciseId, Source.server).then<void>(
+            (_) {},
+            onError: (Object error, StackTrace stack) => Log.e(
+              'exercises',
+              'Animation of $exerciseId not refreshed',
+              error,
+              stack,
+            ),
+          ),
+        );
+        return cached.animation;
+      }, mapper: mapFirebaseError);
+
+  /// Null when the cache cannot answer: never loaded, or unreadable.
+  Future<({ExerciseAnimation? animation})?> _cachedAnimation(
+    String exerciseId,
+  ) async {
+    try {
+      return (animation: await _readAnimation(exerciseId, Source.cache));
+    } catch (error) {
+      Log.d('exercises', 'Animation of $exerciseId not cached: $error');
+      return null;
+    }
+  }
+
+  Future<ExerciseAnimation?> _readAnimation(
+    String exerciseId,
+    Source source,
+  ) async {
+    final animation = await _source.animation(exerciseId, source);
+    if (animation == null) return null;
+    final kits = await _source.animationKits(source);
+    if (kits == null) throw const NotFoundFailure('animation kits');
+    return ExerciseAnimation(
+      recipe: _jsonObject(animation['recipe']),
+      kits: _jsonObject(kits['kits']),
+    );
+  }
+
+  /// Recipes and kits are stored as JSON text: Firestore cannot hold the
+  /// arrays inside arrays they are made of.
+  static Map<String, Object?> _jsonObject(Object? text) {
+    if (text is! String) throw FormatException('Not JSON text', text);
+    if (jsonDecode(text) case final Map<String, Object?> map) return map;
+    throw FormatException('Not a JSON object', text);
   }
 
   /// Publishes the live exercises unless they equal the current list.

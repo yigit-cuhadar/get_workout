@@ -2,8 +2,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 typedef ExerciseDocument = ({String id, Map<String, Object?> data});
 
-/// Raw access to `exercises`, documents of every status. Throws the Firestore
-/// SDK's errors. `FirestoreCollection` cannot read from the cache only, and
+/// Raw access to `exercises`, documents of every status, and to the
+/// animations: `exercises/{id}/animation/main` and `animationKits/main`.
+/// Throws the Firestore SDK's errors. `FirestoreCollection` cannot read from the cache only, and
 /// its converter would fail a whole list on one malformed document, hence the
 /// direct Firestore access.
 class FirestoreExerciseSource {
@@ -33,6 +34,24 @@ class FirestoreExerciseSource {
     );
     return snapshot.count ?? 0;
   }
+
+  /// The animation document of exercise [id], null when there is none.
+  /// From [Source.cache] it throws when the document was never loaded.
+  Future<Map<String, dynamic>?> animation(String id, Source source) =>
+      _readDocument(
+        _exercises.doc(id).collection('animation').doc('main'),
+        source,
+      );
+
+  /// The gear kits shared by every animation, null when there are none.
+  /// From [Source.cache] it throws when the document was never loaded.
+  Future<Map<String, dynamic>?> animationKits(Source source) =>
+      _readDocument(_firestore.doc('animationKits/main'), source);
+
+  static Future<Map<String, dynamic>?> _readDocument(
+    DocumentReference<Map<String, dynamic>> doc,
+    Source source,
+  ) async => (await doc.get(GetOptions(source: source))).data();
 
   static Future<List<ExerciseDocument>> _read(
     Query<Map<String, dynamic>> query,

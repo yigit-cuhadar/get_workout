@@ -1,5 +1,6 @@
 // Validates the exercise library in content/exercises/*.json, the programs
-// in content/programs/*.json and, when the functions are built, the
+// in content/programs/*.json, the animation recipes and kits in
+// content/animations and, when the functions are built, the
 // generator rules in content/generator/rules.json, and prints a summary of
 // each program.
 //
@@ -14,13 +15,18 @@ Future<void> main(List<String> args) async {
   final root = args.isNotEmpty ? args.first : 'content';
   final exercises = Directory('$root/exercises');
   final programs = Directory('$root/programs');
-  for (final dir in [exercises, programs]) {
+  final animations = Directory('$root/animations');
+  for (final dir in [exercises, programs, animations]) {
     if (!dir.existsSync()) {
       stderr.writeln('No such directory: ${dir.path}');
       exit(2);
     }
   }
-  final report = validateContent(exercises, programs: programs);
+  final report = validateContent(
+    exercises,
+    programs: programs,
+    animations: animations,
+  );
   final rules = File('$root/generator/rules.json');
   if (rules.existsSync() && !File(rulesCliPath).existsSync()) {
     stdout.writeln(
