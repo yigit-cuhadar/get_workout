@@ -3518,7 +3518,10 @@ the feature you are about to touch, and keep it true when you change it.
   included, to `animationKits/draft`. The app reads the draft pair in place
   of the approved one only for a user whose ID token has the `admin` claim
   (`tool/set_admin.sh`), so the owner reviews drafts in the released app
-  while nobody else sees them; approving a recipe deletes its draft.
+  while nobody else sees them; approving a recipe deletes its draft. An
+  approved recipe sent back with `fix` keeps its published animation until
+  the fix is approved (decided 2026-11-26: a flagged animation is still
+  better for everyone else than none).
   The app's `GetExerciseAnimation` reads the animation and the kits from
   Firestore's cache when it holds them (a known absence included) and
   refreshes them from the server for the next read; otherwise from the

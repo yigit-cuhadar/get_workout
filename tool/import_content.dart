@@ -30,8 +30,9 @@ exercises/<id>/animation/main, after the other content, kits first. A recipe
 that is not approved becomes exercises/<id>/animation/draft and every kit goes
 to animationKits/draft; only admins see those in the app. All are stored as
 JSON text (Firestore cannot store arrays inside arrays). A recipe's document
-of the other kind is deleted if it has one; a recipe file that was removed
-leaves its documents alone.
+of the other kind is deleted if it has one, except that a recipe with status
+fix keeps its published animation until the fix is approved; a recipe file
+that was removed leaves its documents alone.
 
 Writes only new documents and ones whose file changed. Each import stores a
 contentHash with the document. The admin panel leaves contentHash untouched,
@@ -167,6 +168,11 @@ Future<void> main(List<String> args) async {
     await read('animationKits', into: animationRemote);
     for (final recipe in animations.recipes) {
       await read('exercises/${recipe.id}/animation', into: animationRemote);
+      // A recipe sent back for a fix keeps what is published until the fix
+      // is approved; its draft shows the fix to admins meanwhile.
+      if (recipe.data['status'] == 'fix') {
+        animationRemote.remove('exercises/${recipe.id}/animation/main');
+      }
     }
     final plan = planImport(
       {for (final doc in docs.values) doc.path: doc.hash},
