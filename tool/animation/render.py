@@ -107,6 +107,10 @@ def unit_mesh(kind):
     bm = bmesh.new()
     if kind == "cyl":
         bmesh.ops.create_cone(bm, cap_ends=True, segments=32, radius1=1, radius2=1, depth=1)
+    elif kind == "ball":
+        bmesh.ops.create_uvsphere(bm, u_segments=32, v_segments=16, radius=1)
+        for face in bm.faces:
+            face.smooth = True
     else:
         bmesh.ops.create_cube(bm, size=1)
     bm.to_mesh(mesh)
@@ -136,9 +140,9 @@ def extent(frames):
     low, high = np.full(3, np.inf), np.full(3, -np.inf)
     for body, pieces in frames:
         clouds = [body] + [
-            np.array([m[:3, :3] @ (x, y, z) + m[:3, 3] for x in (-r, r) for y in (-r, r) for z in (-0.5, 0.5)])
+            np.array([m[:3, :3] @ (x, y, z) + m[:3, 3] for x in (-r, r) for y in (-r, r) for z in (-h, h)])
             for kind, m, _ in pieces
-            for r in [1 if kind == "cyl" else 0.5]
+            for r, h in [{"cyl": (1, 0.5), "ball": (1, 1)}.get(kind, (0.5, 0.5))]
         ]
         low = np.minimum(low, np.min([c.min(axis=0) for c in clouds], axis=0))
         high = np.maximum(high, np.max([c.max(axis=0) for c in clouds], axis=0))
