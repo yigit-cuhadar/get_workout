@@ -525,8 +525,6 @@ class TrainingWorld {
         .thenAnswer((_) => Stream.value(EquipmentProfile.fullGym.equipment));
     when(() => library.watchFavorites(any()))
         .thenAnswer((_) => Stream.value(const {}));
-    when(() => library.watchExerciseNotes(any()))
-        .thenAnswer((_) => Stream.value(const {}));
     final profile = ProfileCubit(
       watchAuthUser: watchUser,
       watchProfile: WatchProfile(profiles),

@@ -11,7 +11,6 @@ import 'package:get_workout/features/exercises/presentation/body_model_cubit.dar
 import 'package:get_workout/features/exercises/presentation/exercise_catalogue_cubit.dart';
 import 'package:get_workout/features/exercises/presentation/exercise_detail_cubit.dart';
 import 'package:get_workout/features/exercises/presentation/exercise_detail_page.dart';
-import 'package:get_workout/features/exercises/presentation/exercise_notes_cubit.dart';
 import 'package:get_workout/features/exercises/presentation/favorites_cubit.dart';
 import 'package:get_workout/l10n/app_localizations.dart';
 import 'package:go_router/go_router.dart';
@@ -28,9 +27,6 @@ class _CatalogueCubit extends MockCubit<ExerciseCatalogueState>
 
 class _DetailCubit extends MockCubit<ExerciseDetailState>
     implements ExerciseDetailCubit {}
-
-class _NotesCubit extends MockCubit<ExerciseNotesState>
-    implements ExerciseNotesCubit {}
 
 class _FavoritesCubit extends MockCubit<FavoritesState>
     implements FavoritesCubit {}
@@ -63,22 +59,16 @@ void main() {
   );
 
   late _DetailCubit detail;
-  late _NotesCubit notes;
   late _FavoritesCubit favorites;
 
   setUp(() {
     detail = _DetailCubit();
-    notes = _NotesCubit();
-    when(() => notes.state).thenReturn(const ExerciseNotesState({}));
-    when(() => notes.save(any(), any())).thenAnswer((_) async => null);
     favorites = _FavoritesCubit();
     when(() => favorites.state).thenReturn(const FavoritesState({}));
     when(() => favorites.toggle(any())).thenAnswer((_) async {});
-    sl
-      ..registerFactoryParam<ExerciseDetailCubit, String, void>(
-        (_, _) => detail,
-      )
-      ..registerSingleton<ExerciseNotesCubit>(notes);
+    sl.registerFactoryParam<ExerciseDetailCubit, String, void>(
+      (_, _) => detail,
+    );
     registerNoMotion();
   });
 
@@ -249,32 +239,6 @@ void main() {
     expect(find.text('Edit'), findsNothing);
   });
 
-  testWidgets('without a note, Your note offers Add; Save stores it', (
-    tester,
-  ) async {
-    await pump(tester, DetailReady(bench));
-
-    expect(find.text('Your note'), findsOneWidget);
-    await tester.tap(
-      find.descendant(of: find.byType(SectionCard), matching: find.text('Add')),
-    );
-    await settle(tester);
-    await tester.enterText(find.byType(TextField), 'Grip on the rings.');
-    await tester.tap(find.text('Save'));
-    await settle(tester);
-
-    verify(() => notes.save('bench', 'Grip on the rings.')).called(1);
-  });
-
-  testWidgets('a note shows with Edit', (tester) async {
-    when(() => notes.state)
-        .thenReturn(const ExerciseNotesState({'bench': 'Grip on the rings.'}));
-    await pump(tester, DetailReady(bench));
-
-    expect(find.text('Grip on the rings.'), findsOneWidget);
-    expect(find.text('Edit'), findsOneWidget);
-  });
-
   testWidgets('a custom exercise: its tag, equipment, note and ⋯', (
     tester,
   ) async {
@@ -285,7 +249,6 @@ void main() {
     expect(find.text('Equipment'), findsOneWidget);
     expect(find.text('Level'), findsNothing);
     expect(find.text('Third hole.'), findsOneWidget);
-    expect(find.text('Your note'), findsNothing);
 
     await tester.tap(find.bySemanticsLabel('Exercise options'));
     await settle(tester);

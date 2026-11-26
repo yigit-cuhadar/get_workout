@@ -11,14 +11,11 @@ import '../../analytics/domain/analytics.dart';
 import '../../programs/presentation/add_to_program.dart';
 import '../../programs/presentation/add_to_program_cubit.dart';
 import '../../workout/presentation/start_workout.dart';
-import '../../workout/presentation/workout_editor_view.dart';
 import '../domain/exercise.dart';
-import '../domain/exercise_usecases.dart';
 import 'body_model_cubit.dart';
 import 'exercise_catalogue_cubit.dart';
 import 'exercise_detail_cubit.dart';
 import 'exercise_motion_cubit.dart';
-import 'exercise_notes_cubit.dart';
 import 'favorites_cubit.dart';
 import 'vocabulary_labels.dart';
 import 'widgets/exercise_motion_view.dart';
@@ -41,14 +38,8 @@ class ExerciseDetailPage extends StatelessWidget {
   final String Function(String id) exerciseRoute;
 
   @override
-  Widget build(BuildContext context) => MultiBlocProvider(
-    providers: [
-      BlocProvider(
-        create: (_) =>
-            sl<ExerciseDetailCubit>(param1: exerciseId, param2: from),
-      ),
-      BlocProvider.value(value: sl<ExerciseNotesCubit>()),
-    ],
+  Widget build(BuildContext context) => BlocProvider(
+    create: (_) => sl<ExerciseDetailCubit>(param1: exerciseId, param2: from),
     child: _DetailView(exerciseRoute),
   );
 }
@@ -293,7 +284,6 @@ class _DetailBody extends StatelessWidget {
             ),
           if (exercise.note case final note? when note.isNotEmpty)
             SectionCard.plain(title: l10n.detailNote, child: Text(note)),
-          if (!exercise.isCustom) _OwnNote(exercise),
         ]) ...[part, const SizedBox(height: Gap.sm)],
         if (detail.variations.isNotEmpty || detail.alternatives.isNotEmpty)
           _Similar(detail, exerciseRoute),
@@ -387,63 +377,6 @@ class _Similar extends StatelessWidget {
         ),
       ),
     );
-  }
-}
-
-/// The user's own note on a catalogue exercise, edited in a sheet.
-class _OwnNote extends StatelessWidget {
-  const _OwnNote(this.exercise);
-
-  final Exercise exercise;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final note = context.select(
-      (ExerciseNotesCubit cubit) => cubit.state.of(exercise.id),
-    );
-    return SectionCard.plain(
-      title: l10n.detailOwnNote,
-      actionLabel: note == null ? l10n.detailOwnNoteAdd : l10n.customEdit,
-      onAction: () => _edit(context, note),
-      child: note == null ? null : Text(note),
-    );
-  }
-
-  Future<void> _edit(BuildContext context, String? note) async {
-    final l10n = AppLocalizations.of(context);
-    final notes = context.read<ExerciseNotesCubit>();
-    var text = note ?? '';
-    final save = await showForgeBottomSheet<bool>(
-      context: context,
-      builder: (context) => ForgeBottomSheet(
-        title: l10n.detailOwnNote,
-        action: ForgeButton(
-          label: l10n.customSave,
-          size: ForgeButtonSize.large,
-          onPressed: () => Navigator.pop(context, true),
-        ),
-        child: NoteField(
-          initial: note,
-          label: l10n.detailNote,
-          hint: l10n.workoutNoteHint,
-          maxLength: maxExerciseNoteLength,
-          onChanged: (changed) => text = changed,
-          autofocus: true,
-        ),
-      ),
-    );
-    if (save != true) return;
-    final failure = await notes.save(exercise.id, text);
-    if (failure != null && context.mounted) {
-      showForgeSnackbar(
-        context,
-        message: failure is NetworkFailure
-            ? l10n.errorNetwork
-            : l10n.detailOwnNoteSaveFailed,
-        error: true,
-      );
-    }
   }
 }
 
