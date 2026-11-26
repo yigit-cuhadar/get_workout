@@ -55,7 +55,12 @@
         ],
         "curl": 15,
         "rel": "chest"
-      }
+      },
+      "knee": [
+        0,
+        -1,
+        0
+      ]
     },
     "air1": {
       "extends": "closed",
