@@ -3459,8 +3459,12 @@ the feature you are about to touch, and keep it true when you change it.
   from two angles and what to look at; (5) the owner is asked in the question dialog, in Turkish: which
   exercises need a fix (multi-select), then what to change in each; (6)
   fixes go back through 2-4 and are shown again; (7) when the owner
-  approves, statuses become `approved`, the count here is updated, and the
-  batch's PR is merged. No recipe is marked `approved` and no batch is
+  approves, statuses become `approved`, the count here is updated, the
+  batch's PR is merged, and the batch is imported to dev and to prod at
+  once (owner, 2026-11-26: an approved batch goes straight to prod, no
+  second question). A batch that needs a solver, body file or app change
+  not yet in a released build is held from prod until that build is out,
+  and the owner is told. No recipe is marked `approved` and no batch is
   merged without the owner's answer.
 - **Checks before the owner sees an exercise**: a standing pose has locked
   knees (leg stretch 0.995 or more; the owner sent the first batch back for
