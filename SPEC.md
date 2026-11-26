@@ -3343,7 +3343,9 @@ the feature you are about to touch, and keep it true when you change it.
   <exercise id> [keys|loop] [male|female]` renders the correct form and
   every mistake into `build/animation/` (key poses in a few seconds);
   `validate.py` checks the recipes on both bodies; `page.py` builds a
-  batch's review page from the rendered loops; `batch.py` prints the
+  batch's review page from the rendered loops (after a fix, render the
+  loops again and look at a frame of the page's own copy before
+  publishing: an unchanged page went out once); `batch.py` prints the
   counts by status, the kits and the next batch; `export.py` bakes the
   correct forms for the debug page until the phone solves recipes itself.
 - **A recipe**: the correct form and the exercise's mistakes, each a set of
