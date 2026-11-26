@@ -3505,6 +3505,12 @@ the feature you are about to touch, and keep it true when you change it.
   recipe's `exercises/{id}/animation/main` after the other content, skips
   unchanged ones by `contentHash`, and deletes the document of a recipe that
   is no longer approved (a recipe file removed leaves its document alone).
+  **Drafts for admins** (owner, 2026-11-26): a recipe that is not approved
+  is written to `exercises/{id}/animation/draft` and every kit, draft ones
+  included, to `animationKits/draft`. The app reads the draft pair in place
+  of the approved one only for a user whose ID token has the `admin` claim
+  (`tool/set_admin.sh`), so the owner reviews drafts in the released app
+  while nobody else sees them; approving a recipe deletes its draft.
   The app's `GetExerciseAnimation` reads the animation and the kits from
   Firestore's cache when it holds them (a known absence included) and
   refreshes them from the server for the next read; otherwise from the
