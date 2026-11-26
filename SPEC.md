@@ -3331,8 +3331,11 @@ the feature you are about to touch, and keep it true when you change it.
   `spike/exercise-animation`, worktree `apps/get_workout_anim`), which
   holds the tools, the five exercises and the debug page, and points at
   the package through a gitignored `pubspec_overrides.yaml`, so its CI
-  fails until #112 is tagged. Recipes approved: 0 of
-  419 live exercises (which carry 852 mistakes). Review page of the spike:
+  fails until #112 is tagged. Recipes approved: 6 of
+  419 live exercises (which carry 852 mistakes): batch 1, the barbell squat
+  family, approved by the owner 2026-11-26 after one round of fixes (page
+  https://claude.ai/artifact/C7QFi5EHF8sbxbPDSQYM7G). Until #271 can merge,
+  approved batches stay on that branch. Review page of the spike:
   https://claude.ai/artifact/2FhtzLavcFCNdBh1rZeFHN
 - **Tools** (`tool/animation/` on that branch; they need Blender 5.2 at
   `/Applications` and python3 with numpy and Pillow): `rig.py` fits the

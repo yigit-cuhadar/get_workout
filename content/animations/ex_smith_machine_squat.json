@@ -1,5 +1,5 @@
 {
-  "status": "review",
+  "status": "approved",
   "view": [35, 8],
   "poses": {
     "top": {
@@ -26,7 +26,7 @@
   "mistakes": [
     {
       "line": 0,
-      "status": "review",
+      "status": "approved",
       "ring": ["foot_L", "foot_R"],
       "poses": {
         "top": {"foot": {"at": [0.20, 0.17]}},

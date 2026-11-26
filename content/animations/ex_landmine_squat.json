@@ -1,5 +1,5 @@
 {
-  "status": "review",
+  "status": "approved",
   "view": [60, 8],
   "poses": {
     "top": {
@@ -25,13 +25,13 @@
   "mistakes": [
     {
       "line": 0,
-      "status": "review",
+      "status": "approved",
       "ring": ["hand_L", "hand_R"],
       "poses": {"bottom": {"hand": {"pos": [0.045, -0.40, 0.02]}, "elbow": [0.5, -0.2, -1]}}
     },
     {
       "line": 1,
-      "status": "review",
+      "status": "approved",
       "ring": ["foot_L", "foot_R"],
       "poses": {"bottom": {"foot": {"pitch": 20}, "pelvis": [0, 0.12, 0.56], "pelvis_rot": [16, 0, 0]}}
     }

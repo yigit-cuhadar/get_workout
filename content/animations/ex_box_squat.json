@@ -1,5 +1,5 @@
 {
-  "status": "review",
+  "status": "approved",
   "view": [40, 8],
   "poses": {
     "top": {
@@ -27,13 +27,13 @@
   "mistakes": [
     {
       "line": 0,
-      "status": "review",
+      "status": "approved",
       "ring": ["hip_L", "hip_R"],
       "keys": [[0, "top"], [0.6, "seated"], [1.4, "seated"], [2.3, "top"], [2.8, "top"]]
     },
     {
       "line": 1,
-      "status": "review",
+      "status": "approved",
       "ring": ["chest"],
       "poses": {"rocked": {"extends": "seated", "pelvis": [0, 0.47, 0.56], "pelvis_rot": [14, 0, 0], "lumbar": 12, "chest": 8, "neck": -10}},
       "keys": [[0, "top"], [1.7, "seated"], [2.2, "rocked"], [2.8, "seated"], [3.7, "top"], [4.2, "top"]]

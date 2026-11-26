@@ -1,5 +1,5 @@
 {
-  "status": "review",
+  "status": "approved",
   "view": [55, 8],
   "poses": {
     "top": {
@@ -27,7 +27,7 @@
   "mistakes": [
     {
       "line": 0,
-      "status": "review",
+      "status": "approved",
       "ring": ["elbow_L", "elbow_R"],
       "poses": {
         "bottom": {
@@ -40,7 +40,7 @@
     },
     {
       "line": 1,
-      "status": "review",
+      "status": "approved",
       "ring": ["chest"],
       "poses": {
         "bottom": {"lumbar": 6, "chest": 28, "neck": -38, "clavicle": [5, 26]}
