@@ -2,7 +2,8 @@
 
   python3 export.py <body.glb> <rig.npz> <skinned body.glb> <clips dir>
 
-The body keeps its geometry and gains JOINTS_0 / WEIGHTS_0 and a skin. Each
+The body keeps its geometry and gains JOINTS_0 / WEIGHTS_0 and a skin; beside
+it goes `<body>.rig.json`, the joints a solver needs. Each
 recipe's correct form gets `<name>.glb`, the gear with every piece bound to a joint of its
 own after the body's, and `<name>.clip`, one 3x4 matrix per joint per frame
 (layout in forge_model_viewer's ModelClip). Everything is in the body file's
@@ -121,6 +122,8 @@ inverse_bind = np.tile(np.eye(4, dtype=np.float32), (len(heads), 1, 1))
 inverse_bind[:, 3, :3] = -heads  # column-major: the translation is the last column
 skin(out, data, [{"name": b, "translation": h.tolist()} for b, h in zip(rig.bones, heads)], inverse_bind)
 write_glb(body_out, out, data)
+with open(os.path.splitext(body_out)[0] + ".rig.json", "w") as f:
+    json.dump(rig.joints(metres), f, separators=(",", ":"))
 print(f"{body_out}: {os.path.getsize(body_out) // 1024} KB, {len(rig.bones)} joints")
 
 
