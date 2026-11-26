@@ -3,7 +3,7 @@
   "view": [35, 8],
   "poses": {
     "top": {
-      "pelvis": [0, 0, 0.965],
+      "pelvis": [0, 0, 0.975],
       "pelvis_rot": [3, 0, 0],
       "lumbar": 0,
       "chest": 0,

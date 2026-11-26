@@ -3342,7 +3342,8 @@ the feature you are about to touch, and keep it true when you change it.
   recipes and kits (its header is the format's reference); `preview.sh
   <exercise id> [keys|loop] [male|female]` renders the correct form and
   every mistake into `build/animation/` (key poses in a few seconds);
-  `validate.py` checks the recipes on both bodies; `batch.py` prints the
+  `validate.py` checks the recipes on both bodies; `page.py` builds a
+  batch's review page from the rendered loops; `batch.py` prints the
   counts by status, the kits and the next batch; `export.py` bakes the
   correct forms for the debug page until the phone solves recipes itself.
 - **A recipe**: the correct form and the exercise's mistakes, each a set of
@@ -3396,7 +3397,10 @@ the feature you are about to touch, and keep it true when you change it.
   approves, statuses become `approved`, the count here is updated, and the
   batch's PR is merged. No recipe is marked `approved` and no batch is
   merged without the owner's answer.
-- **Checks before the owner sees an exercise**: no limb is stretched past
+- **Checks before the owner sees an exercise**: a standing pose has locked
+  knees (leg stretch 0.995 or more; the owner sent the first batch back for
+  bent knees at the top); a grip matches how the bar is really held, looked
+  at from the front, not only solved; no limb is stretched past
   its reach (the preview prints each limb's stretch; above 0.99 means the
   target was not reached); feet that stand are flat on the floor and do not
   slide; hands stay on the bar or handle through the whole loop; the bar or
