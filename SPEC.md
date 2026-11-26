@@ -3372,14 +3372,13 @@ the feature you are about to touch, and keep it true when you change it.
 ### Exercise animations
 
 - **Where it stands** (keep this entry current): the system is built end
-  to end and batch 1 plays in the app's real screens (exercise detail and
-  the open workout card), checked on the simulator against `getworkout-dev`
-  2026-11-26: recipes and kits are imported to dev Firestore (rules deployed
-  to dev only; nothing on prod), the phone solves them with `forge_motion`.
-  Packages: `forge_model_viewer` (skinning, motions, ground parts; Forge
-  #112) and `forge_motion` (Forge #113) are merged and tagged v0.59.0; the
-  app and its widgetbook pin that tag. App: PR #271 (draft, branch
-  `spike/exercise-animation`, worktree `apps/get_workout_anim`). Not done: nothing on a
+  to end and on main (#271). Batch 1 plays in the app's real screens
+  (exercise detail and the open workout card), checked on the simulator
+  against `getworkout-dev` 2026-11-26. Recipes, kits and their rules are on
+  dev and prod (prod 2026-11-26, owner's go-ahead); the phone solves them
+  with `forge_motion` (Forge v0.59.0, with the skinned
+  `forge_model_viewer`). First TestFlight build with animations: 1.0.0 (9).
+  Not done: nothing on a
   real phone; studio cards and Widgetbook use cases for the tabbed card,
   the motion view and the play button; the chips are plain `ForgeChip`s
   and the play button a bare icon button, not yet the canvas's looks.
