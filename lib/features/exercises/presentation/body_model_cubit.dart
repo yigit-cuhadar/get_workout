@@ -21,12 +21,15 @@ final class BodyModelLoading extends BodyModelState {
 }
 
 final class BodyModelReady extends BodyModelState {
-  const BodyModelReady(this.model);
+  const BodyModelReady(this.model, this.sex);
 
   final Model3D model;
 
+  /// Whose body it is.
+  final Sex sex;
+
   @override
-  List<Object?> get props => [model];
+  List<Object?> get props => [model, sex];
 }
 
 final class BodyModelFailed extends BodyModelState {
@@ -98,7 +101,7 @@ class BodyModelCubit extends Cubit<BodyModelState> {
     if (state is BodyModelFailed) emit(const BodyModelLoading());
     try {
       final loaded = await model;
-      if (!isClosed && sex == _sex) emit(BodyModelReady(loaded));
+      if (!isClosed && sex == _sex) emit(BodyModelReady(loaded, sex));
     } catch (_) {
       if (!isClosed && sex == _sex) emit(const BodyModelFailed());
     }

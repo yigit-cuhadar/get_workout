@@ -1,6 +1,8 @@
 // Imports content/exercises/*.json into Firestore `exercises/<id>`,
 // content/programs/*.json into `programs/<id>` (the catalog card) and
-// `programs/<id>/detail/main` (the days), and seeds the program generator's
+// `programs/<id>/detail/main` (the days), the approved animation recipes of
+// content/animations into `exercises/<id>/animation/main` and their kits
+// into `animationKits/main`, and seeds the program generator's
 // rules from content/generator/rules.json. See _usage for how it decides
 // what to write.
 import 'dart:io';
@@ -14,17 +16,26 @@ const _usage = '''
 Usage: GOOGLE_ACCESS_TOKEN=\$(gcloud auth print-access-token) \\
          dart run tool/import_content.dart --project <id> [--dry-run] [--force]
 
-Run from the app root. Validates content/exercises/*.json and
-content/programs/*.json and refuses to import on any error. Firestore is the
+Run from the app root. Validates content/exercises/*.json,
+content/programs/*.json and content/animations and refuses to import on any
+error. Firestore is the
 source of truth once seeded; the files are the seed and the bulk-edit path.
 
 A program file becomes two documents: programs/<id> (every field but days)
 and programs/<id>/detail/main (days). Exercises are written before programs.
 
+Animations: content/animations/_kits.json becomes animationKits/main (the
+approved kits) and every recipe with status approved becomes
+exercises/<id>/animation/main, after the other content, kits first. Both are
+stored as JSON text (Firestore cannot store arrays inside arrays). A recipe
+that is not approved has its document deleted if it has one; a recipe file
+that was removed leaves its document alone.
+
 Writes only new documents and ones whose file changed. Each import stores a
 contentHash with the document. The admin panel leaves contentHash untouched,
 so a document edited there no longer matches it and counts as "edited
-elsewhere": it is skipped, listed, and the run exits non-zero. --force
+elsewhere": it is skipped, listed, and the run exits non-zero (a document
+to delete is deleted all the same). --force
 overwrites such documents with the file. A panel that wants a document managed
 by this import again must store the matching contentHash itself. A program
 is one unit: if its card or its detail was edited elsewhere, neither is
@@ -32,8 +43,9 @@ written (without --force), and the two are always in the same commit.
 
 Every write carries a precondition (the document's updateTime from the read,
 or "does not exist" for a new one), so a concurrent edit fails the commit
-instead of being lost. Nothing is ever deleted; documents missing from the
-files are listed as warnings (retire one by setting its status in its file).
+instead of being lost. Apart from the animations of recipes that are not
+approved, nothing is ever deleted; documents missing from the files are
+listed as warnings (retire one by setting its status in its file).
 
 content/generator/rules.json seeds the generator rules once: when the
 project has none yet, the file is checked by the functions' validator
@@ -68,10 +80,15 @@ Future<void> main(List<String> args) async {
 
   final exercises = Directory('content/exercises');
   final programs = Directory('content/programs');
-  for (final dir in [exercises, programs]) {
+  final animationDir = Directory('content/animations');
+  for (final dir in [exercises, programs, animationDir]) {
     if (!dir.existsSync()) _fail('No such directory: ${dir.path}');
   }
-  final report = validateContent(exercises, programs: programs);
+  final report = validateContent(
+    exercises,
+    programs: programs,
+    animations: animationDir,
+  );
   final firestore = FirestoreRest(project, token);
   try {
     final rulesFile = File('content/generator/rules.json');
@@ -96,9 +113,11 @@ Future<void> main(List<String> args) async {
       printReport(report);
       _fail('Validation failed; nothing imported.');
     }
+    final animations = report.animations!;
     stdout.writeln(
       'Validation OK: ${report.exercises.length} exercises, '
-      '${report.programs.length} programs.',
+      '${report.programs.length} programs, '
+      '${animations.recipes.length} animation recipes.',
     );
 
     final docs = {
@@ -110,10 +129,24 @@ Future<void> main(List<String> args) async {
       ])
         doc.path: doc,
     };
+    final animationDocs = {
+      for (final doc in [
+        animationKitsDoc(animations.kits),
+        for (final recipe in animations.recipes)
+          if (recipe.isApproved) animationDoc(recipe.id, recipe.data),
+      ])
+        doc.path: doc,
+    };
     final remote = <String, RemoteDocument>{};
-    Future<void> read(String collection) async {
+    final animationRemote = <String, RemoteDocument>{};
+    Future<void> read(
+      String collection, {
+      Map<String, RemoteDocument>? into,
+      String? onlyId,
+    }) async {
       for (final d in await firestore.listDocuments(collection)) {
-        remote['$collection/${d.id}'] = RemoteDocument.fromFields(
+        if (onlyId != null && d.id != onlyId) continue;
+        (into ?? remote)['$collection/${d.id}'] = RemoteDocument.fromFields(
           decodeFields(d.fields),
           d.updateTime,
         );
@@ -130,26 +163,62 @@ Future<void> main(List<String> args) async {
     for (final id in programIds) {
       await read('programs/$id/detail');
     }
+    await read('animationKits', into: animationRemote, onlyId: 'main');
+    for (final recipe in animations.recipes) {
+      await read(
+        'exercises/${recipe.id}/animation',
+        into: animationRemote,
+        onlyId: 'main',
+      );
+    }
     final plan = planImport(
       {for (final doc in docs.values) doc.path: doc.hash},
       remote,
       force: force,
     );
+    // Planned apart, so an exercise and its animation never hold each other
+    // back. Its orphans are the animations of recipes not approved.
+    final animationPlan = planImport(
+      {for (final doc in animationDocs.values) doc.path: doc.hash},
+      animationRemote,
+      force: force,
+    );
 
     if (!dryRun) {
+      List<Map<String, Object?>> writes(
+        List<String> unit,
+        Map<String, ContentDoc> local,
+        Map<String, RemoteDocument> stored,
+      ) => [
+        for (final path in unit)
+          contentWrite(
+            firestore.databasePath,
+            local[path]!,
+            updateTime: stored[path]?.updateTime,
+          ),
+      ];
       await firestore.commitInBatches([
         for (final unit in groupByUnit(plan.toWrite))
+          writes(unit, docs, remote),
+        for (final unit in groupByUnit(animationPlan.toWrite))
+          writes(unit, animationDocs, animationRemote),
+        for (final path in animationPlan.orphaned)
           [
-            for (final path in unit)
-              contentWrite(
-                firestore.databasePath,
-                docs[path]!,
-                updateTime: remote[path]?.updateTime,
-              ),
+            deleteWrite(
+              firestore.databasePath,
+              path,
+              updateTime: animationRemote[path]!.updateTime,
+            ),
           ],
       ]);
     }
     _printPlan(plan, project: project, dryRun: dryRun);
+    _printPlan(
+      animationPlan,
+      project: project,
+      dryRun: dryRun,
+      animations: true,
+    );
     final failures = <String>[];
     if (rulesExist) stdout.writeln(rulesExistLine);
     if (rulesSeed != null) {
@@ -169,9 +238,10 @@ Future<void> main(List<String> args) async {
         );
       }
     }
-    if (plan.skipped.isNotEmpty) {
+    final skipped = plan.skipped.length + animationPlan.skipped.length;
+    if (skipped > 0) {
       failures.add(
-        '${plan.skipped.length} document(s) were edited elsewhere and skipped, '
+        '$skipped document(s) were edited elsewhere and skipped, '
         'with ${plan.held.length} more of the same program(s). Bring the edit '
         'into the file, or run with --force to overwrite.',
       );
@@ -194,18 +264,22 @@ Future<void> main(List<String> args) async {
   }
 }
 
+/// With [animations], [plan]'s orphans are deleted rather than listed.
 void _printPlan(
   ImportPlan plan, {
   required String project,
   required bool dryRun,
+  bool animations = false,
 }) {
   final verb = dryRun ? 'Would write' : 'Wrote';
   final overwritten = plan.force ? plan.edited.length : 0;
   stdout.writeln(
-    '$verb to $project: ${plan.created.length} created, '
+    '$verb ${animations ? 'animations ' : ''}to $project: '
+    '${plan.created.length} created, '
     '${plan.updated.length} updated, $overwritten overwritten, '
     '${plan.unchanged.length} unchanged, ${plan.skipped.length} skipped, '
-    '${plan.held.length} held back.',
+    '${plan.held.length} held back'
+    '${animations ? ', ${plan.orphaned.length} deleted' : ''}.',
   );
   for (final id in plan.created) {
     stdout.writeln('  created $id');
@@ -228,6 +302,10 @@ void _printPlan(
     );
   }
   for (final id in plan.orphaned) {
+    if (animations) {
+      stdout.writeln('  deleted $id (its recipe is not approved)');
+      continue;
+    }
     stdout.writeln(
       'WARNING $id is in Firestore but not in the files; not deleted. '
       'Content is retired by setting status in its file, not removed.',

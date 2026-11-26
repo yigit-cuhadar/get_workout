@@ -373,6 +373,7 @@ void main() {
     when(() => programs.createProgram(any(), any()))
         .thenAnswer((_) async => const Ok('p1'));
     sl.registerSingleton(PremiumPrompt((_) async => false));
+    registerNoMotion();
     // "Add to program" without programs, and the builder it opens.
     sl
       ..registerFactory(

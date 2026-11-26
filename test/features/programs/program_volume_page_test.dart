@@ -12,6 +12,7 @@ import 'package:get_workout/core/widgets/volume_band.dart';
 import 'package:get_workout/features/exercises/domain/vocabulary.dart';
 import 'package:get_workout/features/exercises/presentation/body_model_cubit.dart';
 import 'package:get_workout/features/exercises/presentation/exercise_catalogue_cubit.dart';
+import 'package:get_workout/features/profile/domain/user_profile.dart';
 import 'package:get_workout/features/programs/presentation/program_list_cubit.dart';
 import 'package:get_workout/features/programs/presentation/program_volume_page.dart';
 import 'package:get_workout/l10n/app_localizations.dart';
@@ -112,7 +113,7 @@ void main() {
       exercises: CatalogueReady([
         exercise('a', main: [Muscle.quads]),
       ]),
-      body: BodyModelReady(body!),
+      body: BodyModelReady(body!, Sex.male),
     );
 
     expect(find.text('Drag to turn'), findsOneWidget);

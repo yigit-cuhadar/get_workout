@@ -1,5 +1,7 @@
-// Validates the exercise library in content/exercises/*.json and the
-// programs in content/programs/*.json against the content rules shared with
+// Validates the exercise library in content/exercises/*.json, the
+// programs in content/programs/*.json and the animations in
+// content/animations (see animation_validator.dart); exercises and programs
+// against the content rules shared with
 // the app (lib/features/exercises/domain/content_rules.dart and
 // lib/features/programs/domain/catalogue_rules.dart), then checks the
 // library and the catalogue as wholes.
@@ -12,6 +14,8 @@ import 'package:get_workout/features/exercises/domain/content_rules.dart';
 import 'package:get_workout/features/programs/domain/catalogue_rules.dart';
 import 'package:get_workout/features/exercises/domain/vocabulary.dart';
 
+import 'animation_validator.dart';
+
 /// What [validateContent] found in a content directory.
 class ContentReport {
   final perFile = <String, int>{};
@@ -20,6 +24,7 @@ class ContentReport {
   final errors = <String>[];
   final warnings = <String>[];
   String coverage = '';
+  AnimationContent? animations;
 
   // Draft and retired exercises are not shown to users, so popularity,
   // family ranks and coverage only count live ones.
@@ -32,8 +37,13 @@ class ContentReport {
 }
 
 /// Reads every `*.json` file in [exercises] (which must exist) and checks
-/// it; with [programs], also every program file there against the library.
-ContentReport validateContent(Directory exercises, {Directory? programs}) {
+/// it; with [programs], also every program file there against the library,
+/// and with [animations], the recipes and kits there.
+ContentReport validateContent(
+  Directory exercises, {
+  Directory? programs,
+  Directory? animations,
+}) {
   final report = ContentReport();
   final errors = report.errors;
   for (final (name, decoded) in _readJson(exercises, errors)) {
@@ -60,6 +70,9 @@ ContentReport validateContent(Directory exercises, {Directory? programs}) {
   report.warnings.addAll(library.warnings);
   report.coverage = library.coverage;
   if (programs != null) _validatePrograms(programs, report);
+  if (animations != null) {
+    report.animations = validateAnimations(animations, report.library, errors);
+  }
   return report;
 }
 
@@ -116,6 +129,13 @@ void printReport(ContentReport report) {
   );
   stdout.writeln(report.coverage);
   if (report.programs.isNotEmpty) _printPrograms(report);
+  if (report.animations case final animations?) {
+    final approved = animations.recipes.where((r) => r.isApproved).length;
+    stdout.writeln(
+      'Animations: ${animations.recipes.length} recipes '
+      '(approved: $approved), ${animations.kits.length} kits\n',
+    );
+  }
   for (final warning in report.warnings) {
     stdout.writeln('WARNING $warning');
   }

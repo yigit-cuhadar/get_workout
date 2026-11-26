@@ -646,4 +646,96 @@ void main() {
       expect(write['currentDocument'], {'updateTime': '2026-11-11T10:00:00Z'});
     });
   });
+
+  group('animations', () {
+    final recipe = <String, Object?>{
+      'status': 'approved',
+      'note': 'Lower the hips',
+      'poses': {'top': <String, Object?>{}},
+      'keys': [
+        [0, 'top'],
+        [1, 'top'],
+      ],
+      'mistakes': [
+        {
+          'line': 0,
+          'status': 'approved',
+          'note': 'ok',
+          'ring': ['knee_L'],
+        },
+        {
+          'line': 1,
+          'status': 'review',
+          'ring': ['chest'],
+        },
+        {'line': 2, 'shown': false, 'why': 'Breathing'},
+      ],
+    };
+
+    test('stores an approved recipe as JSON text, review fields left out', () {
+      final doc = animationDoc('ex_a', recipe);
+
+      expect(doc.path, 'exercises/ex_a/animation/main');
+      expect(doc.content.keys, ['recipe']);
+      expect(jsonDecode(doc.content['recipe']! as String), {
+        'poses': {'top': <String, Object?>{}},
+        'keys': [
+          [0, 'top'],
+          [1, 'top'],
+        ],
+        'mistakes': [
+          {
+            'line': 0,
+            'ring': ['knee_L'],
+          },
+          {'line': 2, 'shown': false, 'why': 'Breathing'},
+        ],
+      });
+      expect(() => doc.fields, returnsNormally);
+    });
+
+    test('hashes the same however the file orders its keys', () {
+      final reordered = Map.fromEntries(recipe.entries.toList().reversed);
+
+      expect(
+        animationDoc('ex_a', reordered).hash,
+        animationDoc('ex_a', recipe).hash,
+      );
+    });
+
+    test('stores the approved kits without their status', () {
+      final doc = animationKitsDoc({
+        'barbell': {'status': 'approved', 'pieces': <Object?>[]},
+        'rings': {'status': 'draft', 'pieces': <Object?>[]},
+      });
+
+      expect(doc.path, 'animationKits/main');
+      expect(jsonDecode(doc.content['kits']! as String), {
+        'barbell': {'pieces': <Object?>[]},
+      });
+    });
+
+    test('a stored animation reads back as unchanged', () {
+      final doc = animationDoc('ex_a', recipe);
+      final stored = RemoteDocument.fromFields({
+        ...doc.content,
+        'contentHash': doc.hash,
+      }, '2026-11-26T10:00:00Z');
+
+      final plan = planImport({doc.path: doc.hash}, {doc.path: stored});
+
+      expect(plan.unchanged, [doc.path]);
+    });
+
+    test('deleteWrite deletes only an unchanged document', () {
+      const db = 'projects/p/databases/(default)';
+      expect(
+        deleteWrite(db, 'exercises/ex_a/animation/main', updateTime: 't'),
+        {
+          'delete': '$db/documents/exercises/ex_a/animation/main',
+          'currentDocument': {'updateTime': 't'},
+        },
+      );
+    });
+  });
 }

@@ -45,6 +45,7 @@ class ExerciseCardItem {
     this.letter,
     this.details = const [],
     this.sets,
+    this.openAction,
     this.onTap,
   });
 
@@ -65,6 +66,9 @@ class ExerciseCardItem {
 
   /// Its bubbles, shown open.
   final ExerciseCardSets? sets;
+
+  /// Shown open, before its menu button.
+  final Widget? openAction;
 
   /// Opens its menu under the button whose context it is given.
   final ValueChanged<BuildContext> onOptions;
@@ -303,6 +307,7 @@ class ExerciseCard extends StatelessWidget {
                     ),
                   ),
                 ),
+                ?item.openAction,
                 _Options(item: item, label: optionsLabel),
               ],
             ),

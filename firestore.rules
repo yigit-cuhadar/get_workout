@@ -6,6 +6,15 @@ rules_version = '2';
 //   exercises/{id}           signed out                             deny  deny
 //   exercises/{id}           any signed-in user, guests included    allow deny
 //   exercises/{id}           admin claim                            allow allow
+//   exercises/{id}/          signed out                             deny  deny
+//     animation/x
+//   exercises/{id}/          any signed-in user, guests included    allow deny
+//     animation/x
+//   exercises/{id}/          admin claim                            allow allow
+//     animation/x
+//   animationKits/{id}       signed out                             deny  deny
+//   animationKits/{id}       any signed-in user, guests included    allow deny
+//   animationKits/{id}       admin claim                            allow allow
 //   programs/{id}            signed out                             deny  deny
 //   programs/{id}            any signed-in user, guests included    allow deny
 //   programs/{id}            admin claim                            allow allow
@@ -498,6 +507,16 @@ service cloud.firestore {
     }
 
     match /exercises/{id} {
+      allow read: if signedIn();
+      allow write: if isAdmin();
+
+      match /animation/{doc} {
+        allow read: if signedIn();
+        allow write: if isAdmin();
+      }
+    }
+
+    match /animationKits/{doc} {
       allow read: if signedIn();
       allow write: if isAdmin();
     }

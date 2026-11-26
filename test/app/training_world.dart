@@ -485,6 +485,7 @@ class TrainingWorld {
     addTearDown(tester.view.reset);
     addTearDown(sl.reset);
     sl.registerSingleton(fakeAnalytics());
+    registerNoMotion();
     _registerFallbacks();
     registerReviewPrompt();
 

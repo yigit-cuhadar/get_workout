@@ -17,9 +17,11 @@ import '../domain/exercise_usecases.dart';
 import 'body_model_cubit.dart';
 import 'exercise_catalogue_cubit.dart';
 import 'exercise_detail_cubit.dart';
+import 'exercise_motion_cubit.dart';
 import 'exercise_notes_cubit.dart';
 import 'favorites_cubit.dart';
 import 'vocabulary_labels.dart';
+import 'widgets/exercise_motion_view.dart';
 import 'widgets/exercise_tile.dart';
 
 class ExerciseDetailPage extends StatelessWidget {
@@ -510,7 +512,8 @@ class _Loading extends StatelessWidget {
 
 /// The model from the front and from the back side by side, with the worked
 /// muscles coloured. Neither view takes gestures, so the page scrolls over
-/// them.
+/// them. When the exercise has an animation, the card gets two tabs: the
+/// animation with a chip per clip (the default), and the pair.
 class _MusclePreview extends StatefulWidget {
   const _MusclePreview(this.exercise);
 
@@ -521,6 +524,8 @@ class _MusclePreview extends StatefulWidget {
 }
 
 class _MusclePreviewState extends State<_MusclePreview> {
+  var _moving = true;
+
   @override
   void initState() {
     super.initState();
@@ -529,6 +534,18 @@ class _MusclePreviewState extends State<_MusclePreview> {
 
   @override
   Widget build(BuildContext context) {
+    final exercise = widget.exercise;
+    if (exercise.isCustom) return _pair(context, null);
+    return BlocProvider(
+      create: (_) => sl<ExerciseMotionCubit>(param1: exercise.id)..load(),
+      child: BlocBuilder<ExerciseMotionCubit, ExerciseMotionState>(
+        builder: (context, motion) =>
+            _pair(context, motion is MotionReady ? motion : null),
+      ),
+    );
+  }
+
+  Widget _pair(BuildContext context, MotionReady? motion) {
     final l10n = AppLocalizations.of(context);
     final exercise = widget.exercise;
     final title = l10n.muscleModelWorked;
@@ -546,6 +563,20 @@ class _MusclePreviewState extends State<_MusclePreview> {
         secondary: secondary,
         onRetry: context.read<BodyModelCubit>().load,
       ),
+      BodyModelReady(:final model) when motion != null => MuscleModelPair(
+        model: model,
+        header: ForgeSegmentedControl<bool>(
+          segments: [
+            ForgeSegment(value: true, label: l10n.motionTab),
+            ForgeSegment(value: false, label: l10n.musclesTab),
+          ],
+          selected: _moving,
+          onChanged: (moving) => setState(() => _moving = moving),
+        ),
+        stage: _moving ? _Motion(motion, exercise) : null,
+        main: main,
+        secondary: secondary,
+      ),
       BodyModelReady(:final model) => MuscleModelPair(
         model: model,
         title: title,
@@ -553,5 +584,58 @@ class _MusclePreviewState extends State<_MusclePreview> {
         secondary: secondary,
       ),
     };
+  }
+}
+
+/// The animation, the picked mistake's text, and a chip per clip.
+class _Motion extends StatelessWidget {
+  const _Motion(this.motion, this.exercise);
+
+  final MotionReady motion;
+  final Exercise exercise;
+
+  static const double _height = 290;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final mistakes = exercise.localized(context).mistakes;
+    final line = motion.clips[motion.selected].line;
+    final mistake = line == null ? null : mistakes.elementAtOrNull(line);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      spacing: Gap.sm,
+      children: [
+        SizedBox(
+          height: _height,
+          child: ExerciseMotionView(
+            motion: motion,
+            main: exercise.mainMuscles,
+            secondary: exercise.secondaryMuscles,
+          ),
+        ),
+        if (mistake != null)
+          Text(
+            l10n.motionMistakeText(mistake),
+            style: Theme.of(context).textTheme.bodyMedium!
+                .copyWith(color: ForgeStyle.of(context).colors.danger),
+          ),
+        Wrap(
+          spacing: Gap.sm,
+          runSpacing: Gap.sm,
+          children: [
+            for (final (i, clip) in motion.clips.indexed)
+              ForgeChip(
+                label: clip.line == null
+                    ? l10n.motionCorrect
+                    : l10n.motionMistake(i),
+                selected: i == motion.selected,
+                showCheck: false,
+                onPressed: () => context.read<ExerciseMotionCubit>().select(i),
+              ),
+          ],
+        ),
+      ],
+    );
   }
 }

@@ -310,6 +310,7 @@ class FlowApp {
       saveEquipment: SaveOwnedEquipment(userLibrary),
     );
     bodyModel = failingBodyModel();
+    registerNoMotion();
     _registerPrograms(userLibrary);
     profiles = MockProfiles();
     when(() => profiles.watchProfile(any())).thenAnswer((_) {

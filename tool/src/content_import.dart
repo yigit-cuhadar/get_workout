@@ -1,5 +1,5 @@
-// Pure parts of tool/import_content.dart: turning content JSON (exercises and
-// programs) into Firestore documents, hashing them and deciding what to
+// Pure parts of tool/import_content.dart: turning content JSON (exercises,
+// programs and animations) into Firestore documents, hashing them and deciding what to
 // write.
 import 'dart:convert';
 
@@ -129,6 +129,41 @@ Map<String, Object?> decodeFields(Map<String, Object?> fields) => {
     detail: ContentDoc('$path/detail/main', {'days': json['days']}),
   );
 }
+
+/// `exercises/<id>/animation/main` for the approved recipe of exercise [id]:
+/// the recipe as JSON text, since Firestore cannot store the arrays inside
+/// arrays it is made of. Statuses and notes are left out, and so is every
+/// mistake not approved itself; one no pose can show (`shown: false`) stays.
+ContentDoc animationDoc(String id, Map<String, Object?> recipe) {
+  final stored = _withoutReview(recipe);
+  if (recipe['mistakes'] case final List<Object?> mistakes) {
+    stored['mistakes'] = [
+      for (final mistake in mistakes.cast<Map<String, Object?>>())
+        if (mistake['shown'] == false || mistake['status'] == 'approved')
+          _withoutReview(mistake),
+    ];
+  }
+  return ContentDoc('exercises/$id/animation/main', {
+    'recipe': canonicalJson(stored),
+  });
+}
+
+/// `animationKits/main`: the approved kits of `_kits.json`, without their
+/// status, as JSON text like the recipes.
+ContentDoc animationKitsDoc(Map<String, Object?> kits) =>
+    ContentDoc(animationKitsPath, {
+      'kits': canonicalJson({
+        for (final MapEntry(key: name, value: kit) in kits.entries)
+          if (kit is Map<String, Object?> && kit['status'] == 'approved')
+            name: _withoutReview(kit),
+      }),
+    });
+
+const animationKitsPath = 'animationKits/main';
+
+Map<String, Object?> _withoutReview(Map<String, Object?> json) => Map.of(json)
+  ..remove('status')
+  ..remove('note');
 
 /// What the import needs to know about an existing content document.
 class RemoteDocument {
@@ -284,6 +319,17 @@ List<List<T>> packUnits<T>(
   if (batch.isNotEmpty) result.add(batch);
   return result;
 }
+
+/// A `documents:commit` write that deletes the document at [path], read
+/// with [updateTime], unless it changed since.
+Map<String, Object?> deleteWrite(
+  String databasePath,
+  String path, {
+  required String updateTime,
+}) => {
+  'delete': '$databasePath/documents/$path',
+  'currentDocument': {'updateTime': updateTime},
+};
 
 /// A `documents:commit` write that replaces the document at [doc]'s path
 /// with it and sets `updatedAt` to the server time. With [updateTime] (from the read) it

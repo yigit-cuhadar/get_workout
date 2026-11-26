@@ -10,6 +10,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/grouping.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../exercises/presentation/equipment_cubit.dart';
+import '../../exercises/presentation/widgets/exercise_motion_button.dart';
 import '../../programs/presentation/program_text.dart';
 import '../../settings/domain/user_settings.dart';
 import '../../settings/presentation/settings_cubit.dart';
@@ -484,6 +485,14 @@ class _Card extends StatelessWidget {
             ]
           : const [],
       sets: open ? setBubbles(context, index, state, editor) : null,
+      // Only in the workout in progress (Design › HA4).
+      openAction: open && running != null
+          ? ExerciseMotionButton(
+              key: ValueKey(exercise.exerciseId),
+              exerciseId: exercise.exerciseId,
+              detailRoute: exerciseRoute(exercise.exerciseId),
+            )
+          : null,
       onTap: !open || grouped ? () => editor.openExercise(index) : null,
       onOptions: (button) => ExerciseMenu(
         index: index,
