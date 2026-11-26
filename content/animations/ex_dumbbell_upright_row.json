@@ -1,0 +1,32 @@
+{
+  "status": "draft",
+  "view": [35, 8],
+  "poses": {
+    "bottom": {"pelvis": [0, 0, 0.98], "pelvis_rot": [0, 0, 0], "lumbar": 0, "chest": 0, "neck": 0, "foot": {"at": [0.13, 0.037], "floor": 0, "yaw": 10}, "clavicle": [0, 0], "hand": {"pos": [0.17, -0.22, 0.86], "fingers": [-0.093, -0.478, -0.873], "palm": [-0.051, 0.878, -0.476], "curl": 75}, "elbow": [1, 0.2, 0.3]},
+    "mid": {"extends": "bottom", "hand": {"pos": [0.18, -0.27, 1.1], "fingers": [-0.631, -0.545, -0.552], "palm": [-0.41, 0.838, -0.359], "curl": 75}},
+    "top": {"extends": "bottom", "hand": {"pos": [0.2, -0.24, 1.32], "fingers": [-0.689, -0.508, -0.516], "palm": [-0.201, 0.819, -0.538], "curl": 75}, "elbow": [1, 0.2, 0.6], "clavicle": [6, 0]}
+  },
+  "keys": [[0, "bottom"], [0.6, "mid"], [1.0, "top"], [1.3, "top"], [2.2, "mid"], [3.1, "bottom"], [3.4, "bottom"]],
+  "gear": [{"kit": "dumbbell", "side": "L"}, {"kit": "dumbbell", "side": "R"}],
+  "mistakes": [
+    {
+      "line": 0,
+      "status": "draft",
+      "ring": ["shoulder_L", "shoulder_R"],
+      "poses": {
+        "top": {"hand": {"pos": [0.2, -0.22, 1.5], "fingers": [-0.56, -0.721, -0.408], "palm": [-0.292, 0.632, -0.717], "curl": 75}, "elbow": [1, 0.2, 1], "clavicle": [16, 0]}
+      }
+    },
+    {
+      "line": 1,
+      "status": "draft",
+      "ring": ["lumbar", "hip_L", "hip_R"],
+      "poses": {
+        "dip": {"extends": "bottom", "pelvis": [0, 0.03, 0.97], "pelvis_rot": [12, 0, 0], "hand": {"pos": [0.17, -0.25, 0.84], "fingers": [-0.159, -0.434, -0.887], "palm": [-0.077, 0.901, -0.427], "curl": 75}},
+        "mid": {"pelvis": [0, -0.04, 0.975], "pelvis_rot": [-8, 0, 0], "lumbar": -6, "neck": 6, "hand": {"pos": [0.18, -0.23, 1.13], "fingers": [-0.666, -0.561, -0.492], "palm": [-0.451, 0.828, -0.334], "curl": 75}},
+        "top": {"pelvis": [0, -0.04, 0.975], "pelvis_rot": [-6, 0, 0], "lumbar": -5, "neck": 5, "hand": {"pos": [0.2, -0.2, 1.34], "fingers": [-0.686, -0.553, -0.474], "palm": [-0.246, 0.788, -0.564], "curl": 75}}
+      },
+      "keys": [[0, "bottom"], [0.4, "dip"], [0.75, "mid"], [1.0, "top"], [1.2, "top"], [2.1, "mid"], [3.0, "bottom"], [3.3, "bottom"]]
+    }
+  ]
+}
