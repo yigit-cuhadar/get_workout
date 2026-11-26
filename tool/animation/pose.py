@@ -7,8 +7,9 @@ degrees. A pose is a dict:
   pelvis_rot  (pitch, yaw, roll); pitch leans forward, yaw turns left
   lumbar, chest, neck, head   (pitch, yaw, roll) against the parent
   clavicle    (elevation, protraction) of both shoulders
-  hand        {pos, fingers, palm, curl}: the grip point, the directions the
-              fingers and the palm face, and how far the fingers close
+  hand        {pos, fingers, palm, curl, hold?}: the grip point, the directions the
+              fingers and the palm face, and how far the fingers close;
+              hold moves the grip point (see GRIP)
   elbow       where the elbow points
   foot        {pos, yaw, pitch}: the ankle, the toe-out and the toes-down angle;
               a standing foot gives {at: (x, y), floor} in place of pos, and
@@ -27,7 +28,8 @@ import numpy as np
 
 SIDES = (("L", 1.0), ("R", -1.0))
 # How far the grip point sits from the wrist: along the fingers, into the palm.
-GRIP = (0.10, 0.028)
+# A hand's `hold` replaces it, for a bar that rests on the fingers.
+GRIP = (0.064, 0.036)
 
 
 def unit(v):
@@ -152,7 +154,7 @@ def normalized(pose):
             out[f"{key}_{side}"] = value
         foot = out[f"foot_{side}"]
         out[f"foot_{side}"] = {"yaw": np.float64(10), "pitch": np.float64(0), "floor": np.float64(0), "rel": None} | foot
-        out[f"hand_{side}"] = {"curl": np.float64(0), "rel": None} | out[f"hand_{side}"]
+        out[f"hand_{side}"] = {"curl": np.float64(0), "rel": None, "hold": np.array(GRIP)} | out[f"hand_{side}"]
     return out
 
 
@@ -242,7 +244,8 @@ class Rig:
             curl = rot_axis(hand_frame[:, 2], np.radians(hand["curl"]))
             R[f"fingers_{side}"] = curl @ R[f"hand_{side}"]
             R[f"fingertips_{side}"] = curl @ curl @ R[f"hand_{side}"]
-            grip = hand_frame @ (GRIP[0], GRIP[1], 0)
+            p[f"hold_{side}"] = np.array([*hand["hold"], 0.0])
+            grip = hand_frame @ p[f"hold_{side}"]
             shoulder = p[f"clavicle_{side}"] + R[f"clavicle_{side}"] @ (h[f"upper_arm_{side}"] - h[f"clavicle_{side}"])
             elbow_pole = pose[f"elbow_{side}"]
             if hand["rel"] is not None:
@@ -258,7 +261,7 @@ class Rig:
             p[f"upper_arm_{side}"], p[f"forearm_{side}"] = shoulder, elbow
             p[f"wrist_{side}"], p[f"hand_{side}"] = (elbow + wrist) / 2, wrist
             # The thumb closes round the fingers' direction, toward the palm.
-            R[f"thumb_{side}"] = rot_axis(fingers, sign * np.radians(hand["curl"]) * 0.8) @ R[f"hand_{side}"]
+            R[f"thumb_{side}"] = rot_axis(fingers, sign * np.radians(hand["curl"]) * 1.2) @ R[f"hand_{side}"]
             for bone, parent in (("fingers", "hand"), ("fingertips", "fingers"), ("thumb", "hand")):
                 p[f"{bone}_{side}"] = p[f"{parent}_{side}"] + R[f"{parent}_{side}"] @ (h[f"{bone}_{side}"] - h[f"{parent}_{side}"])
 
@@ -296,7 +299,7 @@ class Rig:
 
     def grip(self, R, p, side):
         """Where the hand holds: the point the pose's `hand.pos` asked for."""
-        return p[f"hand_{side}"] + R[f"hand_{side}"] @ self.rest[side]["hand"] @ (GRIP[0], GRIP[1], 0)
+        return p[f"hand_{side}"] + R[f"hand_{side}"] @ self.rest[side]["hand"] @ p[f"hold_{side}"]
 
     def skin(self, R, p):
         rotations = np.stack([R[b] for b in self.bones])

@@ -1,37 +1,47 @@
 {
-  "status": "draft",
+  "status": "approved",
   "view": [50, 14],
   "poses": {
     "top": {
-      "pelvis": [0, 0.05, 0.535],
-      "pelvis_rot": [-80, 0, 0],
-      "lumbar": -10,
+      "pelvis": [0, 0.05, 0.57],
+      "pelvis_rot": [-82, 0, 0],
+      "lumbar": -6,
       "chest": -10,
-      "neck": 12,
+      "neck": -8,
       "foot": {"at": [0.30, -0.40], "floor": 0, "yaw": 25},
-      "hand": {"pos": [0.38, 0.48, 1.05], "fingers": [0, 0, 1], "palm": [0, -1, 0], "curl": 75},
-      "elbow": [1, -0.45, -0.25],
+      "hand": {"pos": [0.36, 0.47, 1.083], "fingers": [0.000, 0.391, 0.921], "palm": [0.000, -0.921, 0.391], "curl": 75},
+      "elbow": [1, -0.9, -0.3],
       "clavicle": [0, -12]
     },
     "bottom": {
       "extends": "top",
-      "hand": {"pos": [0.38, 0.37, 0.75]}
+      "hand": {"pos": [0.36, 0.40, 0.772], "fingers": [0.000, 0.612, 0.791], "palm": [0.000, -0.791, 0.612]}
     }
   },
   "keys": [[0, "top"], [1.5, "bottom"], [1.7, "bottom"], [2.6, "top"], [3.1, "top"]],
   "gear": [{"kit": "barbell"}, {"kit": "flat_bench", "at": [0, 0.48, 0]}],
   "mistakes": [
     {
+      "line": 0,
+      "status": "approved",
+      "ring": ["chest"],
+      "poses": {"rebound": {"extends": "bottom", "hand": {"pos": [0.36, 0.415, 0.86]}}},
+      "keys": [[0, "top"], [0.6, "bottom"], [0.72, "rebound"], [1.5, "top"], [2.0, "top"]]
+    },
+    {
       "line": 1,
-      "status": "draft",
+      "status": "approved",
       "ring": ["elbow_L", "elbow_R"],
-      "poses": {"bottom": {"elbow": [1, 0.15, -0.05], "hand": {"pos": [0.40, 0.50, 0.76]}}}
+      "poses": {"bottom": {"elbow": [1, 0.05, -0.2], "hand": {"pos": [0.36, 0.45, 0.749], "fingers": [0.000, 0.271, 0.963], "palm": [0.000, -0.963, 0.271]}}}
     },
     {
       "line": 2,
-      "status": "draft",
+      "status": "approved",
       "ring": ["hip_L", "hip_R"],
-      "poses": {"bottom": {"pelvis": [0, 0, 0.70], "pelvis_rot": [-106, 0, 0], "lumbar": 8, "chest": 10, "neck": 0}}
+      "poses": {
+        "drive": {"extends": "bottom", "pelvis": [0, 0.07, 0.678], "pelvis_rot": [-110, 0, 0], "lumbar": 4, "chest": 8, "hand": {"pos": [0.36, 0.435, 0.95]}}
+      },
+      "keys": [[0, "top"], [1.5, "bottom"], [1.7, "bottom"], [2.1, "drive"], [2.6, "top"], [3.1, "top"]]
     }
   ]
 }
