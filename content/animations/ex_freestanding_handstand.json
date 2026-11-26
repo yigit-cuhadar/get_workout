@@ -1,0 +1,203 @@
+{
+  "status": "draft",
+  "view": [
+    60,
+    8
+  ],
+  "poses": {
+    "hold": {
+      "pelvis": [
+        0,
+        0.038,
+        1.052
+      ],
+      "pelvis_rot": [
+        180,
+        0,
+        0
+      ],
+      "lumbar": 0,
+      "chest": 0,
+      "neck": -15,
+      "clavicle": [
+        20,
+        0
+      ],
+      "hand": {
+        "pos": [
+          0.2,
+          0.0,
+          0.035
+        ],
+        "fingers": [
+          0,
+          1,
+          0
+        ],
+        "palm": [
+          0,
+          0,
+          -1
+        ],
+        "curl": 0,
+        "hold": [
+          0.05,
+          0
+        ]
+      },
+      "elbow": [
+        0.3,
+        -1,
+        0
+      ],
+      "foot": {
+        "pos": [
+          0.07,
+          0.0,
+          -0.87
+        ],
+        "yaw": 10,
+        "pitch": 55,
+        "rel": "pelvis"
+      },
+      "knee": [
+        0,
+        -1,
+        0
+      ]
+    },
+    "fw": {
+      "extends": "hold",
+      "pelvis": [
+        0,
+        0.012999999999999998,
+        1.052
+      ],
+      "pelvis_rot": [
+        178,
+        0,
+        0
+      ]
+    },
+    "bw": {
+      "extends": "hold",
+      "pelvis": [
+        0,
+        0.057999999999999996,
+        1.052
+      ],
+      "pelvis_rot": [
+        181.5,
+        0,
+        0
+      ]
+    }
+  },
+  "keys": [
+    [
+      0,
+      "hold"
+    ],
+    [
+      0.8,
+      "fw"
+    ],
+    [
+      1.8,
+      "bw"
+    ],
+    [
+      2.6,
+      "hold"
+    ],
+    [
+      3.0,
+      "hold"
+    ]
+  ],
+  "gear": [],
+  "mistakes": [
+    {
+      "line": 0,
+      "status": "draft",
+      "ring": [
+        "lumbar"
+      ],
+      "poses": {
+        "hold": {
+          "lumbar": -22,
+          "chest": -10,
+          "pelvis_rot": [
+            168,
+            0,
+            0
+          ],
+          "pelvis": [
+            0,
+            0.288,
+            0.935
+          ]
+        },
+        "fw": {
+          "lumbar": -22,
+          "chest": -10,
+          "pelvis_rot": [
+            168,
+            0,
+            0
+          ],
+          "pelvis": [
+            0,
+            0.288,
+            0.935
+          ]
+        },
+        "bw": {
+          "lumbar": -22,
+          "chest": -10,
+          "pelvis_rot": [
+            168,
+            0,
+            0
+          ],
+          "pelvis": [
+            0,
+            0.288,
+            0.935
+          ]
+        }
+      }
+    },
+    {
+      "line": 1,
+      "status": "draft",
+      "ring": [
+        "elbow_L",
+        "elbow_R"
+      ],
+      "poses": {
+        "hold": {
+          "pelvis": [
+            0,
+            0.038,
+            0.932
+          ]
+        },
+        "fw": {
+          "pelvis": [
+            0,
+            0.038,
+            0.932
+          ]
+        },
+        "bw": {
+          "pelvis": [
+            0,
+            0.038,
+            0.932
+          ]
+        }
+      }
+    }
+  ]
+}

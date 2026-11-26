@@ -1,0 +1,264 @@
+{
+  "status": "draft",
+  "view": [
+    0,
+    30
+  ],
+  "poses": {
+    "closed": {
+      "pelvis": [
+        0.0,
+        0.0,
+        0.251
+      ],
+      "pelvis_rot": [
+        0,
+        0,
+        90
+      ],
+      "lumbar": 0,
+      "chest": [
+        0,
+        0,
+        0
+      ],
+      "neck": [
+        0,
+        0,
+        -12
+      ],
+      "clavicle": [
+        0,
+        6
+      ],
+      "foot": {
+        "pos": [
+          0.08,
+          -0.4,
+          -0.4
+        ],
+        "yaw": 0,
+        "pitch": 0,
+        "rel": "pelvis"
+      },
+      "knee": [
+        0,
+        -1,
+        0
+      ],
+      "foot_R": {
+        "pos": [
+          -0.06,
+          -0.4,
+          -0.4
+        ],
+        "yaw": 0,
+        "pitch": 0,
+        "rel": "pelvis"
+      },
+      "knee_R": [
+        0,
+        -1,
+        0
+      ],
+      "hand": {
+        "pos": [
+          0.427,
+          -0.4,
+          0.078
+        ],
+        "fingers": [
+          0,
+          -1,
+          0
+        ],
+        "palm": [
+          0,
+          0,
+          1
+        ],
+        "curl": 8
+      },
+      "elbow": [
+        0,
+        0.3,
+        1
+      ],
+      "elbow_R": [
+        -1,
+        0,
+        0
+      ],
+      "hand_R": {
+        "pos": [
+          0.427,
+          -0.4,
+          0.143
+        ],
+        "fingers": [
+          0,
+          -1,
+          0
+        ],
+        "palm": [
+          0,
+          0,
+          -1
+        ],
+        "curl": 8
+      }
+    },
+    "mid": {
+      "extends": "closed",
+      "chest": [
+        0,
+        -20.0,
+        0
+      ],
+      "hand_R": {
+        "pos": [
+          0.427,
+          0.09,
+          0.949
+        ],
+        "fingers": [
+          0,
+          0,
+          1
+        ],
+        "palm": [
+          0,
+          -1,
+          0
+        ],
+        "curl": 8
+      },
+      "pelvis": [
+        0.0,
+        0.0,
+        0.228
+      ]
+    },
+    "open": {
+      "extends": "closed",
+      "chest": [
+        0,
+        -40,
+        0
+      ],
+      "hand_R": {
+        "pos": [
+          0.427,
+          0.621,
+          0.193
+        ],
+        "fingers": [
+          0,
+          0.6,
+          0.8
+        ],
+        "palm": [
+          0,
+          -0.8,
+          0.6
+        ],
+        "curl": 8
+      },
+      "pelvis": [
+        0.0,
+        0.0,
+        0.217
+      ]
+    }
+  },
+  "keys": [
+    [
+      0,
+      "closed"
+    ],
+    [
+      1.0,
+      "mid"
+    ],
+    [
+      2.0,
+      "open"
+    ],
+    [
+      3.0,
+      "open"
+    ],
+    [
+      4.0,
+      "mid"
+    ],
+    [
+      5.0,
+      "closed"
+    ]
+  ],
+  "gear": [],
+  "mistakes": [
+    {
+      "line": 0,
+      "status": "draft",
+      "ring": [
+        "knee_L",
+        "knee_R",
+        "hip_R"
+      ],
+      "poses": {
+        "open": {
+          "chest": [
+            0,
+            -40,
+            0
+          ],
+          "hand_R": {
+            "pos": [
+              0.393,
+              0.621,
+              0.261
+            ],
+            "fingers": [
+              0,
+              0.6,
+              0.8
+            ],
+            "palm": [
+              0,
+              -0.8,
+              0.6
+            ],
+            "curl": 8
+          },
+          "pelvis": [
+            0.0,
+            0.0,
+            0.214
+          ],
+          "pelvis_rot": [
+            0,
+            0,
+            80
+          ],
+          "foot_R": {
+            "pos": [
+              -0.22,
+              -0.4,
+              -0.36
+            ],
+            "yaw": 0,
+            "pitch": 0,
+            "rel": "pelvis"
+          }
+        }
+      }
+    },
+    {
+      "line": 1,
+      "shown": false,
+      "why": "How hard a stretch is forced cannot be shown by a pose."
+    }
+  ]
+}

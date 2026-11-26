@@ -1,0 +1,32 @@
+{
+  "status": "draft",
+  "view": [30, 8],
+  "poses": {
+    "rack": {"pelvis": [0, 0, 0.98], "pelvis_rot": [0, 0, 0], "lumbar": 0, "chest": 0, "neck": 0, "foot": {"at": [0.12, 0.037], "floor": 0, "yaw": 10}, "clavicle": [0, 0], "hand": {"pos": [0.12, -0.22, 0.14], "rel": "chest", "fingers": [-0.256, -0.478, 0.84], "palm": [-0.967, 0.126, -0.222], "curl": 75}, "elbow": [0.1, -0.5, -1], "hand_R": {"pos": [-0.33, -0.06, -0.43], "rel": "chest", "curl": 40, "fingers": [-0.208, -0.337, -0.918], "palm": [0.978, -0.072, -0.195]}, "elbow_R": [-0.2, 0.5, -0.2]},
+    "mid": {"extends": "rack", "hand": {"pos": [0.25, -0.1, 0.5], "rel": "chest", "fingers": [-0.582, -0.049, 0.812], "palm": [-0.5, -0.766, -0.405], "curl": 75}, "elbow": [1, 0, -1], "clavicle_L": [6, 0]},
+    "top": {"extends": "rack", "hand": {"pos": [0.15, -0.02, 0.78], "rel": "chest", "fingers": [-0.137, -0.014, 0.99], "palm": [0.002, -1.0, -0.014], "curl": 75}, "elbow": [1, 0.3, 0], "clavicle_L": [14, 0]}
+  },
+  "keys": [[0, "rack"], [0.6, "mid"], [1.0, "top"], [1.3, "top"], [2.1, "mid"], [2.9, "rack"], [3.2, "rack"]],
+  "gear": [{"kit": "kettlebell", "bell": [-0.15, -0.16, 0]}],
+  "mistakes": [
+    {
+      "line": 0,
+      "status": "draft",
+      "ring": ["lumbar", "chest"],
+      "poses": {
+        "mid": {"pelvis": [-0.02, 0, 0.978], "lumbar": [0, 0, -7], "chest": [0, 0, -5]},
+        "top": {"pelvis": [-0.03, 0, 0.976], "lumbar": [0, 0, -12], "chest": [0, 0, -8], "neck": [0, 0, 6], "hand_R": {"pos": [-0.36, -0.06, -0.42], "rel": "chest", "curl": 40, "fingers": [-0.258, -0.35, -0.901], "palm": [0.966, -0.094, -0.241]}}
+      }
+    },
+    {
+      "line": 1,
+      "status": "draft",
+      "ring": ["wrist_L"],
+      "poses": {
+        "rack": {"hand": {"pos": [0.12, -0.26, 0.12], "rel": "chest", "fingers": [-0.014, -0.615, 0.789], "palm": [-1.0, 0.008, -0.011], "curl": 75}},
+        "mid": {"hand": {"pos": [0.25, -0.08, 0.48], "rel": "chest", "fingers": [-0.429, 0.234, 0.872], "palm": [-0.654, -0.747, -0.121], "curl": 75}},
+        "top": {"hand": {"pos": [0.15, 0.0, 0.74], "rel": "chest", "fingers": [-0.419, 0.266, 0.868], "palm": [-0.116, -0.964, 0.24], "curl": 75}}
+      }
+    }
+  ]
+}

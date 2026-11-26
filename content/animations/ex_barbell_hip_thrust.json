@@ -1,0 +1,47 @@
+{
+  "status": "draft",
+  "view": [50, 14],
+  "poses": {
+    "top": {
+      "pelvis": [0, -0.15, 0.545],
+      "pelvis_rot": [-90, 0, 0],
+      "lumbar": 0,
+      "chest": 0,
+      "neck": 20,
+      "foot": {"at": [0.15, -0.55], "floor": 0, "yaw": 10},
+      "knee": [0.2, 0, 1],
+      "hand": {"pos": [0.33, -0.17, -0.04], "fingers": [-0.205, -0.366, -0.908], "palm": [-0.083, 0.931, -0.356], "curl": 75, "rel": "pelvis"},
+      "elbow": [1, 0, 0.5],
+      "clavicle": [0, 0]
+    },
+    "bottom": {
+      "extends": "top",
+      "pelvis": [0, 0.04, 0.251],
+      "pelvis_rot": [-40, 0, 0],
+      "lumbar": 8,
+      "chest": 8,
+      "neck": 5,
+      "hand": {"pos": [0.33, -0.24, 0.1], "fingers": [-0.205, -0.366, -0.908], "palm": [-0.083, 0.931, -0.356], "curl": 75, "rel": "pelvis"}
+    }
+  },
+  "keys": [[0, "bottom"], [0.9, "top"], [1.4, "top"], [2.7, "bottom"], [3.1, "bottom"]],
+  "gear": [{"kit": "barbell"}, {"kit": "flat_bench", "at": [0, 0.45, 0], "turn": 90}],
+  "mistakes": [
+    {
+      "line": 0,
+      "status": "draft",
+      "ring": ["lumbar"],
+      "poses": {
+        "top": {"pelvis": [0, -0.13, 0.594], "pelvis_rot": [-80, 0, 0], "lumbar": -18, "chest": -10}
+      }
+    },
+    {
+      "line": 1,
+      "status": "draft",
+      "ring": ["foot_L", "foot_R", "knee_L", "knee_R"],
+      "poses": {
+        "top": {"foot": {"at": [0.15, -0.8]}, "pelvis": [0, -0.15, 0.545]}
+      }
+    }
+  ]
+}

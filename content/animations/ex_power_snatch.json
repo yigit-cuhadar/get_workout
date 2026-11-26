@@ -1,0 +1,115 @@
+{
+  "status": "draft",
+  "view": [40, 8],
+  "poses": {
+    "floor": {
+      "pelvis": [0, 0.3, 0.646],
+      "pelvis_rot": [73, 0, 0],
+      "lumbar": 0,
+      "chest": 0,
+      "neck": -32,
+      "foot": {"at": [0.13, 0.037], "floor": 0, "yaw": 12},
+      "hand": {"pos": [0.45, -0.065, 0.225], "fingers": [0.366, -0.209, -0.907], "palm": [0.037, 0.977, -0.21], "curl": 75},
+      "elbow": [0.3, 1, 0],
+      "clavicle": [-5, 9]
+    },
+    "knee": {
+      "pelvis": [0, 0.21, 0.83],
+      "pelvis_rot": [54, 0, 0],
+      "lumbar": 0,
+      "chest": 0,
+      "neck": -25,
+      "foot": {"at": [0.13, 0.037], "floor": 0, "yaw": 12},
+      "hand": {"pos": [0.45, -0.15, 0.531], "fingers": [0.361, -0.253, -0.898], "palm": [0.042, 0.966, -0.256], "curl": 75},
+      "elbow": [0.3, 1, 0],
+      "clavicle": [-5, 9]
+    },
+    "power": {
+      "pelvis": [0, 0.0, 1.031],
+      "pelvis_rot": [-4, 0, 0],
+      "lumbar": 0,
+      "chest": 0,
+      "neck": -4,
+      "foot": {"at": [0.13, 0.037], "floor": 0, "yaw": 12, "pitch": 24},
+      "hand": {"pos": [0.45, -0.12, 1.002], "fingers": [0.31, -0.557, -0.77], "palm": [0.059, 0.82, -0.57], "curl": 75},
+      "elbow": [0.3, 1, 0],
+      "clavicle": [24, 0]
+    },
+    "pull": {
+      "pelvis": [0, 0.0, 1.031],
+      "pelvis_rot": [-4, 0, 0],
+      "lumbar": 0,
+      "chest": 0,
+      "neck": -4,
+      "foot": {"at": [0.13, 0.037], "floor": 0, "yaw": 12, "pitch": 24},
+      "hand": {"pos": [0.45, -0.12, 1.32], "fingers": [-0.077, -0.646, -0.759], "palm": [-0.239, 0.751, -0.615], "curl": 75},
+      "elbow": [1, 0.3, 0.6],
+      "clavicle": [22, 0]
+    },
+    "catch": {
+      "pelvis": [0, 0.06, 0.84],
+      "pelvis_rot": [12, 0, 0],
+      "lumbar": 0,
+      "chest": 0,
+      "neck": 0,
+      "foot": {"at": [0.13, 0.037], "floor": 0, "yaw": 12},
+      "hand": {"pos": [0.45, 0.02, 1.864], "fingers": [0.252, 0.118, 0.961], "palm": [-0.051, -0.99, 0.135], "curl": 75},
+      "elbow": [1, 0, 0],
+      "clavicle": [18, 0]
+    },
+    "stand": {
+      "pelvis": [0, 0.04, 0.98],
+      "pelvis_rot": [0, 0, 0],
+      "lumbar": 0,
+      "chest": 0,
+      "neck": 0,
+      "foot": {"at": [0.13, 0.037], "floor": 0, "yaw": 12},
+      "hand": {"pos": [0.45, 0.02, 2.008], "fingers": [0.274, -0.03, 0.961], "palm": [-0.098, -0.995, -0.003], "curl": 75},
+      "elbow": [1, 0, 0],
+      "clavicle": [18, 0]
+    },
+    "top": {
+      "pelvis": [0, 0.04, 0.98],
+      "pelvis_rot": [0, 0, 0],
+      "lumbar": 0,
+      "chest": 0,
+      "neck": 0,
+      "foot": {"at": [0.13, 0.037], "floor": 0, "yaw": 12},
+      "hand": {"pos": [0.45, -0.105, 0.883], "fingers": [0.315, -0.535, -0.784], "palm": [0.067, 0.836, -0.544], "curl": 75},
+      "elbow": [0.3, 1, 0],
+      "clavicle": [2, 3]
+    },
+    "turn": {
+      "pelvis": [0, 0.0, 1.031],
+      "pelvis_rot": [-4, 0, 0],
+      "lumbar": 0,
+      "chest": 0,
+      "neck": -4,
+      "foot": {"at": [0.13, 0.037], "floor": 0, "yaw": 12, "pitch": 24},
+      "hand": {"pos": [0.45, -0.24, 1.62], "fingers": [0, -0.3, 0.95], "palm": [0, -0.95, -0.3], "curl": 75},
+      "elbow": [1, 0.4, 0.3],
+      "clavicle": [22, 0]
+    }
+  },
+  "keys": [[0, "floor"], [0.6, "knee"], [0.9, "power"], [1.1, "pull"], [1.25, "turn"], [1.4, "catch"], [2.1, "stand"], [2.6, "stand"], [3.5, "top"], [4.4, "knee"], [5.0, "floor"], [5.4, "floor"]],
+  "gear": [{"kit": "barbell"}],
+  "mistakes": [
+    {
+      "line": 0,
+      "status": "draft",
+      "ring": ["elbow_L", "elbow_R"],
+      "poses": {
+        "early": {"extends": "knee", "pelvis": [0, 0.18, 0.86], "pelvis_rot": [48, 0, 0], "hand": {"pos": [0.45, -0.12, 0.7], "fingers": [0.016, -0.201, -0.98], "palm": [0.003, 0.98, -0.201], "curl": 75}, "elbow": [1, 0.3, 0.6]}
+      },
+      "keys": [[0, "floor"], [0.6, "knee"], [0.8, "early"], [1.1, "pull"], [1.25, "turn"], [1.4, "catch"], [2.1, "stand"], [2.6, "stand"], [3.5, "top"], [4.4, "knee"], [5.0, "floor"], [5.4, "floor"]]
+    },
+    {
+      "line": 1,
+      "status": "draft",
+      "ring": ["elbow_L", "elbow_R"],
+      "poses": {
+        "catch": {"hand": {"pos": [0.45, -0.02, 1.62], "fingers": [-0.038, 0.315, 0.948], "palm": [-0.086, -0.947, 0.311]}, "elbow": [1, -0.3, 0]}
+      }
+    }
+  ]
+}

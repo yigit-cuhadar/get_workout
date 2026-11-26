@@ -1,0 +1,38 @@
+{
+  "status": "draft",
+  "view": [55, 12],
+  "poses": {
+    "top": {
+      "pelvis": [0, -0.063, 0.565],
+      "pelvis_rot": [-46, 0, 0],
+      "lumbar": -4,
+      "chest": -6,
+      "neck": 10,
+      "foot": {"at": [0.25, -0.62], "floor": 0, "yaw": 20},
+      "hand": {"pos": [0.19, 0.269, 1.378], "fingers": [-0.082, 0.032, 0.996], "palm": [0.07, -0.997, 0.038], "curl": 75},
+      "elbow": [1, -0.3, -0.5],
+      "clavicle": [0, -12]
+    },
+    "bottom": {
+      "extends": "top",
+      "hand": {"pos": [0.38, 0.19, 0.85], "fingers": [0.104, -0.183, 0.978], "palm": [-0.044, -0.983, -0.179]}
+    }
+  },
+  "keys": [[0, "top"], [1.6, "bottom"], [1.8, "bottom"], [2.7, "top"], [3.2, "top"]],
+  "gear": [{"kit": "incline_bench", "top_y": 0.689, "top_z": 0.964}, {"kit": "dumbbell", "side": "L"}, {"kit": "dumbbell", "side": "R"}],
+  "mistakes": [
+    {
+      "line": 0,
+      "shown": false,
+      "why": "The bench angle is gear; a mistake changes only the body, so a steeper bench cannot be drawn."
+    },
+    {
+      "line": 1,
+      "status": "draft",
+      "ring": ["lumbar"],
+      "poses": {
+        "top": {"pelvis": [0, -0.023, 0.536], "pelvis_rot": [-26.0, 0, 0], "lumbar": -20, "chest": -10}
+      }
+    }
+  ]
+}

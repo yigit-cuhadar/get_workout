@@ -1,0 +1,48 @@
+{
+  "status": "draft",
+  "view": [60, 8],
+  "poses": {
+    "top": {
+      "pelvis": [0, 0.03, 0.882],
+      "pelvis_rot": [3, 0, 0],
+      "lumbar": 0,
+      "chest": 0,
+      "neck": 0,
+      "foot": {"at": [0.13, -0.36], "floor": 0, "yaw": 10},
+      "hand": {"pos": [0.4, 0.135, 1.372], "fingers": [0, 0.25, 1], "palm": [0, -1, 0], "curl": 75},
+      "elbow": [0.2, 0.8, -1],
+      "clavicle": [5, -10],
+      "foot_R": {"at": [-0.13, 0.42], "floor": 0, "yaw": 10, "pitch": 32},
+      "knee_R": [0, -0.3, -1]
+    },
+    "bottom": {
+      "extends": "top",
+      "pelvis": [0, 0.06, 0.55],
+      "pelvis_rot": [8, 0, 0],
+      "neck": -6,
+      "hand": {"pos": [0.4, 0.135, 1.055]}
+    }
+  },
+  "keys": [[0, "top"], [1.5, "bottom"], [1.7, "bottom"], [2.6, "top"], [3.0, "top"]],
+  "gear": [{"kit": "smith_machine", "at": [0, 0.135, 0]}],
+  "mistakes": [
+    {
+      "line": 0,
+      "status": "draft",
+      "ring": ["foot_L"],
+      "poses": {
+        "top": {"foot": {"at": [0.13, -0.12]}, "foot_R": {"at": [-0.13, 0.3]}},
+        "bottom": {"foot": {"pitch": 28}, "pelvis": [0, 0.09, 0.62], "hand": {"pos": [0.4, 0.135, 1.13]}}
+      }
+    },
+    {
+      "line": 1,
+      "status": "draft",
+      "ring": ["foot_R", "knee_R"],
+      "poses": {
+        "push": {"extends": "bottom", "pelvis": [0, -0.03, 0.72], "pelvis_rot": [16, 0, 0], "foot_R": {"pitch": 55}, "hand": {"pos": [0.4, 0.135, 1.215]}}
+      },
+      "keys": [[0, "top"], [1.5, "bottom"], [1.7, "bottom"], [2.1, "push"], [2.6, "top"], [3.0, "top"]]
+    }
+  ]
+}

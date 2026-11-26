@@ -1,0 +1,162 @@
+{
+  "status": "draft",
+  "view": [
+    70,
+    8
+  ],
+  "poses": {
+    "up": {
+      "pelvis": [
+        0.0,
+        0.0,
+        0.519
+      ],
+      "pelvis_rot": [
+        -6,
+        0,
+        0
+      ],
+      "lumbar": 0,
+      "chest": 0,
+      "neck": 0,
+      "clavicle": [
+        0,
+        0
+      ],
+      "foot": {
+        "at": [
+          0.13,
+          -0.52
+        ],
+        "floor": 0,
+        "yaw": 8
+      },
+      "knee": [
+        0.1,
+        -1,
+        0.3
+      ],
+      "foot_R": {
+        "pos": [
+          -0.12,
+          0.5,
+          0.07
+        ],
+        "yaw": 0,
+        "pitch": 165
+      },
+      "knee_R": [
+        0,
+        -1,
+        -1
+      ],
+      "hand": {
+        "pos": [
+          0.19,
+          -0.02,
+          0.06
+        ],
+        "fingers": [
+          0,
+          -1,
+          -0.4
+        ],
+        "palm": [
+          -1,
+          0,
+          0
+        ],
+        "curl": 20,
+        "rel": "pelvis"
+      },
+      "elbow": [
+        1,
+        0.6,
+        0
+      ]
+    },
+    "fwd": {
+      "extends": "up",
+      "pelvis": [
+        0.0,
+        -0.08,
+        0.497
+      ],
+      "pelvis_rot": [
+        -6,
+        0,
+        0
+      ],
+      "lumbar": 0,
+      "chest": 0
+    }
+  },
+  "keys": [
+    [
+      0,
+      "up"
+    ],
+    [
+      1.5,
+      "fwd"
+    ],
+    [
+      3.5,
+      "fwd"
+    ],
+    [
+      5.0,
+      "up"
+    ]
+  ],
+  "gear": [],
+  "mistakes": [
+    {
+      "line": 0,
+      "status": "draft",
+      "ring": [
+        "lumbar",
+        "pelvis"
+      ],
+      "poses": {
+        "fwd": {
+          "pelvis": [
+            0.0,
+            -0.08,
+            0.5
+          ],
+          "pelvis_rot": [
+            10,
+            0,
+            0
+          ],
+          "lumbar": -16,
+          "chest": -4
+        }
+      }
+    },
+    {
+      "line": 1,
+      "status": "draft",
+      "ring": [
+        "knee_L"
+      ],
+      "poses": {
+        "fwd": {
+          "pelvis": [
+            0.0,
+            -0.24,
+            0.388
+          ],
+          "pelvis_rot": [
+            -6,
+            0,
+            0
+          ],
+          "lumbar": 0,
+          "chest": 0
+        }
+      }
+    }
+  ]
+}

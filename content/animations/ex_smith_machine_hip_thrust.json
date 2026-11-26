@@ -1,0 +1,44 @@
+{
+  "status": "draft",
+  "view": [50, 14],
+  "poses": {
+    "top": {
+      "pelvis": [0, -0.15, 0.545],
+      "pelvis_rot": [-90, 0, 0],
+      "lumbar": 0,
+      "chest": 0,
+      "neck": 20,
+      "foot": {"at": [0.15, -0.55], "floor": 0, "yaw": 10},
+      "knee": [0.2, 0, 1],
+      "hand": {"pos": [0.33, -0.1, 0.71], "fingers": [-0.336, -0.905, 0.262], "palm": [0.16, -0.329, -0.931], "curl": 75},
+      "elbow": [1, 0, 0.5],
+      "clavicle": [0, 0]
+    },
+    "bottom": {
+      "extends": "top",
+      "pelvis": [0, 0.04, 0.251],
+      "pelvis_rot": [-40, 0, 0],
+      "lumbar": 8,
+      "chest": 8,
+      "neck": 5,
+      "hand": {"pos": [0.33, -0.1, 0.48], "fingers": [-0.398, -0.792, -0.462], "palm": [0.554, 0.193, -0.81]}
+    }
+  },
+  "keys": [[0, "bottom"], [0.9, "top"], [1.4, "top"], [2.7, "bottom"], [3.1, "bottom"]],
+  "gear": [{"kit": "smith_machine", "at": [0, -0.1, 0]}, {"kit": "flat_bench", "at": [0, 0.45, 0], "turn": 90}],
+  "mistakes": [
+    {
+      "line": 0,
+      "status": "draft",
+      "ring": ["lumbar"],
+      "poses": {
+        "top": {"pelvis": [0, -0.13, 0.594], "pelvis_rot": [-80, 0, 0], "lumbar": -18, "chest": -10, "hand": {"pos": [0.33, -0.1, 0.75], "fingers": [-0.305, -0.879, 0.367], "palm": [0.133, -0.421, -0.897]}}
+      }
+    },
+    {
+      "line": 1,
+      "shown": false,
+      "why": "Where the bar crosses the hips is set up before the set; the Smith bar runs in a fixed line, so no pose can show it apart from the correct form."
+    }
+  ]
+}

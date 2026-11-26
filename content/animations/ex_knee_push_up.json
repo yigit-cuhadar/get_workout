@@ -1,0 +1,186 @@
+{
+  "status": "draft",
+  "view": [
+    40,
+    15
+  ],
+  "poses": {
+    "top": {
+      "pelvis": [
+        0,
+        -0.003,
+        0.323
+      ],
+      "pelvis_rot": [
+        60.0,
+        0,
+        0
+      ],
+      "lumbar": 0,
+      "chest": 0,
+      "neck": 0,
+      "foot": {
+        "pos": [
+          0.1,
+          0.653,
+          0.4
+        ],
+        "yaw": 10,
+        "pitch": 150
+      },
+      "hand": {
+        "pos": [
+          0.25,
+          -0.4,
+          0.035
+        ],
+        "fingers": [
+          0,
+          -1,
+          0
+        ],
+        "palm": [
+          0,
+          0,
+          -1
+        ],
+        "curl": 0,
+        "hold": [
+          0.05,
+          0
+        ]
+      },
+      "elbow": [
+        0.4,
+        1,
+        0
+      ],
+      "clavicle": [
+        0,
+        0
+      ],
+      "knee": [
+        0,
+        0,
+        -1
+      ]
+    },
+    "bottom": {
+      "extends": "top",
+      "pelvis": [
+        0,
+        -0.051,
+        0.228
+      ],
+      "pelvis_rot": [
+        74.0,
+        0,
+        0
+      ]
+    }
+  },
+  "keys": [
+    [
+      0,
+      "top"
+    ],
+    [
+      1.4,
+      "bottom"
+    ],
+    [
+      1.7,
+      "bottom"
+    ],
+    [
+      2.5,
+      "top"
+    ],
+    [
+      3.0,
+      "top"
+    ]
+  ],
+  "gear": [],
+  "mistakes": [
+    {
+      "line": 0,
+      "status": "draft",
+      "ring": [
+        "hip_L",
+        "hip_R"
+      ],
+      "poses": {
+        "top": {
+          "pelvis": [
+            0,
+            0.196,
+            0.489
+          ],
+          "pelvis_rot": [
+            88,
+            0,
+            0
+          ]
+        },
+        "bottom": {
+          "pelvis": [
+            0,
+            0.156,
+            0.471
+          ],
+          "pelvis_rot": [
+            108,
+            0,
+            0
+          ]
+        }
+      }
+    },
+    {
+      "line": 1,
+      "status": "draft",
+      "ring": [
+        "elbow_L",
+        "elbow_R"
+      ],
+      "poses": {
+        "half": {
+          "extends": "top",
+          "pelvis": [
+            0,
+            -0.021,
+            0.291
+          ],
+          "pelvis_rot": [
+            64.0,
+            0,
+            0
+          ]
+        }
+      },
+      "keys": [
+        [
+          0,
+          "top"
+        ],
+        [
+          0.8,
+          "half"
+        ],
+        [
+          0.9,
+          "half"
+        ],
+        [
+          1.4,
+          "top"
+        ],
+        [
+          1.8,
+          "top"
+        ]
+      ]
+    }
+  ]
+}

@@ -1,0 +1,32 @@
+{
+  "status": "draft",
+  "view": [55, 14],
+  "poses": {
+    "plank": {"pelvis": [0, 0.05, 0.485], "pelvis_rot": [72, 0, 0], "lumbar": 0, "chest": 0, "neck": -20, "clavicle": [0, 0], "foot": {"at": [0.25, 1.045], "floor": 0.025, "yaw": 0, "pitch": 65}, "knee": [0, 0.3, -1], "elbow": [0.3, 1, 0.2], "hand": {"pos": [0.205, -0.33, 0.075], "fingers": [-0.015, -0.226, -0.974], "palm": [-1.0, 0.0, 0.015], "curl": 75}},
+    "rowL": {"extends": "plank", "hand_L": {"pos": [0.22, -0.18, 0.36], "fingers": [-0.089, -0.356, -0.93], "palm": [-0.996, 0.032, 0.083], "curl": 75}, "elbow": [0.3, 1, 1], "clavicle_L": [-2, -12]},
+    "rowR": {"extends": "plank", "hand_R": {"pos": [-0.22, -0.18, 0.36], "fingers": [0.089, -0.356, -0.93], "palm": [0.996, 0.032, 0.083], "curl": 75}, "elbow_R": [-0.3, 1, 1], "clavicle_R": [-2, -12]}
+  },
+  "keys": [[0, "plank"], [0.7, "rowL"], [0.9, "rowL"], [1.7, "plank"], [2.0, "plank"], [2.7, "rowR"], [2.9, "rowR"], [3.7, "plank"], [4.0, "plank"]],
+  "gear": [{"kit": "dumbbell", "side": "L"}, {"kit": "dumbbell", "side": "R"}],
+  "mistakes": [
+    {
+      "line": 0,
+      "status": "draft",
+      "ring": ["pelvis", "hip_L", "hip_R"],
+      "poses": {
+        "rowL": {"pelvis_rot": [64.8, 46.4, -43.6]},
+        "rowR": {"pelvis_rot": [64.8, -46.4, 43.6]}
+      }
+    },
+    {
+      "line": 1,
+      "status": "draft",
+      "ring": ["foot_L", "foot_R"],
+      "poses": {
+        "plank": {"foot": {"at": [0.07, 1.045], "floor": 0.025, "yaw": 0, "pitch": 65}},
+        "rowL": {"foot": {"at": [0.07, 1.045], "floor": 0.025, "yaw": 0, "pitch": 65}},
+        "rowR": {"foot": {"at": [0.07, 1.045], "floor": 0.025, "yaw": 0, "pitch": 65}}
+      }
+    }
+  ]
+}

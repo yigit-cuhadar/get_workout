@@ -1,0 +1,43 @@
+{
+  "status": "draft",
+  "view": [40, 10],
+  "poses": {
+    "top": {
+      "pelvis": [0, 0.05, 0.578],
+      "pelvis_rot": [28, 0, 0],
+      "lumbar": 4,
+      "chest": 4,
+      "neck": -10,
+      "foot": {"at": [0.17, -0.42], "floor": 0, "yaw": 12},
+      "knee": [0.15, -1, 0.3],
+      "hand": {"pos": [0.17, -0.473, 0.603], "fingers": [0.0, -0.84, 0.53], "palm": [0.0, -0.537, -0.852], "curl": 75},
+      "elbow": [0.2, 0.3, -1],
+      "clavicle": [-4, 10]
+    },
+    "bottom": {
+      "extends": "top",
+      "hand": {"pos": [0.17, -0.404, 0.526], "fingers": [0.0, -0.537, -0.852], "palm": [-0.0, 0.84, -0.53], "curl": 75}
+    }
+  },
+  "keys": [[0, "bottom"], [0.7, "top"], [1.0, "top"], [2.2, "bottom"], [2.6, "bottom"]],
+  "gear": [{"kit": "flat_bench", "at": [0, 0.5, 0]}, {"kit": "dumbbell", "side": "L"}, {"kit": "dumbbell", "side": "R"}],
+  "mistakes": [
+    {
+      "line": 0,
+      "status": "draft",
+      "ring": ["hand_L", "hand_R"],
+      "poses": {
+        "heave": {"extends": "top", "hand": {"pos": [0.17, -0.472, 0.67], "fingers": [0.0, -0.79, 0.602], "palm": [0.0, -0.608, -0.802], "curl": 75}, "elbow": [0.2, 0.3, -1]}
+      },
+      "keys": [[0, "bottom"], [0.25, "heave"], [0.45, "top"], [0.6, "top"], [0.8, "bottom"], [1.2, "bottom"]]
+    },
+    {
+      "line": 1,
+      "status": "draft",
+      "ring": ["elbow_L", "elbow_R"],
+      "poses": {
+        "top": {"hand": {"pos": [0.17, -0.503, 0.683]}, "elbow": [0.2, 0.3, -1]}
+      }
+    }
+  ]
+}

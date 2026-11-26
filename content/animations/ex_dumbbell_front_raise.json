@@ -1,0 +1,32 @@
+{
+  "status": "draft",
+  "view": [40, 8],
+  "poses": {
+    "bottom": {"pelvis": [0, 0, 0.98], "pelvis_rot": [0, 0, 0], "lumbar": 0, "chest": 0, "neck": 0, "foot": {"at": [0.13, 0.037], "floor": 0, "yaw": 10}, "clavicle": [0, 0], "hand": {"pos": [0.17, -0.219, 0.872], "fingers": [-0.138, -0.652, -0.746], "palm": [-0.118, 0.758, -0.641], "curl": 75}, "elbow": [0.4, 1, 0]},
+    "mid": {"extends": "bottom", "hand": {"pos": [0.19, -0.383, 0.987], "fingers": [-0.132, -0.856, -0.5], "palm": [-0.034, 0.508, -0.861], "curl": 75}},
+    "top": {"extends": "bottom", "hand": {"pos": [0.19, -0.547, 1.379], "fingers": [-0.256, -0.967, 0.005], "palm": [-0.001, -0.005, -1.0], "curl": 75}}
+  },
+  "keys": [[0, "bottom"], [0.35, "mid"], [1.1, "top"], [1.3, "top"], [2.53, "mid"], [3.1, "bottom"], [3.5, "bottom"]],
+  "gear": [{"kit": "dumbbell", "side": "L"}, {"kit": "dumbbell", "side": "R"}],
+  "mistakes": [
+    {
+      "line": 0,
+      "status": "draft",
+      "ring": ["lumbar", "hip_L", "hip_R"],
+      "poses": {
+        "dip": {"extends": "bottom", "pelvis": [0, 0.03, 0.97], "pelvis_rot": [12, 0, 0], "hand": {"pos": [0.17, -0.25, 0.85], "fingers": [-0.143, -0.625, -0.768], "palm": [-0.114, 0.781, -0.614], "curl": 75}},
+        "mid": {"pelvis": [0, -0.04, 0.975], "pelvis_rot": [-8, 0, 0], "lumbar": -6, "neck": 6, "hand": {"pos": [0.189, -0.399, 1.04], "fingers": [-0.148, -0.921, -0.36], "palm": [-0.064, 0.373, -0.926], "curl": 75}},
+        "top": {"pelvis": [0, -0.04, 0.976], "pelvis_rot": [-8, 0, 0], "lumbar": -6, "neck": 6, "hand": {"pos": [0.19, -0.491, 1.441], "fingers": [-0.235, -0.97, 0.067], "palm": [-0.016, -0.065, -0.998], "curl": 75}}
+      },
+      "keys": [[0, "bottom"], [0.4, "dip"], [0.61, "mid"], [1.0, "top"], [1.2, "top"], [2.35, "mid"], [3.0, "bottom"], [3.4, "bottom"]]
+    },
+    {
+      "line": 1,
+      "status": "draft",
+      "ring": ["shoulder_L", "shoulder_R"],
+      "poses": {
+        "top": {"clavicle": [10, 0], "hand": {"pos": [0.189, -0.334, 1.88], "fingers": [-0.116, -0.745, 0.657], "palm": [-0.275, -0.612, -0.742], "curl": 75}}
+      }
+    }
+  ]
+}

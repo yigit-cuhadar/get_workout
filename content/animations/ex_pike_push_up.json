@@ -1,0 +1,143 @@
+{
+  "status": "draft",
+  "view": [
+    60,
+    10
+  ],
+  "poses": {
+    "top": {
+      "pelvis": [
+        0,
+        0.004,
+        0.884
+      ],
+      "pelvis_rot": [
+        138.0,
+        0,
+        0
+      ],
+      "lumbar": 0,
+      "chest": 0,
+      "neck": 5,
+      "foot": {
+        "at": [
+          0.1,
+          0.578
+        ],
+        "floor": 0.02,
+        "yaw": 10,
+        "pitch": 35
+      },
+      "hand": {
+        "pos": [
+          0.25,
+          -0.42,
+          0.035
+        ],
+        "fingers": [
+          0,
+          -1,
+          0
+        ],
+        "palm": [
+          0,
+          0,
+          -1
+        ],
+        "curl": 0,
+        "hold": [
+          0.05,
+          0
+        ]
+      },
+      "elbow": [
+        0.3,
+        1,
+        0
+      ],
+      "clavicle": [
+        10,
+        0
+      ]
+    },
+    "bottom": {
+      "extends": "top",
+      "pelvis": [
+        0,
+        -0.129,
+        0.73
+      ],
+      "pelvis_rot": [
+        153.0,
+        0,
+        0
+      ],
+      "neck": -10
+    }
+  },
+  "keys": [
+    [
+      0,
+      "top"
+    ],
+    [
+      1.5,
+      "bottom"
+    ],
+    [
+      1.8,
+      "bottom"
+    ],
+    [
+      2.6,
+      "top"
+    ],
+    [
+      3.0,
+      "top"
+    ]
+  ],
+  "gear": [],
+  "mistakes": [
+    {
+      "line": 0,
+      "status": "draft",
+      "ring": [
+        "hip_L",
+        "hip_R"
+      ],
+      "poses": {
+        "bottom": {
+          "pelvis": [
+            0,
+            -0.047,
+            0.537
+          ],
+          "pelvis_rot": [
+            123.0,
+            0,
+            0
+          ],
+          "neck": 0
+        }
+      }
+    },
+    {
+      "line": 1,
+      "status": "draft",
+      "ring": [
+        "elbow_L",
+        "elbow_R"
+      ],
+      "poses": {
+        "top": {
+          "elbow": [
+            1,
+            0,
+            0
+          ]
+        }
+      }
+    }
+  ]
+}
