@@ -1,0 +1,52 @@
+{
+  "status": "draft",
+  "view": [-30, 8],
+  "poses": {
+    "load": {
+      "pelvis": [0, 0.02, 0.93],
+      "pelvis_rot": [8, -30, 0],
+      "lumbar": [0, 0, 0],
+      "chest": [2, -25, 0],
+      "neck": [0, 40, 0],
+      "foot_L": {"at": [0.2, 0.0], "floor": 0, "yaw": 20},
+      "foot_R": {"at": [-0.2, 0.0], "floor": 0, "yaw": 20},
+      "elbow_L": [0, -1, -0.3],
+      "elbow_R": [-0.5, 0.5, -0.5],
+      "clavicle": [0, 6],
+      "hand_L": {"pos": [-0.27, -0.175, 1.04], "fingers": [-0.3, -0.3, -0.9], "palm": [0, 0.9, -0.4], "curl": 20},
+      "hand_R": {"pos": [-0.27, -0.025, 0.96], "fingers": [-0.3, -0.3, -0.9], "palm": [0, -0.9, 0.4], "curl": 20}
+    },
+    "throw": {
+      "extends": "load",
+      "pelvis": [0.02, 0.0, 0.95],
+      "pelvis_rot": [4, 25, 0],
+      "chest": [2, 15, 0],
+      "neck": [0, 10, 0],
+      "foot_R": {"at": [-0.2, 0.0], "floor": 0, "yaw": 70, "pitch": 25},
+      "elbow_L": [0, 0.5, -1],
+      "elbow_R": [0, -1, -0.5],
+      "hand_L": {"pos": [0.18, -0.27, 1.24], "fingers": [0.9, 0.3, 0.2], "palm": [0.6, -0.7, -0.3], "curl": 20},
+      "hand_R": {"pos": [0.3, -0.39, 1.18], "fingers": [0.9, 0.3, 0.2], "palm": [-0.6, 0.7, 0.3], "curl": 20}
+    }
+  },
+  "keys": [[0, "load"], [0.55, "throw"], [0.7, "throw"], [1.5, "load"], [1.8, "load"]],
+  "gear": [{"kit": "medicine_ball"}],
+  "mistakes": [
+    {
+      "line": 0,
+      "status": "draft",
+      "ring": ["shoulder_L", "shoulder_R"],
+      "poses": {
+        "throw": {"pelvis_rot": [6, -20, 0], "chest": [2, 0, 0], "foot_R": {"at": [-0.2, 0.0], "floor": 0, "yaw": 20}, "hand_L": {"pos": [-0.16, -0.24, 1.15], "fingers": [0.3, -0.9, 0.2]}, "hand_R": {"pos": [-0.04, -0.36, 1.09], "fingers": [0.3, -0.9, 0.2]}}
+      }
+    },
+    {
+      "line": 1,
+      "status": "draft",
+      "ring": ["lumbar"],
+      "poses": {
+        "throw": {"pelvis_rot": [6, -25, 0], "lumbar": [0, 30, 0], "chest": [2, 30, 0], "foot_R": {"at": [-0.2, 0.0], "floor": 0, "yaw": 20}, "hand_L": {"pos": [0.12, -0.27, 1.23]}, "hand_R": {"pos": [0.24, -0.39, 1.17]}}
+      }
+    }
+  ]
+}

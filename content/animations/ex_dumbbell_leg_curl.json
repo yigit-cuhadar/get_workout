@@ -1,0 +1,39 @@
+{
+  "status": "draft",
+  "view": [-60, 8],
+  "poses": {
+    "down": {
+      "pelvis": [0, 0.5, 0.585],
+      "pelvis_rot": [90, 0, 0],
+      "lumbar": 0,
+      "chest": 0,
+      "neck": -15,
+      "foot": {"pos": [0.075, 1.36, 0.6], "yaw": 0, "pitch": 90},
+      "knee": [0, 0, -1],
+      "hand": {"pos": [0.16, -0.18, 0.39], "fingers": [0, 0, -1], "palm": [-1, 0, 0], "curl": 60},
+      "elbow": [1, 0, 0.3],
+      "clavicle": [0, 0]
+    },
+    "up": {
+      "extends": "down",
+      "foot": {"pos": [0.075, 1.0, 1.0], "yaw": 0, "pitch": 170}
+    }
+  },
+  "keys": [[0, "down"], [1.0, "up"], [1.3, "up"], [2.8, "down"], [3.2, "down"]],
+  "gear": [{"kit": "flat_bench", "at": [0, 0.35, 0]}, {"kit": "dumbbell_feet"}],
+  "mistakes": [
+    {
+      "line": 0,
+      "shown": false,
+      "why": "The dumbbell is drawn between the feet and follows them; it cannot slip out of them."
+    },
+    {
+      "line": 1,
+      "status": "draft",
+      "ring": ["hip_L", "hip_R"],
+      "poses": {
+        "up": {"pelvis": [0, 0.5, 0.68], "pelvis_rot": [104, 0, 0], "foot": {"pos": [0.075, 0.92, 1.05], "yaw": 0, "pitch": 165}}
+      }
+    }
+  ]
+}

@@ -3414,13 +3414,20 @@ the feature you are about to touch, and keep it true when you change it.
   419 live exercises (which carry 852 mistakes), 6 more sent back with
   `fix` after the owner's review in the app (2026-11-26: the back, box and
   Smith squats, the front squat, the bench press and the Smith bench press;
-  their published animations stay until the fixes are approved), and 241
+  their published animations stay until the fixes are approved), and 260
   drafts written by six sessions on 2026-11-26 (bodyweight, pull-up bar,
   barbell family, dumbbell and kettlebell, bench, cable) and fixed once
   after that review; none of them is approved. Draft kits waiting with
   them: `dumbbell`, `dumbbell_cupped`, `kettlebell`, `incline_bench`,
   `decline_bench`, `cable_column`, `cable_bar`, `cable_rope`,
-  `cable_handle`, `cable_v_handle`, `row_seat`, `pulldown_seat`. Earlier: batch 1, the barbell squat
+  `cable_handle`, `cable_v_handle`, `row_seat`, `pulldown_seat`,
+  `dumbbell_feet`, `ankle_cuff`, `calf_step`, `stability_ball`,
+  `stability_ball_feet`, `stability_ball_hands`, `medicine_ball`,
+  `medicine_ball_knees`. On 2026-11-27 the exercises that had worked around
+  feet that could not step, pivot or roll were redone, and those that
+  needed gear on a foot or a ball were added. Still not drawn: gear that
+  leaves the hands inside a clip (a slam or a throw stops at the release).
+  Earlier: batch 1, the barbell squat
   family, and batch 2, the bench press and curl families, both approved by
   the owner 2026-11-26 after the hands were seated on the bar (pages
   https://claude.ai/artifact/C7QFi5EHF8sbxbPDSQYM7G,
