@@ -135,8 +135,9 @@ void main() {
     expect(find.text('Pattern'), findsOneWidget);
     expect(find.text('Logged as'), findsOneWidget);
     expect(find.text('Also called'), findsOneWidget);
-    expect(find.byType(BenefitList), findsOneWidget);
-    expect(find.text('• Bouncing the bar.'), findsOneWidget);
+    // The steps and the numbered mistakes.
+    expect(find.byType(BenefitList), findsNWidgets(2));
+    expect(find.text('Bouncing the bar.'), findsOneWidget);
     expect(find.text('• Use a spotter.'), findsOneWidget);
     expect(find.text('Similar exercises'), findsOneWidget);
     expect(find.text('Alternatives · 1'), findsOneWidget);
@@ -145,12 +146,10 @@ void main() {
     expect(find.text('Exercise options'), findsNothing);
   });
 
-  testWidgets('the ⋯ menu makes it a favourite', (tester) async {
+  testWidgets('the star in the app bar makes it a favourite', (tester) async {
     await pump(tester, DetailReady(bench));
 
-    await tester.tap(find.bySemanticsLabel('Exercise options'));
-    await settle(tester);
-    await tester.tap(find.text('Add to favourites'));
+    await tester.tap(find.bySemanticsLabel('Add to favourites'));
     verify(() => favorites.toggle('bench')).called(1);
   });
 
@@ -181,9 +180,16 @@ void main() {
     );
   });
 
-  testWidgets('the Similar card opens every one; a row opens it', (
-    tester,
-  ) async {
+  testWidgets('a Similar row opens its exercise', (tester) async {
+    await pump(tester, DetailReady(bench, alternatives: [dumbbell]));
+
+    expect(find.text('See all'), findsNothing);
+    await tester.tap(find.text('Dumbbell Bench Press'));
+    await settle(tester);
+    expect(find.text('Opened dumbbell'), findsOneWidget);
+  });
+
+  testWidgets('See all opens every one; a row opens it', (tester) async {
     final variations = [
       for (var i = 1; i <= 4; i++) exercise('v$i', name: 'Variation $i'),
     ];
@@ -192,7 +198,7 @@ void main() {
       DetailReady(bench, variations: variations, alternatives: [dumbbell]),
     );
 
-    await tester.tap(find.text('Similar exercises'));
+    await tester.tap(find.text('See all'));
     await settle(tester);
     final sheet = find.byType(ForgeBottomSheet);
     for (final name in [
@@ -235,7 +241,7 @@ void main() {
       tester.getTopLeft(find.text('Add to workout')).dy,
       lessThan(tester.getTopLeft(find.text('Add to program')).dy),
     );
-    expect(find.text('Add to favourites'), findsOneWidget);
+    expect(find.text('Add to favourites'), findsNothing);
     expect(find.text('Edit'), findsNothing);
   });
 

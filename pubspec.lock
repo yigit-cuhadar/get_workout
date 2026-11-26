@@ -170,11 +170,12 @@ packages:
     source: hosted
     version: "0.7.6+1"
   camera_avfoundation:
-    dependency: "direct overridden"
+    dependency: transitive
     description:
-      path: "third_party/camera_avfoundation"
-      relative: true
-    source: path
+      name: camera_avfoundation
+      sha256: "971f7b4938ae761797dd667c078af92f1b6a1bb7760774c0cbcf9c9d4a14bdf1"
+      url: "https://pub.dev"
+    source: hosted
     version: "0.11.1"
   camera_platform_interface:
     dependency: "direct dev"
@@ -845,11 +846,9 @@ packages:
   forge_ui:
     dependency: "direct main"
     description:
-      path: "packages/forge_ui"
-      ref: "5de90024c08040cf35c21556c514284509780f67"
-      resolved-ref: "5de90024c08040cf35c21556c514284509780f67"
-      url: "https://github.com/yigit-cuhadar/MobileAppForge.git"
-    source: git
+      path: "../../.claude/worktrees/exercise-screen/packages/forge_ui"
+      relative: true
+    source: path
     version: "0.2.0"
   frontend_server_client:
     dependency: transitive
