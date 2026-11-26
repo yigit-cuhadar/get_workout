@@ -121,5 +121,151 @@
       {"cyl": [{"hand": "$side", "at": [0, 0, -0.07]}, {"hand": "$side", "at": [0, 0, -0.13]}], "r": "$head", "colour": "plate"},
       {"cyl": [{"hand": "$side", "at": [0, 0, 0.07]}, {"hand": "$side", "at": [0, 0, 0.13]}], "r": "$head", "colour": "plate"}
     ]
+  },
+  "kettlebell": {
+    "status": "draft",
+    "values": {"side": "L", "other": "L", "a": [0, 0, 0.06], "b": [0, 0, -0.06], "bell": [0.18, 0, 0]},
+    "pieces": [
+      {"cyl": [{"hand": "$side", "at": "$a"}, {"hand": "$other", "at": "$b"}], "r": 0.015, "colour": "steel"},
+      {"cyl": [{"hand": "$side", "at": "$a"}, {"between": [{"hand": "$side", "at": "$a"}, {"hand": "$side", "at": "$bell"}], "t": 0.5}], "r": 0.015, "colour": "steel"},
+      {"cyl": [{"hand": "$other", "at": "$b"}, {"between": [{"hand": "$other", "at": "$b"}, {"hand": "$side", "at": "$bell"}], "t": 0.5}], "r": 0.015, "colour": "steel"},
+      {"cyl": [{"between": [{"between": [{"hand": "$side", "at": "$a"}, {"hand": "$other", "at": "$b"}], "t": 0.5}, {"hand": "$side", "at": "$bell"}], "t": 0.42}, {"between": [{"between": [{"hand": "$side", "at": "$a"}, {"hand": "$other", "at": "$b"}], "t": 0.5}, {"hand": "$side", "at": "$bell"}], "t": 0.62}], "r": 0.075, "colour": "plate"},
+      {"cyl": [{"between": [{"between": [{"hand": "$side", "at": "$a"}, {"hand": "$other", "at": "$b"}], "t": 0.5}, {"hand": "$side", "at": "$bell"}], "t": 0.58}, {"between": [{"between": [{"hand": "$side", "at": "$a"}, {"hand": "$other", "at": "$b"}], "t": 0.5}, {"hand": "$side", "at": "$bell"}], "t": 1.5}], "r": 0.1, "colour": "plate"},
+      {"cyl": [{"between": [{"between": [{"hand": "$side", "at": "$a"}, {"hand": "$other", "at": "$b"}], "t": 0.5}, {"hand": "$side", "at": "$bell"}], "t": 1.5}, {"between": [{"between": [{"hand": "$side", "at": "$a"}, {"hand": "$other", "at": "$b"}], "t": 0.5}, {"hand": "$side", "at": "$bell"}], "t": 1.56}], "r": 0.08, "colour": "plate"}
+    ]
+  },
+  "incline_bench": {
+    "status": "draft",
+    "values": {"top_y": 0.636, "top_z": 1.021},
+    "pieces": [
+      {"box": [0, -0.19, 0.385], "size": [0.28, 0.36, 0.07], "colour": "pad"},
+      {"cyl": [[-0.105, 0, 0.385], [-0.105, "$top_y", "$top_z"]], "r": 0.035, "colour": "pad"},
+      {"cyl": [[-0.07, 0, 0.385], [-0.07, "$top_y", "$top_z"]], "r": 0.035, "colour": "pad"},
+      {"cyl": [[-0.035, 0, 0.385], [-0.035, "$top_y", "$top_z"]], "r": 0.035, "colour": "pad"},
+      {"cyl": [[0, 0, 0.385], [0, "$top_y", "$top_z"]], "r": 0.035, "colour": "pad"},
+      {"cyl": [[0.035, 0, 0.385], [0.035, "$top_y", "$top_z"]], "r": 0.035, "colour": "pad"},
+      {"cyl": [[0.07, 0, 0.385], [0.07, "$top_y", "$top_z"]], "r": 0.035, "colour": "pad"},
+      {"cyl": [[0.105, 0, 0.385], [0.105, "$top_y", "$top_z"]], "r": 0.035, "colour": "pad"},
+      {"box": [0, -0.17, 0.32], "size": [0.06, 0.34, 0.06]},
+      {"box": [0, -0.3, 0.17], "size": [0.06, 0.06, 0.3]},
+      {"box": [0, -0.3, 0.02], "size": [0.44, 0.06, 0.04]},
+      {"box": [0, 0.13, 0.04], "size": [0.06, 0.86, 0.06]},
+      {"box": [0, 0.56, 0.02], "size": [0.44, 0.06, 0.04]},
+      {"box": [0, 0, 0.18], "size": [0.06, 0.06, 0.28]},
+      {"cyl": [[0, 0.4, 0.07], {"between": [[0, 0, 0.335], [0, "$top_y", "$top_z"]], "t": 0.5}], "r": 0.02, "colour": "steel"}
+    ]
+  },
+  "dumbbell_cupped": {
+    "status": "draft",
+    "values": {"head": 0.08},
+    "pieces": [
+      {"cyl": [{"between": [{"hand": "L", "at": [0, -0.015, 0]}, {"hand": "R", "at": [0, -0.015, 0]}], "t": 0.5}, {"between": [{"hand": "L", "at": [0, 0.035, 0]}, {"hand": "R", "at": [0, 0.035, 0]}], "t": 0.5}], "r": "$head", "colour": "plate"},
+      {"cyl": [{"between": [{"hand": "L", "at": [0, -0.015, 0]}, {"hand": "R", "at": [0, -0.015, 0]}], "t": 0.5}, {"between": [{"hand": "L", "at": [0, -0.155, 0]}, {"hand": "R", "at": [0, -0.155, 0]}], "t": 0.5}], "r": 0.016, "colour": "steel"},
+      {"cyl": [{"between": [{"hand": "L", "at": [0, -0.155, 0]}, {"hand": "R", "at": [0, -0.155, 0]}], "t": 0.5}, {"between": [{"hand": "L", "at": [0, -0.205, 0]}, {"hand": "R", "at": [0, -0.205, 0]}], "t": 0.5}], "r": "$head", "colour": "plate"}
+    ]
+  },
+  "decline_bench": {
+    "status": "draft",
+    "pieces": [
+      {"cyl": [[-0.105, -0.05, 0.62], [-0.105, 1.1, 0.2]], "r": 0.035, "colour": "pad"},
+      {"cyl": [[-0.07, -0.05, 0.62], [-0.07, 1.1, 0.2]], "r": 0.035, "colour": "pad"},
+      {"cyl": [[-0.035, -0.05, 0.62], [-0.035, 1.1, 0.2]], "r": 0.035, "colour": "pad"},
+      {"cyl": [[0, -0.05, 0.62], [0, 1.1, 0.2]], "r": 0.035, "colour": "pad"},
+      {"cyl": [[0.035, -0.05, 0.62], [0.035, 1.1, 0.2]], "r": 0.035, "colour": "pad"},
+      {"cyl": [[0.07, -0.05, 0.62], [0.07, 1.1, 0.2]], "r": 0.035, "colour": "pad"},
+      {"cyl": [[0.105, -0.05, 0.62], [0.105, 1.1, 0.2]], "r": 0.035, "colour": "pad"},
+      {"cyl": [[0, -0.05, 0.56], [0, 1.1, 0.14]], "r": 0.025, "colour": "steel"},
+      {"box": [0, 1.0, 0.09], "size": [0.06, 0.06, 0.14]},
+      {"box": [0, 1.0, 0.02], "size": [0.44, 0.06, 0.04]},
+      {"box": [0, 0.0, 0.29], "size": [0.06, 0.06, 0.5]},
+      {"box": [0, 0.0, 0.02], "size": [0.44, 0.06, 0.04]},
+      {"cyl": [[0, 0.0, 0.5], [0, -0.5, 0.3]], "r": 0.025, "colour": "steel"},
+      {"box": [0, -0.5, 0.16], "size": [0.05, 0.05, 0.32]},
+      {"box": [0, -0.5, 0.02], "size": [0.3, 0.06, 0.04]},
+      {"cyl": [[-0.17, -0.55, 0.46], [0.17, -0.55, 0.46]], "r": 0.05, "colour": "pad"},
+      {"cyl": [[0, -0.5, 0.3], [0, -0.55, 0.46]], "r": 0.02, "colour": "steel"}
+    ]
+  },
+  "cable_column": {
+    "status": "draft",
+    "values": {"pulley": 1.0, "reach": 0.06, "side": "L", "one": 0, "hx": 0.12, "hy": 0.03, "jy": 0, "jz": 0, "ax": 0, "ay": 1, "az": 0, "rest": 0.3, "top": 0.52},
+    "movers": {
+      "stack": {"follows": {"between": [{"grips": [0, "$jy", "$jz"]}, {"hand": "$side", "at": ["$hx", "$hy", 0]}], "t": "$one"}, "axis": ["$ax", "$ay", "$az"], "along": [0, 0, 1]}
+    },
+    "pieces": [
+      {"cyl": [[0, "$reach", "$pulley"], {"between": [{"grips": [0, "$jy", "$jz"]}, {"hand": "$side", "at": ["$hx", "$hy", 0]}], "t": "$one"}], "r": 0.006, "colour": "steel"},
+      {"cyl": [[-0.022, "$reach", "$pulley"], [0.022, "$reach", "$pulley"]], "r": 0.045, "colour": "steel"},
+      {"cyl": [[0, -0.04, "$pulley"], [0, "$reach", "$pulley"]], "r": 0.03},
+      {"box": [0, -0.04, 1.1], "size": [0.1, 0.08, 2.2]},
+      {"box": [0, -0.22, 0.03], "size": [0.6, 0.5, 0.06]},
+      {"box": [0, -0.24, 2.17], "size": [0.36, 0.48, 0.06]},
+      {"cyl": [[-0.1, -0.33, 0.06], [-0.1, -0.33, 2.14]], "r": 0.01, "colour": "steel"},
+      {"cyl": [[0.1, -0.33, 0.06], [0.1, -0.33, 2.14]], "r": 0.01, "colour": "steel"},
+      {"cyl": [[0, -0.33, 2.14], {"at": [0, -0.33, "$top"], "with": "stack"}], "r": 0.006, "colour": "steel"},
+      {"box": {"at": [0, -0.33, "$rest"], "with": "stack"}, "size": [0.24, 0.14, 0.44], "colour": "plate"}
+    ]
+  },
+  "cable_bar": {
+    "status": "draft",
+    "values": {"half": 0.3, "arm": 0, "jy": 0, "jz": 0.06},
+    "pieces": [
+      {"cyl": [{"between": [{"grips": [0, 0, 0]}, {"grips": ["$half", 0, 0]}], "t": -1}, {"grips": ["$half", 0, 0]}], "r": 0.014, "colour": "steel"},
+      {"cyl": [{"between": [{"grips": [0, 0, 0]}, {"grips": ["$half", 0, 0]}], "t": "$arm"}, {"grips": [0, "$jy", "$jz"]}], "r": 0.01, "colour": "steel"},
+      {"cyl": [{"between": [{"grips": [0, 0, 0]}, {"between": [{"grips": [0, 0, 0]}, {"grips": ["$half", 0, 0]}], "t": -1}], "t": "$arm"}, {"grips": [0, "$jy", "$jz"]}], "r": 0.01, "colour": "steel"}
+    ]
+  },
+  "cable_rope": {
+    "status": "draft",
+    "values": {"jy": 0, "jz": 0.14, "kl": 0.05, "kr": -0.05},
+    "pieces": [
+      {"cyl": [{"hand": "L", "at": [0, 0, "$kl"]}, {"between": [{"hand": "L", "at": [0, 0, "$kl"]}, {"hand": "L", "at": [0, 0, 0]}], "t": 2}], "r": 0.012, "colour": "pad"},
+      {"cyl": [{"between": [{"hand": "L", "at": [0, 0, "$kl"]}, {"hand": "L", "at": [0, 0, 0]}], "t": 2}, {"grips": [0, "$jy", "$jz"]}], "r": 0.012, "colour": "pad"},
+      {"cyl": [{"hand": "L", "at": [0, 0, "$kl"]}, {"between": [{"hand": "L", "at": [0, 0, 0]}, {"hand": "L", "at": [0, 0, "$kl"]}], "t": 1.6}], "r": 0.022, "colour": "pad"},
+      {"cyl": [{"hand": "R", "at": [0, 0, "$kr"]}, {"between": [{"hand": "R", "at": [0, 0, "$kr"]}, {"hand": "R", "at": [0, 0, 0]}], "t": 2}], "r": 0.012, "colour": "pad"},
+      {"cyl": [{"between": [{"hand": "R", "at": [0, 0, "$kr"]}, {"hand": "R", "at": [0, 0, 0]}], "t": 2}, {"grips": [0, "$jy", "$jz"]}], "r": 0.012, "colour": "pad"},
+      {"cyl": [{"hand": "R", "at": [0, 0, "$kr"]}, {"between": [{"hand": "R", "at": [0, 0, 0]}, {"hand": "R", "at": [0, 0, "$kr"]}], "t": 1.6}], "r": 0.022, "colour": "pad"}
+    ]
+  },
+  "cable_handle": {
+    "status": "draft",
+    "values": {"side": "L", "hx": 0.12, "hy": 0.03},
+    "pieces": [
+      {"cyl": [{"hand": "$side", "at": [0, 0, -0.065]}, {"hand": "$side", "at": [0, 0, 0.065]}], "r": 0.014, "colour": "steel"},
+      {"cyl": [{"hand": "$side", "at": [0, 0, -0.065]}, {"hand": "$side", "at": ["$hx", "$hy", 0]}], "r": 0.01, "colour": "steel"},
+      {"cyl": [{"hand": "$side", "at": [0, 0, 0.065]}, {"hand": "$side", "at": ["$hx", "$hy", 0]}], "r": 0.01, "colour": "steel"}
+    ]
+  },
+  "cable_v_handle": {
+    "status": "draft",
+    "values": {"jy": 0, "jz": 0},
+    "pieces": [
+      {"cyl": [{"hand": "L", "at": [0, 0, -0.06]}, {"hand": "L", "at": [0, 0, 0.06]}], "r": 0.014, "colour": "steel"},
+      {"cyl": [{"hand": "L", "at": [0, 0, -0.06]}, {"grips": [0, "$jy", "$jz"]}], "r": 0.01, "colour": "steel"},
+      {"cyl": [{"hand": "L", "at": [0, 0, 0.06]}, {"grips": [0, "$jy", "$jz"]}], "r": 0.01, "colour": "steel"},
+      {"cyl": [{"hand": "R", "at": [0, 0, -0.06]}, {"hand": "R", "at": [0, 0, 0.06]}], "r": 0.014, "colour": "steel"},
+      {"cyl": [{"hand": "R", "at": [0, 0, -0.06]}, {"grips": [0, "$jy", "$jz"]}], "r": 0.01, "colour": "steel"},
+      {"cyl": [{"hand": "R", "at": [0, 0, 0.06]}, {"grips": [0, "$jy", "$jz"]}], "r": 0.01, "colour": "steel"}
+    ]
+  },
+  "row_seat": {
+    "status": "draft",
+    "pieces": [
+      {"box": [0, 0, 0.385], "size": [0.32, 0.5, 0.07], "colour": "pad"},
+      {"box": [0, 0, 0.2], "size": [0.08, 0.08, 0.3]},
+      {"box": [0, -0.45, 0.03], "size": [0.14, 1.2, 0.06]},
+      {"box": [0, -0.86, 0.24], "size": [0.46, 0.04, 0.32]},
+      {"box": [0, -0.9, 0.12], "size": [0.08, 0.08, 0.18]}
+    ]
+  },
+  "pulldown_seat": {
+    "status": "draft",
+    "pieces": [
+      {"box": [0, 0.03, 0.4], "size": [0.36, 0.38, 0.08], "colour": "pad"},
+      {"box": [0, 0.03, 0.2], "size": [0.08, 0.08, 0.34]},
+      {"box": [0, 0.03, 0.02], "size": [0.44, 0.3, 0.04]},
+      {"cyl": [[-0.27, -0.26, 0.68], [0.27, -0.26, 0.68]], "r": 0.05, "colour": "pad"},
+      {"box": [0, -0.26, 0.36], "size": [0.05, 0.05, 0.6]},
+      {"box": [0, -0.2, 0.02], "size": [0.1, 0.5, 0.04]}
+    ]
   }
 }

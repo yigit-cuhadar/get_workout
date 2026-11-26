@@ -1,0 +1,176 @@
+{
+  "status": "draft",
+  "view": [
+    35,
+    8
+  ],
+  "poses": {
+    "hold": {
+      "pelvis": [
+        0,
+        0.2,
+        0.4
+      ],
+      "pelvis_rot": [
+        32,
+        0,
+        0
+      ],
+      "lumbar": 0,
+      "chest": 0,
+      "neck": -15,
+      "clavicle": [
+        0,
+        8
+      ],
+      "foot": {
+        "at": [
+          0.18,
+          0.0
+        ],
+        "floor": 0,
+        "yaw": 28,
+        "pitch": 0
+      },
+      "knee": [
+        0.55,
+        -0.85,
+        0
+      ],
+      "hand": {
+        "pos": [
+          0.02,
+          -0.25,
+          0.02
+        ],
+        "fingers": [
+          0,
+          -0.3,
+          1
+        ],
+        "palm": [
+          -1,
+          0,
+          0
+        ],
+        "curl": 10,
+        "rel": "chest"
+      },
+      "elbow": [
+        1,
+        -0.4,
+        -0.8
+      ]
+    },
+    "breathe": {
+      "extends": "hold",
+      "chest": -1.5
+    }
+  },
+  "keys": [
+    [
+      0,
+      "hold"
+    ],
+    [
+      2.0,
+      "breathe"
+    ],
+    [
+      4.0,
+      "hold"
+    ]
+  ],
+  "gear": [],
+  "mistakes": [
+    {
+      "line": 0,
+      "status": "draft",
+      "ring": [
+        "foot_L",
+        "foot_R"
+      ],
+      "poses": {
+        "bad": {
+          "extends": "hold",
+          "pelvis": [
+            0,
+            0.2,
+            0.43
+          ],
+          "foot": {
+            "at": [
+              0.18,
+              0.0
+            ],
+            "floor": 0,
+            "yaw": 28,
+            "pitch": 28
+          }
+        }
+      },
+      "keys": [
+        [
+          0,
+          "hold"
+        ],
+        [
+          1.5,
+          "bad"
+        ],
+        [
+          3.5,
+          "bad"
+        ],
+        [
+          5.0,
+          "hold"
+        ]
+      ]
+    },
+    {
+      "line": 1,
+      "status": "draft",
+      "ring": [
+        "lumbar",
+        "chest"
+      ],
+      "poses": {
+        "bad": {
+          "extends": "hold",
+          "pelvis": [
+            0,
+            0.22,
+            0.38
+          ],
+          "pelvis_rot": [
+            22,
+            0,
+            0
+          ],
+          "lumbar": 24,
+          "chest": 24,
+          "neck": 10
+        }
+      },
+      "keys": [
+        [
+          0,
+          "hold"
+        ],
+        [
+          1.5,
+          "bad"
+        ],
+        [
+          3.5,
+          "bad"
+        ],
+        [
+          5.0,
+          "hold"
+        ]
+      ]
+    }
+  ]
+}

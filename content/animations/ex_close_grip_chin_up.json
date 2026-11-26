@@ -1,0 +1,267 @@
+{
+  "status": "draft",
+  "view": [
+    160,
+    5
+  ],
+  "poses": {
+    "hang": {
+      "pelvis": [
+        0,
+        -0.04,
+        1.18
+      ],
+      "pelvis_rot": [
+        0,
+        0,
+        0
+      ],
+      "neck": 0,
+      "foot": {
+        "pos": [
+          0.09,
+          -0.1,
+          -0.86
+        ],
+        "yaw": 5,
+        "pitch": 35,
+        "rel": "pelvis"
+      },
+      "hand": {
+        "pos": [
+          0.075,
+          0,
+          2.25
+        ],
+        "fingers": [
+          0,
+          0,
+          1
+        ],
+        "palm": [
+          0,
+          1,
+          0
+        ],
+        "curl": 75
+      },
+      "elbow": [
+        0.15,
+        -1,
+        -0.6
+      ],
+      "clavicle": [
+        28,
+        0
+      ],
+      "knee": [
+        0,
+        -1,
+        0
+      ]
+    },
+    "top": {
+      "extends": "hang",
+      "pelvis": [
+        0,
+        0.08,
+        1.7
+      ],
+      "pelvis_rot": [
+        -10,
+        0,
+        0
+      ],
+      "neck": -8,
+      "clavicle": [
+        -5,
+        -8
+      ]
+    }
+  },
+  "keys": [
+    [
+      0,
+      "hang"
+    ],
+    [
+      1.2,
+      "top"
+    ],
+    [
+      1.5,
+      "top"
+    ],
+    [
+      2.9,
+      "hang"
+    ],
+    [
+      3.3,
+      "hang"
+    ]
+  ],
+  "gear": [
+    {
+      "kit": "pull_up_bar"
+    }
+  ],
+  "mistakes": [
+    {
+      "line": 0,
+      "status": "draft",
+      "ring": [
+        "elbow_L",
+        "elbow_R"
+      ],
+      "poses": {
+        "half": {
+          "extends": "hang",
+          "pelvis": [
+            0,
+            0.04,
+            1.48
+          ],
+          "pelvis_rot": [
+            -6,
+            0,
+            0
+          ],
+          "neck": -4,
+          "clavicle": [
+            8,
+            -4
+          ]
+        }
+      },
+      "keys": [
+        [
+          0,
+          "half"
+        ],
+        [
+          0.7,
+          "top"
+        ],
+        [
+          0.9,
+          "top"
+        ],
+        [
+          1.6,
+          "half"
+        ],
+        [
+          1.8,
+          "half"
+        ]
+      ]
+    },
+    {
+      "line": 1,
+      "status": "draft",
+      "ring": [
+        "hip_L",
+        "hip_R",
+        "knee_L",
+        "knee_R"
+      ],
+      "poses": {
+        "back": {
+          "extends": "hang",
+          "pelvis": [
+            0,
+            0.2,
+            1.2
+          ],
+          "pelvis_rot": [
+            11,
+            0,
+            0
+          ],
+          "foot": {
+            "pos": [
+              0.09,
+              0.05,
+              -0.85
+            ]
+          }
+        },
+        "front": {
+          "extends": "hang",
+          "pelvis": [
+            0,
+            -0.29,
+            1.22
+          ],
+          "pelvis_rot": [
+            -15,
+            0,
+            0
+          ],
+          "foot": {
+            "pos": [
+              0.09,
+              -0.3,
+              -0.62
+            ]
+          },
+          "knee": [
+            0,
+            -1,
+            0.4
+          ]
+        },
+        "top": {
+          "pelvis": [
+            0,
+            0.02,
+            1.7
+          ],
+          "pelvis_rot": [
+            -20,
+            0,
+            0
+          ],
+          "foot": {
+            "pos": [
+              0.09,
+              0.05,
+              -0.8
+            ]
+          }
+        }
+      },
+      "keys": [
+        [
+          0,
+          "hang"
+        ],
+        [
+          0.5,
+          "back"
+        ],
+        [
+          1.0,
+          "front"
+        ],
+        [
+          1.6,
+          "top"
+        ],
+        [
+          1.9,
+          "top"
+        ],
+        [
+          3.0,
+          "hang"
+        ],
+        [
+          3.4,
+          "hang"
+        ]
+      ]
+    }
+  ]
+}

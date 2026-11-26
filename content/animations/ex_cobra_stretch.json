@@ -1,0 +1,134 @@
+{
+  "status": "draft",
+  "view": [
+    50,
+    12
+  ],
+  "poses": {
+    "down": {
+      "pelvis": [
+        0.0,
+        0.0,
+        0.193
+      ],
+      "pelvis_rot": [
+        90,
+        0,
+        0
+      ],
+      "lumbar": 0,
+      "chest": 0,
+      "neck": -10,
+      "clavicle": [
+        0,
+        0
+      ],
+      "foot": {
+        "pos": [
+          0.09,
+          0.861,
+          0.075
+        ],
+        "yaw": 0,
+        "pitch": 170
+      },
+      "knee": [
+        0,
+        -0.2,
+        -1
+      ],
+      "hand": {
+        "pos": [
+          0.233,
+          -0.447,
+          0.022
+        ],
+        "fingers": [
+          0,
+          -1,
+          0
+        ],
+        "palm": [
+          0,
+          0,
+          -1
+        ],
+        "curl": 8,
+        "hold": [
+          0.05,
+          0.012
+        ]
+      },
+      "elbow": [
+        0.3,
+        1,
+        0.3
+      ]
+    },
+    "up": {
+      "extends": "down",
+      "pelvis": [
+        0.0,
+        0.0,
+        0.193
+      ],
+      "lumbar": -22,
+      "chest": -16,
+      "neck": -14,
+      "clavicle": [
+        0,
+        0
+      ]
+    }
+  },
+  "keys": [
+    [
+      0,
+      "down"
+    ],
+    [
+      1.5,
+      "up"
+    ],
+    [
+      3.5,
+      "up"
+    ],
+    [
+      5.0,
+      "down"
+    ]
+  ],
+  "gear": [],
+  "mistakes": [
+    {
+      "line": 0,
+      "status": "draft",
+      "ring": [
+        "shoulder_L",
+        "shoulder_R"
+      ],
+      "poses": {
+        "up": {
+          "pelvis": [
+            0.0,
+            0.0,
+            0.193
+          ],
+          "lumbar": -22,
+          "chest": -16,
+          "neck": -14,
+          "clavicle": [
+            24,
+            0
+          ]
+        }
+      }
+    },
+    {
+      "line": 1,
+      "shown": false,
+      "why": "Pain cannot be shown by a pose."
+    }
+  ]
+}

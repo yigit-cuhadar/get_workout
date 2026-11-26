@@ -1,0 +1,149 @@
+{
+  "status": "draft",
+  "view": [
+    50,
+    5
+  ],
+  "poses": {
+    "ground": {
+      "pelvis": [
+        0,
+        0,
+        1.04
+      ],
+      "pelvis_rot": [
+        3,
+        0,
+        0
+      ],
+      "lumbar": 0,
+      "chest": 0,
+      "neck": 0,
+      "clavicle": [
+        0,
+        0
+      ],
+      "hand": {
+        "pos": [
+          0.231,
+          -0.063,
+          -0.413
+        ],
+        "fingers": [
+          0,
+          0,
+          -1
+        ],
+        "palm": [
+          -1,
+          0,
+          0
+        ],
+        "curl": 20,
+        "rel": "chest"
+      },
+      "elbow": [
+        0.3,
+        1,
+        -0.3
+      ],
+      "foot": {
+        "pos": [
+          0.1,
+          0.04,
+          0.185
+        ],
+        "yaw": 10,
+        "pitch": 28
+      }
+    },
+    "air": {
+      "extends": "ground",
+      "pelvis": [
+        0,
+        0,
+        1.1600000000000001
+      ],
+      "foot": {
+        "pos": [
+          0.1,
+          0.04,
+          0.315
+        ],
+        "pitch": 38
+      }
+    }
+  },
+  "keys": [
+    [
+      0,
+      "ground"
+    ],
+    [
+      0.18,
+      "air"
+    ],
+    [
+      0.36,
+      "ground"
+    ],
+    [
+      0.54,
+      "air"
+    ],
+    [
+      0.72,
+      "ground"
+    ]
+  ],
+  "gear": [],
+  "mistakes": [
+    {
+      "line": 0,
+      "status": "draft",
+      "ring": [
+        "knee_L",
+        "knee_R"
+      ],
+      "poses": {
+        "ground": {
+          "pelvis": [
+            0,
+            0.07,
+            0.9
+          ],
+          "pelvis_rot": [
+            15,
+            0,
+            0
+          ]
+        }
+      }
+    },
+    {
+      "line": 1,
+      "status": "draft",
+      "ring": [
+        "foot_L",
+        "foot_R"
+      ],
+      "poses": {
+        "ground": {
+          "foot": {
+            "pos": [
+              0.1,
+              0.037,
+              0.11
+            ],
+            "pitch": -8
+          },
+          "pelvis": [
+            0,
+            0,
+            0.98
+          ]
+        }
+      }
+    }
+  ]
+}

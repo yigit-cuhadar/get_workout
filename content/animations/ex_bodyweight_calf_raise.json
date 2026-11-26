@@ -1,0 +1,107 @@
+{
+  "status": "draft",
+  "view": [
+    50,
+    5
+  ],
+  "poses": {
+    "bottom": {
+      "pelvis": [
+        0,
+        0,
+        0.979
+      ],
+      "pelvis_rot": [
+        3,
+        0,
+        0
+      ],
+      "lumbar": 0,
+      "chest": 0,
+      "neck": 0,
+      "foot": {
+        "at": [
+          0.1,
+          0.037
+        ],
+        "floor": 0,
+        "yaw": 10
+      },
+      "clavicle": [
+        0,
+        0
+      ],
+      "elbow": [
+        1,
+        0.6,
+        0
+      ],
+      "hand": {
+        "pos": [
+          0.17,
+          -0.04,
+          0.09
+        ],
+        "fingers": [
+          0,
+          -0.6,
+          -0.8
+        ],
+        "palm": [
+          -1,
+          0,
+          0
+        ],
+        "curl": 15,
+        "rel": "pelvis"
+      }
+    },
+    "top": {
+      "extends": "bottom",
+      "pelvis": [
+        0,
+        0,
+        1.078
+      ],
+      "foot": {
+        "pitch": 38,
+        "floor": 0.02
+      }
+    }
+  },
+  "keys": [
+    [
+      0,
+      "bottom"
+    ],
+    [
+      0.9,
+      "top"
+    ],
+    [
+      1.6,
+      "top"
+    ],
+    [
+      3.0,
+      "bottom"
+    ],
+    [
+      3.4,
+      "bottom"
+    ]
+  ],
+  "gear": [],
+  "mistakes": [
+    {
+      "line": 0,
+      "shown": false,
+      "why": "Rushing is a matter of tempo, which a pose cannot show."
+    },
+    {
+      "line": 1,
+      "shown": false,
+      "why": "Rolling onto the outer edge needs the foot to tilt sideways, which the recipe's foot (yaw and pitch only) cannot do."
+    }
+  ]
+}

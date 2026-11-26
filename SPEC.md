@@ -3386,8 +3386,17 @@ the feature you are about to touch, and keep it true when you change it.
   half-speed button while on, whether pause and speed survive a chip
   change, the loop restarting when the speed changes) are built with
   defaults and still to be drawn and asked.
-  Recipes approved: 11 of
-  419 live exercises (which carry 852 mistakes): batch 1, the barbell squat
+  Recipes approved: 5 of
+  419 live exercises (which carry 852 mistakes), 6 more sent back with
+  `fix` after the owner's review in the app (2026-11-26: the back, box and
+  Smith squats, the front squat, the bench press and the Smith bench press;
+  their published animations stay until the fixes are approved), and 241
+  drafts written by six sessions on 2026-11-26 (bodyweight, pull-up bar,
+  barbell family, dumbbell and kettlebell, bench, cable) and fixed once
+  after that review; none of them is approved. Draft kits waiting with
+  them: `dumbbell`, `dumbbell_cupped`, `kettlebell`, `incline_bench`,
+  `decline_bench`, `cable_column`, `cable_bar`, `cable_rope`,
+  `cable_handle`, `cable_v_handle`, `row_seat`, `pulldown_seat`. Earlier: batch 1, the barbell squat
   family, and batch 2, the bench press and curl families, both approved by
   the owner 2026-11-26 after the hands were seated on the bar (pages
   https://claude.ai/artifact/C7QFi5EHF8sbxbPDSQYM7G,

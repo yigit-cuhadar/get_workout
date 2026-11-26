@@ -1,0 +1,158 @@
+{
+  "status": "draft",
+  "view": [
+    35,
+    8
+  ],
+  "poses": {
+    "top": {
+      "pelvis": [
+        0,
+        0,
+        0.979
+      ],
+      "pelvis_rot": [
+        3,
+        0,
+        0
+      ],
+      "lumbar": 0,
+      "chest": 0,
+      "neck": 0,
+      "foot": {
+        "at": [
+          0.17,
+          0.037
+        ],
+        "floor": 0,
+        "yaw": 22
+      },
+      "hand": {
+        "pos": [
+          0.183,
+          -0.584,
+          1.386
+        ],
+        "fingers": [
+          0,
+          -1,
+          0
+        ],
+        "palm": [
+          0,
+          0,
+          -1
+        ],
+        "curl": 10
+      },
+      "elbow": [
+        1,
+        0,
+        -0.5
+      ],
+      "clavicle": [
+        0,
+        5
+      ]
+    },
+    "bottom": {
+      "extends": "top",
+      "pelvis": [
+        0,
+        0.18,
+        0.47
+      ],
+      "pelvis_rot": [
+        32,
+        0,
+        0
+      ],
+      "lumbar": 3,
+      "chest": 3,
+      "neck": -20,
+      "hand": {
+        "pos": [
+          0.183,
+          -0.632,
+          0.813
+        ],
+        "fingers": [
+          0,
+          -1,
+          0
+        ],
+        "palm": [
+          0,
+          0,
+          -1
+        ],
+        "curl": 10
+      }
+    }
+  },
+  "keys": [
+    [
+      0,
+      "top"
+    ],
+    [
+      1.6,
+      "bottom"
+    ],
+    [
+      1.8,
+      "bottom"
+    ],
+    [
+      2.8,
+      "top"
+    ],
+    [
+      3.3,
+      "top"
+    ]
+  ],
+  "gear": [],
+  "mistakes": [
+    {
+      "line": 0,
+      "status": "draft",
+      "ring": [
+        "knee_L",
+        "knee_R"
+      ],
+      "poses": {
+        "top": {
+          "knee": [
+            0.42,
+            -0.91,
+            0
+          ]
+        },
+        "bottom": {
+          "knee": [
+            0.0,
+            -1,
+            0
+          ]
+        }
+      }
+    },
+    {
+      "line": 1,
+      "status": "draft",
+      "ring": [
+        "foot_L",
+        "foot_R"
+      ],
+      "poses": {
+        "bottom": {
+          "foot": {
+            "pitch": 28,
+            "floor": 0.014
+          }
+        }
+      }
+    }
+  ]
+}

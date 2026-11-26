@@ -1,0 +1,142 @@
+{
+  "status": "draft",
+  "view": [
+    60,
+    15
+  ],
+  "poses": {
+    "hold": {
+      "pelvis": [
+        0.0,
+        0.3,
+        0.537
+      ],
+      "pelvis_rot": [
+        112,
+        0,
+        0
+      ],
+      "lumbar": 16,
+      "chest": 10,
+      "neck": -20,
+      "clavicle": [
+        20,
+        6
+      ],
+      "foot": {
+        "pos": [
+          0.05,
+          0.38,
+          0.07
+        ],
+        "yaw": 0,
+        "pitch": 165
+      },
+      "knee": [
+        1,
+        -1,
+        -1
+      ],
+      "foot_R": {
+        "pos": [
+          -0.05,
+          0.38,
+          0.07
+        ],
+        "yaw": 0,
+        "pitch": 165
+      },
+      "knee_R": [
+        -1,
+        -1,
+        -1
+      ],
+      "hand": {
+        "pos": [
+          0.17,
+          -0.591,
+          0.025
+        ],
+        "fingers": [
+          0,
+          -1,
+          0
+        ],
+        "palm": [
+          0,
+          0,
+          -1
+        ],
+        "curl": 8,
+        "hold": [
+          0.05,
+          0.012
+        ]
+      },
+      "hand_R": {
+        "pos": [
+          -0.17,
+          -0.591,
+          0.025
+        ],
+        "fingers": [
+          0,
+          -1,
+          0
+        ],
+        "palm": [
+          0,
+          0,
+          -1
+        ],
+        "curl": 8,
+        "hold": [
+          0.05,
+          0.012
+        ]
+      },
+      "elbow": [
+        0.3,
+        0,
+        1
+      ],
+      "elbow_R": [
+        -0.3,
+        0,
+        1
+      ]
+    },
+    "breathe": {
+      "extends": "hold",
+      "chest": 10,
+      "lumbar": 22
+    }
+  },
+  "keys": [
+    [
+      0,
+      "hold"
+    ],
+    [
+      2.5,
+      "breathe"
+    ],
+    [
+      5.0,
+      "hold"
+    ]
+  ],
+  "gear": [],
+  "mistakes": [
+    {
+      "line": 0,
+      "shown": false,
+      "why": "How hard a stretch is forced cannot be shown by a pose."
+    },
+    {
+      "line": 1,
+      "shown": false,
+      "why": "Breathing cannot be shown by a pose."
+    }
+  ]
+}
