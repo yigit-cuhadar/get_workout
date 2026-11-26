@@ -21,6 +21,8 @@ foot with `rel` names the bone its position, its directions and its elbow or
 knee are given in.
 """
 
+import json
+
 import numpy as np
 
 SIDES = (("L", 1.0), ("R", -1.0))
@@ -156,17 +158,24 @@ def normalized(pose):
 
 class Rig:
     def __init__(self, path):
-        data = np.load(path)
-        self.verts = data["verts"].astype(float)
-        self.tris = data["tris"]
-        self.tri_part = data["tri_part"]
-        self.part_names = [str(n) for n in data["part_names"]]
+        """From rig.py's .npz, or from a joints-only .json (see `joints`),
+        which can be solved but not skinned."""
+        if path.endswith(".json"):
+            with open(path) as f:
+                data = json.load(f)
+            data = {k: np.array(v) for k, v in data.items() if k != "metres"}
+        else:
+            data = np.load(path)
+            self.verts = data["verts"].astype(float)
+            self.tris = data["tris"]
+            self.tri_part = data["tri_part"]
+            self.part_names = [str(n) for n in data["part_names"]]
+            self.skin_bones = data["skin_bones"]
+            self.skin_weights = data["skin_weights"].astype(float)
         self.bones = [str(n) for n in data["bone_names"]]
         self.index = {name: i for i, name in enumerate(self.bones)}
         self.heads = dict(zip(self.bones, data["bone_heads"].astype(float)))
         self.tails = dict(zip(self.bones, data["bone_tails"].astype(float)))
-        self.skin_bones = data["skin_bones"]
-        self.skin_weights = data["skin_weights"].astype(float)
         palms = dict(zip("LR", data["palms"].astype(float)))
         self.ankle = self.heads["foot_L"][2]
         self.rest = {}
@@ -185,6 +194,17 @@ class Rig:
                 "arm": (np.linalg.norm(elbow - shoulder), np.linalg.norm(wrist - elbow)),
                 "leg": (np.linalg.norm(knee - hip), np.linalg.norm(ankle - knee)),
             }
+
+    def joints(self, metres):
+        """What a solver needs of the rig, as JSON: the bones with their heads
+        and tails, the palms' directions, and metres per unit of the body file."""
+        return {
+            "bone_names": self.bones,
+            "bone_heads": [self.heads[b].round(5).tolist() for b in self.bones],
+            "bone_tails": [self.tails[b].round(5).tolist() for b in self.bones],
+            "palms": [self.rest[side]["hand"][:, 1].round(5).tolist() for side, _ in SIDES],
+            "metres": metres,
+        }
 
     def solve(self, pose):
         """World rotation and position of every bone for a normalized pose.

@@ -46,8 +46,8 @@ def load(exercise):
         return json.load(f)
 
 
-def kits():
-    with open(os.path.join(RECIPES, "_kits.json")) as f:
+def kits(path=None):
+    with open(path or os.path.join(RECIPES, "_kits.json")) as f:
         return json.load(f)
 
 
@@ -99,13 +99,13 @@ def filled(value, values):
     return values[value[1:]] if isinstance(value, str) and value.startswith("$") else value
 
 
-def gear_of(uses):
+def gear_of(uses, kit_set=None):
     """gear(rig, now, first) -> [(shape, 4x4 matrix, colour)] for the kits a
     recipe uses; `now` and `first` are the solved (R, p) of this frame and of
     the first key."""
-    placed = []
+    placed, kit_set = [], kit_set or kits()
     for use in uses:
-        kit = kits()[use["kit"]]
+        kit = kit_set[use["kit"]]
         values = kit.get("values", {}) | {k: v for k, v in use.items() if k not in PLACING}
         turn, at = rot_z(use.get("turn", 0)), np.array(use.get("at", (0, 0, 0)), float)
         placed.append((filled(kit["pieces"], values), filled(kit.get("movers", {}), values), turn, at))
