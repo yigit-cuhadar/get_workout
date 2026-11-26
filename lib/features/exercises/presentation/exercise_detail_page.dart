@@ -587,7 +587,9 @@ class _MusclePreviewState extends State<_MusclePreview> {
   }
 }
 
-/// The animation, the picked mistake's text, and a chip per clip.
+/// The animation, a chip per clip, and under the chips the picked mistake's
+/// text, or that the form is correct, in a place two lines tall so the card
+/// keeps its height.
 class _Motion extends StatelessWidget {
   const _Motion(this.motion, this.exercise);
 
@@ -599,27 +601,24 @@ class _Motion extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final p = ForgeStyle.of(context).colors;
     final mistakes = exercise.localized(context).mistakes;
     final line = motion.clips[motion.selected].line;
     final mistake = line == null ? null : mistakes.elementAtOrNull(line);
+    final small = Theme.of(context).textTheme.bodySmall!;
+    final style = line == null
+        ? small
+        : small.copyWith(color: p.danger, fontWeight: FontWeight.w500);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       spacing: Gap.sm,
       children: [
-        SizedBox(
+        ExerciseMotionView(
+          motion: motion,
+          main: exercise.mainMuscles,
+          secondary: exercise.secondaryMuscles,
           height: _height,
-          child: ExerciseMotionView(
-            motion: motion,
-            main: exercise.mainMuscles,
-            secondary: exercise.secondaryMuscles,
-          ),
         ),
-        if (mistake != null)
-          Text(
-            l10n.motionMistakeText(mistake),
-            style: Theme.of(context).textTheme.bodyMedium!
-                .copyWith(color: ForgeStyle.of(context).colors.danger),
-          ),
         Wrap(
           spacing: Gap.sm,
           runSpacing: Gap.sm,
@@ -629,11 +628,30 @@ class _Motion extends StatelessWidget {
                 label: clip.line == null
                     ? l10n.motionCorrect
                     : l10n.motionMistake(i),
+                tone: clip.line == null
+                    ? ForgeChipTone.success
+                    : ForgeChipTone.danger,
                 selected: i == motion.selected,
                 showCheck: false,
                 onPressed: () => context.read<ExerciseMotionCubit>().select(i),
               ),
           ],
+        ),
+        ConstrainedBox(
+          constraints: BoxConstraints(
+            minHeight:
+                2 *
+                MediaQuery.textScalerOf(context).scale(style.fontSize!) *
+                style.height!,
+          ),
+          child: Text(
+            line == null
+                ? l10n.motionCorrectForm
+                : mistake == null
+                ? ''
+                : l10n.motionMistakeText(mistake),
+            style: style,
+          ),
         ),
       ],
     );

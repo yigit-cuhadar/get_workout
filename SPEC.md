@@ -2048,7 +2048,7 @@ Decisions (the canvases they were drawn on are deleted):
   keeps its own row); the Next/Done keyboard bar above set entry is
   removed (owner, Forge StepperField).
 - Exercise gear (2026-11-25), canvas https://claude.ai/artifact/6oF4mJVecSe7n2gtZyZ5fW: EK1 today's tones kept (frames in line, steel and pads in line-strong, plates in ink-muted; colour stays with the muscles), EK2 A (the barbell has thick sleeves and two plates a side), EK3 A (the flat bench is a pad on a beam with two posts and two cross feet), EK4 A (the pull-up bar is the bar and its end caps, no posts, so the body fills more of the card), EK5 today's lat pulldown machine kept (with its weight stack rising), EK6 B (a light round floor under the model with the body's soft shadow on it, for every exercise). EK7-EK9: the smith machine (two rails, a top bar, two feet), the squat box and the landmine (a floor pivot, the bar to the hands) approved as drawn.
-- Exercise page (2026-11-26), canvas https://claude.ai/artifact/Y8sMp2DB83WX6ga5MhbCvW: ES1 A with ES1b B (the picked mistake chip fills in danger, the other mistake chips sit in a light danger tint; "Doğru" is light green and fills green when picked), ES2 unchanged (chips stay "Hata 1", "Hata 2"; no short names are written), ES3 A (chips always sit right under the animation; the mistake's text below them in a fixed two-line place that reads "Doğru yapılış" for the correct form, so the card keeps its height), ES4 A (two small round buttons in the stage's corner: pause/play and half speed; the same in the workout's sheet), ES5 A (a hint line under the animation, "Çevirmek için sürükle · yakınlaştırmak için iki parmak"; no view buttons), ES6 A (the workout card's play button is a filled round button). Not built yet.
+- Exercise page (2026-11-26), canvas https://claude.ai/artifact/Y8sMp2DB83WX6ga5MhbCvW: ES1 A with ES1b B (the picked mistake chip fills in danger, the other mistake chips sit in a light danger tint; "Doğru" is light green and fills green when picked), ES2 unchanged (chips stay "Hata 1", "Hata 2"; no short names are written), ES3 A (chips always sit right under the animation; the mistake's text below them in a fixed two-line place that reads "Doğru yapılış" for the correct form, so the card keeps its height), ES4 A (two small round buttons in the stage's corner: pause/play and half speed; the same in the workout's sheet), ES5 A (a hint line under the animation, "Çevirmek için sürükle · yakınlaştırmak için iki parmak"; no view buttons), ES6 A (the workout card's play button is a filled round button).
 - Exercise animations (2026-11-25), canvas https://claude.ai/artifact/RGTHJ9yhTVxSxnX1LG3ZL2: HA1 B with the mistakes made together with the movement (every exercise gets its correct form and each of its `mistakes` a pose can show), HA2 C (the first card of Exercise detail gets two tabs, Hareket and Kaslar; Kaslar is today's front and back pair, the legend stays under both), HA3 A (chips under the animation, "Doğru" and one per mistake; the picked mistake plays in the same place, its faulty region ringed in danger, its text under it), HA4 A (a play button beside ⋯ on the open exercise card of the workout; it opens a bottom sheet with the animation, the cues and a link to the full detail). To draw in the studio before it is built. Not asked yet: playback controls.
 - Workout summary redesign (2026-11-23), canvas https://claude.ai/artifact/EAeojwrrTVCeAdhA58w1Qe: S1 unchanged, S2 A (records as one highlighted card with gain badges), S3 A then S3b B (front and back models over the top four muscles as set bars), S4 B (each exercise's sets as a table, two shown, the rest behind + n more).
 - App icon and launch (2026-11-23): the owner's own logo, two 1024 PNGs
@@ -3379,10 +3379,13 @@ the feature you are about to touch, and keep it true when you change it.
   dev and prod (prod 2026-11-26, owner's go-ahead); the phone solves them
   with `forge_motion` (Forge v0.60.0, with the skinned
   `forge_model_viewer`). First TestFlight build with animations: 1.0.0 (9).
-  Not done: nothing on a
-  real phone; studio cards and Widgetbook use cases for the tabbed card,
-  the motion view and the play button; the chips are plain `ForgeChip`s
-  and the play button a bare icon button, not yet the canvas's looks.
+  The exercise page picks (ES1-ES6) are built and checked on the
+  simulator 2026-11-26. Not done: speed and feel on a real phone; studio
+  cards and Widgetbook use cases for the tabbed card, the motion view and
+  the play button; three details the canvas left open (the look of the
+  half-speed button while on, whether pause and speed survive a chip
+  change, the loop restarting when the speed changes) are built with
+  defaults and still to be drawn and asked.
   Recipes approved: 11 of
   419 live exercises (which carry 852 mistakes): batch 1, the barbell squat
   family, and batch 2, the bench press and curl families, both approved by
@@ -3520,20 +3523,32 @@ the feature you are about to touch, and keep it true when you change it.
   shadow, framed by the motion's bounds padded by 8% of the body's height
   (they hold joints, not skin), from the recipe's `view` at zoom 1.35, and turns and
   zooms; the floor (surface-sunken) and the shadow on it are the viewer's
-  ground parts, drawn under everything and unlit. Exercise detail: with an animation, the first card's title gives
+  ground parts, drawn under everything and unlit. `ExerciseMotionView`
+  (the detail card and the workout sheet both use it) puts two buttons in
+  the stage's corner, pause/play and half speed (a toggle), and a line
+  under the stage on how to turn and zoom. Pause holds the current frame;
+  half speed wraps the clip so a loop takes twice as long, and switching it
+  restarts the loop. Both are view state, kept while another clip is
+  picked and forgotten when the view closes. Exercise detail: with an
+  animation, the first card's title gives
   way to Hareket | Kaslar (Hareket first; the tab is not remembered);
-  Hareket shows the animation, the picked mistake's catalogue text and a
-  chip per clip; Kaslar the front and back pair; the legend stays under
+  Hareket shows the animation, a chip per clip, and under the chips a
+  place two lines tall (at least; larger text grows it) holding "Hata:"
+  and the picked mistake's catalogue text, or "Doğru yapılış" for the
+  correct form, so picking a chip does not change the card's height;
+  Kaslar the front and back pair; the legend stays under
   both. With none, while loading, on failure and for custom exercises the
-  card is as before. Chips read "Hata 1", "Hata 2", … in catalogue order,
-  because the catalogue has no short names for mistakes. Workout: only in
+  card is as before. Chips read "Doğru", "Hata 1", "Hata 2", … in catalogue
+  order, because the catalogue has no short names for mistakes; "Doğru"
+  carries the success tone and each mistake the danger tone
+  (`ForgeChipTone`). Workout: only in
   the workout in progress, each exercise row of an open card that has an
-  animation gets a play button before ⋯; its sheet plays the correct form
-  over the running workout with the cues, and "Tüm ayrıntılar" closes it
-  and opens the exercise's detail route. The workout reaches it through
+  animation gets a play button before ⋯; its sheet plays the correct
+  form over the running workout with the cues, and "Tüm ayrıntılar" closes
+  it and opens the exercise's detail route. The workout reaches it through
   the exercises feature's `ExerciseMotionButton`, given the exercise id and
   the detail route.
-- **Open**: building the Exercise page picks (Design › Exercise page, ES1-ES6); speed on a real phone; a
+- **Open**: speed on a real phone; a
   comparison with Tripo's rig if Blender's weights prove too weak.
 
 ### Programs

@@ -11,8 +11,8 @@ import '../exercise_motion_cubit.dart';
 import '../vocabulary_labels.dart';
 import 'exercise_motion_view.dart';
 
-/// A play button for exercise [exerciseId] when it has an animation, and
-/// nothing otherwise. It opens a sheet over the screen with the correct
+/// A round play button for exercise [exerciseId] when it has an animation,
+/// and nothing otherwise. It opens a sheet over the screen with the correct
 /// form playing, the exercise's cues, and a way to its detail page at
 /// [detailRoute].
 class ExerciseMotionButton extends StatelessWidget {
@@ -24,6 +24,8 @@ class ExerciseMotionButton extends StatelessWidget {
 
   final String exerciseId;
   final String detailRoute;
+
+  static const double _stageHeight = 280;
 
   @override
   Widget build(BuildContext context) {
@@ -45,6 +47,7 @@ class ExerciseMotionButton extends StatelessWidget {
                 icon: ForgeIcons.playArrow,
                 label: AppLocalizations.of(context).motionWatch,
                 variant: ForgeIconButtonVariant.ink,
+                fill: ForgeIconButtonFill.sunken,
                 onPressed: () => _show(context, exercise),
               )
             : const SizedBox.shrink(),
@@ -75,17 +78,15 @@ class ExerciseMotionButton extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               spacing: Gap.sm,
               children: [
-                SizedBox(
-                  height: 280,
-                  child: BlocBuilder<ExerciseMotionCubit, ExerciseMotionState>(
-                    builder: (context, state) => state is MotionReady
-                        ? ExerciseMotionView(
-                            motion: state,
-                            main: exercise.mainMuscles,
-                            secondary: exercise.secondaryMuscles,
-                          )
-                        : const SizedBox.shrink(),
-                  ),
+                BlocBuilder<ExerciseMotionCubit, ExerciseMotionState>(
+                  builder: (context, state) => state is MotionReady
+                      ? ExerciseMotionView(
+                          motion: state,
+                          main: exercise.mainMuscles,
+                          secondary: exercise.secondaryMuscles,
+                          height: _stageHeight,
+                        )
+                      : const SizedBox(height: _stageHeight),
                 ),
                 if (text.cues.isNotEmpty) ...[
                   const SizedBox(height: Gap.sm),
