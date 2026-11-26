@@ -15,8 +15,8 @@ where they stand. A kit is
 
   status   draft | approved
   values   name -> default, used in the pieces as "$name"
-  pieces   {"cyl": [point, point], "r": radius} or {"box": point, "size":
-           [x, y, z]}, each with a `colour`
+  pieces   {"cyl": [point, point], "r": radius}, {"box": point, "size":
+           [x, y, z]} or {"ball": point, "r": radius}, each with a `colour`
   movers   name -> {"follows": point, "axis": [..], "along": [..]}: how far
            the point has moved along `axis` since the first key, as a shift
            along `along` (a weight stack rising as the bar comes down)
@@ -25,6 +25,8 @@ A point is [x, y, z] from the kit's own origin on the floor,
 {"grips": [along the bar, forward of it, above it]} between the two hands,
 {"hand": "L" or "R", "at": [along the fingers, out of the palm, across the
 palm]} from where that hand holds (a dumbbell's handle runs across the palm),
+{"foot": "L" or "R", "at": [x, y, z]} from that ankle in the foot's own frame
+(the toes point to -y, the sole faces -z),
 {"at": [x, y, z], "with": mover}, or {"between": [point, point], "t": how far
 from the first to the second, past it above 1}.
 """
@@ -126,6 +128,8 @@ def gear_of(uses, kit_set=None):
                     return (left + right) / 2 + np.stack([along, np.cross(up, along), up], axis=1) @ spec["grips"]
                 if "hand" in spec:
                     return rig.grip(*solved, spec["hand"]) + solved[0][f"hand_{spec['hand']}"] @ rig.rest[spec["hand"]]["hand"] @ spec["at"]
+                if "foot" in spec:
+                    return solved[1][f"foot_{spec['foot']}"] + solved[0][f"foot_{spec['foot']}"] @ spec["at"]
                 if "between" in spec:
                     a, b = (point(end, solved) for end in spec["between"])
                     return a + (b - a) * spec["t"]
@@ -141,9 +145,12 @@ def gear_of(uses, kit_set=None):
                     side = unit(np.cross(axis, (0, 0, 1) if abs(axis[2]) < 0.9 else (1, 0, 0)))
                     m[:3, 0], m[:3, 1] = side * piece["r"], np.cross(axis, side) * piece["r"]
                     m[:3, 2], m[:3, 3] = b - a, (a + b) / 2
+                elif "ball" in piece:
+                    m[:3, :3], m[:3, 3] = np.eye(3) * piece["r"], point(piece["ball"])
                 else:
                     m[:3, :3], m[:3, 3] = turn @ np.diag(piece["size"]), point(piece["box"])
-                out.append(("cyl" if "cyl" in piece else "box", m, piece.get("colour", "gear")))
+                kind = next(k for k in ("cyl", "ball", "box") if k in piece)
+                out.append((kind, m, piece.get("colour", "gear")))
         return out
 
     return gear

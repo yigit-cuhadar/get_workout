@@ -89,13 +89,15 @@ def check(name):
                     low = min((m[:3, :3] @ (x, y, z) + m[:3, 3])[2] for x in (-r, r) for y in (-r, r) for z in (-0.5, 0.5))
                     if kind == "box" and low < FLOOR:
                         bad(f"{label} at {t}s: a box of the gear goes {-low * 100:.1f} cm under the floor")
-        # A foot that stands does not slide.
+        # A foot that stands does not slide: it may turn on the spot, and it
+        # stands somewhere else only after a key that lifts it.
         for side, _ in SIDES:
-            stands = [normalized(pose)[f"foot_{side}"] for _, pose in keys]
-            if any("at" in f for f in stands) and any(
-                "at" not in f or not np.allclose(f["at"], stands[0]["at"]) or f["yaw"] != stands[0]["yaw"] for f in stands
-            ):
-                bad(f"{label}: foot {side} stands and moves between keys")
+            feet = [normalized(pose)[f"foot_{side}"] for _, pose in keys]
+            for here, there in zip(feet, feet[1:]):
+                if "at" in here and "at" in there and not np.allclose(here["at"], there["at"]):
+                    bad(f"{label}: foot {side} slides from one standing place to another; lift it in a key between")
+                if ("at" in here) != ("at" in there) and (here["rel"] is not None or there["rel"] is not None):
+                    bad(f"{label}: foot {side} steps to or from a foot given in a bone")
 
 
 names = sys.argv[1:] or sorted(f[:-5] for f in os.listdir(recipe.RECIPES) if not f.startswith("_"))
