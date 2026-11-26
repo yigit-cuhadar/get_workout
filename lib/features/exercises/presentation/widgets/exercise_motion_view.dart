@@ -36,6 +36,9 @@ class _ExerciseMotionViewState extends State<ExerciseMotionView> {
   late final _camera = ModelViewerController(
     yaw: -widget.motion.motion.view.$1 * math.pi / 180,
     pitch: widget.motion.motion.view.$2 * math.pi / 180,
+    // The clip's bounds are fitted as a sphere, which leaves the figure
+    // small in a wide card.
+    zoom: 1.35,
   );
 
   @override
@@ -62,9 +65,10 @@ class _ExerciseMotionViewState extends State<ExerciseMotionView> {
         'steel': p.lineStrong,
         'pad': p.lineStrong,
         'plate': p.inkMuted,
-        'floor': p.accentSoft,
-        'shadow': Color.lerp(p.accentSoft, p.lineStrong, 0.5)!,
+        'floor': p.surfaceSunken,
+        'shadow': Color.lerp(p.surfaceSunken, p.lineStrong, 0.6)!,
       },
+      groundParts: const {'floor', 'shadow'},
       markerColor: p.danger,
     );
   }

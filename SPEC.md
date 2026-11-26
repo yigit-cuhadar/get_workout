@@ -3331,15 +3331,22 @@ the feature you are about to touch, and keep it true when you change it.
 
 ### Exercise animations
 
-- **Where it stands** (keep this entry current): five spike exercises
-  (back squat, bench press, pull-up, lat pulldown, deadlift) play in the app
-  on the simulator from a debug page (Profile › Animation spike). Package:
-  Forge #112 (draft, branch `feat/model-viewer-skinning`, worktree
-  `.claude/worktrees/model-viewer-skinning`). App: PR #271 (draft, branch
+- **Where it stands** (keep this entry current): the system is built end
+  to end and batch 1 plays in the app's real screens (exercise detail and
+  the open workout card), checked on the simulator against `getworkout-dev`
+  2026-11-26: recipes and kits are imported to dev Firestore (rules deployed
+  to dev only; nothing on prod), the phone solves them with `forge_motion`.
+  Packages: Forge #112 (`forge_model_viewer` skinning, motions, ground
+  parts; branch `feat/model-viewer-skinning`) and Forge #113 (`forge_motion`;
+  branch `feat/forge-motion`), both draft, worktrees under
+  `.claude/worktrees/`. App: PR #271 (draft, branch
   `spike/exercise-animation`, worktree `apps/get_workout_anim`), which
-  holds the tools, the five exercises and the debug page, and points at
-  the package through a gitignored `pubspec_overrides.yaml`, so its CI
-  fails until #112 is tagged. Recipes approved: 6 of
+  points at both packages through a gitignored `pubspec_overrides.yaml`,
+  so its CI fails until they are merged and tagged. Not done: nothing on a
+  real phone; studio cards and Widgetbook use cases for the tabbed card,
+  the motion view and the play button; the chips are plain `ForgeChip`s
+  and the play button a bare icon button, not yet the canvas's looks.
+  Recipes approved: 6 of
   419 live exercises (which carry 852 mistakes): batch 1, the barbell squat
   family, approved by the owner 2026-11-26 after one round of fixes (page
   https://claude.ai/artifact/C7QFi5EHF8sbxbPDSQYM7G). Until #271 can merge,
@@ -3357,8 +3364,8 @@ the feature you are about to touch, and keep it true when you change it.
   batch's review page from the rendered loops (after a fix, render the
   loops again and look at a frame of the page's own copy before
   publishing: an unchanged page went out once); `batch.py` prints the
-  counts by status, the kits and the next batch; `export.py` bakes the
-  correct forms for the debug page until the phone solves recipes itself.
+  counts by status, the kits and the next batch; `export.py` writes the
+  skinned bodies and their `.rig.json` joints files into `assets/models`.
 - **A recipe**: the correct form and the exercise's mistakes, each a set of
   key poses with their times; the gear; a status. A mistake is the correct
   form with the few values that go wrong changed, the catalogue `mistakes`
@@ -3456,8 +3463,9 @@ the feature you are about to touch, and keep it true when you change it.
   when first picked, and a change of body solves it again. The viewer
   plays it in a loop on the body joined with the clip's gear, floor and
   shadow, framed by the motion's bounds padded by 8% of the body's height
-  (they hold joints, not skin), from the recipe's `view`, and turns and
-  zooms. Exercise detail: with an animation, the first card's title gives
+  (they hold joints, not skin), from the recipe's `view` at zoom 1.35, and turns and
+  zooms; the floor (surface-sunken) and the shadow on it are the viewer's
+  ground parts, drawn under everything and unlit. Exercise detail: with an animation, the first card's title gives
   way to Hareket | Kaslar (Hareket first; the tab is not remembered);
   Hareket shows the animation, the picked mistake's catalogue text and a
   chip per clip; Kaslar the front and back pair; the legend stays under
