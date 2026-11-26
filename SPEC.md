@@ -2066,8 +2066,12 @@ Decisions (the canvases they were drawn on are deleted):
   the menu row goes); ET10, ET11, ET12 and ET13 as built (adding stays in
   the ⋯ menu, the facts table keeps its seven rows, the muscle lines show
   on both tabs, pause and half speed are kept when another chip is picked).
-  Picked, not built yet. Decided without a board: a speed change does not
-  restart the loop.
+  Built (Forge v0.61.0: the warning colour, a card title icon, the
+  danger numbered list, the filled toggle) and checked on the simulator. A
+  mistake chip carries the mistake's own number in the list, so a mistake
+  without an animation leaves a gap in the chips. Decided without a board:
+  a speed change does not restart the loop. Owed: the studio cards and the
+  app's Widgetbook use cases for these parts.
 - Exercise animations (2026-11-25), canvas https://claude.ai/artifact/RGTHJ9yhTVxSxnX1LG3ZL2: HA1 B with the mistakes made together with the movement (every exercise gets its correct form and each of its `mistakes` a pose can show), HA2 C (the first card of Exercise detail gets two tabs, Hareket and Kaslar; Kaslar is today's front and back pair, the legend stays under both), HA3 A (chips under the animation, "Doğru" and one per mistake; the picked mistake plays in the same place, its faulty region ringed in danger, its text under it), HA4 A (a play button beside ⋯ on the open exercise card of the workout; it opens a bottom sheet with the animation, the cues and a link to the full detail). To draw in the studio before it is built. Not asked yet: playback controls.
 - Workout summary redesign (2026-11-23), canvas https://claude.ai/artifact/EAeojwrrTVCeAdhA58w1Qe: S1 unchanged, S2 A (records as one highlighted card with gain badges), S3 A then S3b B (front and back models over the top four muscles as set bars), S4 B (each exercise's sets as a table, two shown, the rest behind + n more).
 - App icon and launch (2026-11-23): the owner's own logo, two 1024 PNGs
