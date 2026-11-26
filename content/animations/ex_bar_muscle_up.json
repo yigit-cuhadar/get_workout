@@ -46,8 +46,8 @@
         "curl": 75
       },
       "elbow": [
-        0.8,
-        0.3,
+        1,
+        -0.3,
         -1
       ],
       "clavicle": [
@@ -84,17 +84,17 @@
       "extends": "hang",
       "pelvis": [
         0,
-        -0.22,
+        -0.08,
         1.52
       ],
       "pelvis_rot": [
-        -32,
+        -14,
         0,
         0
       ],
-      "lumbar": -4,
-      "chest": -4,
-      "neck": -10,
+      "lumbar": 0,
+      "chest": -2,
+      "neck": -8,
       "clavicle": [
         -5,
         -10
@@ -102,31 +102,31 @@
       "foot": {
         "pos": [
           0.09,
-          -0.18,
-          -0.84
+          -0.1,
+          -0.86
         ]
       },
       "elbow": [
         0.6,
-        1,
-        -0.3
+        0.6,
+        -1
       ]
     },
     "turn": {
       "extends": "hang",
       "pelvis": [
         0,
-        0.16,
+        0.14,
         1.92
       ],
       "pelvis_rot": [
-        35,
+        22,
         0,
         0
       ],
-      "lumbar": 10,
-      "chest": 10,
-      "neck": -15,
+      "lumbar": 8,
+      "chest": 8,
+      "neck": -12,
       "clavicle": [
         0,
         8
