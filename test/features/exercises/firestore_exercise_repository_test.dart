@@ -68,6 +68,7 @@ void main() {
       firestore = FakeFirebaseFirestore();
       repository = FirestoreExerciseRepository(
         FirestoreExerciseSource(firestore),
+        seesDrafts: () async => false,
       );
       final exercises = firestore.collection('exercises');
       await exercises.doc('b').set(document(popularity: 2, updatedAt: at(1)));
@@ -224,7 +225,10 @@ void main() {
 
     setUp(() {
       source = MockSource();
-      repository = FirestoreExerciseRepository(source);
+      repository = FirestoreExerciseRepository(
+        source,
+        seesDrafts: () async => false,
+      );
     });
 
     test('an empty cache fetches everything once', () async {

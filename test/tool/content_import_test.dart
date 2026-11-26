@@ -715,6 +715,32 @@ void main() {
       });
     });
 
+    test('a recipe under review keeps every mistake, in its own document', () {
+      final doc = animationDoc('ex_a', recipe, draft: true);
+
+      expect(doc.path, 'exercises/ex_a/animation/draft');
+      expect(
+        (jsonDecode(doc.content['recipe']! as String)
+            as Map<String, Object?>)['mistakes'],
+        hasLength((recipe['mistakes']! as List<Object?>).length),
+      );
+    });
+
+    test('the draft kits are every kit', () {
+      final doc = animationKitsDoc({
+        'barbell': {'status': 'approved', 'pieces': <Object?>[]},
+        'rings': {'status': 'draft', 'pieces': <Object?>[]},
+      }, draft: true);
+
+      expect(doc.path, 'animationKits/draft');
+      expect(
+        (jsonDecode(
+          doc.content['kits']! as String,
+        ) as Map<String, Object?>).keys,
+        ['barbell', 'rings'],
+      );
+    });
+
     test('a stored animation reads back as unchanged', () {
       final doc = animationDoc('ex_a', recipe);
       final stored = RemoteDocument.fromFields({

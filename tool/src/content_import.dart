@@ -134,32 +134,41 @@ Map<String, Object?> decodeFields(Map<String, Object?> fields) => {
 /// the recipe as JSON text, since Firestore cannot store the arrays inside
 /// arrays it is made of. Statuses and notes are left out, and so is every
 /// mistake not approved itself; one no pose can show (`shown: false`) stays.
-ContentDoc animationDoc(String id, Map<String, Object?> recipe) {
+///
+/// With [draft], `exercises/<id>/animation/draft` for a recipe still under
+/// review, which only admins see in the app: every mistake stays.
+ContentDoc animationDoc(
+  String id,
+  Map<String, Object?> recipe, {
+  bool draft = false,
+}) {
   final stored = _withoutReview(recipe);
   if (recipe['mistakes'] case final List<Object?> mistakes) {
     stored['mistakes'] = [
       for (final mistake in mistakes.cast<Map<String, Object?>>())
-        if (mistake['shown'] == false || mistake['status'] == 'approved')
+        if (draft ||
+            mistake['shown'] == false ||
+            mistake['status'] == 'approved')
           _withoutReview(mistake),
     ];
   }
-  return ContentDoc('exercises/$id/animation/main', {
+  return ContentDoc('exercises/$id/animation/${draft ? 'draft' : 'main'}', {
     'recipe': canonicalJson(stored),
   });
 }
 
 /// `animationKits/main`: the approved kits of `_kits.json`, without their
-/// status, as JSON text like the recipes.
-ContentDoc animationKitsDoc(Map<String, Object?> kits) =>
-    ContentDoc(animationKitsPath, {
+/// status, as JSON text like the recipes. With [draft],
+/// `animationKits/draft`: every kit, for the recipes still under review.
+ContentDoc animationKitsDoc(Map<String, Object?> kits, {bool draft = false}) =>
+    ContentDoc('animationKits/${draft ? 'draft' : 'main'}', {
       'kits': canonicalJson({
         for (final MapEntry(key: name, value: kit) in kits.entries)
-          if (kit is Map<String, Object?> && kit['status'] == 'approved')
+          if (kit is Map<String, Object?> &&
+              (draft || kit['status'] == 'approved'))
             name: _withoutReview(kit),
       }),
     });
-
-const animationKitsPath = 'animationKits/main';
 
 Map<String, Object?> _withoutReview(Map<String, Object?> json) => Map.of(json)
   ..remove('status')
