@@ -1,0 +1,40 @@
+{
+  "status": "draft",
+  "view": [60, 6],
+  "poses": {
+    "stand": {"pelvis": [0, 0, 0.98], "pelvis_rot": [0, 0, 0], "lumbar": 0, "chest": 0, "neck": 0, "foot": {"at": [0.2, 0.02], "floor": 0, "yaw": 20}, "clavicle": [0, 10], "hand": {"pos": [0.05, -0.565, 1.28], "fingers": [-0.246, -0.963, -0.11], "palm": [-0.02, 0.119, -0.993], "curl": 75}, "elbow": [0, 0.6, -1]},
+    "top": {"extends": "stand"},
+    "fall": {"extends": "stand", "pelvis": [0, 0.02, 0.975], "pelvis_rot": [6, 0, 0], "neck": -4, "hand": {"pos": [0.05, -0.37, 0.95], "fingers": [-0.268, -0.802, -0.534], "palm": [-0.052, 0.565, -0.823], "curl": 75}},
+    "pass": {"extends": "stand", "pelvis": [0, 0.15, 0.9], "pelvis_rot": [45, 0, 0], "neck": -22, "clavicle": [-3, 6], "hand": {"pos": [0.05, 0.02, 0.645], "fingers": [-0.309, 0.095, -0.946], "palm": [-0.071, 0.99, 0.122], "curl": 75}},
+    "hike": {"extends": "stand", "pelvis": [0, 0.2, 0.84], "pelvis_rot": [62, 0, 0], "neck": -30, "clavicle": [-4, 6], "hand": {"pos": [0.05, 0.15, 0.57], "fingers": [-0.435, 0.408, -0.803], "palm": [-0.088, 0.868, 0.489], "curl": 75}}
+  },
+  "keys": [[0, "top"], [0.3, "fall"], [0.5, "pass"], [0.8, "hike"], [1.05, "pass"], [1.25, "fall"], [1.5, "top"], [1.6, "top"]],
+  "gear": [{"kit": "kettlebell", "other": "R", "a": [0, 0, 0.02], "b": [0, 0, -0.02], "bell": [0.175, 0, -0.01]}],
+  "mistakes": [
+    {
+      "line": 0,
+      "status": "draft",
+      "ring": ["knee_L", "knee_R", "hip_L", "hip_R"],
+      "poses": {
+        "pass": {"pelvis": [0, 0.06, 0.82], "pelvis_rot": [22, 0, 0], "hand": {"pos": [0.05, -0.12, 0.66], "fingers": [-0.335, -0.431, -0.838], "palm": [-0.2, 0.901, -0.384], "curl": 75}},
+        "hike": {"pelvis": [0, 0.14, 0.64], "pelvis_rot": [40, 0, 0], "neck": -20, "hand": {"pos": [0.05, -0.02, 0.4], "fingers": [-0.325, -0.083, -0.942], "palm": [-0.168, 0.985, -0.029], "curl": 75}}
+      }
+    },
+    {
+      "line": 1,
+      "status": "draft",
+      "ring": ["shoulder_L", "shoulder_R"],
+      "poses": {
+        "top": {"pelvis": [0, 0.05, 0.96], "pelvis_rot": [14, 0, 0], "neck": -6, "hand": {"pos": [0.05, -0.45, 1.36], "fingers": [-0.52, -0.591, 0.617], "palm": [-0.54, -0.331, -0.773], "curl": 75}, "elbow": [0.6, 0.2, -1]}
+      }
+    },
+    {
+      "line": 2,
+      "status": "draft",
+      "ring": ["lumbar", "chest"],
+      "poses": {
+        "top": {"pelvis": [0, -0.05, 0.975], "pelvis_rot": [-10, 0, 0], "lumbar": -8, "chest": -4, "neck": 10, "hand": {"pos": [0.05, -0.46, 1.36], "fingers": [-0.185, -0.897, 0.402], "palm": [-0.129, -0.384, -0.914], "curl": 75}}
+      }
+    }
+  ]
+}

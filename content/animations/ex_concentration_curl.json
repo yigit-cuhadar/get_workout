@@ -1,0 +1,32 @@
+{
+  "status": "draft",
+  "view": [30, 10],
+  "poses": {
+    "bottom": {"pelvis": [0, 0.06, 0.578], "pelvis_rot": [46, 0, 0], "lumbar": 6, "chest": 6, "neck": -30, "foot": {"at": [0.33, -0.36], "floor": 0, "yaw": 25}, "knee": [0.6, -1, 0.2], "clavicle": [-4, 6], "elbow": [0.8, -0.3, -1], "hand_R": {"pos": [-0.27, -0.33, 0.6], "curl": 20, "fingers": [0.66, -0.471, -0.585], "palm": [-0.476, 0.34, -0.811]}, "elbow_R": [-1, 0.3, 0], "hand": {"pos": [0.16, -0.33, 0.29], "fingers": [-0.297, -0.041, -0.954], "palm": [-0.911, -0.288, 0.296], "curl": 75}},
+    "mid": {"extends": "bottom", "hand": {"pos": [0.14, -0.56, 0.56], "fingers": [-0.634, -0.701, -0.327], "palm": [-0.374, -0.093, 0.923], "curl": 75}},
+    "top": {"extends": "bottom", "hand": {"pos": [0.11, -0.37, 0.84], "fingers": [-0.746, -0.233, 0.623], "palm": [-0.294, 0.956, 0.005], "curl": 75}}
+  },
+  "keys": [[0, "bottom"], [0.6, "mid"], [1.1, "top"], [1.4, "top"], [2.4, "mid"], [3.4, "bottom"], [3.8, "bottom"]],
+  "gear": [{"kit": "dumbbell", "side": "L"}, {"kit": "flat_bench", "turn": 90, "at": [0, 0.1, 0]}],
+  "mistakes": [
+    {
+      "line": 0,
+      "status": "draft",
+      "ring": ["elbow_L", "shoulder_L"],
+      "poses": {
+        "mid": {"hand": {"pos": [0.17, -0.5, 0.7], "fingers": [-0.262, -0.081, -0.962], "palm": [-0.954, -0.129, 0.271], "curl": 75}, "elbow": [0.3, -1, 0.3]},
+        "top": {"hand": {"pos": [0.22, -0.5, 0.98], "fingers": [-0.851, -0.505, -0.143], "palm": [-0.506, 0.862, -0.035], "curl": 75}, "elbow": [0.3, -1, 0.3], "clavicle_L": [6, 6]}
+      }
+    },
+    {
+      "line": 1,
+      "status": "draft",
+      "ring": ["lumbar", "chest"],
+      "poses": {
+        "mid": {"pelvis_rot": [22, 0, 0], "lumbar": 0, "chest": 0, "hand": {"pos": [0.15, -0.48, 0.68], "fingers": [-0.46, -0.828, -0.321], "palm": [-0.374, -0.147, 0.916], "curl": 75}},
+        "top": {"pelvis_rot": [12, 0, 0], "lumbar": -4, "chest": -2, "neck": -8, "hand": {"pos": [0.13, -0.23, 1.02], "fingers": [-0.607, -0.436, 0.664], "palm": [-0.448, 0.878, 0.167], "curl": 75}}
+      },
+      "keys": [[0, "bottom"], [0.4, "mid"], [0.8, "top"], [1.0, "top"], [2.0, "mid"], [3.0, "bottom"], [3.4, "bottom"]]
+    }
+  ]
+}
