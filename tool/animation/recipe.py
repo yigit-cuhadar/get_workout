@@ -23,6 +23,8 @@ where they stand. A kit is
 
 A point is [x, y, z] from the kit's own origin on the floor,
 {"grips": [along the bar, forward of it, above it]} between the two hands,
+{"hand": "L" or "R", "at": [along the fingers, out of the palm, across the
+palm]} from where that hand holds (a dumbbell's handle runs across the palm),
 {"at": [x, y, z], "with": mover}, or {"between": [point, point], "t": how far
 from the first to the second, past it above 1}.
 """
@@ -122,6 +124,8 @@ def gear_of(uses, kit_set=None):
                     along = unit(left - right)
                     up = unit((0, 0, 1) - along[2] * along)
                     return (left + right) / 2 + np.stack([along, np.cross(up, along), up], axis=1) @ spec["grips"]
+                if "hand" in spec:
+                    return rig.grip(*solved, spec["hand"]) + solved[0][f"hand_{spec['hand']}"] @ rig.rest[spec["hand"]]["hand"] @ spec["at"]
                 if "between" in spec:
                     a, b = (point(end, solved) for end in spec["between"])
                     return a + (b - a) * spec["t"]
