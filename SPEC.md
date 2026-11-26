@@ -3377,7 +3377,7 @@ the feature you are about to touch, and keep it true when you change it.
   (exercise detail and the open workout card), checked on the simulator
   against `getworkout-dev` 2026-11-26. Recipes, kits and their rules are on
   dev and prod (prod 2026-11-26, owner's go-ahead); the phone solves them
-  with `forge_motion` (Forge v0.59.0, with the skinned
+  with `forge_motion` (Forge v0.60.0, with the skinned
   `forge_model_viewer`). First TestFlight build with animations: 1.0.0 (9).
   Not done: nothing on a
   real phone; studio cards and Widgetbook use cases for the tabbed card,
