@@ -36,7 +36,6 @@ import 'package:get_workout/features/exercises/presentation/custom_write_rejecti
 import 'package:get_workout/features/exercises/presentation/equipment_cubit.dart';
 import 'package:get_workout/features/exercises/presentation/exercise_catalogue_cubit.dart';
 import 'package:get_workout/features/exercises/presentation/exercise_detail_cubit.dart';
-import 'package:get_workout/features/exercises/presentation/exercise_notes_cubit.dart';
 import 'package:get_workout/features/exercises/presentation/exercise_detail_page.dart';
 import 'package:get_workout/features/exercises/presentation/exercises_page.dart';
 import 'package:get_workout/features/exercises/presentation/widgets/library_list_view.dart';
@@ -338,8 +337,6 @@ void main() {
     // Onboarding saves an equipment answer through the library.
     when(() => userLibrary.saveEquipment(any(), any()))
         .thenAnswer((_) async => const Ok(null));
-    when(() => userLibrary.watchExerciseNotes(any()))
-        .thenAnswer((_) => Stream.value(const {}));
     final customExercises = MockCustomExerciseRepository();
     when(() => customExercises.rejectedWrites)
         .thenAnswer((_) => const Stream.empty());
@@ -491,14 +488,6 @@ void main() {
       ..registerLazySingleton(
         () => CustomWriteRejectionsCubit(
           WatchRejectedCustomExerciseWrites(customExercises),
-        ),
-        dispose: (cubit) => cubit.close(),
-      )
-      ..registerLazySingleton(
-        () => ExerciseNotesCubit(
-          watchAuthUser: WatchAuthUser(settingsAuth),
-          watchExerciseNotes: WatchExerciseNotes(userLibrary),
-          setExerciseNote: SetExerciseNote(userLibrary),
         ),
         dispose: (cubit) => cubit.close(),
       )

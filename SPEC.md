@@ -286,8 +286,9 @@ keepScreenOn, bar and plates (`barWeightKg`, `ezBarWeightKg`, `trapBarWeightKg`,
 `plates[]`; each only while customised), stepGoal,
 reminder times,
 trackedMeasurements[], analyticsConsent), `favoriteExerciseIds[]`,
-`exerciseNotes` (exercise id → the user's own note, at most 500
-characters),
+`exerciseNotes` (exercise id → the user's own note; the own note was
+removed by the owner on 2026-11-26, so the app no longer reads or writes
+it and it stays in old documents),
 `activeProgram` (`programId`, `schedule` (ISO weekday `"1"`-`"7"` → the
 program day index done on it; 1-7 entries, a day may be on several
 weekdays or on none), `nextDayIndex`, `nextDate` `YYYY-MM-DD`,
@@ -961,7 +962,8 @@ Decisions (the canvases they were drawn on are deleted):
   a variants canvas; StepperField takes the workout screen's look.
 - Review additions (owner's picks): restored program states (no active
   program, finished, Premium ended), the Front / Back toggle, exercise stars,
-  favourites, Setup and Safety, own notes, workout minimize, the exercise ⋯
+  favourites, Setup and Safety, own notes (removed 2026-11-26), workout
+  minimize, the exercise ⋯
   menu, Add exercise and the workout note, circuits, reminder rows, Strength
   ranges (12 weeks free, 2 weeks since Monetization; 6 months, 1 year and All Premium), cardio session detail, the steps
   no-permission state, the workout edit page, Estimate body fat. New: the
@@ -1299,8 +1301,8 @@ Decisions (the canvases they were drawn on are deleted):
   active program", "Week 2 of 8 · opens your copy", a tap opening the
   user's copy; all programs follow (PC1). The catalogue page and the
   copy's page keep their own layouts (PU1).
-  Focus on open: the workout, exercise, "Your note" and cardio note
-  sheets, the Bar weight dialog and the plate dialog's weight field;
+  Focus on open: the workout, exercise and cardio note sheets (the "Your
+  note" sheet was removed on 2026-11-26), the Bar weight dialog and the plate dialog's weight field;
   Save as program and the new custom exercise page stay unfocused (the
   set sheet's note too).
 - Live Activity ve antrenman sayfası (owner's picks, 2026-11-19, canvas
@@ -1385,7 +1387,8 @@ Decisions (the canvases they were drawn on are deleted):
     single choice: Similar first (Alternative / Variation), a tap swaps, a
     note says logged sets stay.
   - Exercise detail: front and back models, facts table, Setup and How to do
-    it as numbered steps, Common mistakes, Safety, Cues, own note, Similar;
+    it as numbered steps, Common mistakes, Safety, Cues, Similar (the own
+    note was removed on 2026-11-26);
     favourite and Add in the app bar.
   - Workout: elapsed time and Finish in the header; one exercise card open at
     a time; set bubbles (done filled without a tick); the long-press set type
@@ -2049,6 +2052,26 @@ Decisions (the canvases they were drawn on are deleted):
   removed (owner, Forge StepperField).
 - Exercise gear (2026-11-25), canvas https://claude.ai/artifact/6oF4mJVecSe7n2gtZyZ5fW: EK1 today's tones kept (frames in line, steel and pads in line-strong, plates in ink-muted; colour stays with the muscles), EK2 A (the barbell has thick sleeves and two plates a side), EK3 A (the flat bench is a pad on a beam with two posts and two cross feet), EK4 A (the pull-up bar is the bar and its end caps, no posts, so the body fills more of the card), EK5 today's lat pulldown machine kept (with its weight stack rising), EK6 B (a light round floor under the model with the body's soft shadow on it, for every exercise). EK7-EK9: the smith machine (two rails, a top bar, two feet), the squat box and the landmine (a floor pivot, the bar to the hands) approved as drawn.
 - Exercise page (2026-11-26), canvas https://claude.ai/artifact/Y8sMp2DB83WX6ga5MhbCvW: ES1 A with ES1b B (the picked mistake chip fills in danger, the other mistake chips sit in a light danger tint; "Doğru" is light green and fills green when picked), ES2 unchanged (chips stay "Hata 1", "Hata 2"; no short names are written), ES3 A (chips always sit right under the animation; the mistake's text below them in a fixed two-line place that reads "Doğru yapılış" for the correct form, so the card keeps its height), ES4 A (two small round buttons in the stage's corner: pause/play and half speed; the same in the workout's sheet), ES5 A (a hint line under the animation, "Çevirmek için sürükle · yakınlaştırmak için iki parmak"; no view buttons), ES6 A (the workout card's play button is a filled round button).
+- Exercise screen review (2026-11-26), canvas https://claude.ai/artifact/Gp3cZ7kU1JMSZ5TG59rXGn:
+  the own note card is removed (owner); ET1 as built (the facts table stays
+  under the animation); ET2 A (Setup and How to do it share one "How to do
+  it" card with two sub-headings); ET3 A (each common mistake carries its
+  chip's number in a danger-toned badge); ET4 A (a mistake with an animation
+  has a play button on its row: the page scrolls up and that clip plays);
+  ET5 A (the Safety card takes the warning tone and a warning icon); ET6 A
+  (the half speed button is filled dark with light text while on); ET7 with
+  ET7b A (Tips keep their bullets and the card title gets a light-bulb
+  icon); ET8 A (each similar exercise is its own row that opens it, with
+  "See all" under them); ET9 A (a favourite star in the app bar beside ⋯;
+  the menu row goes); ET10, ET11, ET12 and ET13 as built (adding stays in
+  the ⋯ menu, the facts table keeps its seven rows, the muscle lines show
+  on both tabs, pause and half speed are kept when another chip is picked).
+  Built (Forge v0.61.0: the warning colour, a card title icon, the
+  danger numbered list, the filled toggle) and checked on the simulator. A
+  mistake chip carries the mistake's own number in the list, so a mistake
+  without an animation leaves a gap in the chips. Decided without a board:
+  a speed change does not restart the loop. Owed: the studio cards and the
+  app's Widgetbook use cases for these parts.
 - Exercise animations (2026-11-25), canvas https://claude.ai/artifact/RGTHJ9yhTVxSxnX1LG3ZL2: HA1 B with the mistakes made together with the movement (every exercise gets its correct form and each of its `mistakes` a pose can show), HA2 C (the first card of Exercise detail gets two tabs, Hareket and Kaslar; Kaslar is today's front and back pair, the legend stays under both), HA3 A (chips under the animation, "Doğru" and one per mistake; the picked mistake plays in the same place, its faulty region ringed in danger, its text under it), HA4 A (a play button beside ⋯ on the open exercise card of the workout; it opens a bottom sheet with the animation, the cues and a link to the full detail). To draw in the studio before it is built. Not asked yet: playback controls.
 - Workout summary redesign (2026-11-23), canvas https://claude.ai/artifact/EAeojwrrTVCeAdhA58w1Qe: S1 unchanged, S2 A (records as one highlighted card with gain badges), S3 A then S3b B (front and back models over the top four muscles as set bars), S4 B (each exercise's sets as a table, two shown, the rest behind + n more).
 - App icon and launch (2026-11-23): the owner's own logo, two 1024 PNGs
@@ -3358,9 +3381,10 @@ the feature you are about to touch, and keep it true when you change it.
   (equipment with its alternative sets; for a catalogue exercise also
   level, mechanic, pattern, sides, logged as, also called); Setup and How
   to do it as numbered steps; Common mistakes, Safety and Cues as
-  bulleted lines, each its own card; the custom exercise's Note, or on a
-  catalogue exercise the user's own note ("Your note", stored in
-  `users/{uid}.exerciseNotes`, trimmed, blank removes it); then one
+  bulleted lines, each its own card; the custom exercise's Note (the
+  user's own note on a catalogue exercise, "Your note", was removed by the
+  owner on 2026-11-26; `users/{uid}.exerciseNotes` is no longer read or
+  written and stays in old documents); then one
   "Similar exercises" card: its total, then Variations and Alternatives as
   two groups with their counts and their first three names; a tap opens
   a sheet with every one by group (rows without tags, as the group names

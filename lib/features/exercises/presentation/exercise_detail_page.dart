@@ -11,14 +11,11 @@ import '../../analytics/domain/analytics.dart';
 import '../../programs/presentation/add_to_program.dart';
 import '../../programs/presentation/add_to_program_cubit.dart';
 import '../../workout/presentation/start_workout.dart';
-import '../../workout/presentation/workout_editor_view.dart';
 import '../domain/exercise.dart';
-import '../domain/exercise_usecases.dart';
 import 'body_model_cubit.dart';
 import 'exercise_catalogue_cubit.dart';
 import 'exercise_detail_cubit.dart';
 import 'exercise_motion_cubit.dart';
-import 'exercise_notes_cubit.dart';
 import 'favorites_cubit.dart';
 import 'vocabulary_labels.dart';
 import 'widgets/exercise_motion_view.dart';
@@ -41,14 +38,8 @@ class ExerciseDetailPage extends StatelessWidget {
   final String Function(String id) exerciseRoute;
 
   @override
-  Widget build(BuildContext context) => MultiBlocProvider(
-    providers: [
-      BlocProvider(
-        create: (_) =>
-            sl<ExerciseDetailCubit>(param1: exerciseId, param2: from),
-      ),
-      BlocProvider.value(value: sl<ExerciseNotesCubit>()),
-    ],
+  Widget build(BuildContext context) => BlocProvider(
+    create: (_) => sl<ExerciseDetailCubit>(param1: exerciseId, param2: from),
     child: _DetailView(exerciseRoute),
   );
 }
@@ -80,7 +71,12 @@ class _DetailView extends StatelessWidget {
           title: state is DetailReady
               ? state.exercise.localized(context).name
               : '',
-          actions: [if (state is DetailReady) _MoreAction(state)],
+          actions: [
+            if (state is DetailReady) ...[
+              _FavoriteAction(state.exercise),
+              _MoreAction(state),
+            ],
+          ],
         ),
         body: switch (state) {
           DetailLoading() || DetailDeleted() => const _Loading(),
@@ -113,9 +109,30 @@ class _DetailView extends StatelessWidget {
   }
 }
 
+/// The star beside the ⋯: makes the exercise a favourite or not.
+class _FavoriteAction extends StatelessWidget {
+  const _FavoriteAction(this.exercise);
+
+  final Exercise exercise;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final favorite = context.select(
+      (FavoritesCubit cubit) => cubit.state.contains(exercise.id),
+    );
+    return ForgeAppBarAction.icon(
+      icon: ForgeIcons.star,
+      label: favorite ? l10n.favoriteRemove : l10n.favoriteAdd,
+      toggled: favorite,
+      onPressed: () => context.read<FavoritesCubit>().toggle(exercise.id),
+    );
+  }
+}
+
 /// The page's ⋯: add the exercise to the workout in progress (or a new
-/// one) or to a program, make it a favourite or not, and for a custom
-/// exercise Edit, and Delete after asking.
+/// one) or to a program, and for a custom exercise Edit, and Delete after
+/// asking.
 class _MoreAction extends StatelessWidget {
   const _MoreAction(this.detail);
 
@@ -125,9 +142,6 @@ class _MoreAction extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final exercise = detail.exercise;
-    final favorite = context.select(
-      (FavoritesCubit cubit) => cubit.state.contains(exercise.id),
-    );
     return ForgeAppBarAction.icon(
       icon: ForgeIcons.moreHoriz,
       label: l10n.detailMore,
@@ -143,11 +157,6 @@ class _MoreAction extends StatelessWidget {
             label: l10n.addToProgram,
             icon: ForgeIcons.editCalendar,
             onTap: () => _addToProgram(context, exercise),
-          ),
-          ForgeMenuItem(
-            label: favorite ? l10n.favoriteRemove : l10n.favoriteAdd,
-            icon: ForgeIcons.star,
-            onTap: () => context.read<FavoritesCubit>().toggle(exercise.id),
           ),
           if (exercise.isCustom) ...[
             ForgeMenuItem(
@@ -201,14 +210,43 @@ class _MoreAction extends StatelessWidget {
   }
 }
 
-class _DetailBody extends StatelessWidget {
+class _DetailBody extends StatefulWidget {
   const _DetailBody(this.detail, this.exerciseRoute);
 
   final DetailReady detail;
   final String Function(String id) exerciseRoute;
 
   @override
+  State<_DetailBody> createState() => _DetailBodyState();
+}
+
+class _DetailBodyState extends State<_DetailBody> {
+  final _scroll = ScrollController();
+
+  /// Whether the model card shows the animation rather than the muscles.
+  final _moving = ValueNotifier(true);
+
+  @override
+  void dispose() {
+    _scroll.dispose();
+    _moving.dispose();
+    super.dispose();
+  }
+
+  /// Brings the animation into view, on its tab.
+  void _showMotion() {
+    _moving.value = true;
+    _scroll.animateTo(
+      0,
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeOut,
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final detail = widget.detail;
+    final exerciseRoute = widget.exerciseRoute;
     final l10n = AppLocalizations.of(context);
     final exercise = detail.exercise;
     final text = exercise.localized(context);
@@ -238,11 +276,12 @@ class _DetailBody extends StatelessWidget {
           (l10n.detailAliases, l10n.inlineList(text.aliases)),
       ],
     ];
-    return ListView(
+    final body = ListView(
+      controller: _scroll,
       padding: const EdgeInsets.fromLTRB(Gap.md, Gap.xs, Gap.md, Gap.lg),
       children: [
         for (final part in [
-          _MusclePreview(exercise),
+          _MusclePreview(exercise, _moving),
           if (exercise.isCustom)
             Row(
               spacing: Gap.sm,
@@ -266,44 +305,121 @@ class _DetailBody extends StatelessWidget {
                   ListRow(title: label, value: value),
               ],
             ),
-          if (text.setup.isNotEmpty)
-            SectionCard.plain(
-              title: l10n.detailSetup,
-              child: BenefitList.numbered(text.setup),
-            ),
-          if (text.execution.isNotEmpty)
+          if (text.setup.isNotEmpty || text.execution.isNotEmpty)
             SectionCard.plain(
               title: l10n.detailExecution,
-              child: BenefitList.numbered(text.execution),
+              child: _Steps(setup: text.setup, execution: text.execution),
             ),
           if (text.mistakes.isNotEmpty)
-            SectionCard.plain(
-              title: l10n.detailMistakes,
-              child: _Bullets(text.mistakes),
+            _Mistakes(
+              text.mistakes,
+              animated: !exercise.isCustom,
+              onWatch: _showMotion,
             ),
           if (text.safety case final safety?)
             SectionCard.plain(
               title: l10n.detailSafety,
+              icon: ForgeIcons.warning,
+              warning: true,
               child: _Bullets([safety]),
             ),
           if (text.cues.isNotEmpty)
             SectionCard.plain(
               title: l10n.detailCues,
+              icon: ForgeIcons.lightbulb,
               child: _Bullets(text.cues),
             ),
           if (exercise.note case final note? when note.isNotEmpty)
             SectionCard.plain(title: l10n.detailNote, child: Text(note)),
-          if (!exercise.isCustom) _OwnNote(exercise),
         ]) ...[part, const SizedBox(height: Gap.sm)],
         if (detail.variations.isNotEmpty || detail.alternatives.isNotEmpty)
           _Similar(detail, exerciseRoute),
       ],
     );
+    if (exercise.isCustom) return body;
+    return BlocProvider(
+      create: (_) => sl<ExerciseMotionCubit>(param1: exercise.id)..load(),
+      child: body,
+    );
+  }
+}
+
+/// Setup and the movement as numbered steps, each under its own heading
+/// when the exercise has both.
+class _Steps extends StatelessWidget {
+  const _Steps({required this.setup, required this.execution});
+
+  final List<String> setup;
+  final List<String> execution;
+
+  @override
+  Widget build(BuildContext context) {
+    if (setup.isEmpty || execution.isEmpty) {
+      return BenefitList.numbered(setup.isEmpty ? execution : setup);
+    }
+    final l10n = AppLocalizations.of(context);
+    final heading = Theme.of(context).textTheme.labelLarge!
+        .copyWith(color: ForgeStyle.of(context).colors.inkMuted);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      spacing: Gap.md,
+      children: [
+        Text(l10n.detailSetup, style: heading),
+        BenefitList.numbered(setup),
+        const Divider(height: 1),
+        Text(l10n.detailMovement, style: heading),
+        BenefitList.numbered(execution),
+      ],
+    );
+  }
+}
+
+/// The common mistakes, numbered as their chips are; a mistake with an
+/// animation ends in a play button that plays it and calls [onWatch].
+class _Mistakes extends StatelessWidget {
+  const _Mistakes(
+    this.mistakes, {
+    required this.animated,
+    required this.onWatch,
+  });
+
+  final List<String> mistakes;
+
+  /// Whether the page has an [ExerciseMotionCubit] (a catalogue exercise).
+  final bool animated;
+  final VoidCallback onWatch;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final motion = animated ? context.watch<ExerciseMotionCubit>().state : null;
+    return SectionCard.plain(
+      title: l10n.detailMistakes,
+      child: BenefitList.numbered(
+        mistakes,
+        danger: true,
+        trailing: {
+          if (motion is MotionReady)
+            for (final (i, clip) in motion.clips.indexed)
+              ?clip.line: ForgeIconButton(
+                icon: ForgeIcons.playArrow,
+                label: l10n.motionWatchMistake((clip.line ?? 0) + 1),
+                variant: ForgeIconButtonVariant.ink,
+                fill: ForgeIconButtonFill.sunken,
+                onPressed: () {
+                  context.read<ExerciseMotionCubit>().select(i);
+                  onWatch();
+                },
+              ),
+        },
+      ),
+    );
   }
 }
 
 /// The exercise's variations and alternatives as two groups, each with its
-/// count and its first few names; the card opens a sheet listing them all.
+/// count and its first few as rows that open them; "See all" opens a sheet
+/// listing them all.
 class _Similar extends StatelessWidget {
   const _Similar(this.detail, this.exerciseRoute);
 
@@ -327,28 +443,59 @@ class _Similar extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final text = Theme.of(context).textTheme;
     final muted = ForgeStyle.of(context).colors.inkMuted;
-    return SectionCard(
+    final groups = _groups(l10n);
+    return SectionCard.plain(
       title: l10n.detailSimilar,
-      detail: '${detail.variations.length + detail.alternatives.length}',
-      onTap: () => _showAll(context),
+      note: '${detail.variations.length + detail.alternatives.length}',
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        spacing: Gap.md,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        spacing: Gap.sm,
         children: [
-          for (final (label, exercises) in _groups(l10n))
+          for (final (label, exercises) in groups)
             Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              spacing: Gap.xs,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Text(label, style: text.labelMedium!.copyWith(color: muted)),
-                for (final exercise in exercises.take(_preview))
-                  Text(
-                    exercise.localized(context).name,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: text.bodyMedium,
+                for (final (i, exercise)
+                    in exercises.take(_preview).indexed) ...[
+                  if (i > 0) const Divider(height: 1),
+                  InkWell(
+                    onTap: () => context.push(exerciseRoute(exercise.id)),
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(
+                        minHeight: ForgeTheme.tapMin,
+                      ),
+                      child: Row(
+                        spacing: Gap.sm,
+                        children: [
+                          Expanded(
+                            child: Text(
+                              exercise.localized(context).name,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: text.bodyLarge,
+                            ),
+                          ),
+                          ForgeIcon(
+                            ForgeIcons.chevronRight,
+                            size: 18,
+                            color: muted,
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
+                ],
               ],
+            ),
+          if (groups.any((group) => group.$2.length > _preview))
+            Align(
+              alignment: AlignmentDirectional.centerStart,
+              child: ForgeButton(
+                label: l10n.detailSeeAll,
+                variant: ForgeButtonVariant.text,
+                onPressed: () => _showAll(context),
+              ),
             ),
         ],
       ),
@@ -387,63 +534,6 @@ class _Similar extends StatelessWidget {
         ),
       ),
     );
-  }
-}
-
-/// The user's own note on a catalogue exercise, edited in a sheet.
-class _OwnNote extends StatelessWidget {
-  const _OwnNote(this.exercise);
-
-  final Exercise exercise;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final note = context.select(
-      (ExerciseNotesCubit cubit) => cubit.state.of(exercise.id),
-    );
-    return SectionCard.plain(
-      title: l10n.detailOwnNote,
-      actionLabel: note == null ? l10n.detailOwnNoteAdd : l10n.customEdit,
-      onAction: () => _edit(context, note),
-      child: note == null ? null : Text(note),
-    );
-  }
-
-  Future<void> _edit(BuildContext context, String? note) async {
-    final l10n = AppLocalizations.of(context);
-    final notes = context.read<ExerciseNotesCubit>();
-    var text = note ?? '';
-    final save = await showForgeBottomSheet<bool>(
-      context: context,
-      builder: (context) => ForgeBottomSheet(
-        title: l10n.detailOwnNote,
-        action: ForgeButton(
-          label: l10n.customSave,
-          size: ForgeButtonSize.large,
-          onPressed: () => Navigator.pop(context, true),
-        ),
-        child: NoteField(
-          initial: note,
-          label: l10n.detailNote,
-          hint: l10n.workoutNoteHint,
-          maxLength: maxExerciseNoteLength,
-          onChanged: (changed) => text = changed,
-          autofocus: true,
-        ),
-      ),
-    );
-    if (save != true) return;
-    final failure = await notes.save(exercise.id, text);
-    if (failure != null && context.mounted) {
-      showForgeSnackbar(
-        context,
-        message: failure is NetworkFailure
-            ? l10n.errorNetwork
-            : l10n.detailOwnNoteSaveFailed,
-        error: true,
-      );
-    }
   }
 }
 
@@ -513,19 +603,21 @@ class _Loading extends StatelessWidget {
 /// The model from the front and from the back side by side, with the worked
 /// muscles coloured. Neither view takes gestures, so the page scrolls over
 /// them. When the exercise has an animation, the card gets two tabs: the
-/// animation with a chip per clip (the default), and the pair.
+/// animation with a chip per clip (the default), and the pair. [moving]
+/// holds the picked tab, so the page can bring the animation back.
 class _MusclePreview extends StatefulWidget {
-  const _MusclePreview(this.exercise);
+  const _MusclePreview(this.exercise, this.moving);
 
   final Exercise exercise;
+
+  /// Whether the animation tab is picked.
+  final ValueNotifier<bool> moving;
 
   @override
   State<_MusclePreview> createState() => _MusclePreviewState();
 }
 
 class _MusclePreviewState extends State<_MusclePreview> {
-  var _moving = true;
-
   @override
   void initState() {
     super.initState();
@@ -535,17 +627,17 @@ class _MusclePreviewState extends State<_MusclePreview> {
   @override
   Widget build(BuildContext context) {
     final exercise = widget.exercise;
-    if (exercise.isCustom) return _pair(context, null);
-    return BlocProvider(
-      create: (_) => sl<ExerciseMotionCubit>(param1: exercise.id)..load(),
-      child: BlocBuilder<ExerciseMotionCubit, ExerciseMotionState>(
-        builder: (context, motion) =>
-            _pair(context, motion is MotionReady ? motion : null),
+    if (exercise.isCustom) return _pair(context, null, false);
+    return BlocBuilder<ExerciseMotionCubit, ExerciseMotionState>(
+      builder: (context, motion) => ValueListenableBuilder(
+        valueListenable: widget.moving,
+        builder: (context, moving, _) =>
+            _pair(context, motion is MotionReady ? motion : null, moving),
       ),
     );
   }
 
-  Widget _pair(BuildContext context, MotionReady? motion) {
+  Widget _pair(BuildContext context, MotionReady? motion, bool moving) {
     final l10n = AppLocalizations.of(context);
     final exercise = widget.exercise;
     final title = l10n.muscleModelWorked;
@@ -570,10 +662,10 @@ class _MusclePreviewState extends State<_MusclePreview> {
             ForgeSegment(value: true, label: l10n.motionTab),
             ForgeSegment(value: false, label: l10n.musclesTab),
           ],
-          selected: _moving,
-          onChanged: (moving) => setState(() => _moving = moving),
+          selected: moving,
+          onChanged: (moving) => widget.moving.value = moving,
         ),
-        stage: _moving ? _Motion(motion, exercise) : null,
+        stage: moving ? _Motion(motion, exercise) : null,
         main: main,
         secondary: secondary,
       ),
@@ -625,9 +717,10 @@ class _Motion extends StatelessWidget {
           children: [
             for (final (i, clip) in motion.clips.indexed)
               ForgeChip(
-                label: clip.line == null
-                    ? l10n.motionCorrect
-                    : l10n.motionMistake(i),
+                label: switch (clip.line) {
+                  null => l10n.motionCorrect,
+                  final line => l10n.motionMistake(line + 1),
+                },
                 tone: clip.line == null
                     ? ForgeChipTone.success
                     : ForgeChipTone.danger,

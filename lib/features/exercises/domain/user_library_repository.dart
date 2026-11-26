@@ -2,8 +2,8 @@ import 'package:forge_core/forge_core.dart';
 
 import 'vocabulary.dart';
 
-/// What a user keeps about the library: the equipment they own, their
-/// favourite exercises and their own notes on exercises. Streams emit the current value, then every change;
+/// What a user keeps about the library: the equipment they own and their
+/// favourite exercises. Streams emit the current value, then every change;
 /// errors arrive as [Failure]s.
 abstract interface class UserLibraryRepository {
   /// The equipment user [uid] owns, never including
@@ -22,16 +22,4 @@ abstract interface class UserLibraryRepository {
     String exerciseId, {
     required bool favorite,
   });
-
-  /// User [uid]'s own notes on exercises by exercise id; empty when there
-  /// are none.
-  Stream<Map<String, String>> watchExerciseNotes(String uid);
-
-  /// Stores [note] on [exerciseId] without touching the other notes; an
-  /// empty [note] removes it.
-  Future<Result<void>> setExerciseNote(
-    String uid,
-    String exerciseId,
-    String note,
-  );
 }
