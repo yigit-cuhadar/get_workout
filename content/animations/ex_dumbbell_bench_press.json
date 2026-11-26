@@ -19,7 +19,7 @@
     }
   },
   "keys": [[0, "top"], [1.5, "bottom"], [1.7, "bottom"], [2.6, "top"], [3.1, "top"]],
-  "gear": [{"kit": "flat_bench", "at": [0, 0.48, 0]}, {"kit": "dumbbell", "side": "L"}, {"kit": "dumbbell", "side": "R"}],
+  "gear": [{"kit": "flat_bench", "at": [0, 0.3, 0]}, {"kit": "dumbbell", "side": "L"}, {"kit": "dumbbell", "side": "R"}],
   "mistakes": [
     {
       "line": 0,
@@ -40,12 +40,8 @@
     },
     {
       "line": 2,
-      "status": "draft",
-      "ring": ["shoulder_L", "shoulder_R"],
-      "poses": {
-        "drop": {"extends": "bottom", "hand": {"pos": [0.66, 0.32, 0.28], "fingers": [0.66, -0.08, -0.74], "palm": [-0.053, -0.994, 0.059]}, "elbow": [0.5, 0, 1]}
-      },
-      "keys": [[0, "top"], [1.5, "bottom"], [1.7, "bottom"], [2.3, "drop"], [2.6, "drop"], [3.4, "top"], [3.8, "top"]]
+      "shown": false,
+      "why": "Gear stays in the hands, so dumbbells dropped to the floor cannot be drawn; the bent-arm lowering beside the bench read wrong (owner, 2026-11-26)."
     }
   ]
 }

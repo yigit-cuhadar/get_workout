@@ -3,7 +3,7 @@
   "view": [60, 10],
   "poses": {
     "down": {
-      "pelvis": [0, 0.05, 0.79],
+      "pelvis": [0.0, 0.16, 0.75],
       "pelvis_rot": [-112, 0, 0],
       "lumbar": 0,
       "chest": 0,
@@ -38,7 +38,7 @@
       "status": "draft",
       "ring": ["hip_L", "hip_R"],
       "poses": {
-        "up": {"pelvis": [0, -0.02, 0.82], "pelvis_rot": [-28, 0, 0], "lumbar": 10, "chest": 10, "neck": 6}
+        "up": {"pelvis": [0.0, 0.09, 0.78], "pelvis_rot": [-28, 0, 0], "lumbar": 10, "chest": 10, "neck": 6}
       },
       "keys": [[0, "down"], [1.4, "up"], [1.6, "up"], [3.2, "down"], [3.6, "down"]]
     }

@@ -20,7 +20,7 @@
     }
   },
   "keys": [[0, "top"], [1.8, "stretch"], [2.0, "stretch"], [3.1, "top"], [3.6, "top"]],
-  "gear": [{"kit": "flat_bench", "at": [0, 0.48, 0]}, {"kit": "dumbbell_cupped"}],
+  "gear": [{"kit": "flat_bench", "at": [0, 0.3, 0]}, {"kit": "dumbbell_cupped"}],
   "mistakes": [
     {
       "line": 0,

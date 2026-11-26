@@ -19,7 +19,7 @@
     }
   },
   "keys": [[0, "top"], [1.6, "bottom"], [1.8, "bottom"], [2.7, "top"], [3.2, "top"]],
-  "gear": [{"kit": "flat_bench", "at": [0, 0.48, 0]}, {"kit": "dumbbell", "side": "L"}, {"kit": "dumbbell", "side": "R"}],
+  "gear": [{"kit": "flat_bench", "at": [0, 0.3, 0]}, {"kit": "dumbbell", "side": "L"}, {"kit": "dumbbell", "side": "R"}],
   "mistakes": [
     {
       "line": 0,

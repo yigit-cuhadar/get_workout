@@ -3,7 +3,7 @@
   "view": [60, 10],
   "poses": {
     "down": {
-      "pelvis": [0, 0.05, 0.79],
+      "pelvis": [0.0, 0.16, 0.75],
       "pelvis_rot": [-112, 0, 0],
       "lumbar": 0,
       "chest": 0,
@@ -16,7 +16,7 @@
     },
     "up": {
       "extends": "down",
-      "pelvis": [0, -0.02, 0.82],
+      "pelvis": [0.0, 0.09, 0.78],
       "pelvis_rot": [-28, 0, 0],
       "lumbar": 10,
       "chest": 10,
@@ -31,7 +31,7 @@
       "status": "draft",
       "ring": ["lumbar", "chest"],
       "poses": {
-        "bounce": {"extends": "down", "pelvis": [0, 0.03, 0.8], "pelvis_rot": [-90, 0, 0], "lumbar": 10, "chest": 14}
+        "bounce": {"extends": "down", "pelvis": [0.0, 0.14, 0.76], "pelvis_rot": [-90, 0, 0], "lumbar": 10, "chest": 14}
       },
       "keys": [[0, "down"], [0.9, "up"], [1.1, "up"], [1.9, "down"], [2.0, "bounce"], [2.5, "up"], [2.7, "up"], [3.5, "down"], [3.9, "down"]]
     },
@@ -40,7 +40,7 @@
       "status": "draft",
       "ring": ["neck"],
       "poses": {
-        "pull": {"extends": "down", "pelvis_rot": [-80, 0, 0], "pelvis": [0, 0.04, 0.81], "lumbar": 4, "chest": 6, "neck": 44, "head": 20}
+        "pull": {"extends": "down", "pelvis_rot": [-80, 0, 0], "pelvis": [0.0, 0.15, 0.77], "lumbar": 4, "chest": 6, "neck": 44, "head": 20}
       },
       "keys": [[0, "down"], [0.6, "pull"], [1.4, "up"], [1.6, "up"], [3.4, "down"], [3.8, "down"]]
     }
