@@ -20,7 +20,8 @@
       "pelvis_rot": [-86, 0, 0],
       "neck": 0,
       "lumbar": 0,
-      "chest": 0
+      "chest": 0,
+      "hand": {"pos": [0.33, -0.24, 0.1], "fingers": [-0.205, -0.366, -0.908], "palm": [-0.083, 0.931, -0.356], "curl": 75, "rel": "pelvis"}
     }
   },
   "keys": [[0, "bottom"], [0.9, "top"], [1.4, "top"], [2.7, "bottom"], [3.1, "bottom"]],

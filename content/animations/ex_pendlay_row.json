@@ -3,7 +3,7 @@
   "view": [40, 8],
   "poses": {
     "floor": {
-      "pelvis": [0, 0.35, 0.749],
+      "pelvis": [0, 0.35, 0.752],
       "pelvis_rot": [80, 0, 0],
       "lumbar": 0,
       "chest": 0,
@@ -41,7 +41,7 @@
       "status": "draft",
       "ring": ["lumbar"],
       "poses": {
-        "floor": {"pelvis_rot": [66, 0, 0], "lumbar": 22, "chest": 16, "neck": -40, "pelvis": [0, 0.35, 0.798]},
+        "floor": {"pelvis_rot": [66, 0, 0], "lumbar": 22, "chest": 16, "neck": -40, "pelvis": [0, 0.35, 0.801]},
         "top": {"pelvis_rot": [66, 0, 0], "lumbar": 22, "chest": 16, "neck": -40, "hand": {"pos": [0.29, 0.137, 0.641], "fingers": [0.05, -0.21, -0.976], "palm": [-0.303, 0.928, -0.216]}}
       }
     }
