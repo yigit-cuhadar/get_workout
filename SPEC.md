@@ -3461,10 +3461,17 @@ the feature you are about to touch, and keep it true when you change it.
   keys keeps the arm's stretch between them, so a straight arm swings
   straight instead of along the chord; a hand that stays in place is left
   where the pose puts it. `pose.py` and `forge_motion` do the same.
+- **Feet** (2026-11-26, after the first drafts could not show them): a
+  foot takes a `roll` (the sole turning inward) next to its toe-out and
+  toes-down angles. A standing foot does not slide, but it may turn on the
+  spot from one key to the next (a pivot), and it stands somewhere else
+  after a key that lifts it (a step): between a standing and a lifted key
+  the foot travels as a lifted foot from where its ankle was. So a body can
+  step, walk, jump and switch sides inside one loop.
 - **Gear** (owner, 2026-11-25): designed once. A piece of equipment is a
   kit in `content/animations/_kits.json`, built from boxes and cylinders
-  that stand still, follow the two hands or one hand (a dumbbell), or
-  stretch between two points (a cable), with a status of its own (`draft`, `approved`). A recipe only
+  and balls that stand still, follow the two hands, one hand (a dumbbell)
+  or one foot (an ankle strap), or stretch between two points (a cable), with a status of its own (`draft`, `approved`). A recipe only
   names kits, says where each stands and sets the few values a kit offers
   (a plate's size); the validator refuses anything else. A new kit, or a
   change to one, is shown to the owner on its own before any exercise that

@@ -153,7 +153,15 @@ def shape(kind, matrix):
         triangles.append(patch[1] + count)
         count += len(patch[0])
 
-    if kind == "box":
+    if kind == "ball":
+        around, rings = 24, 12
+        i, j = np.meshgrid(np.arange(around + 1), np.arange(rings + 1))
+        turn, tilt = i.ravel() * 2 * np.pi / around, j.ravel() * np.pi / rings
+        ball = np.stack([np.sin(tilt) * np.cos(turn), np.sin(tilt) * np.sin(turn), -np.cos(tilt)], axis=1)
+        a = (j[:-1, :-1] * (around + 1) + i[:-1, :-1]).ravel()
+        quads = np.stack([a, a + 1, a + around + 2, a, a + around + 2, a + around + 1], axis=1)
+        add((ball, quads.reshape(-1, 3)), ball)
+    elif kind == "box":
         for axis in range(3):
             for sign in (-1, 1):
                 n = np.eye(3)[axis] * sign
