@@ -2048,6 +2048,7 @@ Decisions (the canvases they were drawn on are deleted):
   keeps its own row); the Next/Done keyboard bar above set entry is
   removed (owner, Forge StepperField).
 - Exercise gear (2026-11-25), canvas https://claude.ai/artifact/6oF4mJVecSe7n2gtZyZ5fW: EK1 today's tones kept (frames in line, steel and pads in line-strong, plates in ink-muted; colour stays with the muscles), EK2 A (the barbell has thick sleeves and two plates a side), EK3 A (the flat bench is a pad on a beam with two posts and two cross feet), EK4 A (the pull-up bar is the bar and its end caps, no posts, so the body fills more of the card), EK5 today's lat pulldown machine kept (with its weight stack rising), EK6 B (a light round floor under the model with the body's soft shadow on it, for every exercise). EK7-EK9: the smith machine (two rails, a top bar, two feet), the squat box and the landmine (a floor pivot, the bar to the hands) approved as drawn.
+- Exercise page (2026-11-26), canvas https://claude.ai/artifact/Y8sMp2DB83WX6ga5MhbCvW: ES1 A with ES1b B (the picked mistake chip fills in danger, the other mistake chips sit in a light danger tint; "Doğru" is light green and fills green when picked), ES2 unchanged (chips stay "Hata 1", "Hata 2"; no short names are written), ES3 A (chips always sit right under the animation; the mistake's text below them in a fixed two-line place that reads "Doğru yapılış" for the correct form, so the card keeps its height), ES4 A (two small round buttons in the stage's corner: pause/play and half speed; the same in the workout's sheet), ES5 A (a hint line under the animation, "Çevirmek için sürükle · yakınlaştırmak için iki parmak"; no view buttons), ES6 A (the workout card's play button is a filled round button).
 - Exercise animations (2026-11-25), canvas https://claude.ai/artifact/RGTHJ9yhTVxSxnX1LG3ZL2: HA1 B with the mistakes made together with the movement (every exercise gets its correct form and each of its `mistakes` a pose can show), HA2 C (the first card of Exercise detail gets two tabs, Hareket and Kaslar; Kaslar is today's front and back pair, the legend stays under both), HA3 A (chips under the animation, "Doğru" and one per mistake; the picked mistake plays in the same place, its faulty region ringed in danger, its text under it), HA4 A (a play button beside ⋯ on the open exercise card of the workout; it opens a bottom sheet with the animation, the cues and a link to the full detail). To draw in the studio before it is built. Not asked yet: playback controls.
 - Workout summary redesign (2026-11-23), canvas https://claude.ai/artifact/EAeojwrrTVCeAdhA58w1Qe: S1 unchanged, S2 A (records as one highlighted card with gain badges), S3 A then S3b B (front and back models over the top four muscles as set bars), S4 B (each exercise's sets as a table, two shown, the rest behind + n more).
 - App icon and launch (2026-11-23): the owner's own logo, two 1024 PNGs
@@ -3376,17 +3377,20 @@ the feature you are about to touch, and keep it true when you change it.
   (exercise detail and the open workout card), checked on the simulator
   against `getworkout-dev` 2026-11-26. Recipes, kits and their rules are on
   dev and prod (prod 2026-11-26, owner's go-ahead); the phone solves them
-  with `forge_motion` (Forge v0.59.0, with the skinned
+  with `forge_motion` (Forge v0.60.0, with the skinned
   `forge_model_viewer`). First TestFlight build with animations: 1.0.0 (9).
   Not done: nothing on a
   real phone; studio cards and Widgetbook use cases for the tabbed card,
   the motion view and the play button; the chips are plain `ForgeChip`s
   and the play button a bare icon button, not yet the canvas's looks.
-  Recipes approved: 6 of
+  Recipes approved: 11 of
   419 live exercises (which carry 852 mistakes): batch 1, the barbell squat
-  family, approved by the owner 2026-11-26 after one round of fixes (page
-  https://claude.ai/artifact/C7QFi5EHF8sbxbPDSQYM7G). Until #271 can merge,
-  approved batches stay on that branch. Review page of the spike:
+  family, and batch 2, the bench press and curl families, both approved by
+  the owner 2026-11-26 after the hands were seated on the bar (pages
+  https://claude.ai/artifact/C7QFi5EHF8sbxbPDSQYM7G,
+  https://claude.ai/artifact/RU1WYy6cc9afm64StPkVhP, hand close-ups
+  https://claude.ai/artifact/VARtitovjbnb1ts3ZbehuG). Prod still holds
+  batch 1 with the old hands until the owner says to import. Review page of the spike:
   https://claude.ai/artifact/2FhtzLavcFCNdBh1rZeFHN
 - **Tools** (`tool/animation/` on that branch; they need Blender 5.2 at
   `/Applications` and python3 with numpy and Pillow): `rig.py` fits the
@@ -3395,7 +3399,9 @@ the feature you are about to touch, and keep it true when you change it.
   knee, shoulder and elbow, a thumb bone, finger curl); `recipe.py` reads
   recipes and kits (its header is the format's reference); `preview.sh
   <exercise id> [keys|loop] [male|female]` renders the correct form and
-  every mistake into `build/animation/` (key poses in a few seconds);
+  every mistake into `build/animation/` (key poses in a few seconds;
+  `hands` shows each key pose's left hand close up, along the bar, from
+  the front and from above, with the plates hidden);
   `validate.py` checks the recipes on both bodies; `page.py` builds a
   batch's review page from the rendered loops (after a fix, render the
   loops again and look at a frame of the page's own copy before
@@ -3421,7 +3427,7 @@ the feature you are about to touch, and keep it true when you change it.
   uses it goes to review; a change to a kit changes every exercise using
   it, so those are rendered again. Approved so far (2026-11-25, Design ›
   Exercise gear): `barbell`, `flat_bench`, `pull_up_bar`,
-  `lat_pulldown_machine`, `smith_machine`, `squat_box`, `landmine`. Every kit uses the same four tones (`gear`,
+  `lat_pulldown_machine`, `smith_machine`, `squat_box`, `landmine`; `ez_bar` (2026-11-26, EK10). Every kit uses the same four tones (`gear`,
   `steel`, `pad`, `plate`). Under every exercise lies a light floor disc
   with the body's soft shadow; the preview paints it, the app's viewer does
   not draw it yet (part of Animations in the app).
@@ -3456,7 +3462,11 @@ the feature you are about to touch, and keep it true when you change it.
 - **Checks before the owner sees an exercise**: a standing pose has locked
   knees (leg stretch 0.995 or more; the owner sent the first batch back for
   bent knees at the top); a grip matches how the bar is really held, looked
-  at from the front, not only solved; no limb is stretched past
+  at in the `hands` close-ups of both bodies, not only solved (the owner
+  sent batch 2 and batch 1 back on 2026-11-26: the bar lay outside the
+  fist in every exercise): the bar runs through the closed fist at the
+  base of the fingers, the fingers wrap it, the thumb closes with them,
+  the wrist is straight or stacked over the forearm; no limb is stretched past
   its reach (the preview prints each limb's stretch; above 0.99 means the
   target was not reached); feet that stand are flat on the floor and do not
   slide; hands stay on the bar or handle through the whole loop; the bar or
@@ -3464,6 +3474,15 @@ the feature you are about to touch, and keep it true when you change it.
   pass through the body or the floor; start and end pose are the same, so
   the loop does not jump; the lowering is slower than the lifting; nothing
   contradicts the exercise's `mistakes` list.
+- **Hands** (2026-11-26): the grip point is 6.4 cm from the wrist along
+  the fingers and 3.6 cm into the palm, where two finger joints curled 75
+  degrees each close round a 28 mm bar; the thumb turns about its base by
+  1.2 times the curl. A bar grip uses `curl` 75. A hand that holds the bar
+  elsewhere says so with `hold` ([along the fingers, into the palm]): the
+  front squat's rack rests the bar on the fingers (`hold` [0.10, 0.028],
+  `curl` 30). The same numbers live in `forge_motion`; the two change
+  together. An EZ bar does not turn with the hands (owner, EK10), so its
+  bends lie across the palm only at the bottom.
 - **What the body models taught**: at rest the palms face forward, not the
   thighs; the arms are short for the height, so a deadlift starts with a
   near-horizontal back; the female hand ends higher than the male one, so

@@ -226,7 +226,7 @@ for side in "LR":
     opposing = np.where(s < 0.5, step(0.045, 0.065, t), 0)
     share = np.stack([1 - knuckle, knuckle - middle, middle], axis=1) * (1 - opposing)[:, None]
     full[np.ix_(in_hand, hand_bones)] = total[in_hand, None] * share
-    extra[f"thumb_{side}"] = (wrist_at + local[thumb & (t < 0.07)].mean(axis=0), f"hand_{side}")
+    extra[f"thumb_{side}"] = (wrist_at + local[thumb & (t < 0.058)].mean(axis=0), f"hand_{side}")
     column = np.zeros(len(V), np.float32)
     column[in_hand] = total[in_hand] * opposing
     full = np.hstack([full, column[:, None]])

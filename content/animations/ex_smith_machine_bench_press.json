@@ -1,0 +1,35 @@
+{
+  "status": "approved",
+  "view": [50, 14],
+  "poses": {
+    "top": {
+      "pelvis": [0, 0.05, 0.57],
+      "pelvis_rot": [-82, 0, 0],
+      "lumbar": -6,
+      "chest": -10,
+      "neck": -8,
+      "foot": {"at": [0.30, -0.40], "floor": 0, "yaw": 25},
+      "hand": {"pos": [0.36, 0.40, 1.079], "fingers": [0.000, 0.259, 0.966], "palm": [0.000, -0.966, 0.259], "curl": 75},
+      "elbow": [1, -0.9, -0.3],
+      "clavicle": [0, -12]
+    },
+    "bottom": {
+      "extends": "top",
+      "hand": {"pos": [0.36, 0.40, 0.772], "fingers": [0.000, 0.612, 0.791], "palm": [0.000, -0.791, 0.612]}
+    }
+  },
+  "keys": [[0, "top"], [1.5, "bottom"], [1.7, "bottom"], [2.6, "top"], [3.1, "top"]],
+  "gear": [{"kit": "smith_machine", "at": [0, 0.40, 0]}, {"kit": "flat_bench", "at": [0, 0.40, 0]}],
+  "mistakes": [
+    {
+      "line": 0,
+      "status": "approved",
+      "ring": ["neck"],
+      "poses": {
+        "top": {"pelvis": [0, -0.09, 0.57], "foot": {"at": [0.30, -0.54]}, "hand": {"pos": [0.36, 0.40, 1.078], "fingers": [0.000, 0.515, 0.857], "palm": [0.000, -0.857, 0.515]}},
+        "bottom": {"hand": {"pos": [0.36, 0.40, 0.66], "fingers": [0.000, 0.914, 0.407], "palm": [0.000, -0.407, 0.914]}}
+      }
+    },
+    {"line": 1, "shown": false, "why": "The safety stops are a setup step; no pose of the body shows them."}
+  ]
+}
