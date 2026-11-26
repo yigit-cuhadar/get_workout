@@ -35,11 +35,14 @@ void main() {
   group('with Firestore (fake)', () {
     late FakeFirebaseFirestore firestore;
     late FirestoreExerciseRepository repository;
+    late bool admin;
 
     setUp(() async {
       firestore = FakeFirebaseFirestore();
+      admin = false;
       repository = FirestoreExerciseRepository(
         FirestoreExerciseSource(firestore),
+        seesDrafts: () async => admin,
       );
       await firestore.doc('animationKits/main').set({'kits': kitsText});
     });
@@ -79,6 +82,42 @@ void main() {
       expect(result.failureOrNull, isA<UnknownFailure>());
     });
 
+    group('a recipe under review', () {
+      const draftKits = '{"barbell":{"pieces":[]},"dumbbell":{"pieces":[]}}';
+
+      setUp(() async {
+        await firestore.doc('exercises/ex_a/animation/draft').set({
+          'recipe': recipeText,
+        });
+        await firestore.doc('animationKits/draft').set({'kits': draftKits});
+      });
+
+      test('plays for an admin, with every kit', () async {
+        admin = true;
+
+        final result = await repository.getAnimation('ex_a');
+
+        expect(result.valueOrNull?.kits.keys, ['barbell', 'dumbbell']);
+      });
+
+      test('is no animation for anyone else', () async {
+        final result = await repository.getAnimation('ex_a');
+
+        expect(result.isOk, isTrue);
+        expect(result.valueOrNull, isNull);
+      });
+
+      test('an admin still gets an approved one', () async {
+        admin = true;
+        await firestore.doc('exercises/ex_a/animation/draft').delete();
+        await storeRecipe(recipeText);
+
+        final result = await repository.getAnimation('ex_a');
+
+        expect(result.valueOrNull, animation);
+      });
+    });
+
     test('fails when the kits are missing', () async {
       await storeRecipe(recipeText);
       await firestore.doc('animationKits/main').delete();
@@ -99,8 +138,11 @@ void main() {
 
     setUp(() {
       source = MockSource();
-      repository = FirestoreExerciseRepository(source);
-      when(() => source.animationKits(any()))
+      repository = FirestoreExerciseRepository(
+        source,
+        seesDrafts: () async => false,
+      );
+      when(() => source.animationKits(any(), draft: false))
           .thenAnswer((_) async => {'kits': kitsText});
     });
 
