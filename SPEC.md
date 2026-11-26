@@ -3420,10 +3420,18 @@ the feature you are about to touch, and keep it true when you change it.
   stands, where elbows and knees point; the solver does the rest, so hands
   stay on the bar and feet on the floor. Muscles come from the catalogue's
   `mainMuscles` and `secondaryMuscles`, never from the recipe.
+- **Between keys** (owner's review, 2026-11-26: "not fluid", elbows bending
+  on the way): the motion rests only at the first and last key, at a hold
+  (the same pose twice in a row) and where it turns back (the same pose
+  before and after a key); it passes through every other key at speed, so a
+  mid pose shapes the path without a stop. A hand that moves between two
+  keys keeps the arm's stretch between them, so a straight arm swings
+  straight instead of along the chord; a hand that stays in place is left
+  where the pose puts it. `pose.py` and `forge_motion` do the same.
 - **Gear** (owner, 2026-11-25): designed once. A piece of equipment is a
   kit in `content/animations/_kits.json`, built from boxes and cylinders
-  that stand still, follow the hands, or stretch between two points (a
-  cable), with a status of its own (`draft`, `approved`). A recipe only
+  that stand still, follow the two hands or one hand (a dumbbell), or
+  stretch between two points (a cable), with a status of its own (`draft`, `approved`). A recipe only
   names kits, says where each stands and sets the few values a kit offers
   (a plate's size); the validator refuses anything else. A new kit, or a
   change to one, is shown to the owner on its own before any exercise that
