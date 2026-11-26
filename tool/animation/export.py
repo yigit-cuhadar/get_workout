@@ -18,7 +18,7 @@ import sys
 import numpy as np
 
 import recipe
-from pose import Rig, normalized, pose_at
+from pose import Rig, keyed, pose_at
 
 source, rig_path, body_out, clips_dir = sys.argv[1:5]
 FPS = 12
@@ -184,8 +184,7 @@ os.makedirs(clips_dir, exist_ok=True)
 for name in sorted(f[:-5] for f in os.listdir(recipe.RECIPES) if not f.startswith("_")):
     spec = recipe.load(name)
     clip_keys = recipe.clip(spec)
-    poses = {id(p): normalized(p) for _, p in clip_keys}
-    keys = [(t, poses[id(p)]) for t, p in clip_keys]
+    keys = keyed(rig, clip_keys)
     frames = round(keys[-1][0] * FPS)
     solved = [rig.solve(pose_at(keys, f / FPS)) for f in range(frames)]
     gear_at = recipe.gear_of(spec["gear"])
