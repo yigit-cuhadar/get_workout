@@ -3336,13 +3336,10 @@ the feature you are about to touch, and keep it true when you change it.
   the open workout card), checked on the simulator against `getworkout-dev`
   2026-11-26: recipes and kits are imported to dev Firestore (rules deployed
   to dev only; nothing on prod), the phone solves them with `forge_motion`.
-  Packages: Forge #112 (`forge_model_viewer` skinning, motions, ground
-  parts; branch `feat/model-viewer-skinning`) and Forge #113 (`forge_motion`;
-  branch `feat/forge-motion`), both draft, worktrees under
-  `.claude/worktrees/`. App: PR #271 (draft, branch
-  `spike/exercise-animation`, worktree `apps/get_workout_anim`), which
-  points at both packages through a gitignored `pubspec_overrides.yaml`,
-  so its CI fails until they are merged and tagged. Not done: nothing on a
+  Packages: `forge_model_viewer` (skinning, motions, ground parts; Forge
+  #112) and `forge_motion` (Forge #113) are merged and tagged v0.59.0; the
+  app and its widgetbook pin that tag. App: PR #271 (draft, branch
+  `spike/exercise-animation`, worktree `apps/get_workout_anim`). Not done: nothing on a
   real phone; studio cards and Widgetbook use cases for the tabbed card,
   the motion view and the play button; the chips are plain `ForgeChip`s
   and the play button a bare icon button, not yet the canvas's looks.
