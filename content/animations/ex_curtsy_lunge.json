@@ -1,0 +1,184 @@
+{
+  "status": "draft",
+  "view": [
+    30,
+    10
+  ],
+  "poses": {
+    "top": {
+      "pelvis": [
+        0,
+        0,
+        0.979
+      ],
+      "pelvis_rot": [
+        3,
+        0,
+        0
+      ],
+      "lumbar": 0,
+      "chest": 0,
+      "neck": 0,
+      "foot": {
+        "at": [
+          0.1,
+          0.037
+        ],
+        "floor": 0,
+        "yaw": 10
+      },
+      "hand": {
+        "pos": [
+          0.15,
+          -0.04,
+          0.09
+        ],
+        "fingers": [
+          0,
+          -0.6,
+          -0.8
+        ],
+        "palm": [
+          -1,
+          0,
+          0
+        ],
+        "curl": 15,
+        "rel": "pelvis"
+      },
+      "elbow": [
+        1,
+        0.6,
+        0
+      ],
+      "clavicle": [
+        0,
+        0
+      ],
+      "foot_R": {
+        "pos": [
+          -0.1,
+          0.037,
+          0.11
+        ],
+        "yaw": 10,
+        "pitch": 0
+      }
+    },
+    "step": {
+      "extends": "top",
+      "pelvis": [
+        0.03,
+        0.05,
+        0.9
+      ],
+      "foot_R": {
+        "pos": [
+          0.06,
+          0.25,
+          0.2
+        ],
+        "yaw": 0,
+        "pitch": 20
+      }
+    },
+    "bottom": {
+      "extends": "top",
+      "pelvis": [
+        0.06,
+        0.2,
+        0.6
+      ],
+      "pelvis_rot": [
+        10,
+        0,
+        0
+      ],
+      "foot_R": {
+        "pos": [
+          0.22,
+          0.5,
+          0.23
+        ],
+        "yaw": -10,
+        "pitch": 55
+      },
+      "knee_R": [
+        0.3,
+        -0.3,
+        -1
+      ]
+    }
+  },
+  "keys": [
+    [
+      0,
+      "top"
+    ],
+    [
+      0.6,
+      "step"
+    ],
+    [
+      1.5,
+      "bottom"
+    ],
+    [
+      1.8,
+      "bottom"
+    ],
+    [
+      2.4,
+      "step"
+    ],
+    [
+      2.9,
+      "top"
+    ],
+    [
+      3.3,
+      "top"
+    ]
+  ],
+  "gear": [],
+  "mistakes": [
+    {
+      "line": 0,
+      "status": "draft",
+      "ring": [
+        "hip_L",
+        "hip_R"
+      ],
+      "poses": {
+        "bottom": {
+          "pelvis_rot": [
+            10,
+            -35,
+            0
+          ],
+          "lumbar": [
+            0,
+            10,
+            0
+          ]
+        }
+      }
+    },
+    {
+      "line": 1,
+      "status": "draft",
+      "ring": [
+        "knee_L"
+      ],
+      "poses": {
+        "bottom": {
+          "knee_L": [
+            -0.6,
+            -0.8,
+            0
+          ]
+        }
+      }
+    }
+  ]
+}
