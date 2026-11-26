@@ -1,0 +1,132 @@
+{
+  "status": "draft",
+  "view": [
+    30,
+    15
+  ],
+  "poses": {
+    "up": {
+      "pelvis": [
+        0.0,
+        0.0,
+        0.085
+      ],
+      "pelvis_rot": [
+        6,
+        0,
+        0
+      ],
+      "lumbar": 0,
+      "chest": 0,
+      "neck": 0,
+      "clavicle": [
+        0,
+        8
+      ],
+      "foot": {
+        "pos": [
+          0.07,
+          -0.42,
+          0.115
+        ],
+        "yaw": 60,
+        "pitch": 0
+      },
+      "knee": [
+        1,
+        -0.3,
+        0.6
+      ],
+      "hand": {
+        "pos": [
+          0.07,
+          -0.4,
+          0.16
+        ],
+        "fingers": [
+          -0.3,
+          -0.6,
+          -0.7
+        ],
+        "palm": [
+          -0.4,
+          0.4,
+          -0.8
+        ],
+        "curl": 40
+      },
+      "elbow": [
+        1,
+        0.2,
+        -0.3
+      ]
+    },
+    "lean": {
+      "extends": "up",
+      "pelvis": [
+        0.0,
+        0.0,
+        0.081
+      ],
+      "pelvis_rot": [
+        24,
+        0,
+        0
+      ],
+      "lumbar": 0,
+      "chest": 0,
+      "neck": 0
+    }
+  },
+  "keys": [
+    [
+      0,
+      "up"
+    ],
+    [
+      1.5,
+      "lean"
+    ],
+    [
+      3.5,
+      "lean"
+    ],
+    [
+      5.0,
+      "up"
+    ]
+  ],
+  "gear": [],
+  "mistakes": [
+    {
+      "line": 0,
+      "status": "draft",
+      "ring": [
+        "lumbar",
+        "chest"
+      ],
+      "poses": {
+        "lean": {
+          "pelvis": [
+            0.0,
+            0.0,
+            0.084
+          ],
+          "pelvis_rot": [
+            8,
+            0,
+            0
+          ],
+          "lumbar": 24,
+          "chest": 22,
+          "neck": 14
+        }
+      }
+    },
+    {
+      "line": 1,
+      "shown": false,
+      "why": "How hard a stretch is forced cannot be shown by a pose."
+    }
+  ]
+}

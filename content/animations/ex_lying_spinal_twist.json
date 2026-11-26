@@ -1,0 +1,172 @@
+{
+  "status": "draft",
+  "view": [
+    10,
+    35
+  ],
+  "poses": {
+    "flat": {
+      "pelvis": [
+        0.0,
+        0.0,
+        0.143
+      ],
+      "pelvis_rot": [
+        -88,
+        0,
+        0
+      ],
+      "lumbar": 13,
+      "chest": -9,
+      "neck": -24,
+      "clavicle": [
+        0,
+        0
+      ],
+      "knee": [
+        0,
+        0,
+        1
+      ],
+      "hand": {
+        "pos": [
+          0.733,
+          0.43,
+          0.035
+        ],
+        "fingers": [
+          1,
+          0,
+          0
+        ],
+        "palm": [
+          0,
+          0,
+          -1
+        ],
+        "curl": 8,
+        "hold": [
+          0.05,
+          0.012
+        ]
+      },
+      "elbow": [
+        0,
+        1,
+        0
+      ],
+      "foot": {
+        "pos": [
+          0.09,
+          -0.864,
+          0.186
+        ],
+        "yaw": 5,
+        "pitch": -52
+      },
+      "foot_R": {
+        "pos": [
+          -0.09,
+          -0.864,
+          0.186
+        ],
+        "yaw": 5,
+        "pitch": -52
+      },
+      "knee_R": [
+        0,
+        0,
+        1
+      ]
+    },
+    "pull": {
+      "extends": "flat",
+      "foot": {
+        "pos": [
+          0.138,
+          -0.277,
+          0.442
+        ],
+        "yaw": 5,
+        "pitch": -20
+      },
+      "knee": [
+        0,
+        -0.3,
+        1
+      ]
+    },
+    "across": {
+      "extends": "flat",
+      "foot": {
+        "pos": [
+          -0.182,
+          -0.327,
+          0.172
+        ],
+        "yaw": -30,
+        "pitch": 0
+      },
+      "knee": [
+        -1,
+        -0.2,
+        0.2
+      ],
+      "lumbar": [
+        13,
+        -10,
+        0
+      ]
+    }
+  },
+  "keys": [
+    [
+      0,
+      "flat"
+    ],
+    [
+      1.0,
+      "pull"
+    ],
+    [
+      2.2,
+      "across"
+    ],
+    [
+      5.0,
+      "across"
+    ],
+    [
+      6.2,
+      "pull"
+    ],
+    [
+      7.0,
+      "flat"
+    ]
+  ],
+  "gear": [],
+  "mistakes": [
+    {
+      "line": 0,
+      "status": "draft",
+      "ring": [
+        "shoulder_R"
+      ],
+      "poses": {
+        "across": {
+          "chest": [
+            -9,
+            25,
+            0
+          ]
+        }
+      }
+    },
+    {
+      "line": 1,
+      "shown": false,
+      "why": "How hard a stretch is forced cannot be shown by a pose."
+    }
+  ]
+}

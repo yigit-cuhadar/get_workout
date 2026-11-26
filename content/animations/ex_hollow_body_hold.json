@@ -1,0 +1,159 @@
+{
+  "status": "draft",
+  "view": [
+    60,
+    10
+  ],
+  "poses": {
+    "hold": {
+      "pelvis": [
+        0.0,
+        0.0,
+        0.134
+      ],
+      "pelvis_rot": [
+        -88,
+        0,
+        0
+      ],
+      "lumbar": 22,
+      "chest": 18,
+      "neck": 4,
+      "clavicle": [
+        10,
+        0
+      ],
+      "hand": {
+        "pos": [
+          0.209,
+          0.924,
+          0.413
+        ],
+        "fingers": [
+          0,
+          1,
+          0.2
+        ],
+        "palm": [
+          -0.3,
+          0,
+          -1
+        ],
+        "curl": 5
+      },
+      "knee": [
+        0,
+        0,
+        1
+      ],
+      "foot": {
+        "pos": [
+          0.09,
+          -0.824,
+          0.392
+        ],
+        "yaw": 5,
+        "pitch": -37
+      },
+      "elbow": [
+        1,
+        0,
+        -0.2
+      ]
+    },
+    "breathe": {
+      "extends": "hold",
+      "chest": 16.5
+    }
+  },
+  "keys": [
+    [
+      0,
+      "hold"
+    ],
+    [
+      2.0,
+      "breathe"
+    ],
+    [
+      4.0,
+      "hold"
+    ]
+  ],
+  "gear": [],
+  "mistakes": [
+    {
+      "line": 0,
+      "status": "draft",
+      "ring": [
+        "lumbar"
+      ],
+      "poses": {
+        "arch": {
+          "extends": "hold",
+          "pelvis": [
+            0.0,
+            0.0,
+            0.143
+          ],
+          "pelvis_rot": [
+            -76,
+            0,
+            0
+          ],
+          "lumbar": 4,
+          "foot": {
+            "pos": [
+              0.09,
+              -0.851,
+              0.282
+            ],
+            "yaw": 5,
+            "pitch": -45
+          },
+          "hand": {
+            "pos": [
+              0.209,
+              0.93,
+              0.41
+            ],
+            "fingers": [
+              0,
+              1,
+              0.2
+            ],
+            "palm": [
+              -0.3,
+              0,
+              -1
+            ],
+            "curl": 5
+          }
+        }
+      },
+      "keys": [
+        [
+          0,
+          "hold"
+        ],
+        [
+          1.5,
+          "arch"
+        ],
+        [
+          3.5,
+          "arch"
+        ],
+        [
+          5.0,
+          "hold"
+        ]
+      ]
+    },
+    {
+      "line": 1,
+      "shown": false,
+      "why": "Holding the breath cannot be shown by a pose."
+    }
+  ]
+}

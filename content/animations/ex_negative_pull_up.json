@@ -1,33 +1,189 @@
 {
   "status": "draft",
-  "view": [160, 5],
+  "view": [
+    160,
+    5
+  ],
   "poses": {
     "top": {
-      "pelvis": [0, 0.10, 1.70],
-      "pelvis_rot": [-12, 0, 0],
+      "pelvis": [
+        0,
+        0.1,
+        1.7
+      ],
+      "pelvis_rot": [
+        -12,
+        0,
+        0
+      ],
       "neck": -8,
-      "foot": {"pos": [0.09, -0.10, -0.86], "yaw": 5, "pitch": 35, "rel": "pelvis"},
-      "hand": {"pos": [0.22, 0, 2.25], "fingers": [0, 0, 1], "palm": [0, -1, 0], "curl": 75},
-      "elbow": [0.8, 0.3, -1],
-      "clavicle": [-5, -12]
+      "foot": {
+        "pos": [
+          0.09,
+          -0.1,
+          -0.86
+        ],
+        "yaw": 5,
+        "pitch": 35,
+        "rel": "pelvis"
+      },
+      "hand": {
+        "pos": [
+          0.22,
+          0,
+          2.25
+        ],
+        "fingers": [
+          0,
+          0,
+          1
+        ],
+        "palm": [
+          0,
+          -1,
+          0
+        ],
+        "curl": 75
+      },
+      "elbow": [
+        0.8,
+        0.3,
+        -1
+      ],
+      "clavicle": [
+        -5,
+        -12
+      ],
+      "knee": [
+        0,
+        -1,
+        0
+      ]
     },
-    "mid": {"extends": "top", "pelvis": [0, 0.04, 1.42], "pelvis_rot": [-6, 0, 0], "neck": -4, "clavicle": [0, -6]},
-    "hang": {"extends": "top", "pelvis": [0, -0.03, 1.19], "pelvis_rot": [0, 0, 0], "neck": 0, "clavicle": [12, 0]}
+    "mid": {
+      "extends": "top",
+      "pelvis": [
+        0,
+        0.04,
+        1.42
+      ],
+      "pelvis_rot": [
+        -6,
+        0,
+        0
+      ],
+      "neck": -4,
+      "clavicle": [
+        0,
+        -6
+      ]
+    },
+    "hang": {
+      "extends": "top",
+      "pelvis": [
+        0,
+        -0.03,
+        1.19
+      ],
+      "pelvis_rot": [
+        0,
+        0,
+        0
+      ],
+      "neck": 0,
+      "clavicle": [
+        12,
+        0
+      ]
+    }
   },
-  "keys": [[0, "top"], [2.0, "mid"], [4.0, "hang"], [4.4, "hang"], [5.3, "top"], [5.7, "top"]],
-  "gear": [{"kit": "pull_up_bar"}],
+  "keys": [
+    [
+      0,
+      "top"
+    ],
+    [
+      2.0,
+      "mid"
+    ],
+    [
+      4.0,
+      "hang"
+    ],
+    [
+      4.4,
+      "hang"
+    ],
+    [
+      5.3,
+      "top"
+    ],
+    [
+      5.7,
+      "top"
+    ]
+  ],
+  "gear": [
+    {
+      "kit": "pull_up_bar"
+    }
+  ],
   "mistakes": [
     {
       "line": 0,
       "status": "draft",
-      "ring": ["elbow_L", "elbow_R"],
-      "keys": [[0, "top"], [2.0, "mid"], [2.4, "hang"], [2.8, "hang"], [3.7, "top"], [4.1, "top"]]
+      "ring": [
+        "elbow_L",
+        "elbow_R"
+      ],
+      "keys": [
+        [
+          0,
+          "top"
+        ],
+        [
+          2.0,
+          "mid"
+        ],
+        [
+          2.4,
+          "hang"
+        ],
+        [
+          2.8,
+          "hang"
+        ],
+        [
+          3.7,
+          "top"
+        ],
+        [
+          4.1,
+          "top"
+        ]
+      ]
     },
     {
       "line": 1,
       "status": "draft",
-      "ring": ["shoulder_L", "shoulder_R"],
-      "poses": {"hang": {"pelvis": [0, -0.03, 1.14], "clavicle": [42, 0], "neck": 6}}
+      "ring": [
+        "shoulder_L",
+        "shoulder_R"
+      ],
+      "poses": {
+        "hang": {
+          "pelvis": [
+            0,
+            -0.03,
+            1.14
+          ],
+          "clavicle": [
+            42,
+            0
+          ],
+          "neck": 6
+        }
+      }
     }
   ]
 }
