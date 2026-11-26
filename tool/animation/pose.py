@@ -215,7 +215,7 @@ class Rig:
         """
         h = self.heads
         R, p = {}, {}
-        self.missed = {}
+        self.missed, self.reach = {}, {}
 
         def place(bone, parent, rotation):
             R[bone] = rotation
@@ -251,6 +251,9 @@ class Rig:
             if hand["rel"] is not None:
                 elbow_pole = R[hand["rel"]] @ elbow_pole
             target = world(hand, "pos") - grip
+            if hand.get("reach") is not None:
+                target = shoulder + unit(target - shoulder) * hand["reach"]
+            self.reach[side] = np.linalg.norm(target - shoulder)
             elbow, wrist, normal = solve_limb(shoulder, target, *rest["arm"], elbow_pole)
             self.missed[f"hand_{side}"] = np.linalg.norm(target - wrist)
             R[f"upper_arm_{side}"] = frame(elbow - shoulder, normal) @ rest["upper_arm"].T
@@ -317,8 +320,54 @@ def ease(t):
 
 
 def pose_at(keys, time):
-    """The pose at `time` seconds from [(time, normalized pose), ...]."""
-    for (t0, a), (t1, b) in zip(keys, keys[1:]):
-        if time <= t1:
-            return lerp(a, b, ease((time - t0) / (t1 - t0)))
-    return keys[-1][1]
+    """The pose at `time` seconds from [(time, normalized pose), ...].
+
+    The motion eases in and out only where it rests: at the first and last
+    key, at a key that holds (the same pose as its neighbour) and where it
+    turns back (the poses before and after are the same). It passes through
+    every other key at speed, so a mid pose shapes the path without a stop.
+    The same pose is the same object; `keyed` makes the keys.
+    """
+    last = len(keys) - 1
+
+    def rests(k):
+        if k in (0, last):
+            return True
+        before, here, after = keys[k - 1][1], keys[k][1], keys[k + 1][1]
+        return here is before or here is after or before is after
+
+    k = 0
+    while k < last - 1 and time > keys[k + 1][0]:
+        k += 1
+    a, b = k, k + 1
+    while not rests(a):
+        a -= 1
+    while not rests(b):
+        b += 1
+    t0, t1 = keys[a][0], keys[b][0]
+    time = t0 + (t1 - t0) * ease(min(max((time - t0) / (t1 - t0), 0.0), 1.0))
+    k = a
+    while k < b - 1 and time > keys[k + 1][0]:
+        k += 1
+    (t0, a), (t1, b) = keys[k], keys[k + 1]
+    pose = lerp(a, b, (time - t0) / (t1 - t0))
+    for side, _ in SIDES:
+        # A hand that stays where it is (on the floor, on a fixed bar) keeps
+        # its place; one that moves keeps the arm's stretch between the keys,
+        # so a straight arm swings as a straight arm instead of along a chord.
+        if np.array_equal(a[f"hand_{side}"]["pos"], b[f"hand_{side}"]["pos"]):
+            pose[f"hand_{side}"]["reach"] = None
+    return pose
+
+
+def keyed(rig, clip):
+    """[(time, normalized pose)] of a clip for `pose_at`: the same pose is one
+    object, and every pose knows how far each arm is stretched in it."""
+    poses = {}
+    for _, raw in clip:
+        if id(raw) not in poses:
+            poses[id(raw)] = pose = normalized(raw)
+            rig.solve(pose)
+            for side, _ in SIDES:
+                pose[f"hand_{side}"]["reach"] = np.float64(rig.reach[side])
+    return [(t, poses[id(raw)]) for t, raw in clip]

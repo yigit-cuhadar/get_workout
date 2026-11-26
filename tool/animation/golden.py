@@ -16,7 +16,7 @@ import sys
 import numpy as np
 
 import recipe
-from pose import Rig, normalized, pose_at
+from pose import Rig, keyed, pose_at
 
 rig_path, kits_path, out, *recipes = sys.argv[1:]
 rig = Rig(rig_path)
@@ -42,8 +42,7 @@ for path in recipes:
     shown = [None] + [i for i, m in enumerate(spec["mistakes"]) if m.get("shown", True)]
     for mistake in shown:
         raw = recipe.clip(spec, mistake)
-        poses = {id(p): normalized(p) for _, p in raw}
-        keys = [(t, poses[id(p)]) for t, p in raw]
+        keys = keyed(rig, raw)
         first = rig.solve(keys[0][1])
         samples = []
         for t in (0.0, round(keys[-1][0] * 0.37, 3), round(keys[-1][0] * 0.71, 3)):
