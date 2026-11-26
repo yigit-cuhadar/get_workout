@@ -18,7 +18,7 @@ from mathutils import Matrix, Vector
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import recipe  # noqa: E402
-from pose import SIDES, Rig, normalized, pose_at  # noqa: E402
+from pose import SIDES, Rig, keyed, pose_at  # noqa: E402
 
 rig_path, name, out_dir, mode = (sys.argv[sys.argv.index("--") + 1 :] + ["keys"])[:4]
 FPS = 15
@@ -56,11 +56,7 @@ clips = [(name, recipe.clip(spec), [])]
 for i, mistake in enumerate(spec["mistakes"]):
     if mistake.get("shown", True):
         clips.append((f"{name}-m{mistake['line']}", recipe.clip(spec, i), mistake["ring"]))
-clips = [
-    (label, [(t, poses[id(p)]) for t, p in keys], ring)
-    for label, keys, ring in clips
-    for poses in [{id(p): normalized(p) for _, p in keys}]
-]
+clips = [(label, keyed(rig, keys), ring) for label, keys, ring in clips]
 
 bpy.ops.wm.read_factory_settings(use_empty=True)
 scene = bpy.context.scene
