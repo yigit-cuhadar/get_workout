@@ -112,5 +112,14 @@
       {"cyl": [{"grips": [0.41, 0, 0]}, {"grips": [0.445, 0, 0]}], "r": "$plate", "colour": "plate"},
       {"cyl": [{"grips": [0.445, 0, 0]}, {"grips": [0.475, 0, 0]}], "r": 0.12, "colour": "plate"}
     ]
+  },
+  "dumbbell": {
+    "status": "draft",
+    "values": {"side": "L", "head": 0.055},
+    "pieces": [
+      {"cyl": [{"hand": "$side", "at": [0, 0, -0.07]}, {"hand": "$side", "at": [0, 0, 0.07]}], "r": 0.014, "colour": "steel"},
+      {"cyl": [{"hand": "$side", "at": [0, 0, -0.07]}, {"hand": "$side", "at": [0, 0, -0.13]}], "r": "$head", "colour": "plate"},
+      {"cyl": [{"hand": "$side", "at": [0, 0, 0.07]}, {"hand": "$side", "at": [0, 0, 0.13]}], "r": "$head", "colour": "plate"}
+    ]
   }
 }

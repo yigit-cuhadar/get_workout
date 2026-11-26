@@ -26,10 +26,12 @@ and programs/<id>/detail/main (days). Exercises are written before programs.
 
 Animations: content/animations/_kits.json becomes animationKits/main (the
 approved kits) and every recipe with status approved becomes
-exercises/<id>/animation/main, after the other content, kits first. Both are
-stored as JSON text (Firestore cannot store arrays inside arrays). A recipe
-that is not approved has its document deleted if it has one; a recipe file
-that was removed leaves its document alone.
+exercises/<id>/animation/main, after the other content, kits first. A recipe
+that is not approved becomes exercises/<id>/animation/draft and every kit goes
+to animationKits/draft; only admins see those in the app. All are stored as
+JSON text (Firestore cannot store arrays inside arrays). A recipe's document
+of the other kind is deleted if it has one; a recipe file that was removed
+leaves its documents alone.
 
 Writes only new documents and ones whose file changed. Each import stores a
 contentHash with the document. The admin panel leaves contentHash untouched,
@@ -132,8 +134,9 @@ Future<void> main(List<String> args) async {
     final animationDocs = {
       for (final doc in [
         animationKitsDoc(animations.kits),
+        animationKitsDoc(animations.kits, draft: true),
         for (final recipe in animations.recipes)
-          if (recipe.isApproved) animationDoc(recipe.id, recipe.data),
+          animationDoc(recipe.id, recipe.data, draft: !recipe.isApproved),
       ])
         doc.path: doc,
     };
@@ -142,10 +145,8 @@ Future<void> main(List<String> args) async {
     Future<void> read(
       String collection, {
       Map<String, RemoteDocument>? into,
-      String? onlyId,
     }) async {
       for (final d in await firestore.listDocuments(collection)) {
-        if (onlyId != null && d.id != onlyId) continue;
         (into ?? remote)['$collection/${d.id}'] = RemoteDocument.fromFields(
           decodeFields(d.fields),
           d.updateTime,
@@ -163,13 +164,9 @@ Future<void> main(List<String> args) async {
     for (final id in programIds) {
       await read('programs/$id/detail');
     }
-    await read('animationKits', into: animationRemote, onlyId: 'main');
+    await read('animationKits', into: animationRemote);
     for (final recipe in animations.recipes) {
-      await read(
-        'exercises/${recipe.id}/animation',
-        into: animationRemote,
-        onlyId: 'main',
-      );
+      await read('exercises/${recipe.id}/animation', into: animationRemote);
     }
     final plan = planImport(
       {for (final doc in docs.values) doc.path: doc.hash},
@@ -177,7 +174,7 @@ Future<void> main(List<String> args) async {
       force: force,
     );
     // Planned apart, so an exercise and its animation never hold each other
-    // back. Its orphans are the animations of recipes not approved.
+    // back. Its orphans are a recipe's document of the kind it no longer is.
     final animationPlan = planImport(
       {for (final doc in animationDocs.values) doc.path: doc.hash},
       animationRemote,
