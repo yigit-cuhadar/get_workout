@@ -1,0 +1,52 @@
+{
+  "status": "draft",
+  "view": [-60, 8],
+  "poses": {
+    "top": {
+      "pelvis": [0, 0, 0.979],
+      "pelvis_rot": [0, 0, 0],
+      "lumbar": 0,
+      "chest": 0,
+      "neck": 0,
+      "foot": {"at": [0.17, 0.037], "floor": 0, "yaw": 18},
+      "hand": {"pos": [0.085, -0.05, 2.03], "fingers": [-0.287, -0.233, 0.929], "palm": [-0.957, 0.111, -0.268], "curl": 20},
+      "elbow": [0.5, 0.3, 0],
+      "clavicle": [18, 0]
+    },
+    "slam": {
+      "extends": "top",
+      "pelvis": [0, 0.22, 0.7],
+      "pelvis_rot": [55, 0, 0],
+      "lumbar": 6,
+      "chest": 6,
+      "neck": -20,
+      "hand": {"pos": [0.085, -0.42, 0.43], "fingers": [-0.257, -0.539, -0.802], "palm": [-0.966, 0.139, 0.216]},
+      "elbow": [0.5, 0.5, 0.3],
+      "clavicle": [0, 0]
+    },
+    "mid": {
+      "extends": "top",
+      "pelvis": [0, 0.1, 0.86],
+      "pelvis_rot": [25, 0, 0],
+      "hand": {"pos": [0.085, -0.3, 1.05], "fingers": [-0.817, -0.57, -0.086], "palm": [-0.572, 0.784, 0.24]},
+      "clavicle": [4, 0]
+    }
+  },
+  "keys": [[0, "top"], [0.5, "slam"], [0.7, "slam"], [1.5, "mid"], [2.3, "top"], [2.6, "top"]],
+  "gear": [{"kit": "medicine_ball"}],
+  "mistakes": [
+    {
+      "line": 0,
+      "shown": false,
+      "why": "The ball stays in the hands inside a clip, so its bounce back toward the face cannot be drawn."
+    },
+    {
+      "line": 1,
+      "status": "draft",
+      "ring": ["lumbar", "chest"],
+      "poses": {
+        "slam": {"pelvis": [0, 0.16, 0.84], "pelvis_rot": [62, 0, 0], "lumbar": 26, "chest": 22, "hand": {"pos": [0.085, -0.39, 0.33], "fingers": [-0.281, -0.356, -0.891], "palm": [-0.959, 0.149, 0.243]}}
+      }
+    }
+  ]
+}

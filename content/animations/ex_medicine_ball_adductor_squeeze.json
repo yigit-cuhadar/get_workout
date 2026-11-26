@@ -1,0 +1,39 @@
+{
+  "status": "draft",
+  "view": [50, 20],
+  "poses": {
+    "rest": {
+      "pelvis": [0, 0, 0.125],
+      "pelvis_rot": [-86, 0, 0],
+      "lumbar": 0,
+      "chest": 0,
+      "neck": 6,
+      "foot": {"at": [0.16, -0.44], "floor": 0, "yaw": 0},
+      "knee": [0.25, 0, 1],
+      "hand": {"pos": [0.27, -0.05, 0.025], "fingers": [0, -1, 0], "palm": [0, 0, -1], "curl": 5, "hold": [0.05, 0]},
+      "elbow": [1, 0, 0.3],
+      "clavicle": [0, 0]
+    },
+    "squeeze": {
+      "extends": "rest",
+      "knee": [0.17, 0, 1]
+    }
+  },
+  "keys": [[0, "rest"], [0.6, "squeeze"], [2.6, "squeeze"], [3.6, "rest"], [4.0, "rest"]],
+  "gear": [{"kit": "medicine_ball_knees"}],
+  "mistakes": [
+    {
+      "line": 0,
+      "status": "draft",
+      "ring": ["hip_L", "hip_R"],
+      "poses": {
+        "squeeze": {"pelvis": [0, -0.02, 0.3], "pelvis_rot": [-112, 0, 0]}
+      }
+    },
+    {
+      "line": 1,
+      "shown": false,
+      "why": "Breathing cannot be shown by a pose."
+    }
+  ]
+}
