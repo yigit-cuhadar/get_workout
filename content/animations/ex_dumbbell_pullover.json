@@ -1,0 +1,42 @@
+{
+  "status": "draft",
+  "view": [60, 10],
+  "poses": {
+    "top": {
+      "pelvis": [0, 0.05, 0.57],
+      "pelvis_rot": [-82, 0, 0],
+      "lumbar": -6,
+      "chest": -10,
+      "neck": -8,
+      "foot": {"at": [0.3, -0.4], "floor": 0, "yaw": 25},
+      "hand": {"pos": [0.045, 0.43, 1.02], "fingers": [-0.25, 0.97, 0], "palm": [-0.3, 0, 0.95], "curl": 20},
+      "elbow": [1, 0, 0],
+      "clavicle": [0, -12]
+    },
+    "stretch": {
+      "extends": "top",
+      "hand": {"pos": [0.045, 0.99, 0.72]},
+      "elbow": [1, 0, 0.3]
+    }
+  },
+  "keys": [[0, "top"], [1.8, "stretch"], [2.0, "stretch"], [3.1, "top"], [3.6, "top"]],
+  "gear": [{"kit": "flat_bench", "at": [0, 0.48, 0]}, {"kit": "dumbbell_cupped"}],
+  "mistakes": [
+    {
+      "line": 0,
+      "status": "draft",
+      "ring": ["elbow_L", "elbow_R"],
+      "poses": {
+        "stretch": {"hand": {"pos": [0.045, 0.86, 0.86]}, "elbow": [1, -0.3, 1]}
+      }
+    },
+    {
+      "line": 1,
+      "status": "draft",
+      "ring": ["lumbar"],
+      "poses": {
+        "stretch": {"pelvis": [0, 0.07, 0.66], "pelvis_rot": [-104, 0, 0], "lumbar": 6, "chest": 6}
+      }
+    }
+  ]
+}
