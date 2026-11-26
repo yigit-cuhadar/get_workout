@@ -13,7 +13,7 @@
       "status": "draft",
       "ring": ["elbow_L", "elbow_R", "chest"],
       "poses": {
-        "bottom": {"pelvis": [0, 0.2, 0.55], "pelvis_rot": [42, 0, 0], "lumbar": 8, "chest": 10, "neck": -30, "hand": {"pos": [0.19, -0.17, 0.1], "rel": "chest", "fingers": [-0.068, -0.679, 0.731], "palm": [-0.998, 0.046, -0.05], "curl": 75}, "elbow": [0.2, -0.3, -1]}
+        "bottom": {"pelvis": [0, 0.19, 0.55], "pelvis_rot": [36, 0, 0], "lumbar": 6, "chest": 8, "neck": -26, "hand": {"pos": [0.19, -0.24, 0.12], "rel": "chest", "fingers": [-0.09, -0.622, 0.778], "palm": [-0.996, 0.056, -0.07], "curl": 75}, "elbow": [0.2, -0.3, -1]}
       }
     },
     {

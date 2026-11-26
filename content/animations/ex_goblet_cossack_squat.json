@@ -22,7 +22,7 @@
       "status": "draft",
       "ring": ["chest", "lumbar"],
       "poses": {
-        "left": {"pelvis_rot": [55, 0, 0], "lumbar": 10, "chest": 12, "neck": -28, "pelvis": [0.27, 0.2, 0.52]}
+        "left": {"pelvis_rot": [38, 0, 0], "lumbar": 6, "chest": 8, "neck": -22, "pelvis": [0.27, 0.16, 0.52], "elbow": [0.3, -0.7, -1], "hand": {"pos": [0.105, -0.31, 0.06]}}
       }
     }
   ]
