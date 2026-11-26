@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/services.dart';
 import 'package:forge_core/forge_core.dart';
 import 'package:forge_model_viewer/forge_model_viewer.dart';
@@ -53,12 +54,19 @@ class ExercisesModule implements FeatureModule {
         (json) => MotionRig.fromJson(jsonDecode(json) as Map<String, Object?>),
       );
 
+  /// The admin claim of the signed-in user's ID token.
+  static Future<bool> _isAdmin() async {
+    final token = await FirebaseAuth.instance.currentUser?.getIdTokenResult();
+    return token?.claims?['admin'] == true;
+  }
+
   @override
   void register(GetIt sl) {
     sl
       ..registerLazySingleton<ExerciseRepository>(
         () => FirestoreExerciseRepository(
           FirestoreExerciseSource(FirebaseFirestore.instance),
+          seesDrafts: _isAdmin,
         ),
       )
       ..registerLazySingleton<UserLibraryRepository>(

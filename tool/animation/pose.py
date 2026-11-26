@@ -11,9 +11,12 @@ degrees. A pose is a dict:
               fingers and the palm face, and how far the fingers close;
               hold moves the grip point (see GRIP)
   elbow       where the elbow points
-  foot        {pos, yaw, pitch}: the ankle, the toe-out and the toes-down angle;
-              a standing foot gives {at: (x, y), floor} in place of pos, and
-              its pitch lifts the heel with the ball of the foot staying put
+  foot        {pos, yaw, pitch, roll}: the ankle, the toe-out, the toes-down
+              angle and how far the sole turns inward; a standing foot gives
+              {at: (x, y), floor} in place of pos, and its pitch lifts the heel
+              with the ball of the foot staying put. A standing foot may turn
+              on the spot from one key to the next (a pivot); to stand
+              somewhere else it is lifted in a key between (a step)
   knee        where the knee points (default: over the toes)
 
 `hand`, `elbow`, `foot`, `knee` and `clavicle` describe the left side and are
@@ -153,7 +156,7 @@ def normalized(pose):
                     value = mirrored(value)
             out[f"{key}_{side}"] = value
         foot = out[f"foot_{side}"]
-        out[f"foot_{side}"] = {"yaw": np.float64(10), "pitch": np.float64(0), "floor": np.float64(0), "rel": None} | foot
+        out[f"foot_{side}"] = {"yaw": np.float64(10), "pitch": np.float64(0), "roll": np.float64(0), "floor": np.float64(0), "rel": None} | foot
         out[f"hand_{side}"] = {"curl": np.float64(0), "rel": None, "hold": np.array(GRIP)} | out[f"hand_{side}"]
     return out
 
@@ -269,7 +272,7 @@ class Rig:
                 p[f"{bone}_{side}"] = p[f"{parent}_{side}"] + R[f"{parent}_{side}"] @ (h[f"{bone}_{side}"] - h[f"{parent}_{side}"])
 
             foot = pose[f"foot_{side}"]
-            R[f"foot_{side}"] = rot_z(sign * (foot["yaw"] - 10)) @ rot_x(foot["pitch"])
+            R[f"foot_{side}"] = rot_z(sign * (foot["yaw"] - 10)) @ rot_x(foot["pitch"]) @ rot_y(sign * foot["roll"])
             if foot["rel"] is not None:
                 R[f"foot_{side}"] = R[foot["rel"]] @ R[f"foot_{side}"]
             knee_pole = pose[f"knee_{side}"]
@@ -350,6 +353,15 @@ def pose_at(keys, time):
     while k < b - 1 and time > keys[k + 1][0]:
         k += 1
     (t0, a), (t1, b) = keys[k], keys[k + 1]
+    for side, _ in SIDES:
+        # A foot that stands in one key and is lifted, or stands elsewhere, in
+        # the next travels as a lifted foot from where its ankle was.
+        foot = f"foot_{side}"
+        here, there = a[foot], b[foot]
+        if ("at" in here) != ("at" in there) or ("at" in here and not np.array_equal(here["at"], there["at"])):
+            if here["rel"] is not None or there["rel"] is not None:
+                raise ValueError(f"{foot} cannot step to or from a foot given in a bone")
+            a, b = ({**pose, foot: lifted(pose[foot])} for pose in (a, b))
     pose = lerp(a, b, (time - t0) / (t1 - t0))
     for side, _ in SIDES:
         # A hand that stays where it is (on the floor, on a fixed bar) keeps
@@ -360,14 +372,21 @@ def pose_at(keys, time):
     return pose
 
 
+def lifted(foot):
+    """A foot as a lifted one at the ankle its key was solved to."""
+    return {k: v for k, v in foot.items() if k != "at"} | {"pos": foot["ankle"]}
+
+
 def keyed(rig, clip):
     """[(time, normalized pose)] of a clip for `pose_at`: the same pose is one
-    object, and every pose knows how far each arm is stretched in it."""
+    object, and every pose knows how far each arm is stretched in it and
+    where each ankle is."""
     poses = {}
     for _, raw in clip:
         if id(raw) not in poses:
             poses[id(raw)] = pose = normalized(raw)
-            rig.solve(pose)
+            _, p = rig.solve(pose)
             for side, _ in SIDES:
                 pose[f"hand_{side}"]["reach"] = np.float64(rig.reach[side])
+                pose[f"foot_{side}"]["ankle"] = p[f"foot_{side}"]
     return [(t, poses[id(raw)]) for t, raw in clip]

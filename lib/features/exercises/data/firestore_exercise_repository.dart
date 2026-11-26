@@ -22,9 +22,13 @@ import 'firestore_exercise_source.dart';
 /// interrupted first fetch, eviction) has the right newest `updatedAt` but
 /// too few documents, and is then rebuilt with a full fetch.
 class FirestoreExerciseRepository implements ExerciseRepository {
-  FirestoreExerciseRepository(this._source);
+  FirestoreExerciseRepository(this._source, {required this.seesDrafts});
 
   final FirestoreExerciseSource _source;
+
+  /// Whether the signed-in user sees an animation still under review in
+  /// place of the approved one.
+  final Future<bool> Function() seesDrafts;
   final _changes = StreamController<List<Exercise>>.broadcast();
   List<Exercise>? _current;
   Future<Result<void>>? _syncing;
@@ -119,9 +123,16 @@ class FirestoreExerciseRepository implements ExerciseRepository {
     String exerciseId,
     Source source,
   ) async {
-    final animation = await _source.animation(exerciseId, source);
+    var draft = await seesDrafts();
+    var animation = draft
+        ? await _source.animation(exerciseId, source, draft: true)
+        : null;
+    if (animation == null) {
+      draft = false;
+      animation = await _source.animation(exerciseId, source);
+    }
     if (animation == null) return null;
-    final kits = await _source.animationKits(source);
+    final kits = await _source.animationKits(source, draft: draft);
     if (kits == null) throw const NotFoundFailure('animation kits');
     return ExerciseAnimation(
       recipe: _jsonObject(animation['recipe']),
