@@ -4,6 +4,7 @@ import 'package:forge_model_viewer/forge_model_viewer.dart';
 import 'package:get_workout/features/exercises/domain/vocabulary.dart';
 import 'package:get_workout/features/exercises/presentation/body_model_cubit.dart';
 import 'package:get_workout/features/generator/presentation/area_picker.dart';
+import 'package:get_workout/features/profile/domain/user_profile.dart';
 import 'package:widgetbook_annotation/widgetbook_annotation.dart' as widgetbook;
 
 final Future<Model3D> _body = rootBundle
@@ -38,7 +39,7 @@ Widget _framed(
     future: _body,
     builder: (context, snapshot) {
       final picker = build(switch (snapshot.data) {
-        final model? => BodyModelReady(model),
+        final model? => BodyModelReady(model, Sex.male),
         null => const BodyModelLoading(),
       });
       return view == AreaView.model
