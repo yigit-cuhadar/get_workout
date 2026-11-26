@@ -55,7 +55,7 @@ void main() {
     await settle();
     expect(loads, isEmpty);
     await cubit.load();
-    expect(cubit.state, BodyModelReady(male));
+    expect(cubit.state, BodyModelReady(male, Sex.male));
     await cubit.close();
   });
 
@@ -65,7 +65,7 @@ void main() {
     profiles.add(const UserProfile(sex: Sex.female));
     await settle();
     await cubit.load();
-    expect(cubit.state, BodyModelReady(female));
+    expect(cubit.state, BodyModelReady(female, Sex.female));
     expect(loads, [Sex.female]);
     await cubit.close();
   });
@@ -77,10 +77,10 @@ void main() {
     profiles.add(const UserProfile(sex: Sex.female));
     await settle();
     await settle();
-    expect(cubit.state, BodyModelReady(female));
+    expect(cubit.state, BodyModelReady(female, Sex.female));
     profiles.add(const UserProfile(sex: Sex.male));
     await settle();
-    expect(cubit.state, BodyModelReady(male));
+    expect(cubit.state, BodyModelReady(male, Sex.male));
     expect(loads, [Sex.male, Sex.female]);
     await cubit.close();
   });
@@ -99,7 +99,7 @@ void main() {
     await cubit.load();
     expect(cubit.state, const BodyModelFailed());
     await cubit.load();
-    expect(cubit.state, BodyModelReady(male));
+    expect(cubit.state, BodyModelReady(male, Sex.male));
     await cubit.close();
   });
 }

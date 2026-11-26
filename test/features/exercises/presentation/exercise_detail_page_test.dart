@@ -21,6 +21,8 @@ import '../fixtures.dart';
 
 import 'package:get_workout/features/analytics/domain/analytics.dart';
 
+import '../../../fake_body_model.dart';
+
 class _CatalogueCubit extends MockCubit<ExerciseCatalogueState>
     implements ExerciseCatalogueCubit {}
 
@@ -77,6 +79,7 @@ void main() {
         (_, _) => detail,
       )
       ..registerSingleton<ExerciseNotesCubit>(notes);
+    registerNoMotion();
   });
 
   tearDown(sl.reset);

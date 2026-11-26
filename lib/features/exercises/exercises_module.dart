@@ -1,7 +1,10 @@
+import 'dart:convert';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/services.dart';
 import 'package:forge_core/forge_core.dart';
 import 'package:forge_model_viewer/forge_model_viewer.dart';
+import 'package:forge_motion/forge_motion.dart';
 import 'package:get_it/get_it.dart';
 
 import '../analytics/domain/analytics.dart';
@@ -21,6 +24,7 @@ import 'presentation/custom_write_rejections_cubit.dart';
 import 'presentation/equipment_cubit.dart';
 import 'presentation/exercise_catalogue_cubit.dart';
 import 'presentation/exercise_detail_cubit.dart';
+import 'presentation/exercise_motion_cubit.dart';
 import 'presentation/exercise_notes_cubit.dart';
 import 'presentation/favorites_cubit.dart';
 import 'presentation/library_cubit.dart';
@@ -34,6 +38,20 @@ class ExercisesModule implements FeatureModule {
     Sex.male => 'assets/models/body_male.glb',
     Sex.female => 'assets/models/body_female.glb',
   };
+
+  static String _rigAsset(Sex sex) => switch (sex) {
+    Sex.male => 'assets/models/body_male.rig.json',
+    Sex.female => 'assets/models/body_female.rig.json',
+  };
+
+  /// Each body's joints, read once per app run.
+  static final _rigs = <Sex, Future<MotionRig>>{};
+
+  static Future<MotionRig> _loadRig(Sex sex) => _rigs[sex] ??= rootBundle
+      .loadString(_rigAsset(sex))
+      .then(
+        (json) => MotionRig.fromJson(jsonDecode(json) as Map<String, Object?>),
+      );
 
   @override
   void register(GetIt sl) {
@@ -119,6 +137,14 @@ class ExercisesModule implements FeatureModule {
           equipment: sl(),
           getCurrentUser: sl(),
           deleteCustomExercise: sl(),
+        ),
+      )
+      ..registerFactoryParam<ExerciseMotionCubit, String, void>(
+        (exerciseId, _) => ExerciseMotionCubit(
+          exerciseId,
+          getAnimation: sl(),
+          body: sl(),
+          loadRig: _loadRig,
         ),
       )
       ..registerFactoryParam<CustomExerciseFormCubit, CustomExercise?, void>(

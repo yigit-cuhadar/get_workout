@@ -90,6 +90,11 @@ dependencies:
       url: https://github.com/yigit-cuhadar/MobileAppForge.git
       ref: f7b7dafb50376a404f4a69b09f9add3da6c74bbd
       path: packages/forge_app_gate
+  forge_motion:
+    git:
+      url: https://github.com/yigit-cuhadar/MobileAppForge.git
+      ref: f7b7dafb50376a404f4a69b09f9add3da6c74bbd
+      path: packages/forge_motion
   forge_review:
     git:
       url: https://github.com/yigit-cuhadar/MobileAppForge.git
@@ -162,7 +167,6 @@ flutter:
   # the material Icons class.
   uses-material-design: true
   assets:
-    - assets/animations/
     - assets/images/
     - assets/models/
     - assets/sounds/

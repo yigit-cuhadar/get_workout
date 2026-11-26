@@ -299,34 +299,44 @@ class _SkeletonFigure extends StatelessWidget {
 /// of the same family and the rest of the body very light, each figure filling its half,
 /// with a legend naming them. The legend shows also while the model loads
 /// (a shimmering figure per side) and when it could not load (the error
-/// and Retry in place of the figures).
+/// and Retry in place of the figures). A [header] can take the title's
+/// place (tabs) and a [stage] the figures' place.
 class MuscleModelPair extends StatelessWidget {
   const MuscleModelPair({
     super.key,
     required Model3D this.model,
-    required this.title,
+    this.title,
+    this.header,
+    this.stage,
     required this.main,
     this.secondary = const [],
-  }) : onRetry = null;
+  }) : assert((title == null) != (header == null), 'A title or a header.'),
+       onRetry = null;
 
   const MuscleModelPair.loading({
     super.key,
-    required this.title,
+    required String this.title,
     required this.main,
     this.secondary = const [],
   }) : model = null,
+       header = null,
+       stage = null,
        onRetry = null;
 
   const MuscleModelPair.failed({
     super.key,
-    required this.title,
+    required String this.title,
     required this.main,
     this.secondary = const [],
     required VoidCallback this.onRetry,
-  }) : model = null;
+  }) : model = null,
+       header = null,
+       stage = null;
 
   final Model3D? model;
-  final String title;
+  final String? title;
+  final Widget? header;
+  final Widget? stage;
   final List<Muscle> main;
   final List<Muscle> secondary;
   final VoidCallback? onRetry;
@@ -407,7 +417,7 @@ class MuscleModelPair extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         spacing: 12,
         children: [
-          Text(title, style: text.titleMedium),
+          header ?? Text(title!, style: text.titleMedium),
           if (onRetry case final onRetry?)
             ErrorView(
               title: l10n.muscleModelFailedTitle,
@@ -416,6 +426,8 @@ class MuscleModelPair extends StatelessWidget {
               onRetry: onRetry,
               compact: true,
             )
+          else if (stage case final stage?)
+            stage
           else
             Semantics(
               image: true,

@@ -3447,6 +3447,29 @@ the feature you are about to touch, and keep it true when you change it.
   front and back muscle pair; chips under the animation switch between the
   correct form and each mistake; in the workout a play button on the open
   exercise card opens the animation in a bottom sheet.
+- **In the app, as built**: `ExerciseMotionCubit` (one per exercise) reads
+  the animation, waits for the body model of the profile's sex and that
+  body's rig (`assets/models/body_<sex>.rig.json`, read once per run), and
+  is loading, none, failed or ready. Ready holds the clips (the correct
+  form, then each mistake whose recipe entry is not `shown: false`, sorted
+  by its catalogue line) and plays the selected one; a clip is solved once,
+  when first picked, and a change of body solves it again. The viewer
+  plays it in a loop on the body joined with the clip's gear, floor and
+  shadow, framed by the motion's bounds padded by 8% of the body's height
+  (they hold joints, not skin), from the recipe's `view`, and turns and
+  zooms. Exercise detail: with an animation, the first card's title gives
+  way to Hareket | Kaslar (Hareket first; the tab is not remembered);
+  Hareket shows the animation, the picked mistake's catalogue text and a
+  chip per clip; Kaslar the front and back pair; the legend stays under
+  both. With none, while loading, on failure and for custom exercises the
+  card is as before. Chips read "Hata 1", "Hata 2", … in catalogue order,
+  because the catalogue has no short names for mistakes. Workout: only in
+  the workout in progress, each exercise row of an open card that has an
+  animation gets a play button before ⋯; its sheet plays the correct form
+  over the running workout with the cues, and "Tüm ayrıntılar" closes it
+  and opens the exercise's detail route. The workout reaches it through
+  the exercises feature's `ExerciseMotionButton`, given the exercise id and
+  the detail route.
 - **Open**: playback controls (to be drawn and picked); speed on a real phone; a
   comparison with Tripo's rig if Blender's weights prove too weak.
 
