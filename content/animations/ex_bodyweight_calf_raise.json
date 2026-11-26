@@ -100,8 +100,19 @@
     },
     {
       "line": 1,
-      "shown": false,
-      "why": "Rolling onto the outer edge needs the foot to tilt sideways, which the recipe's foot (yaw and pitch only) cannot do."
+      "status": "draft",
+      "ring": [
+        "foot_L",
+        "foot_R"
+      ],
+      "poses": {
+        "top": {
+          "foot": {
+            "roll": -22,
+            "floor": 0.035
+          }
+        }
+      }
     }
   ]
 }
