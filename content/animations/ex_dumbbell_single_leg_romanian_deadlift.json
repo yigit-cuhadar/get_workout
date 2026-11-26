@@ -1,0 +1,29 @@
+{
+  "status": "draft",
+  "view": [55, 8],
+  "poses": {
+    "top": {"pelvis": [0, 0.02, 0.98], "pelvis_rot": [0, 0, 0], "lumbar": 0, "chest": 0, "neck": 0, "foot": {"at": [0.1, 0.03], "floor": 0, "yaw": 8}, "clavicle": [0, 0], "knee_L": [0.1, -1, 0], "foot_R": {"pos": [-0.12, 0.06, 0.14], "yaw": 8, "pitch": 10}, "knee_R": [-0.1, -1, 0], "hand": {"pos": [0.29, -0.06, -0.445], "rel": "chest", "curl": 40, "fingers": [0.15, -0.291, -0.945], "palm": [-0.989, -0.044, -0.144]}, "elbow": [0.2, 0.5, -0.2], "hand_R": {"pos": [-0.27, -0.05, 0.84], "fingers": [-0.114, -0.417, -0.902], "palm": [0.993, -0.048, -0.104], "curl": 75}, "elbow_R": [-0.2, 1, 0]},
+    "mid": {"extends": "top", "pelvis": [0, 0.09, 0.95], "pelvis_rot": [40, 0, 0], "neck": -16, "foot_R": {"pos": [-0.13, 0.45, 0.4], "yaw": 8, "pitch": 45}, "knee_R": [0, 0, -1], "hand_R": {"pos": [-0.253, -0.175, 0.711], "fingers": [-0.106, -0.207, -0.972], "palm": [0.994, -0.022, -0.104], "curl": 75}},
+    "bottom": {"extends": "top", "pelvis": [0, 0.16, 0.9], "pelvis_rot": [78, 0, 0], "neck": -30, "foot_R": {"pos": [-0.13, 0.86, 0.78], "yaw": 8, "pitch": 80}, "knee_R": [0, 0, -1], "hand_R": {"pos": [-0.253, -0.27, 0.435], "fingers": [-0.107, -0.206, -0.973], "palm": [0.994, -0.022, -0.105], "curl": 75}}
+  },
+  "keys": [[0, "top"], [0.8, "mid"], [1.6, "bottom"], [1.9, "bottom"], [2.5, "mid"], [3.0, "top"], [3.4, "top"]],
+  "gear": [{"kit": "dumbbell", "side": "R"}],
+  "mistakes": [
+    {
+      "line": 0,
+      "status": "draft",
+      "ring": ["hip_L", "hip_R", "pelvis"],
+      "poses": {
+        "bottom": {"pelvis_rot": [62.4, -66.0, 63.3], "hand_R": {"pos": [-0.219, -0.252, 0.516], "fingers": [-0.108, -0.205, -0.973], "palm": [0.994, -0.022, -0.106], "curl": 75}, "foot_R": {"pos": [-0.32, 0.8, 0.86], "yaw": 8, "pitch": 80}}
+      }
+    },
+    {
+      "line": 1,
+      "status": "draft",
+      "ring": ["lumbar", "chest"],
+      "poses": {
+        "bottom": {"pelvis_rot": [62, 0, 0], "lumbar": 16, "chest": 20, "neck": -16, "foot_R": {"pos": [-0.13, 0.78, 0.58], "yaw": 8, "pitch": 70}, "hand_R": {"pos": [-0.253, -0.271, 0.418], "fingers": [-0.107, -0.206, -0.973], "palm": [0.994, -0.022, -0.104], "curl": 75}}
+      }
+    }
+  ]
+}

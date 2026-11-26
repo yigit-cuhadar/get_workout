@@ -1,0 +1,28 @@
+{
+  "status": "draft",
+  "view": [40, 8],
+  "poses": {
+    "top": {"pelvis": [0, 0, 0.98], "pelvis_rot": [0, 0, 0], "lumbar": 0, "chest": 0, "neck": 0, "foot": {"at": [0.19, 0.03], "floor": 0, "yaw": 18}, "clavicle": [-2, 6], "knee": [0.3, -1, 0], "hand": {"pos": [0.05, -0.09, 0.836], "fingers": [-0.292, -0.444, -0.847], "palm": [-0.145, 0.896, -0.42], "curl": 75}, "elbow": [0.3, 1, 0]},
+    "bottom": {"extends": "top", "pelvis": [0, 0.22, 0.62], "pelvis_rot": [55, 0, 0], "neck": -26, "clavicle": [-4, 8], "hand": {"pos": [0.05, -0.112, 0.3], "fingers": [-0.31, -0.31, -0.899], "palm": [-0.101, 0.951, -0.293], "curl": 75}}
+  },
+  "keys": [[0, "bottom"], [1.0, "top"], [1.3, "top"], [2.8, "bottom"], [3.2, "bottom"]],
+  "gear": [{"kit": "kettlebell", "other": "R", "a": [0, 0, 0.02], "b": [0, 0, -0.02], "bell": [0.175, 0, -0.01]}],
+  "mistakes": [
+    {
+      "line": 0,
+      "status": "draft",
+      "ring": ["lumbar", "chest"],
+      "poses": {
+        "bottom": {"pelvis": [0, 0.16, 0.7], "pelvis_rot": [42, 0, 0], "lumbar": 18, "chest": 22, "neck": -14, "hand": {"pos": [0.05, -0.188, 0.33], "fingers": [-0.304, -0.285, -0.909], "palm": [-0.09, 0.958, -0.271], "curl": 75}}
+      }
+    },
+    {
+      "line": 1,
+      "status": "draft",
+      "ring": ["hip_L", "hip_R", "knee_L", "knee_R"],
+      "poses": {
+        "bottom": {"pelvis": [0, 0.08, 0.45], "pelvis_rot": [18, 0, 0], "neck": -10, "knee": [0.6, -1, 0], "hand": {"pos": [0.05, -0.034, 0.3], "fingers": [-0.334, -0.402, -0.853], "palm": [-0.147, 0.916, -0.375], "curl": 75}}
+      }
+    }
+  ]
+}
