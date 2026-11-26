@@ -3378,7 +3378,7 @@ the feature you are about to touch, and keep it true when you change it.
   against `getworkout-dev` 2026-11-26. Recipes, kits and their rules are on
   dev and prod (prod 2026-11-26, owner's go-ahead); the phone solves them
   with `forge_motion` (Forge v0.60.0, with the skinned
-  `forge_model_viewer`). First TestFlight build with animations: 1.0.0 (9).
+  `forge_model_viewer`). First TestFlight build with animations: 1.0.0 (9); 1.0.0 (10) carries the seated hands, batch 2 and the exercise page picks.
   The exercise page picks (ES1-ES6) are built and checked on the
   simulator 2026-11-26. Not done: speed and feel on a real phone; studio
   cards and Widgetbook use cases for the tabbed card, the motion view and
@@ -3392,8 +3392,8 @@ the feature you are about to touch, and keep it true when you change it.
   the owner 2026-11-26 after the hands were seated on the bar (pages
   https://claude.ai/artifact/C7QFi5EHF8sbxbPDSQYM7G,
   https://claude.ai/artifact/RU1WYy6cc9afm64StPkVhP, hand close-ups
-  https://claude.ai/artifact/VARtitovjbnb1ts3ZbehuG). Prod still holds
-  batch 1 with the old hands until the owner says to import. Review page of the spike:
+  https://claude.ai/artifact/VARtitovjbnb1ts3ZbehuG). Prod holds both batches since 2026-11-26
+  (owner's go-ahead). Review page of the spike:
   https://claude.ai/artifact/2FhtzLavcFCNdBh1rZeFHN
 - **Tools** (`tool/animation/` on that branch; they need Blender 5.2 at
   `/Applications` and python3 with numpy and Pillow): `rig.py` fits the
