@@ -3501,20 +3501,32 @@ the feature you are about to touch, and keep it true when you change it.
   shadow, framed by the motion's bounds padded by 8% of the body's height
   (they hold joints, not skin), from the recipe's `view` at zoom 1.35, and turns and
   zooms; the floor (surface-sunken) and the shadow on it are the viewer's
-  ground parts, drawn under everything and unlit. Exercise detail: with an animation, the first card's title gives
+  ground parts, drawn under everything and unlit. `ExerciseMotionView`
+  (the detail card and the workout sheet both use it) puts two buttons in
+  the stage's corner, pause/play and half speed (a toggle), and a line
+  under the stage on how to turn and zoom. Pause holds the current frame;
+  half speed wraps the clip so a loop takes twice as long, and switching it
+  restarts the loop. Both are view state, kept while another clip is
+  picked and forgotten when the view closes. Exercise detail: with an
+  animation, the first card's title gives
   way to Hareket | Kaslar (Hareket first; the tab is not remembered);
-  Hareket shows the animation, the picked mistake's catalogue text and a
-  chip per clip; Kaslar the front and back pair; the legend stays under
+  Hareket shows the animation, a chip per clip, and under the chips a
+  place two lines tall (at least; larger text grows it) holding "Hata:"
+  and the picked mistake's catalogue text, or "Doğru yapılış" for the
+  correct form, so picking a chip does not change the card's height;
+  Kaslar the front and back pair; the legend stays under
   both. With none, while loading, on failure and for custom exercises the
-  card is as before. Chips read "Hata 1", "Hata 2", … in catalogue order,
-  because the catalogue has no short names for mistakes. Workout: only in
+  card is as before. Chips read "Doğru", "Hata 1", "Hata 2", … in catalogue
+  order, because the catalogue has no short names for mistakes; "Doğru"
+  carries the success tone and each mistake the danger tone
+  (`ForgeChipTone`). Workout: only in
   the workout in progress, each exercise row of an open card that has an
-  animation gets a play button before ⋯; its sheet plays the correct form
-  over the running workout with the cues, and "Tüm ayrıntılar" closes it
-  and opens the exercise's detail route. The workout reaches it through
+  animation gets a play button before ⋯; its sheet plays the correct
+  form over the running workout with the cues, and "Tüm ayrıntılar" closes
+  it and opens the exercise's detail route. The workout reaches it through
   the exercises feature's `ExerciseMotionButton`, given the exercise id and
   the detail route.
-- **Open**: playback controls (to be drawn and picked); speed on a real phone; a
+- **Open**: speed on a real phone; a
   comparison with Tripo's rig if Blender's weights prove too weak.
 
 ### Programs
