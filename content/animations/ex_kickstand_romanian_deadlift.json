@@ -3,7 +3,7 @@
   "view": [55, 8],
   "poses": {
     "top": {"pelvis": [0, 0.06, 0.975], "pelvis_rot": [0, 0, 0], "lumbar": 0, "chest": 0, "neck": 0, "foot": {"at": [0.12, 0.0], "floor": 0, "yaw": 8}, "clavicle": [0, 0], "knee_L": [0.1, -1, 0], "foot_R": {"at": [-0.12, 0.28], "floor": 0.022, "yaw": 8, "pitch": 55}, "knee_R": [-0.1, -1, 0], "hand": {"pos": [0.29, 0.028, 0.816], "fingers": [0.159, -0.252, -0.955], "palm": [-0.987, -0.041, -0.154], "curl": 75}, "elbow": [0.3, 1, 0]},
-    "bottom": {"extends": "top", "pelvis": [0, 0.24, 0.87], "pelvis_rot": [68, 0, 0], "neck": -28, "clavicle": [-4, 8], "hand": {"pos": [0.29, -0.169, 0.454], "fingers": [0.161, -0.211, -0.964], "palm": [-0.987, -0.035, -0.158], "curl": 75}}
+    "bottom": {"extends": "top", "pelvis": [0, 0.24, 0.87], "pelvis_rot": [68, 0, 0], "neck": -28, "clavicle": [-4, 8], "hand": {"pos": [0.291, -0.169, 0.45], "fingers": [0.172, -0.179, -0.969], "palm": [-0.985, -0.031, -0.169], "curl": 75}}
   },
   "keys": [[0, "top"], [1.6, "bottom"], [1.8, "bottom"], [2.8, "top"], [3.2, "top"]],
   "gear": [{"kit": "dumbbell", "side": "L"}, {"kit": "dumbbell", "side": "R"}],
@@ -14,7 +14,7 @@
       "ring": ["foot_R", "knee_R"],
       "poses": {
         "top": {"pelvis": [0, 0.12, 0.96], "foot_R": {"at": [-0.12, 0.28], "floor": 0.005, "yaw": 8, "pitch": 35}},
-        "bottom": {"pelvis": [0, 0.3, 0.84], "foot_R": {"at": [-0.12, 0.28], "floor": 0.0, "yaw": 8, "pitch": 30}, "hand": {"pos": [0.29, -0.109, 0.424], "fingers": [0.161, -0.211, -0.964], "palm": [-0.987, -0.035, -0.158], "curl": 75}}
+        "bottom": {"pelvis": [0, 0.3, 0.84], "foot_R": {"at": [-0.12, 0.28], "floor": 0.0, "yaw": 8, "pitch": 30}, "hand": {"pos": [0.291, -0.109, 0.42], "fingers": [0.172, -0.179, -0.969], "palm": [-0.985, -0.031, -0.169], "curl": 75}}
       }
     },
     {
@@ -22,7 +22,7 @@
       "status": "draft",
       "ring": ["lumbar", "chest"],
       "poses": {
-        "bottom": {"pelvis_rot": [52, 0, 0], "lumbar": 16, "chest": 20, "neck": -14, "hand": {"pos": [0.29, -0.165, 0.44], "fingers": [0.16, -0.214, -0.964], "palm": [-0.987, -0.035, -0.157], "curl": 75}}
+        "bottom": {"pelvis_rot": [52, 0, 0], "lumbar": 16, "chest": 20, "neck": -14, "hand": {"pos": [0.291, -0.165, 0.435], "fingers": [0.174, -0.175, -0.969], "palm": [-0.985, -0.031, -0.171], "curl": 75}}
       }
     }
   ]
