@@ -3379,10 +3379,13 @@ the feature you are about to touch, and keep it true when you change it.
   dev and prod (prod 2026-11-26, owner's go-ahead); the phone solves them
   with `forge_motion` (Forge v0.60.0, with the skinned
   `forge_model_viewer`). First TestFlight build with animations: 1.0.0 (9).
-  Not done: nothing on a
-  real phone; studio cards and Widgetbook use cases for the tabbed card,
-  the motion view and the play button; the chips are plain `ForgeChip`s
-  and the play button a bare icon button, not yet the canvas's looks.
+  The exercise page picks (ES1-ES6) are built and checked on the
+  simulator 2026-11-26. Not done: speed and feel on a real phone; studio
+  cards and Widgetbook use cases for the tabbed card, the motion view and
+  the play button; three details the canvas left open (the look of the
+  half-speed button while on, whether pause and speed survive a chip
+  change, the loop restarting when the speed changes) are built with
+  defaults and still to be drawn and asked.
   Recipes approved: 11 of
   419 live exercises (which carry 852 mistakes): batch 1, the barbell squat
   family, and batch 2, the bench press and curl families, both approved by
