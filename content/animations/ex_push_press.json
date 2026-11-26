@@ -30,7 +30,7 @@
     "top": {
       "extends": "rack",
       "neck": 4,
-      "hand": {"pos": [0.25, 0.0, 2.07], "fingers": [0.0, -0.0, 1.0], "palm": [0.0, -1.0, -0.0]},
+      "hand": {"pos": [0.25, 0.0, 2.062], "fingers": [0.0, -0.0, 1.0], "palm": [0.0, -1.0, -0.0]},
       "elbow": [1, 0, 0],
       "clavicle": [20, 0]
     },
@@ -59,7 +59,7 @@
       "ring": ["elbow_L", "elbow_R"],
       "poses": {
         "early": {"extends": "dip", "neck": -22, "hand": {"pos": [0.25, -0.135, 1.6], "fingers": [0.0, 0.208, 0.978], "palm": [0.0, -0.978, 0.208]}, "elbow": [0.6, -0.6, -0.6], "clavicle": [8, 0]},
-        "late": {"extends": "top", "pelvis": [0, 0.02, 0.94], "hand": {"pos": [0.25, 0.0, 2.029]}}
+        "late": {"extends": "top", "pelvis": [0, 0.02, 0.94], "hand": {"pos": [0.25, 0.0, 2.022]}}
       },
       "keys": [[0, "rack"], [0.5, "dip"], [0.85, "early"], [1.15, "late"], [1.4, "top"], [1.8, "top"], [2.4, "face"], [3.0, "rack"], [3.4, "rack"]]
     }
