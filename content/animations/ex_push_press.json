@@ -1,0 +1,67 @@
+{
+  "status": "draft",
+  "view": [35, 8],
+  "poses": {
+    "rack": {
+      "pelvis": [0, 0, 0.98],
+      "pelvis_rot": [0, 0, 0],
+      "lumbar": 0,
+      "chest": 0,
+      "neck": -6,
+      "foot": {"at": [0.13, 0.037], "floor": 0, "yaw": 10},
+      "hand": {"pos": [0.25, -0.135, 1.4], "fingers": [0, 0.45, 0.89], "palm": [0, -0.89, 0.45], "curl": 75},
+      "elbow": [0.3, -1, -0.6],
+      "clavicle": [0, 0]
+    },
+    "dip": {
+      "extends": "rack",
+      "pelvis": [0, 0.03, 0.9],
+      "hand": {"pos": [0.25, -0.12, 1.359]}
+    },
+    "drive": {
+      "extends": "rack",
+      "neck": -22,
+      "foot": {"pitch": 18},
+      "pelvis": [0, 0, 1.022],
+      "hand": {"pos": [0.25, -0.135, 1.62], "fingers": [0, 0.35, 0.94], "palm": [0, -0.94, 0.35]},
+      "elbow": [0.6, -0.6, -0.6],
+      "clavicle": [8, 0]
+    },
+    "top": {
+      "extends": "rack",
+      "neck": 4,
+      "hand": {"pos": [0.25, 0.0, 2.07], "fingers": [0, 0.3, 0.95], "palm": [0, -0.95, 0.3]},
+      "elbow": [1, 0, 0],
+      "clavicle": [20, 0]
+    },
+    "face": {
+      "extends": "rack",
+      "neck": -20,
+      "hand": {"pos": [0.25, -0.12, 1.68]},
+      "elbow": [0.6, -0.6, -0.6],
+      "clavicle": [8, 0]
+    }
+  },
+  "keys": [[0, "rack"], [0.5, "dip"], [0.75, "drive"], [1.05, "top"], [1.5, "top"], [2.1, "face"], [2.7, "rack"], [3.1, "rack"]],
+  "gear": [{"kit": "barbell"}],
+  "mistakes": [
+    {
+      "line": 0,
+      "status": "draft",
+      "ring": ["knee_L", "knee_R", "hip_L", "hip_R"],
+      "poses": {
+        "dip": {"pelvis": [0, 0.1, 0.8], "pelvis_rot": [22, 0, 0], "neck": -20, "hand": {"pos": [0.25, -0.22, 1.18]}}
+      }
+    },
+    {
+      "line": 1,
+      "status": "draft",
+      "ring": ["elbow_L", "elbow_R"],
+      "poses": {
+        "early": {"extends": "dip", "neck": -22, "hand": {"pos": [0.25, -0.135, 1.6], "fingers": [0, 0.35, 0.94], "palm": [0, -0.94, 0.35]}, "elbow": [0.6, -0.6, -0.6], "clavicle": [8, 0]},
+        "late": {"extends": "top", "pelvis": [0, 0.02, 0.94], "hand": {"pos": [0.25, 0.0, 2.029]}}
+      },
+      "keys": [[0, "rack"], [0.5, "dip"], [0.85, "early"], [1.15, "late"], [1.4, "top"], [1.8, "top"], [2.4, "face"], [3.0, "rack"], [3.4, "rack"]]
+    }
+  ]
+}
