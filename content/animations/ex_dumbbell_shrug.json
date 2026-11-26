@@ -1,0 +1,30 @@
+{
+  "status": "draft",
+  "view": [35, 8],
+  "poses": {
+    "bottom": {"pelvis": [0, 0, 0.98], "pelvis_rot": [0, 0, 0], "lumbar": 0, "chest": 0, "neck": 0, "foot": {"at": [0.13, 0.037], "floor": 0, "yaw": 10}, "clavicle": [0, 0], "hand": {"pos": [0.29, -0.04, 0.825], "fingers": [0.176, -0.299, -0.938], "palm": [-0.984, -0.053, -0.167], "curl": 75}, "elbow": [0.2, 1, -0.3]},
+    "top": {"extends": "bottom", "clavicle": [16, 0], "hand": {"pos": [0.29, -0.04, 0.905], "fingers": [0.143, -0.459, -0.877], "palm": [-0.99, -0.066, -0.127], "curl": 75}}
+  },
+  "keys": [[0, "bottom"], [0.6, "top"], [1.6, "top"], [2.6, "bottom"], [3.0, "bottom"]],
+  "gear": [{"kit": "dumbbell", "side": "L"}, {"kit": "dumbbell", "side": "R"}],
+  "mistakes": [
+    {
+      "line": 0,
+      "status": "draft",
+      "ring": ["clavicle_L", "clavicle_R"],
+      "poses": {
+        "fwd": {"extends": "bottom", "clavicle": [8, 12], "hand": {"pos": [0.29, -0.1, 0.86], "fingers": [0.164, -0.386, -0.908], "palm": [-0.987, -0.064, -0.151], "curl": 75}},
+        "back": {"extends": "bottom", "clavicle": [8, -10], "hand": {"pos": [0.29, 0.03, 0.865], "fingers": [0.161, -0.345, -0.924], "palm": [-0.987, -0.057, -0.151], "curl": 75}}
+      },
+      "keys": [[0, "bottom"], [0.4, "fwd"], [0.8, "top"], [1.2, "back"], [1.7, "bottom"], [2.1, "fwd"], [2.5, "top"], [2.9, "back"], [3.4, "bottom"], [3.7, "bottom"]]
+    },
+    {
+      "line": 1,
+      "status": "draft",
+      "ring": ["elbow_L", "elbow_R"],
+      "poses": {
+        "top": {"hand": {"pos": [0.29, -0.06, 1.0], "fingers": [0.111, -0.717, -0.688], "palm": [-0.994, -0.08, -0.077], "curl": 75}}
+      }
+    }
+  ]
+}
