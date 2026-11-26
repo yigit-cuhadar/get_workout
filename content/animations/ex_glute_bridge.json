@@ -1,0 +1,171 @@
+{
+  "status": "draft",
+  "view": [
+    60,
+    15
+  ],
+  "poses": {
+    "bottom": {
+      "pelvis": [
+        0,
+        0,
+        0.12
+      ],
+      "pelvis_rot": [
+        -88,
+        0,
+        0
+      ],
+      "lumbar": 10,
+      "chest": -8,
+      "neck": -20,
+      "foot": {
+        "at": [
+          0.12,
+          -0.47
+        ],
+        "floor": 0,
+        "yaw": 10
+      },
+      "knee": [
+        0.1,
+        -0.3,
+        1
+      ],
+      "hand": {
+        "pos": [
+          0.27,
+          -0.05,
+          0.034
+        ],
+        "fingers": [
+          0,
+          -1,
+          0
+        ],
+        "palm": [
+          0,
+          0,
+          -1
+        ],
+        "curl": 0,
+        "hold": [
+          0.05,
+          0
+        ]
+      },
+      "elbow": [
+        1,
+        0,
+        0.2
+      ],
+      "clavicle": [
+        0,
+        0
+      ]
+    },
+    "top": {
+      "extends": "bottom",
+      "pelvis": [
+        0,
+        0.064,
+        0.347
+      ],
+      "pelvis_rot": [
+        -112.0,
+        0,
+        0
+      ],
+      "lumbar": 0,
+      "chest": -4,
+      "neck": 12
+    }
+  },
+  "keys": [
+    [
+      0,
+      "bottom"
+    ],
+    [
+      1.0,
+      "top"
+    ],
+    [
+      1.6,
+      "top"
+    ],
+    [
+      3.0,
+      "bottom"
+    ],
+    [
+      3.4,
+      "bottom"
+    ]
+  ],
+  "gear": [],
+  "mistakes": [
+    {
+      "line": 0,
+      "status": "draft",
+      "ring": [
+        "foot_L",
+        "foot_R"
+      ],
+      "poses": {
+        "bottom": {
+          "foot": {
+            "pitch": 35,
+            "floor": 0.017
+          }
+        }
+      }
+    },
+    {
+      "line": 1,
+      "status": "draft",
+      "ring": [
+        "lumbar"
+      ],
+      "poses": {
+        "arch": {
+          "extends": "top",
+          "lumbar": -22,
+          "chest": -10,
+          "pelvis_rot": [
+            -100.0,
+            0,
+            0
+          ],
+          "pelvis": [
+            0,
+            0.106,
+            0.379
+          ]
+        }
+      },
+      "keys": [
+        [
+          0,
+          "bottom"
+        ],
+        [
+          1.0,
+          "arch"
+        ],
+        [
+          1.6,
+          "arch"
+        ],
+        [
+          3.0,
+          "bottom"
+        ],
+        [
+          3.4,
+          "bottom"
+        ]
+      ]
+    }
+  ]
+}
