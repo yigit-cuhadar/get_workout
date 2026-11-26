@@ -1,25 +1,120 @@
 {
   "status": "draft",
-  "view": [145, 8],
+  "view": [
+    145,
+    8
+  ],
   "poses": {
     "top": {
-      "pelvis": [0, 0, 0.567],
-      "pelvis_rot": [0, 0, 0],
+      "pelvis": [
+        0,
+        0,
+        0.567
+      ],
+      "pelvis_rot": [
+        0,
+        0,
+        0
+      ],
       "chest": 0,
-      "foot": {"at": [0.17, -0.42], "floor": 0, "yaw": 10},
-      "hand": {"pos": [0.42, -0.05, 1.63], "fingers": [0, 0, 1], "palm": [0, -1, 0], "curl": 75},
-      "elbow": [1, 0.25, -0.8],
-      "clavicle": [28, 0]
+      "foot": {
+        "at": [
+          0.17,
+          -0.42
+        ],
+        "floor": 0,
+        "yaw": 10
+      },
+      "hand": {
+        "pos": [
+          0.42,
+          -0.05,
+          1.63
+        ],
+        "fingers": [
+          0,
+          0,
+          1
+        ],
+        "palm": [
+          0,
+          -1,
+          0
+        ],
+        "curl": 75
+      },
+      "elbow": [
+        1,
+        0.25,
+        -0.8
+      ],
+      "clavicle": [
+        28,
+        0
+      ]
     },
     "bottom": {
       "extends": "top",
-      "pelvis_rot": [-14, 0, 0],
+      "pelvis_rot": [
+        -14,
+        0,
+        0
+      ],
       "chest": -6,
-      "hand": {"pos": [0.42, -0.04, 1.07]},
-      "clavicle": [-5, -12]
+      "hand": {
+        "pos": [
+          0.36,
+          -0.03,
+          1.192
+        ],
+        "fingers": [
+          -0.0,
+          0.11,
+          0.994
+        ],
+        "palm": [
+          0.003,
+          -0.994,
+          0.11
+        ]
+      },
+      "clavicle": [
+        -5,
+        -12
+      ],
+      "elbow": [
+        0.166,
+        -0.21,
+        -0.078
+      ]
     }
   },
-  "keys": [[0, "top"], [1.2, "bottom"], [1.5, "bottom"], [2.9, "top"], [3.3, "top"]],
-  "gear": [{"kit": "lat_pulldown_machine"}],
+  "keys": [
+    [
+      0,
+      "top"
+    ],
+    [
+      1.2,
+      "bottom"
+    ],
+    [
+      1.5,
+      "bottom"
+    ],
+    [
+      2.9,
+      "top"
+    ],
+    [
+      3.3,
+      "top"
+    ]
+  ],
+  "gear": [
+    {
+      "kit": "lat_pulldown_machine"
+    }
+  ],
   "mistakes": []
 }
