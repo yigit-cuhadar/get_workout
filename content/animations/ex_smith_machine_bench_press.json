@@ -1,5 +1,5 @@
 {
-  "status": "review",
+  "status": "approved",
   "view": [50, 14],
   "poses": {
     "top": {
@@ -23,7 +23,7 @@
   "mistakes": [
     {
       "line": 0,
-      "status": "review",
+      "status": "approved",
       "ring": ["neck"],
       "poses": {
         "top": {"pelvis": [0, -0.09, 0.57], "foot": {"at": [0.30, -0.54]}, "hand": {"pos": [0.36, 0.40, 1.078], "fingers": [0.000, 0.515, 0.857], "palm": [0.000, -0.857, 0.515]}},

@@ -1,5 +1,5 @@
 {
-  "status": "review",
+  "status": "approved",
   "view": [50, 14],
   "poses": {
     "top": {
@@ -23,20 +23,20 @@
   "mistakes": [
     {
       "line": 0,
-      "status": "review",
+      "status": "approved",
       "ring": ["chest"],
       "poses": {"rebound": {"extends": "bottom", "hand": {"pos": [0.36, 0.415, 0.86]}}},
       "keys": [[0, "top"], [0.6, "bottom"], [0.72, "rebound"], [1.5, "top"], [2.0, "top"]]
     },
     {
       "line": 1,
-      "status": "review",
+      "status": "approved",
       "ring": ["elbow_L", "elbow_R"],
       "poses": {"bottom": {"elbow": [1, 0.05, -0.2], "hand": {"pos": [0.36, 0.45, 0.749], "fingers": [0.000, 0.271, 0.963], "palm": [0.000, -0.963, 0.271]}}}
     },
     {
       "line": 2,
-      "status": "review",
+      "status": "approved",
       "ring": ["hip_L", "hip_R"],
       "poses": {
         "drive": {"extends": "bottom", "pelvis": [0, 0.07, 0.678], "pelvis_rot": [-110, 0, 0], "lumbar": 4, "chest": 8, "hand": {"pos": [0.36, 0.435, 0.95]}}

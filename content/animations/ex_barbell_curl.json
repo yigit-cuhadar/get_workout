@@ -1,5 +1,5 @@
 {
-  "status": "review",
+  "status": "approved",
   "view": [35, 8],
   "poses": {
     "bottom": {
@@ -29,7 +29,7 @@
   "mistakes": [
     {
       "line": 0,
-      "status": "review",
+      "status": "approved",
       "ring": ["lumbar", "chest"],
       "poses": {
         "dip": {"extends": "bottom", "pelvis": [0, 0.03, 0.974], "pelvis_rot": [9, 0, 0], "lumbar": 3, "chest": 0, "neck": -6, "hand": {"pos": [0.245, -0.19, 0.828], "fingers": [0.0, -0.35, -0.937], "palm": [0.0, -0.937, 0.35], "curl": 75}, "elbow": [0.007, 0.004, -0.279]},
@@ -40,7 +40,7 @@
     },
     {
       "line": 1,
-      "status": "review",
+      "status": "approved",
       "ring": ["elbow_L", "elbow_R"],
       "poses": {
         "mid": {"hand": {"pos": [0.245, -0.417, 1.139], "fingers": [0.0, -0.996, -0.087], "palm": [0.0, -0.087, 0.996], "curl": 75}, "elbow": [0.007, -0.086, -0.264]},

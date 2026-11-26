@@ -1,5 +1,5 @@
 {
-  "status": "review",
+  "status": "approved",
   "view": [50, 20],
   "poses": {
     "top": {
@@ -24,14 +24,14 @@
   "mistakes": [
     {
       "line": 0,
-      "status": "review",
+      "status": "approved",
       "ring": ["elbow_L", "elbow_R"],
       "poses": {"rebound": {"extends": "bottom", "hand": {"pos": [0.36, 0.395, 0.45]}}},
       "keys": [[0, "top"], [0.6, "bottom"], [0.72, "rebound"], [1.4, "top"], [1.9, "top"]]
     },
     {
       "line": 1,
-      "status": "review",
+      "status": "approved",
       "ring": ["hand_L", "hand_R"],
       "poses": {"top": {"hand": {"pos": [0.36, 0.574, 0.672], "fingers": [0.000, 0.623, 0.783], "palm": [0.000, -0.783, 0.623]}}}
     }

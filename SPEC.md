@@ -3383,11 +3383,14 @@ the feature you are about to touch, and keep it true when you change it.
   real phone; studio cards and Widgetbook use cases for the tabbed card,
   the motion view and the play button; the chips are plain `ForgeChip`s
   and the play button a bare icon button, not yet the canvas's looks.
-  Recipes approved: 6 of
+  Recipes approved: 11 of
   419 live exercises (which carry 852 mistakes): batch 1, the barbell squat
-  family, approved by the owner 2026-11-26 after one round of fixes (page
-  https://claude.ai/artifact/C7QFi5EHF8sbxbPDSQYM7G). Until #271 can merge,
-  approved batches stay on that branch. Review page of the spike:
+  family, and batch 2, the bench press and curl families, both approved by
+  the owner 2026-11-26 after the hands were seated on the bar (pages
+  https://claude.ai/artifact/C7QFi5EHF8sbxbPDSQYM7G,
+  https://claude.ai/artifact/RU1WYy6cc9afm64StPkVhP, hand close-ups
+  https://claude.ai/artifact/VARtitovjbnb1ts3ZbehuG). Prod still holds
+  batch 1 with the old hands until the owner says to import. Review page of the spike:
   https://claude.ai/artifact/2FhtzLavcFCNdBh1rZeFHN
 - **Tools** (`tool/animation/` on that branch; they need Blender 5.2 at
   `/Applications` and python3 with numpy and Pillow): `rig.py` fits the
