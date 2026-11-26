@@ -3378,7 +3378,7 @@ the feature you are about to touch, and keep it true when you change it.
   against `getworkout-dev` 2026-11-26. Recipes, kits and their rules are on
   dev and prod (prod 2026-11-26, owner's go-ahead); the phone solves them
   with `forge_motion` (Forge v0.60.0, with the skinned
-  `forge_model_viewer`). First TestFlight build with animations: 1.0.0 (9).
+  `forge_model_viewer`). First TestFlight build with animations: 1.0.0 (9); 1.0.0 (10) carries the seated hands, batch 2 and the exercise page picks.
   The exercise page picks (ES1-ES6) are built and checked on the
   simulator 2026-11-26. Not done: speed and feel on a real phone; studio
   cards and Widgetbook use cases for the tabbed card, the motion view and
@@ -3392,8 +3392,8 @@ the feature you are about to touch, and keep it true when you change it.
   the owner 2026-11-26 after the hands were seated on the bar (pages
   https://claude.ai/artifact/C7QFi5EHF8sbxbPDSQYM7G,
   https://claude.ai/artifact/RU1WYy6cc9afm64StPkVhP, hand close-ups
-  https://claude.ai/artifact/VARtitovjbnb1ts3ZbehuG). Prod still holds
-  batch 1 with the old hands until the owner says to import. Review page of the spike:
+  https://claude.ai/artifact/VARtitovjbnb1ts3ZbehuG). Prod holds both batches since 2026-11-26
+  (owner's go-ahead). Review page of the spike:
   https://claude.ai/artifact/2FhtzLavcFCNdBh1rZeFHN
 - **Tools** (`tool/animation/` on that branch; they need Blender 5.2 at
   `/Applications` and python3 with numpy and Pillow): `rig.py` fits the
@@ -3459,8 +3459,12 @@ the feature you are about to touch, and keep it true when you change it.
   from two angles and what to look at; (5) the owner is asked in the question dialog, in Turkish: which
   exercises need a fix (multi-select), then what to change in each; (6)
   fixes go back through 2-4 and are shown again; (7) when the owner
-  approves, statuses become `approved`, the count here is updated, and the
-  batch's PR is merged. No recipe is marked `approved` and no batch is
+  approves, statuses become `approved`, the count here is updated, the
+  batch's PR is merged, and the batch is imported to dev and to prod at
+  once (owner, 2026-11-26: an approved batch goes straight to prod, no
+  second question). A batch that needs a solver, body file or app change
+  not yet in a released build is held from prod until that build is out,
+  and the owner is told. No recipe is marked `approved` and no batch is
   merged without the owner's answer.
 - **Checks before the owner sees an exercise**: a standing pose has locked
   knees (leg stretch 0.995 or more; the owner sent the first batch back for
