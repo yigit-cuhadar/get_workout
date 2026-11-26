@@ -2,11 +2,11 @@
   "status": "draft",
   "view": [20, 8],
   "poses": {
-    "bottom": {"pelvis": [0, 0, 0.98], "pelvis_rot": [7, 0, 0], "lumbar": 0, "chest": 0, "neck": -6, "foot": {"at": [0.13, 0.037], "floor": 0, "yaw": 10}, "clavicle": [0, 0], "hand": {"pos": [0.275, -0.13, 0.88], "fingers": [0.091, -0.564, -0.821], "palm": [-0.996, -0.051, -0.075], "curl": 75}, "elbow": [0.2, 1, 0]},
-    "mid": {"extends": "bottom", "hand": {"pos": [0.61, -0.13, 1.06], "fingers": [0.622, -0.583, -0.522], "palm": [-0.575, 0.112, -0.81], "curl": 75}},
-    "top": {"extends": "bottom", "hand": {"pos": [0.75, -0.12, 1.38], "fingers": [0.847, -0.531, 0.013], "palm": [0.011, -0.007, -1.0], "curl": 75}}
+    "bottom": {"pelvis": [0, 0, 0.98], "pelvis_rot": [7, 0, 0], "lumbar": 0, "chest": 0, "neck": -6, "foot": {"at": [0.13, 0.037], "floor": 0, "yaw": 10}, "clavicle": [0, 0], "hand": {"pos": [0.28, -0.138, 0.842], "fingers": [0.134, -0.421, -0.897], "palm": [-0.991, -0.057, -0.121], "curl": 75}, "elbow": [0.2, 1, 0]},
+    "mid": {"extends": "bottom", "hand": {"pos": [0.639, -0.139, 1.035], "fingers": [0.704, -0.431, -0.564], "palm": [-0.592, 0.083, -0.802], "curl": 75}},
+    "top": {"extends": "bottom", "hand": {"pos": [0.78, -0.125, 1.379], "fingers": [0.916, -0.402, 0.011], "palm": [0.01, -0.005, -1.0], "curl": 75}}
   },
-  "keys": [[0, "bottom"], [0.6, "mid"], [1.1, "top"], [1.3, "top"], [2.2, "mid"], [3.1, "bottom"], [3.5, "bottom"]],
+  "keys": [[0, "bottom"], [0.58, "mid"], [1.1, "top"], [1.3, "top"], [2.16, "mid"], [3.1, "bottom"], [3.5, "bottom"]],
   "gear": [{"kit": "dumbbell", "side": "L"}, {"kit": "dumbbell", "side": "R"}],
   "mistakes": [
     {
@@ -15,27 +15,29 @@
       "ring": ["hip_L", "hip_R", "lumbar"],
       "poses": {
         "dip": {"extends": "bottom", "pelvis": [0, 0.03, 0.97], "pelvis_rot": [18, 0, 0], "hand": {"pos": [0.275, -0.2, 0.84], "fingers": [0.107, -0.512, -0.852], "palm": [-0.994, -0.055, -0.092], "curl": 75}},
-        "mid": {"pelvis": [0, -0.03, 0.975], "pelvis_rot": [-6, 0, 0], "lumbar": -4, "neck": 4, "hand": {"pos": [0.58, -0.06, 1.12], "fingers": [0.516, -0.769, -0.378], "palm": [-0.505, 0.083, -0.859], "curl": 75}},
-        "top": {"pelvis": [0, -0.02, 0.978], "pelvis_rot": [-3, 0, 0], "lumbar": -3, "neck": 2, "hand": {"pos": [0.73, -0.06, 1.4], "fingers": [0.795, -0.603, 0.063], "palm": [0.05, -0.038, -0.998], "curl": 75}}
+        "mid": {"pelvis": [0, -0.03, 0.975], "pelvis_rot": [-6, 0, 0], "lumbar": -4, "neck": 4, "hand": {"pos": [0.661, -0.089, 1.062], "fingers": [0.724, -0.497, -0.479], "palm": [-0.526, 0.052, -0.849], "curl": 75}},
+        "top": {"pelvis": [0, -0.02, 0.978], "pelvis_rot": [-3, 0, 0], "lumbar": -3, "neck": 2, "hand": {"pos": [0.777, -0.07, 1.4], "fingers": [0.902, -0.428, 0.062], "palm": [0.056, -0.027, -0.998], "curl": 75}}
       },
-      "keys": [[0, "bottom"], [0.4, "dip"], [0.75, "mid"], [1.0, "top"], [1.2, "top"], [2.1, "mid"], [3.0, "bottom"], [3.4, "bottom"]]
+      "keys": [[0, "bottom"], [0.4, "dip"], [0.74, "mid"], [1.0, "top"], [1.2, "top"], [2.0, "mid"], [3.0, "bottom"], [3.4, "bottom"]]
     },
     {
       "line": 1,
       "status": "draft",
       "ring": ["clavicle_L", "clavicle_R"],
       "poses": {
-        "mid": {"clavicle": [8, 0], "hand": {"pos": [0.56, -0.13, 1.12], "fingers": [0.493, -0.74, -0.457], "palm": [-0.55, 0.142, -0.823], "curl": 75}},
-        "top": {"clavicle": [18, 0], "neck": 0, "hand": {"pos": [0.71, -0.12, 1.47], "fingers": [0.755, -0.652, 0.075], "palm": [0.057, -0.049, -0.997], "curl": 75}}
-      }
+        "mid": {"clavicle": [8, 0], "hand": {"pos": [0.634, -0.154, 1.053], "fingers": [0.683, -0.456, -0.57], "palm": [-0.6, 0.095, -0.795], "curl": 75}},
+        "top": {"clavicle": [18, 0], "neck": 0, "hand": {"pos": [0.785, -0.134, 1.471], "fingers": [0.909, -0.41, 0.075], "palm": [0.069, -0.031, -0.997], "curl": 75}}
+      },
+      "keys": [[0, "bottom"], [0.53, "mid"], [1.1, "top"], [1.3, "top"], [2.23, "mid"], [3.1, "bottom"], [3.5, "bottom"]]
     },
     {
       "line": 2,
       "status": "draft",
       "ring": ["shoulder_L", "shoulder_R"],
       "poses": {
-        "top": {"clavicle": [10, 0], "hand": {"pos": [0.62, -0.12, 1.72], "fingers": [0.561, -0.641, 0.523], "palm": [0.508, -0.232, -0.83], "curl": 75}}
-      }
+        "top": {"clavicle": [10, 0], "hand": {"pos": [0.682, -0.136, 1.763], "fingers": [0.701, -0.411, 0.584], "palm": [0.576, -0.157, -0.802], "curl": 75}}
+      },
+      "keys": [[0, "bottom"], [0.39, "mid"], [1.1, "top"], [1.3, "top"], [2.46, "mid"], [3.1, "bottom"], [3.5, "bottom"]]
     }
   ]
 }
