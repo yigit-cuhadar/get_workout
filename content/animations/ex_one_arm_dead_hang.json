@@ -1,0 +1,281 @@
+{
+  "status": "draft",
+  "view": [
+    30,
+    5
+  ],
+  "poses": {
+    "both": {
+      "pelvis": [
+        0,
+        -0.04,
+        1.172
+      ],
+      "pelvis_rot": [
+        0,
+        0,
+        0
+      ],
+      "neck": 0,
+      "foot": {
+        "pos": [
+          0.09,
+          -0.1,
+          -0.86
+        ],
+        "yaw": 5,
+        "pitch": 35,
+        "rel": "pelvis"
+      },
+      "hand": {
+        "pos": [
+          0.1,
+          0,
+          2.25
+        ],
+        "fingers": [
+          0,
+          0,
+          1
+        ],
+        "palm": [
+          0,
+          -1,
+          0
+        ],
+        "curl": 75
+      },
+      "elbow": [
+        0.8,
+        0.3,
+        -1
+      ],
+      "clavicle": [
+        25,
+        0
+      ]
+    },
+    "one": {
+      "extends": "both",
+      "pelvis": [
+        -0.1,
+        -0.04,
+        1.2
+      ],
+      "pelvis_rot": [
+        0,
+        0,
+        -8
+      ],
+      "lumbar": [
+        0,
+        0,
+        3
+      ],
+      "chest": [
+        0,
+        0,
+        3
+      ],
+      "clavicle": [
+        10,
+        0
+      ],
+      "clavicle_R": [
+        0,
+        0
+      ],
+      "hand_R": {
+        "pos": [
+          -0.24,
+          0.0,
+          -0.12
+        ],
+        "fingers": [
+          0,
+          0,
+          -1
+        ],
+        "palm": [
+          1,
+          0,
+          0
+        ],
+        "curl": 20,
+        "rel": "pelvis"
+      },
+      "elbow_R": [
+        0,
+        1,
+        0
+      ]
+    },
+    "one2": {
+      "extends": "one",
+      "pelvis": [
+        -0.1,
+        -0.045,
+        1.198
+      ],
+      "chest": [
+        -2,
+        0,
+        3
+      ]
+    }
+  },
+  "keys": [
+    [
+      0,
+      "both"
+    ],
+    [
+      1.0,
+      "one"
+    ],
+    [
+      2.5,
+      "one2"
+    ],
+    [
+      4.0,
+      "one"
+    ],
+    [
+      5.0,
+      "both"
+    ],
+    [
+      5.4,
+      "both"
+    ]
+  ],
+  "gear": [
+    {
+      "kit": "pull_up_bar"
+    }
+  ],
+  "mistakes": [
+    {
+      "line": 0,
+      "status": "draft",
+      "ring": [
+        "shoulder_L"
+      ],
+      "poses": {
+        "one": {
+          "clavicle": [
+            45,
+            0
+          ],
+          "pelvis": [
+            -0.09,
+            -0.04,
+            1.1
+          ],
+          "neck": [
+            0,
+            0,
+            -8
+          ]
+        },
+        "one2": {
+          "clavicle": [
+            45,
+            0
+          ],
+          "pelvis": [
+            -0.09,
+            -0.045,
+            1.098
+          ],
+          "neck": [
+            0,
+            0,
+            -8
+          ]
+        }
+      }
+    },
+    {
+      "line": 1,
+      "status": "draft",
+      "ring": [
+        "hip_L",
+        "hip_R"
+      ],
+      "poses": {
+        "twistl": {
+          "extends": "one",
+          "pelvis_rot": [
+            0,
+            45,
+            -8
+          ],
+          "chest": [
+            0,
+            -15,
+            3
+          ],
+          "pelvis": [
+            -0.1,
+            -0.04,
+            1.2
+          ]
+        },
+        "twistr": {
+          "extends": "one",
+          "pelvis_rot": [
+            0,
+            -40,
+            -8
+          ],
+          "chest": [
+            0,
+            12,
+            3
+          ],
+          "pelvis": [
+            -0.1,
+            -0.04,
+            1.21
+          ]
+        }
+      },
+      "keys": [
+        [
+          0,
+          "both"
+        ],
+        [
+          1.0,
+          "one"
+        ],
+        [
+          1.8,
+          "twistl"
+        ],
+        [
+          2.8,
+          "twistr"
+        ],
+        [
+          3.6,
+          "twistl"
+        ],
+        [
+          4.4,
+          "one"
+        ],
+        [
+          5.2,
+          "both"
+        ],
+        [
+          5.6,
+          "both"
+        ]
+      ]
+    }
+  ]
+}
