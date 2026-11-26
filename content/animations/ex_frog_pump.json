@@ -117,7 +117,7 @@
           "extends": "top",
           "lumbar": -22,
           "chest": -10,
-          "neck": 18,
+          "neck": 28,
           "pelvis_rot": [
             -96.0,
             0,
