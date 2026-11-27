@@ -14,7 +14,7 @@ const _project = 'getworkout-dev';
 
 const _usage =
     '''
-Usage: GOOGLE_ACCESS_TOKEN=\$(gcloud auth print-access-token) \\
+Usage: GOOGLE_ACCESS_TOKEN=\$(../../tools/google_token.sh) \\
          dart run tool/seed_demo.dart --project $_project --uid <uid> \\
          [--dry-run] [--clear]
 

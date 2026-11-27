@@ -13,7 +13,7 @@ import 'src/firestore_rest.dart';
 import 'src/rules_seed.dart';
 
 const _usage = '''
-Usage: GOOGLE_ACCESS_TOKEN=\$(gcloud auth print-access-token) \\
+Usage: GOOGLE_ACCESS_TOKEN=\$(../../tools/google_token.sh) \\
          dart run tool/import_content.dart --project <id> [--dry-run] [--force]
 
 Run from the app root. Validates content/exercises/*.json,

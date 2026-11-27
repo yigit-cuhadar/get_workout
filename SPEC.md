@@ -1,7 +1,25 @@
 # GetWorkout
 
 Single source of truth for this app. Any agent, in any tool, resumes from here.
-To resume, read down to Feature notes; read those only for the feature at hand.
+To resume, read Now and Open, then only the sections they point to.
+
+## Now
+
+Updated 2026-11-27. Keep this block and Open true with every change.
+
+- **State**: feature groups 1-14 and the animation code of Group 15 are on
+  main. iOS 1.0.0 (build 7) was submitted to App Review on 2026-11-24; its
+  result is not known here. TestFlight builds 8-13 followed (2026-11-25 to
+  2026-11-27). 270 of 419 live exercises have an approved animation.
+- **Next**:
+  1. The next animation batch (Feature notes › Exercise animations: Where it
+     stands, then A batch, step by step).
+  2. The exercise page's owed studio cards and Widgetbook use cases (Open).
+  3. The App Review result, then what waits on it (Open › Waits outside).
+- **Waits on the owner**: each animation batch's approval; two playback
+  details to draw and ask; checks on a real device (Open).
+- **Waits outside**: App Review of 1.0.0; the Google Play Console is not
+  opened, which holds all Android work (Open).
 
 ## Product
 
@@ -97,8 +115,8 @@ App-wide decisions only. How each feature behaves is under Feature notes.
   the admin panel, must match). One file per function, exported from
   `src/index.ts`; logic takes its Admin SDK access as a parameter so
   `npm test` (lint, build, `node --test`) runs without an emulator; CI runs
-  it. Deploying is the Architect's step (`firebase deploy --only functions
-  --project <id>`), never an agent's.
+  it. Deploying is the Architect's step, never an agent's (the command is
+  under Operations).
 - **Dependencies** (2026-11-22): everything current, upgraded from an
   analysis; versions are in `pubspec.yaml` and `functions/package.json`.
   Held back: TypeScript at 6.0 (typescript-eslint does not support 7 yet);
@@ -113,20 +131,214 @@ App-wide decisions only. How each feature behaves is under Feature notes.
   reminders; FCM topic push for announcements.
 - **Accounts not opened yet**: Google Play Console; it blocks Play billing,
   Play Integrity, the prod signing SHA and the Health apps declaration
-  (Open questions). The Apple Developer account exists (2026-11-17, team
-  A8J42TV74R); RevenueCat is set up for iOS.
+  (Open › Waits outside). The Apple Developer account exists (2026-11-17,
+  team A8J42TV74R); RevenueCat is set up for iOS.
 - **Exercise animations** (2026-11-25): every exercise is shown as a
   skeletal animation on the app's own body model, not as video; Claude
   writes them all. The rules live only in this SPEC (Feature notes ›
   Exercise animations). Each exercise is one recipe file,
   `content/animations/<id>.json`, which also carries its status. The owner
-  approves batch by batch from a review page, then a question; nothing
-  unapproved reaches `main`. The recipe (poses, timing, gear) is stored in
+  approves batch by batch after watching the drafts in the released app;
+  drafts may be on `main`, and only approved recipes reach other users. The recipe (poses, timing, gear) is stored in
   Firestore next to the catalogue and solved on the phone; body models and
   the solver ship in the app. Batches follow the equipment families. An
   exercise gets its correct form and, in the same batch, its mistakes.
   Gear is designed once: a piece of equipment is one kit, approved once,
   and every exercise that uses it names that kit; no exercise draws its own.
+
+## Features
+
+Ordered. Tick when merged to main. A finished group is one line; its
+behaviour is under Feature notes and its build history in git. An open
+item reads: name — screens — acceptance. Everything else still open is
+under Open.
+
+- [x] Group 1, foundation — scaffold, Firebase, guest start and linking, app shell
+- [x] Group 2, the model — 3D renderer, per-muscle colouring
+- [x] Group 3, exercises — sync, admin panel and editor, English content, library, detail, custom exercises
+- [x] Group 4, programs — builder with supersets and circuits, My programs, weekday schedule, missed-day prompt
+- [x] Group 5, workout — active and free workout, rest timer, lock screen (rest and workout), summary, history
+- [x] Group 6, progress — calendar, weekly volume, strength, Today tab
+- [x] Group 7, programs for everyone — catalog of 29 ready-made programs (6 free), admin program editor, generator (Premium)
+- [x] Group 8, body and extras — weight log, measurement day with photos and backup, cardio, steps, calculators, measurement summary
+- [x] Group 9, launch readiness — onboarding, notifications, subscription, account deletion and privacy
+- [x] Group 10, UX pass — every screen's structure and flow reworked from the owner's picks; five tabs (Today / Programs / Exercises / Progress / Profile); three paywall layouts for an A/B test (Remote Config `paywall_layout`)
+- [x] Group 11, design in code — Slate theme in forge_ui, Forge and app components, every screen by studio group, flow widget tests (#105–#139)
+- [x] Group 12, analytics (2026-11-20) — opt-out collection, typed event API, BigQuery export (daily, prod and dev; prod dataset `analytics_565341735`, 425-day default table expiration), admin Dashboard
+- [x] Group 13, admin panel rework (2026-11-21) — panel look, Users, Support inbox, App settings
+- [x] Group 14, program generator rebuild (2026-11-22) — engine and rules on the server, callables, the generator in the app, admin exercise fields, rules editor and simulator; live on dev and prod (#221–#230)
+
+Group 15, exercise animations (2026-11-25; Feature notes › Exercise
+animations, whose "Where it stands" entry is kept current)
+- [x] Animated viewer — `forge_model_viewer` reads skins, joins models and plays looped clips
+- [x] Recipe files and tools — one `content/animations/<id>.json` per exercise with poses, timing, gear and status; a validator and the preview tool (`tool/animation/`)
+- [x] Solver on the phone — the pose solver and the gear builder in Dart, in a Forge package (`forge_motion`)
+- [x] Recipes in Firestore — the import writes approved recipes to `exercises/{id}/animation/main`, rules, the app reads and caches them
+- [x] Animations in the app — Exercise detail's first card with the movement and muscles tabs and the mistake chips, the workout's play button and its sheet, both body models — plays on the simulator
+- [ ] All exercises — batches by equipment family, each exercise with its correct form and its mistakes, each batch approved by the owner — every live exercise has an approved recipe (2026-11-27: 270 of 419 live exercises approved)
+
+After release (owner's list, 2026-11-19; not before the first release):
+- Health improvements.
+- Apple Watch improvements.
+- Home screen widgets.
+- Streaks, weekly goals, achievements and the like.
+- Progressive overload suggestions.
+- Quick routines and templates outside programs.
+- Exercise images and videos (beyond the animations of Group 15).
+- Other languages.
+- Timers for time-based sets and exercises, and rest set per series.
+
+## Open
+
+Everything still open, each item once; an item goes when it is done. Settled
+behaviour and traps are under Feature notes.
+
+### An agent can do now
+
+- **Next animation batch** (Features, Group 15): 149 live exercises have no
+  approved recipe. Read Feature notes › Exercise animations: Where it stands,
+  then A batch, step by step (it starts with `python3
+  tool/animation/batch.py`); the owner approves each batch.
+- **Exercise page parts** (2026-11-26): studio component cards and Widgetbook
+  use cases are owed for the animation stage with its tabs, the motion view,
+  the mistake chips, the playback buttons, the workout card's play button, the
+  numbered mistakes and the similar-exercise rows; `widgetbook/lib/use_cases`
+  and the studio page have none of them.
+- **Studio, not confirmed as drawn afterwards**: the states built from
+  standard forms on the Programs tab and the workout screen (2026-11-15), and
+  the admin pages (no admin component is tagged in the studio page).
+- **Screens with fuller data** (`tool/seed_demo.dart` fills a dev account):
+  Body with several weigh-ins, measurement days and photos; the past-workout
+  band's four figures with a large volume ("12,400 kg" may be cut); the Cardio
+  session's distance tile ("18.4 km" may wrap); large text beyond Today and
+  Progress (both wrap without overflow at the largest accessibility size on
+  the simulator, 2026-11-25).
+- **Flow tests** do not cover dragging the weight ruler and taking a
+  measurement photo.
+- **Animations, gear that leaves the hands** inside a clip is not drawn: a
+  slam or a throw stops at the release (Feature notes › Exercise animations).
+- **Animations, rig**: a comparison with Tripo's rig, only if Blender's
+  weights prove too weak.
+- **Legal pages, not verified**: the Cloud Storage bucket's region, which the
+  policy states as europe-west1; whether App Privacy's 16 types include
+  Advertising Data for the Apple Search Ads attribution is not recorded
+  (Feature notes › Subscription and paywall).
+- **App Check**, per project (dev and prod): add each debug build's token on
+  dev; watch the metrics per product, then enforce per product and add
+  `enforceAppCheck: true` to the app's callables. What is enforced when is
+  under Feature notes › Account and privacy › App Check.
+
+### Waits on the owner
+
+- **Playback details, to be drawn and asked** (an agent draws the rows first):
+  whether pause and half speed survive a chip change (built: they do) and
+  whether a speed change restarts the loop (built: it does; the screen review
+  of 2026-11-26 noted the opposite without a board). Feature notes › Exercise
+  animations › In the app.
+- **Animations on the owner's phone**: speed and feel (60 fps).
+- **Draft animations in the rules**: `firestore.rules` lets any signed-in user
+  read the draft documents (the app shows them to admins only); narrowing that
+  to the admin claim is a rules deploy the owner has not asked for yet.
+- **Generator rules**, for the owner to tune in the panel: the seed rules'
+  known gaps are under Feature notes › Programs › Program generator.
+- **Generator offline** in the app is not tried on a device (the simulator
+  cannot go offline on its own).
+- **Health on a real device**: health cardio sessions; users who allowed steps
+  before #118 are asked for workouts only through Allow access again; the real
+  Apple Health / Health Connect prompts.
+- **Google sign-in**: a completed native sign-in, guest link and re-sign-in on
+  both platforms.
+- **Body photos, not confirmed on a device**: the camera permission's denial
+  text, the ghost's alignment (front-camera previews are mirrored, saved
+  photos are not), retake, restore from the bucket, the iOS backup exclusion;
+  the patched `third_party/camera_avfoundation` (Decisions › Dependencies) on
+  an iPhone 17. A measurement day's four photos did upload from the owner's
+  iPhone (2026-11-18).
+- **Subscription trial** is not checked: the owner's Apple ID already
+  subscribed in the group, and the dev sandbox tester's sign-in looped after
+  the verification code (2026-11-24).
+- **RevenueCat dashboard**: enable Customer Center (Pro plan, free below 2.5k
+  USD monthly revenue), set its accent to the app's, and map both products to
+  their promotional offer on the Cancel path.
+- **Workout on the lock screen (iOS)**, checked on the simulator (2026-11-25).
+  Not checked yet: a tap with the workout page under the picker or paywall,
+  below iOS 17, a real device.
+- **Notifications, not verified**: a tap on a push on iOS;
+  `Notifications.openSettings` (the reminder tiles' "open settings") on either
+  platform; where the iOS steps hint's "Open Settings" (`app-settings:`) lands
+  on a device.
+- **Legal pages** are not reviewed by a lawyer.
+- **App Check, DeviceCheck** for iOS below 14, per project:
+  `deviceCheckConfig` needs a DeviceCheck key (.p8) of team A8J42TV74R, stored
+  with `tools/secret.sh`.
+
+### Waits outside
+
+- **App Review of 1.0.0 (build 7)**: submitted 2026-11-24 with both
+  subscriptions, manual release; WAITING_FOR_REVIEW on 2026-11-25, not looked
+  at since. Check the review result and record it here and in Now.
+- **Turkish App Store listing**, once the review ends: the text approved on
+  2026-11-25 is in `store/app_store_tr.txt`; enter it with Turkey added and
+  Turkish screenshots.
+- **Win-back offers**, once the subscriptions are approved: one per plan
+  (Feature notes › Subscription and paywall › Win-back offer).
+- **Play Console, not opened** (Decisions › Accounts not opened yet). Once it
+  exists: the Health apps declaration (steps, exercise, distance, total
+  calories burned, heart rate); Data safety (App activity, and App info and
+  performance › Crash logs, collected and linked to the user).
+- **Play billing**: Android / Play is not set up: products, the service
+  account in RevenueCat, license testers, the merged manifest's BILLING
+  permission.
+- **Google sign-in on Android, prod**: the release (Play app signing) SHA on
+  the prod Firebase Android app once the Play Console exists (Feature notes ›
+  Account and privacy › Google sign-in set-up).
+- **App Check, Play Integrity** (`playIntegrityConfig`), per project, once the
+  Play Console exists: link the Cloud project in Play Console › App integrity
+  and add the Play app signing SHA-256 to the Android app.
+- **Android has never been built or run** with the changes since the rest
+  timer; it waits for the Android release to be prepared. What is unbuilt and
+  unchecked until then is under Feature notes › App shell, settings and
+  onboarding › Android.
+- **Android, first topic subscription**: on a fresh emulator install it failed
+  twice with "FCM Registration failed" and succeeded at the next resume. If
+  real devices show it too, retry shortly after the failure.
+
+Reference: read only what the work at hand needs.
+
+## Operations
+
+Paths are from the app root; `tools/` is the forge's, run from the forge root.
+
+- **Run**: `flutter run`; debug and profile builds use `getworkout-dev`,
+  release builds `getworkout-prod`. Admin panel: `flutter run -d chrome -t
+  lib/main_admin.dart` against dev, with an account that has the admin claim
+  (`tool/set_admin.sh`).
+- **Checks before a commit**: `dart format lib tool test && flutter analyze &&
+  flutter test`; in `functions/`, `npm test`. CI repeats both.
+- **Deploy**: functions with `firebase deploy --only functions --project <id>`
+  (the Architect's step; their secrets are set on the project first); the
+  legal pages with `firebase deploy --only hosting:legal --project
+  getworkout-prod`; the admin panel with `tool/deploy_admin.sh <dev|prod>`;
+  content with `dart run tool/import_content.dart --project <id>`, which
+  validates and writes only what changed. `firestore.rules`,
+  `firestore.indexes.json` and `storage.rules` are wired in `firebase.json`.
+- **TestFlight**: bump the build number in `pubspec.yaml`, then from the forge
+  root `tools/ios_upload.sh <app dir> <prod GoogleService-Info.plist>
+  --dart-define=REVENUECAT_IOS_KEY=...` (the plist is
+  `ios/Firebase/prod/GoogleService-Info.plist`).
+- **Secrets**, by name. macOS Keychain through `tools/secret.sh`:
+  `ASC_API_KEY_P8`, `ASC_KEY_ID`, `ASC_ISSUER_ID`, `REVENUECAT_IOS_KEY`, and a
+  copy of `SUPPORT_GMAIL_APP_PASSWORD`. Firebase Functions secrets, per
+  project: `REVENUECAT_WEBHOOK_AUTHORIZATION`, `APPLE_SIGN_IN_KEY`,
+  `SUPPORT_GMAIL_APP_PASSWORD`, `REVENUECAT_API_KEY` (Data model › Cloud
+  Functions).
+- **Google access token**: the `tool/` scripts that reach a Firebase project
+  read one from `GOOGLE_ACCESS_TOKEN`. How to get one, the account ids and the
+  owner's device are in the forge's `workflow/release.md` and its local notes
+  file.
+- **Local prerequisites**: Flutter 3.50.1 (`.github/workflows/ci.yml`); for
+  the animation tools Blender 5.2 at `/Applications` and python3 with numpy
+  and Pillow.
 
 ## Vocabulary
 
@@ -352,8 +564,7 @@ All exported from `functions/src/index.ts`. Inputs, outputs and refusal
 codes (a machine-readable `details.reason`, which the app and the panel
 map on) are in each function's file; below is what the code cannot say.
 Every admin function needs the `admin` custom claim, set by
-`tool/set_admin.sh` with the project owner's gcloud access token passed in
-`GOOGLE_ACCESS_TOKEN`.
+`tool/set_admin.sh` (Operations › Google access token).
 
 - `guestCleanupNightly` (scheduled, `guest_cleanup.ts`; 2026-11-24):
   deletes every guest (no linked provider) the app has not used for 90
@@ -439,103 +650,12 @@ Every admin function needs the `admin` custom claim, set by
   (admin callables, `functions/src/dashboard`): the admin Dashboard's
   numbers; Feature notes › Analytics.
 
-## Features
-
-Ordered. Tick when merged to main. A finished group is one line; its
-behaviour is under Feature notes and its build history in git. An open
-item reads: name — screens — acceptance.
-
-- [x] Group 1, foundation — scaffold, Firebase, guest start and linking, app shell
-- [x] Group 2, the model — 3D renderer, per-muscle colouring
-- [x] Group 3, exercises — sync, admin panel and editor, English content, library, detail, custom exercises
-- [x] Group 4, programs — builder with supersets and circuits, My programs, weekday schedule, missed-day prompt
-- [x] Group 5, workout — active and free workout, rest timer, lock screen (rest and workout), summary, history
-- [x] Group 6, progress — calendar, weekly volume, strength, Today tab
-- [x] Group 7, programs for everyone — catalog of 29 ready-made programs (6 free), admin program editor, generator (Premium)
-- [x] Group 8, body and extras — weight log, measurement day with photos and backup, cardio, steps, calculators, measurement summary
-- [x] Group 9, launch readiness — onboarding, notifications, subscription, account deletion and privacy
-- [x] Group 10, UX pass — every screen's structure and flow reworked from the owner's picks; five tabs (Today / Programs / Exercises / Progress / Profile); three paywall layouts for an A/B test (Remote Config `paywall_layout`)
-- [x] Group 11, design in code — Slate theme in forge_ui, Forge and app components, every screen by studio group, flow widget tests (#105–#139)
-- [x] Group 12, analytics (2026-11-20) — opt-out collection, typed event API, BigQuery export (daily, prod and dev; prod dataset `analytics_565341735`, 425-day default table expiration), admin Dashboard
-- [x] Group 13, admin panel rework (2026-11-21) — panel look, Users, Support inbox, App settings
-- [x] Group 14, program generator rebuild (2026-11-22) — engine and rules on the server, callables, the generator in the app, admin exercise fields, rules editor and simulator; live on dev and prod (#221–#230)
-
-Open after Group 11:
-- To check on a device with fuller data: Body with several weigh-ins,
-  measurement days and photos; the past-workout band's four figures with a
-  large volume ("12,400 kg" may be cut); the Cardio session's distance tile
-  ("18.4 km" may wrap); health cardio sessions on a real device; users who
-  allowed steps before #118 are asked for workouts only through Allow
-  access again; the real Apple Health / Health Connect prompts; large text
-  beyond Today and Progress (both wrap without overflow at the largest
-  accessibility size on the simulator, 2026-11-25).
-- Not covered by the flow tests: dragging the weight ruler, taking a
-  measurement photo.
-- Release: version 1.0.0 with TestFlight build 7 was submitted for review
-  on 2026-11-24 with both subscriptions, manual release; still
-  WAITING_FOR_REVIEW on 2026-11-25. The price is free, content rights "no
-  third-party content", the regulated medical device declaration "No". The
-  medical device declaration and attaching an app's first subscriptions to
-  a version exist only on the App Store Connect website, not in the API.
-- App Store listing (2026-11-22; screenshot canvas
-  https://claude.ai/artifact/EbzyhQps5J6xmubwaEjA48): name "GetWorkout:
-  Gym & Fitness Log", subtitle "Workout tracker & programs", keywords
-  "fitness,workout,exercise,lifting,training,bodybuilding,muscle,body,plan,
-  strength,weight,planner,log", description led by exercises and
-  programs; Health & Fitness, Lifestyle; age 13+; copyright "2026 Yiğit
-  Çuhadar". Seven 1320x2868 screenshots (Exercises model, Workout logger,
-  Programs, Weekly volume, Body, Today, Strength) captured from the dev
-  app over `tool/seed_demo.dart` data; the paywall capture is both
-  subscriptions' review screenshot. App Privacy: 16 types, all linked,
-  none tracking; custom EULA = the Terms; review notes: guest sign-in, no
-  demo account. Sold in the US, UK, Canada, Australia, New Zealand and
-  Ireland only; iPhone only (#216).
-- Turkish App Store listing: approved 2026-11-25, in `store/app_store_tr.txt`;
-  to enter once 1.0.0's review ends, with Turkey added and Turkish
-  screenshots.
-
-Open after Group 14 (rules version 1 at the time):
-- The app's generator offline state is not tried on a device (the
-  simulator cannot go offline on its own).
-- For the owner to tune in the panel: the seed rules leave 69 of the 140
-  standard answers with a target muscle without direct work and 83 with a
-  day under half the session; the intermediate Upper/Lower gives glutes 21
-  sets, above the 20 band. The exercise ratings and seed rules are the
-  Architect's first pass.
-
-Group 15, exercise animations (2026-11-25; Feature notes › Exercise
-animations, whose "Where it stands" entry is kept current)
-- [x] Animated viewer — `forge_model_viewer` reads skins, joins models and plays looped clips
-- [x] Recipe files and tools — one `content/animations/<id>.json` per exercise with poses, timing, gear and status; a validator and the preview tool (`tool/animation/`)
-- [x] Solver on the phone — the pose solver and the gear builder in Dart, in a Forge package (`forge_motion`)
-- [x] Recipes in Firestore — the import writes approved recipes to `exercises/{id}/animation/main`, rules, the app reads and caches them
-- [x] Animations in the app — Exercise detail's first card with the movement and muscles tabs and the mistake chips, the workout's play button and its sheet, both body models — plays on the simulator
-- [ ] All exercises — batches by equipment family, each exercise with its correct form and its mistakes, each batch approved by the owner — every live exercise has an approved recipe (2026-11-27: 270 of 419 live exercises approved)
-
-Open after Group 15's built items (acceptance not yet met):
-- Speed and feel on the owner's phone (60 fps).
-- Studio cards and Widgetbook use cases for the tabbed card, the motion
-  view and the play button.
-- Three playback details the drawings left open are built with defaults
-  and still to be drawn and asked (Feature notes › Exercise animations).
-
-After release (owner's list, 2026-11-19; not before the first release):
-- Health improvements.
-- Apple Watch improvements.
-- Home screen widgets.
-- Streaks, weekly goals, achievements and the like.
-- Progressive overload suggestions.
-- Quick routines and templates outside programs.
-- Exercise images and videos (beyond the animations of Group 15).
-- Other languages.
-- Timers for time-based sets and exercises, and rest set per series.
-
 ## Design
 
 How anything looks lives only in the two studios; a design change is made
 there, never here. The studio rules (tags, build check, components chosen
 before drawing) are in AGENTS.md › Design studios. This section keeps only
-what was decided, when, and what is still owed.
+what was decided and when; what is still owed is under Open.
 - GetWorkout Studio https://claude.ai/artifact/PuK5WUbeyhVHMxA6THNDC2 (in
   git as `design/studio.html`): the app's preset tokens, rules, components
   and every screen with its states. `lib/app/theme.dart` is written by hand
@@ -598,7 +718,7 @@ of the older row.
 | 2026-11-25 | Exercise gear | Gear stays in neutral tones, colour only on muscles; the barbell has thick sleeves and two plates a side; the flat bench is a pad on a beam; the pull-up bar has no posts; a light floor with the body's shadow under every model; smith machine, squat box and landmine approved as drawn | https://claude.ai/artifact/6oF4mJVecSe7n2gtZyZ5fW |
 | 2026-11-25 | Exercise animations | Every exercise gets its correct form and each mistake a pose can show; the exercise page's first card has Movement and Muscles tabs; a chip for the correct form and one per mistake, the picked mistake playing in place with its region marked; the workout's open card gets a play button opening a sheet with the animation, cues and a link to the page | https://claude.ai/artifact/RGTHJ9yhTVxSxnX1LG3ZL2 |
 | 2026-11-26 | Exercise page | The picked mistake chip fills in danger, the others tinted, the correct-form chip green; chips sit right under the animation with the text in a fixed two-line place below; pause / play and half speed buttons, in the workout's sheet too; a hint for turning and zooming, no view buttons; the workout card's play button is filled | https://claude.ai/artifact/Y8sMp2DB83WX6ga5MhbCvW |
-| 2026-11-26 | Exercise screen review | The own note is removed; Setup and How to do it share one card; each common mistake carries its chip's number, and one with an animation plays it from its row; the Safety card takes the warning tone; half speed looks filled while on; Tips get a title icon; each similar exercise is its own row with See all; the favourite star sits in the app bar beside the menu. Without a board: a speed change does not restart the loop; a mistake without an animation leaves a gap in the chip numbers | https://claude.ai/artifact/Gp3cZ7kU1JMSZ5TG59rXGn |
+| 2026-11-26 | Exercise screen review | The own note is removed; Setup and How to do it share one card; each common mistake carries its chip's number, and one with an animation plays it from its row; the Safety card takes the warning tone; half speed looks filled while on; Tips get a title icon; each similar exercise is its own row with See all; the favourite star sits in the app bar beside the menu. Without a board: a mistake without an animation leaves a gap in the chip numbers | https://claude.ai/artifact/Gp3cZ7kU1JMSZ5TG59rXGn |
 
 Rules still binding that the studio does not show:
 - Colours stay muted and black is not a default accent; the plates'
@@ -626,106 +746,10 @@ Rules still binding that the studio does not show:
 - A widget with more than one reasonable look is picked by the owner from
   drawn variants (AGENTS.md › Working with the user).
 
-Open:
-- Exercise page parts (2026-11-26): the studio component cards and the
-  app's Widgetbook use cases are owed for the animation stage with its
-  tabs, the mistake chips, the playback buttons, the numbered mistakes and
-  the similar-exercise rows. `widgetbook/lib/use_cases` has none of them
-  and the studio page has no component tagged for them.
-- Exercise animations (2026-11-25): the build group is unticked (Features,
-  group 15); the page's first card, the chips and the workout's sheet are
-  drawn in the studio before "Animations in the app" is built.
-- Not confirmed as drawn in the studio afterwards: the states built from
-  standard forms on the Programs tab and the workout screen (2026-11-15),
-  and the admin pages (no admin component is tagged in the studio page).
-
-## Open questions
-
-Only what is still open, with the outside set-up it depends on. Settled
-behaviour and traps are under Feature notes.
-
-- **Google sign-in**: Android's Credential Manager needs the signing
-  certificate's SHA on the Firebase Android app; the debug keystore's
-  SHA-1 and SHA-256 are registered on dev. Open: the release (Play app
-  signing) SHA on prod once the Play Console exists, and a completed
-  native sign-in, guest link and re-sign-in on both platforms.
-- **Body photos, not confirmed on a device**: the camera permission's
-  denial text, the ghost's alignment (front-camera previews are mirrored,
-  saved photos are not), retake, restore from the bucket, the iOS backup
-  exclusion. A measurement day's four photos did upload from the owner's
-  iPhone (2026-11-18). The patched `third_party/camera_avfoundation`
-  (Decisions › Dependencies) is not yet checked on an iPhone 17.
-- **Subscriptions**, set-up in Feature notes › Subscription and paywall;
-  still open:
-  - The trial is not checked: the owner's Apple ID already subscribed in
-    the group. The dev sandbox tester's sign-in looped after the
-    verification code (2026-11-24).
-  - Win-back offers cannot be created until the subscriptions are approved
-    (App Store Connect refuses with
-    STATE_ERROR.NON_APPROVED_SUBSCRIPTION). After the first approval
-    create one per plan: 1 month free, eligibility paid at least 1 month
-    and lapsed 1 to 12 months, no wait between offers, priority high, not
-    promoted on the App Store.
-  - RevenueCat (dashboard only): enable Customer Center (Pro plan, free
-    below 2.5k USD monthly revenue), set its accent to the app's, and map
-    both products to their promotional offer on the Cancel path.
-  - Android / Play is not set up: products, the service account in
-    RevenueCat, license testers, the merged manifest's BILLING permission.
-- **Android has never been built or run** with the changes since the rest
-  timer; CI does not build it, and Forge runs no Android check until the
-  Android release is prepared. The first build needs Android platform 37
-  and AGP 9.1.1 downloaded. Unbuilt and unchecked until then: the steps
-  changes (minSdk 26, `FlutterFragmentActivity`, `PrivacyPolicyActivity`),
-  the camera manifest changes and backup rules, the FCM manifest entries
-  (default channel, icon, auto-init flag; an announcement to a fresh
-  install must land on the `workout` channel), and the workout's ongoing
-  notification (workout and rest modes with the app in front, in the
-  background and killed, with and without exact alarms; no duplicate
-  after a relaunch; removed on finish, discard and sign-out; the Android
-  16 status bar chip; taps).
-- **Android, first topic subscription**: on a fresh emulator install it
-  failed twice with "FCM Registration failed" and succeeded at the next
-  resume. If real devices show it too, retry shortly after the failure.
-- **Play Console, once it exists**: the Health apps declaration (steps,
-  exercise, distance, total calories burned, heart rate); Data safety (App
-  activity, and App info and performance › Crash logs, collected and
-  linked to the user).
-- **Workout on the lock screen (iOS)**, checked on the simulator
-  (2026-11-25). Not checked yet: a tap with the workout page under the
-  picker or paywall, below iOS 17, a real device.
-- **Notifications, not verified**: a tap on a push on iOS;
-  `Notifications.openSettings` (the reminder tiles' "open settings") on
-  either platform; where the iOS steps hint's "Open Settings"
-  (`app-settings:`) lands on a device.
-- **Legal pages**:
-  not reviewed by a lawyer; the Cloud Storage bucket's region, which
-  the policy states as europe-west1, is not verified; whether App
-  Privacy's 16 types include Advertising Data for the Apple Search Ads
-  attribution (Feature notes › Subscription and paywall) is not recorded.
-- **App Check** (2026-11-20), monitoring first; enforcement moved after
-  release (2026-11-24). App Attest is registered for the iOS app on dev
-  and prod and nothing is enforced. Storage and the app's callables are
-  enforced once the metrics show nearly every request verified; Firestore,
-  `sendAnnouncement` and the other admin callables wait until the admin
-  web build, which does not activate App Check, gets a reCAPTCHA
-  Enterprise provider. `revenueCatWebhook` is an HTTP endpoint and stays
-  as it is. Open, per project (dev and prod):
-  - DeviceCheck for iOS below 14: `deviceCheckConfig` needs a DeviceCheck
-    key (.p8) of team A8J42TV74R, stored with `tools/secret.sh`.
-  - Play Integrity (`playIntegrityConfig`) once the Play Console exists:
-    link the Cloud project in Play Console › App integrity and add the
-    Play app signing SHA-256 to the Android app.
-  - Debug tokens: a debug build prints its token in the native log; add
-    it under App Check › Apps › Manage debug tokens on dev. A token lives
-    per install.
-  - Watch the metrics per product, then enforce per product (API
-    `services/<service>` `enforcementMode: ENFORCED`) and add
-    `enforceAppCheck: true` to the app's callables' `onCall` options.
-
 ## Feature notes
 
-How each feature behaves, by area. Not needed to resume: read the area of
-the feature you are about to touch, and keep it true when you change it.
+How each feature behaves, by area. Read the area of the feature you are
+about to touch, and keep it true when you change it.
 How anything looks, and every screen text, is in the studio and the ARB
 files, not here.
 
@@ -898,6 +922,11 @@ files, not here.
   applies it. Everyone else, and Android, sees the paywall unchanged. The
   fake store offers its plans' free month once the user's subscription has
   ended ("End subscription now (win-back)" among the Fake store rows).
+  - Not created in App Store Connect yet: it refuses until the subscriptions
+    are approved (STATE_ERROR.NON_APPROVED_SUBSCRIPTION). After the first
+    approval create one per plan: 1 month free, eligibility paid at least 1
+    month and lapsed 1 to 12 months, no wait between offers, priority high,
+    not promoted on the App Store.
 - **Manage subscription** (2026-11-20): on iOS it presents RevenueCat's
   Customer Center (themed in the RevenueCat dashboard), whose cancel path
   first offers the "1 month free" promotional offer; a claimed month or a
@@ -940,6 +969,23 @@ files, not here.
   Promotional offers "1 month free" exist on both plans for the Customer
   Center's cancel path: `retention_1m_free` (monthly) and
   `retention_1m_free_yearly` (yearly).
+- **App Store listing** (2026-11-22; screenshot canvas
+  https://claude.ai/artifact/EbzyhQps5J6xmubwaEjA48): name "GetWorkout: Gym &
+  Fitness Log", subtitle "Workout tracker & programs", keywords
+  "fitness,workout,exercise,lifting,training,bodybuilding,muscle,body,plan,
+  strength,weight,planner,log", description led by exercises and programs;
+  Health & Fitness, Lifestyle; age 13+; copyright "2026 Yiğit Çuhadar". Seven
+  1320x2868 screenshots (Exercises model, Workout logger, Programs, Weekly
+  volume, Body, Today, Strength) captured from the dev app over
+  `tool/seed_demo.dart` data; the paywall capture is both subscriptions'
+  review screenshot. App Privacy: 16 types, all linked, none tracking; custom
+  EULA = the Terms; review notes: guest sign-in, no demo account. Sold in the
+  US, UK, Canada, Australia, New Zealand and Ireland only; iPhone only (#216).
+- **App Store submission** (2026-11-24): version 1.0.0 goes with both
+  subscriptions and manual release. The price is free, content rights "no
+  third-party content", the regulated medical device declaration "No". The
+  medical device declaration and attaching an app's first subscriptions to a
+  version exist only on the App Store Connect website, not in the API.
 
 ### Account and privacy
 
@@ -1073,6 +1119,20 @@ files, not here.
   password-looking codes (`invalid-credential`, `wrong-password`) and
   anything else show the delete failure, and a closed Apple sheet says
   nothing.
+- **Google sign-in set-up**: Android's Credential Manager needs the signing
+  certificate's SHA on the Firebase Android app; the debug keystore's SHA-1
+  and SHA-256 are registered on dev.
+- **App Check** (2026-11-20), monitoring first; enforcement moved after
+  release (2026-11-24). App Attest is registered for the iOS app on dev and
+  prod and nothing is enforced. Storage and the app's callables are enforced
+  once the metrics show nearly every request verified; Firestore,
+  `sendAnnouncement` and the other admin callables wait until the admin web
+  build, which does not activate App Check, gets a reCAPTCHA Enterprise
+  provider. `revenueCatWebhook` is an HTTP endpoint and stays as it is. A
+  debug build prints its token in the native log; it is added under App Check
+  › Apps › Manage debug tokens on dev, and a token lives per install.
+  Enforcing is per product (API `services/<service>` `enforcementMode:
+  ENFORCED`).
 
 ### App shell, settings and onboarding
 
@@ -1290,6 +1350,17 @@ files, not here.
     gate's keys take a fetched value mid-session; `paywall_layout` keeps
     one value per session. The app stays mounted under a gate page and
     comes back as it was.
+- **Android** has never been built or run with the changes since the rest
+  timer; CI does not build it, and Forge runs no Android check until the
+  Android release is prepared. The first build needs Android platform 37 and
+  AGP 9.1.1 downloaded. Unbuilt and unchecked until then: the steps changes
+  (minSdk 26, `FlutterFragmentActivity`, `PrivacyPolicyActivity`), the camera
+  manifest changes and backup rules, the FCM manifest entries (default
+  channel, icon, auto-init flag; an announcement to a fresh install must land
+  on the `workout` channel), and the workout's ongoing notification (workout
+  and rest modes with the app in front, in the background and killed, with and
+  without exact alarms; no duplicate after a relaunch; removed on finish,
+  discard and sign-out; the Android 16 status bar chip; taps).
 
 ### Exercises and content
 
@@ -1406,22 +1477,10 @@ files, not here.
   mistakes are not drawn. Not started: about 148 exercises (bands,
   machines, suspension and small groups), and those skipped for gear
   without a kit (a wall, a rack, a trap bar, plates) or, like the
-  kettlebell snatch and clean, by their session. Open:
-  - speed and feel on a real phone;
-  - gear that leaves the hands inside a clip is not drawn (a slam or a
-    throw stops at the release);
-  - studio cards and Widgetbook use cases for the tabbed card, the motion
-    view and the play button;
-  - three details built with defaults, still to be drawn and asked: the
-    look of the half-speed button while on, whether pause and speed
-    survive a chip change (they do), the loop restarting when the speed
-    changes (it does);
-  - `firestore.rules` lets any signed-in user read the draft documents
-    (the app shows them to admins only); narrowing that to the admin claim
-    is a rules deploy the owner has not asked for yet;
-  - a comparison with Tripo's rig if Blender's weights prove too weak.
-- **Tools** (`tool/animation/`; Blender 5.2 at `/Applications`, python3
-  with numpy and Pillow; each script's header says what it does, and
+  kettlebell snatch and clean, by their session. What is open is under
+  Open.
+- **Tools** (`tool/animation/`; prerequisites under Operations; each
+  script's header says what it does, and
   `recipe.py`'s is the reference of the recipe and kit format):
   `preview.sh <exercise id> [keys|loop|hands] [male|female]` renders the
   correct form and every mistake into `build/animation/`; `validate.py`
@@ -1484,9 +1543,9 @@ files, not here.
   family per Implementer so no two touch a file, rendering the key poses
   and correcting until `validate.py` and the checks below pass; (3) the
   Reviewer looks at every sheet against the checks and the exercise's own
-  `setup`, `execution`, `mistakes` and `cues` text; (4) render the loops
-  and publish one review page for the batch: each exercise with its
-  correct loop and every mistake from two angles and what to look at; (5)
+  `setup`, `execution`, `mistakes` and `cues` text; (4) import the
+  drafts so the owner watches them in the released app with the admin
+  account, with a line per exercise on what to look at; (5)
   ask the owner which exercises need a fix, then what to change in each;
   (6) fixes go back through 2-4 and are shown again; (7) when the owner
   approves, statuses become `approved`, the count here is updated, the
@@ -1495,7 +1554,10 @@ files, not here.
   question). A batch that needs a solver, body file or app change not yet
   in a released build is held from prod until that build is out, and the
   owner is told. No recipe is marked `approved` and no batch is merged
-  without the owner's answer.
+  without the owner's answer. Where a batch is reviewed today (2026-11-26):
+  its drafts are imported as draft documents and the owner reviews them in
+  the released app with the admin account (Drafts for admins, under In
+  Firestore); a `page.py` review page is an optional local aid.
 - **Checks before the owner sees an exercise**: a standing pose has locked
   knees (leg stretch 0.995 or more); a grip matches how the bar is really
   held, looked at in the `hands` close-ups of both bodies, not only
@@ -1885,6 +1947,11 @@ files, not here.
   - The exercise and muscle codes the engine needs are in
     `functions/src/generator/vocabulary.ts`; a Dart test holds them equal
     to `vocabulary.dart`.
+  - Seed rules, known gaps (rules version 1, 2026-11-22): they leave 69 of the
+    140 standard answers with a target muscle without direct work and 83 with
+    a day under half the session; the intermediate Upper/Lower gives glutes 21
+    sets, above the 20 band. The exercise ratings and seed rules are the
+    Architect's first pass.
 - **Program progress**: doing another day of the active program shows it as
   done but leaves the schedule. Done days are read from workouts by date
   only, so no composite index is needed.

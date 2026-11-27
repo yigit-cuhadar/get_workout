@@ -5,7 +5,7 @@ set -euo pipefail
 
 usage() {
   cat >&2 <<'EOF'
-Usage: GOOGLE_ACCESS_TOKEN=$(gcloud auth print-access-token) \
+Usage: GOOGLE_ACCESS_TOKEN=$(../../tools/google_token.sh) \
          tool/set_premium.sh <project-id> <uid> [days|off]
 
 Writes entitlements/<uid> with {"premium": true, "expiresAt": now + days}

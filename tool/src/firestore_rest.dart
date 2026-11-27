@@ -181,7 +181,7 @@ class FirestoreRest {
     final request = await _client.openUrl(method, uri);
     request.headers
       ..set(HttpHeaders.authorizationHeader, 'Bearer $_token')
-      // Bills the call to this project; needed for user (gcloud) tokens.
+      // Bills the call to this project; needed for user tokens.
       ..set('x-goog-user-project', projectId);
     if (body != null) {
       request.headers.contentType = ContentType.json;
