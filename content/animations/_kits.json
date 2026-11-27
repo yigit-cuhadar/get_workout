@@ -398,12 +398,12 @@
   },
   "t_bar_handle": {
     "status": "draft",
-    "values": {"jy": -0.1, "jz": 0.03},
+    "values": {"jy": -0.1, "jz": 0.07},
     "pieces": [
       {"cyl": [[0, 0, 0.1], {"between": [[0, 0, 0.1], {"grips": [0, "$jy", "$jz"]}], "t": 1.2}], "r": 0.014, "colour": "steel"},
-      {"cyl": [{"between": [[0, 0, 0.1], {"grips": [0, "$jy", "$jz"]}], "t": 1.025}, {"between": [[0, 0, 0.1], {"grips": [0, "$jy", "$jz"]}], "t": 1.2}], "r": 0.025, "colour": "steel"},
-      {"cyl": [{"between": [[0, 0, 0.1], {"grips": [0, "$jy", "$jz"]}], "t": 1.04}, {"between": [[0, 0, 0.1], {"grips": [0, "$jy", "$jz"]}], "t": 1.06}], "r": 0.16, "colour": "plate"},
-      {"cyl": [{"between": [[0, 0, 0.1], {"grips": [0, "$jy", "$jz"]}], "t": 1.06}, {"between": [[0, 0, 0.1], {"grips": [0, "$jy", "$jz"]}], "t": 1.076}], "r": 0.12, "colour": "plate"},
+      {"cyl": [{"between": [[0, 0, 0.1], {"grips": [0, "$jy", "$jz"]}], "t": 1.02}, {"between": [[0, 0, 0.1], {"grips": [0, "$jy", "$jz"]}], "t": 1.2}], "r": 0.025, "colour": "steel"},
+      {"cyl": [{"between": [[0, 0, 0.1], {"grips": [0, "$jy", "$jz"]}], "t": 1.035}, {"between": [[0, 0, 0.1], {"grips": [0, "$jy", "$jz"]}], "t": 1.055}], "r": 0.16, "colour": "plate"},
+      {"cyl": [{"between": [[0, 0, 0.1], {"grips": [0, "$jy", "$jz"]}], "t": 1.055}, {"between": [[0, 0, 0.1], {"grips": [0, "$jy", "$jz"]}], "t": 1.071}], "r": 0.12, "colour": "plate"},
       {"box": [0, 0, 0.03], "size": [0.34, 0.34, 0.06]},
       {"cyl": [[0, 0, 0.06], [0, 0, 0.13]], "r": 0.04, "colour": "steel"},
       {"cyl": [{"hand": "L", "at": [0, 0, -0.06]}, {"hand": "L", "at": [0, 0, 0.06]}], "r": 0.014, "colour": "steel"},
