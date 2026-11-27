@@ -3475,7 +3475,10 @@ the feature you are about to touch, and keep it true when you change it.
 - **Gear** (owner, 2026-11-25): designed once. A piece of equipment is a
   kit in `content/animations/_kits.json`, built from boxes and cylinders
   and balls that stand still, follow the two hands, one hand (a dumbbell)
-  or one foot (an ankle strap), or stretch between two points (a cable), with a status of its own (`draft`, `approved`). A recipe only
+  or one foot (an ankle strap), or stretch between two points (a cable). The points and pieces a kit is made of are listed in the header
+  of `tool/animation/recipe.py`: a fixed point, `grips` between the two
+  hands, `hand` and `foot` for one of them, `between` two points, a mover
+  such as a weight stack; a cylinder, a box, a ball, with a status of its own (`draft`, `approved`). A recipe only
   names kits, says where each stands and sets the few values a kit offers
   (a plate's size); the validator refuses anything else. A new kit, or a
   change to one, is shown to the owner on its own before any exercise that
@@ -3539,6 +3542,32 @@ the feature you are about to touch, and keep it true when you change it.
   pass through the body or the floor; start and end pose are the same, so
   the loop does not jump; the lowering is slower than the lifting; nothing
   contradicts the exercise's `mistakes` list.
+  **From the owner's review in the app** (2026-11-26, 65 notes on the
+  first 241 drafts; every recipe passes these too, the ones the owner did
+  not look at included): no hand, forearm or elbow goes into the thigh,
+  knee, hip, belly or chest (sit-up top, Russian twist, deep squat hold,
+  sumo squat, kettlebell deadlift); a bar or a dumbbell goes round the
+  body on its way between two keys, by a mid key, never through it (hip
+  thrust, snatch, sumo deadlift, cleans); an elbow angle the movement keeps
+  is the same at every key, which the preview shows as the same arm stretch
+  (raises, flies, shrugs, straight-arm pulls, swings), and arms that hang
+  with a weight are straight at every key, the top of a deadlift included;
+  no ankle, foot, knee, thigh, shoulder or forearm turns as no joint turns:
+  a direction that flips between two keys spins the limb on the way, and a
+  foot in the air points as a relaxed foot would, the same at every key
+  unless the movement turns it; on a bench the hips and the whole back lie
+  on the pad, centred, never on its edge or corner; a bar that rests on the
+  back or the shoulders touches them; nothing hangs in the air that would
+  fall (a renegade row always has one hand on the floor); nothing is faster
+  than a person does it; a mid pose shapes the path and a hold is the same
+  pose twice, with about the same speed on both sides of a mid key; a
+  movement that reads wrong as a whole is rebuilt from the exercise's own
+  `setup` and `execution` text. A session checks these on the rendered key
+  poses from two angles, and with a script that samples every clip frame
+  by frame where it has one; it says which recipes it only checked by
+  numbers. Known and accepted: one pose cannot seat both bodies, so a back
+  sinks 1-3 cm into a pad on the male body where it just touches on the
+  female one.
 - **Hands** (2026-11-26): the grip point is 6.4 cm from the wrist along
   the fingers and 3.6 cm into the palm, where two finger joints curled 75
   degrees each close round a 28 mm bar; the thumb turns about its base by
@@ -3572,6 +3601,9 @@ the feature you are about to touch, and keep it true when you change it.
   approved recipe sent back with `fix` keeps its published animation until
   the fix is approved (decided 2026-11-26: a flagged animation is still
   better for everyone else than none).
+  Open: `firestore.rules` lets any signed-in user read the draft
+  documents (the app shows them to admins only); narrowing that to the
+  admin claim is a rules deploy the owner has not asked for yet.
   The app's `GetExerciseAnimation` reads the animation and the kits from
   Firestore's cache when it holds them (a known absence included) and
   refreshes them from the server for the next read; otherwise from the
