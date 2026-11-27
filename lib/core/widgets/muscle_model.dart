@@ -341,6 +341,61 @@ class MuscleModelPair extends StatelessWidget {
   final List<Muscle> secondary;
   final VoidCallback? onRetry;
 
+  @override
+  Widget build(BuildContext context) {
+    final style = ForgeStyle.of(context);
+    final p = style.colors;
+    final text = Theme.of(context).textTheme;
+    final l10n = AppLocalizations.of(context);
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(Gap.md, 14, Gap.md, Gap.md),
+      decoration: BoxDecoration(
+        color: p.surface,
+        borderRadius: BorderRadius.circular(style.radii.lg),
+        border: style.cardBorder == 0
+            ? null
+            : Border.all(color: p.line, width: style.cardBorder),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        spacing: 12,
+        children: [
+          header ?? Text(title!, style: text.titleMedium),
+          if (onRetry case final onRetry?)
+            ErrorView(
+              title: l10n.muscleModelFailedTitle,
+              message: l10n.muscleModelPairFailedDetail,
+              retryLabel: l10n.retry,
+              onRetry: onRetry,
+              compact: true,
+            )
+          else
+            stage ??
+                MuscleFigures(model: model, main: main, secondary: secondary),
+          MuscleLegend(main: main, secondary: secondary),
+        ],
+      ),
+    );
+  }
+}
+
+/// The body from the front and from the back side by side, still, each
+/// figure filling its half: the [main] muscles in heat-high, the
+/// [secondary] ones in the lighter green of the same family and the rest
+/// very light. Without a [model] (loading) a shimmering figure per side.
+class MuscleFigures extends StatelessWidget {
+  const MuscleFigures({
+    super.key,
+    required this.model,
+    required this.main,
+    this.secondary = const [],
+  });
+
+  final Model3D? model;
+  final List<Muscle> main;
+  final List<Muscle> secondary;
+
   /// The model's height to width, as its figure stands.
   static const double _aspect = 330 / 170;
 
@@ -351,8 +406,7 @@ class MuscleModelPair extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final style = ForgeStyle.of(context);
-    final p = style.colors;
+    final p = ForgeStyle.of(context).colors;
     final text = Theme.of(context).textTheme;
     final l10n = AppLocalizations.of(context);
     final gw = GwColors.of(context);
@@ -385,6 +439,40 @@ class MuscleModelPair extends StatelessWidget {
         ),
       ],
     );
+    return Semantics(
+      image: true,
+      label: l10n.muscleNames([...main, ...secondary]),
+      child: ExcludeSemantics(
+        child: Row(
+          spacing: 28,
+          children: [
+            Expanded(child: side(l10n.libraryFront, back: false)),
+            Expanded(child: side(l10n.libraryBack, back: true)),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// A dot and a line per group: the [main] muscles in heat-high, then the
+/// [secondary] ones, if any, in the lighter green.
+class MuscleLegend extends StatelessWidget {
+  const MuscleLegend({
+    super.key,
+    required this.main,
+    this.secondary = const [],
+  });
+
+  final List<Muscle> main;
+  final List<Muscle> secondary;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = ForgeStyle.of(context).colors;
+    final text = Theme.of(context).textTheme;
+    final l10n = AppLocalizations.of(context);
+    final gw = GwColors.of(context);
     Widget legend(Color color, String label, List<Muscle> muscles) => Row(
       spacing: Gap.sm,
       children: [
@@ -403,60 +491,14 @@ class MuscleModelPair extends StatelessWidget {
         Flexible(child: Text(l10n.muscleNames(muscles), style: text.bodySmall)),
       ],
     );
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(Gap.md, 14, Gap.md, Gap.md),
-      decoration: BoxDecoration(
-        color: p.surface,
-        borderRadius: BorderRadius.circular(style.radii.lg),
-        border: style.cardBorder == 0
-            ? null
-            : Border.all(color: p.line, width: style.cardBorder),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        spacing: 12,
-        children: [
-          header ?? Text(title!, style: text.titleMedium),
-          if (onRetry case final onRetry?)
-            ErrorView(
-              title: l10n.muscleModelFailedTitle,
-              message: l10n.muscleModelPairFailedDetail,
-              retryLabel: l10n.retry,
-              onRetry: onRetry,
-              compact: true,
-            )
-          else if (stage case final stage?)
-            stage
-          else
-            Semantics(
-              image: true,
-              label: l10n.muscleNames([...main, ...secondary]),
-              child: ExcludeSemantics(
-                child: Row(
-                  spacing: 28,
-                  children: [
-                    Expanded(child: side(l10n.libraryFront, back: false)),
-                    Expanded(child: side(l10n.libraryBack, back: true)),
-                  ],
-                ),
-              ),
-            ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            spacing: 6,
-            children: [
-              legend(gw.heatHigh, l10n.muscleModelMain, main),
-              if (secondary.isNotEmpty)
-                legend(
-                  gw.muscleSecondary,
-                  l10n.muscleModelSecondary,
-                  secondary,
-                ),
-            ],
-          ),
-        ],
-      ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      spacing: 6,
+      children: [
+        legend(gw.heatHigh, l10n.muscleModelMain, main),
+        if (secondary.isNotEmpty)
+          legend(gw.muscleSecondary, l10n.muscleModelSecondary, secondary),
+      ],
     );
   }
 }

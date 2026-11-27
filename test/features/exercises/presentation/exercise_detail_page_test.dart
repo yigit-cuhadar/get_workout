@@ -11,8 +11,16 @@ import 'package:get_workout/features/exercises/presentation/body_model_cubit.dar
 import 'package:get_workout/features/exercises/presentation/exercise_catalogue_cubit.dart';
 import 'package:get_workout/features/exercises/presentation/exercise_detail_cubit.dart';
 import 'package:get_workout/features/exercises/presentation/exercise_detail_page.dart';
+import 'package:get_workout/features/exercises/domain/exercise_animation.dart';
+import 'package:get_workout/features/exercises/presentation/exercise_motion_cubit.dart';
 import 'package:get_workout/features/exercises/presentation/favorites_cubit.dart';
+import 'package:get_workout/features/exercises/presentation/widgets/exercise_tile.dart';
+import 'package:get_workout/features/settings/domain/user_settings.dart';
+import 'package:get_workout/features/settings/presentation/settings_cubit.dart';
+import 'package:get_workout/features/strength/presentation/exercise_strength_cubit.dart';
+import 'package:get_workout/features/workout/domain/exercise_stats.dart';
 import 'package:get_workout/l10n/app_localizations.dart';
+import 'package:forge_model_viewer/forge_model_viewer.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
@@ -32,6 +40,19 @@ class _FavoritesCubit extends MockCubit<FavoritesState>
     implements FavoritesCubit {}
 
 class _ModelCubit extends MockCubit<BodyModelState> implements BodyModelCubit {}
+
+class _MotionCubit extends MockCubit<ExerciseMotionState>
+    implements ExerciseMotionCubit {}
+
+class _Model extends Fake implements Model3D {}
+
+class _Clip extends Fake implements ClipMotion {}
+
+class _SettingsCubit extends MockCubit<SettingsState>
+    implements SettingsCubit {}
+
+class _StrengthCubit extends MockCubit<ExerciseStrengthState>
+    implements ExerciseStrengthCubit {}
 
 void main() {
   final bench = exercise(
@@ -60,8 +81,14 @@ void main() {
 
   late _DetailCubit detail;
   late _FavoritesCubit favorites;
+  late _StrengthCubit strength;
 
   setUp(() {
+    strength = _StrengthCubit();
+    when(() => strength.state).thenReturn(const ExerciseStrengthState());
+    sl.registerFactoryParam<ExerciseStrengthCubit, String, WeightUnit>(
+      (_, _) => strength,
+    );
     detail = _DetailCubit();
     favorites = _FavoritesCubit();
     when(() => favorites.state).thenReturn(const FavoritesState({}));
@@ -82,6 +109,12 @@ void main() {
     when(() => detail.state).thenReturn(state);
     final catalogue = _CatalogueCubit();
     when(() => catalogue.state).thenReturn(CatalogueReady([bench, custom]));
+    final settings = _SettingsCubit();
+    when(() => settings.state).thenReturn(
+      const SettingsState(
+        UserSettings(weightUnit: WeightUnit.kg, lengthUnit: LengthUnit.cm),
+      ),
+    );
     final model = _ModelCubit();
     when(() => model.state).thenReturn(const BodyModelLoading());
     when(model.load).thenAnswer((_) async {});
@@ -108,6 +141,7 @@ void main() {
           BlocProvider<ExerciseCatalogueCubit>.value(value: catalogue),
           BlocProvider<FavoritesCubit>.value(value: favorites),
           BlocProvider<BodyModelCubit>.value(value: model),
+          BlocProvider<SettingsCubit>.value(value: settings),
         ],
         child: MaterialApp.router(
           theme: AppPreset.slate.lightTheme(),
@@ -127,23 +161,118 @@ void main() {
     await tester.pump(const Duration(milliseconds: 500));
   }
 
-  testWidgets('a catalogue exercise: facts, steps, bullets and similar', (
+  Future<void> openTab(WidgetTester tester, String tab) async {
+    await tester.tap(find.widgetWithText(Tab, tab));
+    await settle(tester);
+  }
+
+  testWidgets('without an animation: no form chips, mistakes listed', (
     tester,
   ) async {
     await pump(tester, DetailReady(bench, alternatives: [dumbbell]));
 
+    expect(find.text('Correct form'), findsNothing);
+    expect(find.text('Mistake 1'), findsNothing);
+    expect(find.text('Common mistakes'), findsOneWidget);
+    expect(find.text('Bouncing the bar.'), findsOneWidget);
+    expect(find.text('Flaring the elbows.'), findsOneWidget);
+    expect(find.bySemanticsLabel('Watch mistake 1'), findsNothing);
+    // How to do it is open: the steps, the mistakes and the safety line.
+    expect(find.byType(BenefitList), findsNWidgets(2));
+    expect(find.text('• Use a spotter.'), findsOneWidget);
+    expect(find.text('Pattern'), findsNothing);
+    expect(find.text('Custom'), findsNothing);
+    expect(find.text('Exercise options'), findsNothing);
+  });
+
+  testWidgets('with an animation: a chip per clip, every mistake listed', (
+    tester,
+  ) async {
+    await sl.unregister<ExerciseMotionCubit>();
+    final motion = _MotionCubit();
+    when(() => motion.state).thenReturn(
+      MotionReady(
+        clips: const [AnimationClip.correct(), AnimationClip.mistake(0, 0)],
+        selected: 0,
+        model: _Model(),
+        motion: _Clip(),
+      ),
+    );
+    when(motion.load).thenAnswer((_) async {});
+    when(() => motion.select(any())).thenReturn(null);
+    sl.registerFactoryParam<ExerciseMotionCubit, String, void>(
+      (_, _) => motion,
+    );
+    await pump(tester, DetailReady(bench));
+
+    // The picked form is open on the stage, each other a small chip.
+    expect(find.text('Correct form'), findsOneWidget);
+    expect(find.bySemanticsLabel('Mistake 1'), findsOneWidget);
+    expect(find.bySemanticsLabel('Mistake 2'), findsNothing);
+    // Every mistake is on How to do it; the one with a clip plays it.
+    expect(find.text('Common mistakes'), findsOneWidget);
+    expect(find.text('Flaring the elbows.'), findsOneWidget);
+    expect(find.bySemanticsLabel('Watch mistake 1'), findsOneWidget);
+    expect(find.bySemanticsLabel('Watch mistake 2'), findsNothing);
+
+    await tester.tap(find.bySemanticsLabel('Mistake 1'));
+    await settle(tester);
+    verify(() => motion.select(1)).called(1);
+
+    await tester.tap(find.bySemanticsLabel('Watch mistake 1'));
+    await settle(tester);
+    verify(() => motion.select(1)).called(1);
+  });
+
+  testWidgets('Details holds the facts and the similar exercises', (
+    tester,
+  ) async {
+    await pump(tester, DetailReady(bench, alternatives: [dumbbell]));
+    await openTab(tester, 'Details');
+
     expect(find.text('Pattern'), findsOneWidget);
     expect(find.text('Logged as'), findsOneWidget);
     expect(find.text('Also called'), findsOneWidget);
-    // The steps and the numbered mistakes.
-    expect(find.byType(BenefitList), findsNWidgets(2));
-    expect(find.text('Bouncing the bar.'), findsOneWidget);
-    expect(find.text('• Use a spotter.'), findsOneWidget);
-    expect(find.text('Similar exercises'), findsOneWidget);
     expect(find.text('Alternatives · 1'), findsOneWidget);
     expect(find.text('Dumbbell Bench Press'), findsOneWidget);
-    expect(find.text('Custom'), findsNothing);
-    expect(find.text('Exercise options'), findsNothing);
+  });
+
+  testWidgets('Performance, never done, offers Add to workout', (tester) async {
+    when(() => strength.state).thenReturn(
+      const ExerciseStrengthState(status: ExerciseStrengthStatus.ready),
+    );
+    await pump(tester, DetailReady(bench));
+    await openTab(tester, 'Performance');
+
+    expect(find.text('No sets yet'), findsOneWidget);
+    expect(find.widgetWithText(ForgeButton, 'Add to workout'), findsOneWidget);
+  });
+
+  testWidgets('Performance lists the latest workouts and See progress', (
+    tester,
+  ) async {
+    when(() => strength.state).thenReturn(
+      ExerciseStrengthState(
+        status: ExerciseStrengthStatus.ready,
+        trained: true,
+        sessions: [
+          for (var i = 0; i < 7; i++)
+            HistoryPoint(
+              date: DateTime(2026, 11, 20 - i),
+              workoutId: 'w$i',
+              workoutName: 'Push $i',
+            ),
+        ],
+      ),
+    );
+    await pump(tester, DetailReady(bench));
+    await openTab(tester, 'Performance');
+
+    expect(find.textContaining('Last time'), findsOneWidget);
+    // The five latest; See progress opens the rest.
+    expect(find.textContaining('Push 4'), findsOneWidget);
+    expect(find.textContaining('Push 5'), findsNothing);
+    expect(find.text('See progress'), findsOneWidget);
   });
 
   testWidgets('the star in the app bar makes it a favourite', (tester) async {
@@ -163,13 +292,10 @@ void main() {
       tester,
       DetailReady(bench, variations: variations, alternatives: [dumbbell]),
     );
+    await openTab(tester, 'Details');
 
-    final card = find.ancestor(
-      of: find.text('Similar exercises'),
-      matching: find.byType(SectionCard),
-    );
-    expect(find.descendant(of: card, matching: find.text('5')), findsOneWidget);
     expect(find.text('Variations · 4'), findsOneWidget);
+    expect(find.text('See all (4)'), findsOneWidget);
     expect(find.text('Alternatives · 1'), findsOneWidget);
     expect(find.text('Variation 3'), findsOneWidget);
     expect(find.text('Variation 4'), findsNothing);
@@ -182,14 +308,15 @@ void main() {
 
   testWidgets('a Similar row opens its exercise', (tester) async {
     await pump(tester, DetailReady(bench, alternatives: [dumbbell]));
+    await openTab(tester, 'Details');
 
-    expect(find.text('See all'), findsNothing);
+    expect(find.textContaining('See all'), findsNothing);
     await tester.tap(find.text('Dumbbell Bench Press'));
     await settle(tester);
     expect(find.text('Opened dumbbell'), findsOneWidget);
   });
 
-  testWidgets('See all opens every one; a row opens it', (tester) async {
+  testWidgets('See all opens its group; a row opens it', (tester) async {
     final variations = [
       for (var i = 1; i <= 4; i++) exercise('v$i', name: 'Variation $i'),
     ];
@@ -197,22 +324,22 @@ void main() {
       tester,
       DetailReady(bench, variations: variations, alternatives: [dumbbell]),
     );
+    await openTab(tester, 'Details');
 
-    await tester.tap(find.text('See all'));
+    await tester.tap(find.text('See all (4)'));
     await settle(tester);
     final sheet = find.byType(ForgeBottomSheet);
-    for (final name in [
-      'Variations · 4',
-      'Variation 4',
-      'Alternatives · 1',
-      'Dumbbell Bench Press',
-    ]) {
+    for (final name in ['Variations · 4', 'Variation 1', 'Variation 4']) {
       expect(
         find.descendant(of: sheet, matching: find.text(name)),
         findsOneWidget,
         reason: name,
       );
     }
+    expect(
+      find.descendant(of: sheet, matching: find.text('Dumbbell Bench Press')),
+      findsNothing,
+    );
 
     await tester.tap(
       find.descendant(of: sheet, matching: find.text('Variation 4')),
@@ -226,7 +353,39 @@ void main() {
     tester,
   ) async {
     await pump(tester, DetailReady(bench));
-    expect(find.text('Similar exercises'), findsNothing);
+    await openTab(tester, 'Details');
+    expect(find.textContaining('Variations'), findsNothing);
+    expect(find.textContaining('Alternatives'), findsNothing);
+  });
+
+  testWidgets('a row says Easier or Harder when its level differs', (
+    tester,
+  ) async {
+    await pump(
+      tester,
+      DetailReady(
+        exercise('mid', name: 'Middle', level: Level.intermediate),
+        variations: [
+          exercise('easy', name: 'Easy one'),
+          exercise('same', name: 'Same one', level: Level.intermediate),
+          exercise('hard', name: 'Hard one', level: Level.advanced),
+        ],
+      ),
+    );
+    await openTab(tester, 'Details');
+
+    expect(find.text('Easier'), findsOneWidget);
+    expect(find.text('Harder'), findsOneWidget);
+    expect(
+      find.descendant(
+        of: find.ancestor(
+          of: find.text('Same one'),
+          matching: find.byType(ExerciseTile),
+        ),
+        matching: find.byType(ForgeTag),
+      ),
+      findsNothing,
+    );
   });
 
   testWidgets('the ⋯ menu adds to a workout or a program; no bottom bar', (

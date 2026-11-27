@@ -1859,5 +1859,14 @@
   "reviewThanksTitle": "Bize söylediğin için teşekkürler",
   "reviewThanksMessage": "Neyi geliştirmemiz gerektiğini söyle, inceleyelim.",
   "reviewWriteToUs": "Bize yaz",
-  "verifyEmailTooMany": "Başka bir e-posta göndermeden önce bir dakika bekle."
+  "verifyEmailTooMany": "Başka bir e-posta göndermeden önce bir dakika bekle.",
+  "detailDetailsTab": "Detaylar",
+  "detailPerformanceTab": "Performans",
+  "performanceLastTime": "Son sefer · {date}",
+  "performanceSeeProgress": "İlerlemeyi gör",
+  "performanceEmptyTitle": "Henüz kayıt yok",
+  "performanceEmptyMessage": "Bu egzersizi bir antrenmanda yaptığında setlerin burada görünür.",
+  "detailSeeAllCount": "Tümünü gör ({count})",
+  "similarEasier": "Daha kolay",
+  "similarHarder": "Daha zor"
 }

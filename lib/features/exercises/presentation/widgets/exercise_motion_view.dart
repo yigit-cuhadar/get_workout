@@ -25,12 +25,17 @@ class ExerciseMotionView extends StatefulWidget {
     required this.main,
     required this.secondary,
     required this.height,
+    this.controlsOnTop = false,
   });
 
   final MotionReady motion;
   final List<Muscle> main;
   final List<Muscle> secondary;
   final double height;
+
+  /// The buttons in the stage's top corner, leaving its foot free (the
+  /// exercise page draws the form picker there).
+  final bool controlsOnTop;
 
   @override
   State<ExerciseMotionView> createState() => _ExerciseMotionViewState();
@@ -104,7 +109,8 @@ class _ExerciseMotionViewState extends State<ExerciseMotionView> {
               Positioned.fill(child: viewer),
               Positioned(
                 right: Gap.xs,
-                bottom: Gap.xs,
+                top: widget.controlsOnTop ? Gap.xs : null,
+                bottom: widget.controlsOnTop ? null : Gap.xs,
                 child: Row(
                   spacing: Gap.xs,
                   children: [

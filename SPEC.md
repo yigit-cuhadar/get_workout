@@ -12,9 +12,9 @@ Updated 2026-11-27. Keep this block and Open true with every change.
   result is not known here. TestFlight builds 8-13 followed (2026-11-25 to
   2026-11-27). 305 of 419 live exercises have an approved animation.
 - **Next**:
-  1. The next animation batch (Feature notes › Exercise animations: Where it
+  1. The owner's verdict on the exercise page redesign PR (Open).
+  2. The next animation batch (Feature notes › Exercise animations: Where it
      stands, then A batch, step by step).
-  2. The exercise page's owed studio cards and Widgetbook use cases (Open).
   3. The App Review result, then what waits on it (Open › Waits outside).
 - **Waits on the owner**: each animation batch's approval; two playback
   details to draw and ask; checks on a real device (Open).
@@ -203,10 +203,15 @@ behaviour and traps are under Feature notes.
   step by step (it starts with `python3 tool/animation/batch.py`); the
   owner approves each batch. Sample every clip frame by frame for body
   parts inside gear: the owner caught feet passing through a box.
-- **Exercise page parts** (2026-11-26): studio component cards and Widgetbook
-  use cases are owed for the animation stage with its tabs, the motion view,
-  the mistake chips, the playback buttons, the workout card's play button, the
-  numbered mistakes and the similar-exercise rows; `widgetbook/lib/use_cases`
+- **Exercise page redesign** (Design, 2026-11-27): built on its own PR,
+  which the owner may turn down and ask to revert as one. Left to the
+  build: the muscle legend sits under the stage; a custom exercise
+  keeps its short page (no tabs). The tab bar is Material's
+  TabBar in Forge's theme, with no Forge component or studio card yet.
+- **Exercise page parts** (2026-11-26, 2026-11-27): studio component cards and Widgetbook
+  use cases are owed for the stage, the form picker, the page's tab bar, the
+  motion view, the playback buttons, the workout card's play button and the
+  similar-exercise rows; `widgetbook/lib/use_cases`
   and the studio page have none of them.
 - **Studio, not confirmed as drawn afterwards**: the states built from
   standard forms on the Programs tab and the workout screen (2026-11-15), and
@@ -733,6 +738,9 @@ of the older row.
 | 2026-11-25 | Exercise animations | Every exercise gets its correct form and each mistake a pose can show; the exercise page's first card has Movement and Muscles tabs; a chip for the correct form and one per mistake, the picked mistake playing in place with its region marked; the workout's open card gets a play button opening a sheet with the animation, cues and a link to the page | https://claude.ai/artifact/RGTHJ9yhTVxSxnX1LG3ZL2 |
 | 2026-11-26 | Exercise page | The picked mistake chip fills in danger, the others tinted, the correct-form chip green; chips sit right under the animation with the text in a fixed two-line place below; pause / play and half speed buttons, in the workout's sheet too; a hint for turning and zooming, no view buttons; the workout card's play button is filled | https://claude.ai/artifact/Y8sMp2DB83WX6ga5MhbCvW |
 | 2026-11-26 | Exercise screen review | The own note is removed; Setup and How to do it share one card; each common mistake carries its chip's number, and one with an animation plays it from its row; the Safety card takes the warning tone; half speed looks filled while on; Tips get a title icon; each similar exercise is its own row with See all; the favourite star sits in the app bar beside the menu. Without a board: a mistake without an animation leaves a gap in the chip numbers | https://claude.ai/artifact/Gp3cZ7kU1JMSZ5TG59rXGn |
+| 2026-11-27 | Exercise page redesign | The animation is a full-width 380 px stage under the app bar, Movement / Muscles on the stage; under it a swipeable card per form (the correct form with its cues, each mistake with its line and region; swiping plays that form) replaces the chips, their line and the Mistakes list; then the tabs How to do it, Details, Performance; Details keeps the seven-row info table, then Similar exercises; Performance shows last time, best set and estimated 1RM with "See progress" to the strength page, then each workout's sets (the record set marked, a row opens the workout); never done, it says so and offers Add to workout. Built 2026-11-27; Performance lists each workout's best set (what the stats keep), and its rows and See progress switch to the Progress tab | https://claude.ai/artifact/GEGQYC6oV96g6h38z6BLmC |
+| 2026-11-27 | Similar exercises | Each group (Variations, Alternatives) under its label with its count, its first three as library rows (muscles · equipment, the star), "See all (n)" opening that group in a sheet; a row whose level differs from the exercise's says Easier or Harder; Movement and Muscles keep one stage height | https://claude.ai/artifact/GEGQYC6oV96g6h38z6BLmC |
+| 2026-11-27 | Mistakes and cues | The forms the animation plays are picked on the stage's foot in frosted see-through chips: the picked one open with its name or mistake line, each other a small circle with a check or its number; pause and half speed move to the stage's top corner (45 of 852 mistakes cannot be shown; 118 of 419 exercises have no animation and no picker); How to do it lists every mistake numbered in danger, one with a clip ending in a play button that scrolls up and plays it on the stage; the cues are the third part of the How to do it card, each beside a bulb in a pale warning circle aligned with the steps | https://claude.ai/artifact/GEGQYC6oV96g6h38z6BLmC |
 
 Rules still binding that the studio does not show:
 - Colours stay muted and black is not a default accent; the plates'
