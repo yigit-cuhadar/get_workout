@@ -1,6 +1,6 @@
 """Where the work stands and what comes next.
 
-  python3 batch.py [size]     (default: 5 exercises)
+  python3 batch.py [size]     (default: 15 exercises)
 
 Prints the count of live exercises by recipe status, the kits and their
 status, and the next batch: whole families, the family whose most popular
@@ -21,7 +21,7 @@ GROUPS = [
     ("bars", {"pull_up_bar", "dip_station", "rings", "suspension_trainer"}),
     ("bands", {"resistance_band"}),
 ]
-size = int(sys.argv[1]) if len(sys.argv) > 1 else 5
+size = int(sys.argv[1]) if len(sys.argv) > 1 else 15
 live = [e for e in recipe.catalogue().values() if e["status"] == "live"]
 status = {
     e["id"]: recipe.load(e["id"])["status"] if os.path.exists(os.path.join(recipe.RECIPES, f"{e['id']}.json")) else "none"

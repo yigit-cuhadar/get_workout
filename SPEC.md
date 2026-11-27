@@ -1558,8 +1558,10 @@ files, not here.
   the count in Where it stands is the only state kept here.
 - **Order** (2026-11-27, the owner: popular first): whole families, the
   family whose most popular exercise still lacks an approved recipe first,
-  then `familyRank`; the equipment group is only printed. A batch is about 5 exercises with their
-  mistakes (10-15 animations) and never splits a family.
+  then `familyRank`; the equipment group is only printed. A batch is about
+  15 exercises with their mistakes (2026-11-27, the owner: fewer, bigger
+  reviews), never splits a family, and is shared by three writers, each
+  with whole families and their kits.
 - **A batch, step by step**: (1) list the batch (`batch.py`), build any
   kit it lacks and get that kit approved; (2) write the recipes, one
   family per Implementer so no two touch a file, rendering the key poses
