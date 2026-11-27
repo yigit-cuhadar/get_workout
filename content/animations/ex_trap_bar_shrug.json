@@ -1,0 +1,255 @@
+{
+  "status": "draft",
+  "view": [
+    35,
+    8
+  ],
+  "poses": {
+    "bottom": {
+      "pelvis": [
+        0,
+        0,
+        0.98
+      ],
+      "pelvis_rot": [
+        0,
+        0,
+        0
+      ],
+      "lumbar": 0,
+      "chest": 0,
+      "neck": 0,
+      "foot": {
+        "at": [
+          0.13,
+          0.03
+        ],
+        "floor": 0,
+        "yaw": 10
+      },
+      "clavicle": [
+        0,
+        0
+      ],
+      "elbow": [
+        0.3,
+        1,
+        0
+      ],
+      "knee": [
+        0.15,
+        -1,
+        0
+      ],
+      "hand": {
+        "fingers": [
+          0.19,
+          0,
+          -0.98
+        ],
+        "palm": [
+          -0.98,
+          0,
+          -0.19
+        ],
+        "curl": 75,
+        "pos": [
+          0.3,
+          -0.03,
+          0.82
+        ]
+      }
+    },
+    "top": {
+      "extends": "bottom",
+      "clavicle": [
+        16,
+        0
+      ],
+      "hand": {
+        "fingers": [
+          0.19,
+          0,
+          -0.98
+        ],
+        "palm": [
+          -0.98,
+          0,
+          -0.19
+        ],
+        "curl": 75,
+        "pos": [
+          0.3,
+          -0.03,
+          0.869
+        ]
+      }
+    }
+  },
+  "keys": [
+    [
+      0,
+      "bottom"
+    ],
+    [
+      0.6,
+      "top"
+    ],
+    [
+      1.6,
+      "top"
+    ],
+    [
+      2.6,
+      "bottom"
+    ],
+    [
+      3.0,
+      "bottom"
+    ]
+  ],
+  "gear": [
+    {
+      "kit": "trap_bar"
+    }
+  ],
+  "mistakes": [
+    {
+      "line": 0,
+      "status": "review",
+      "ring": [
+        "elbow_L",
+        "elbow_R"
+      ],
+      "poses": {
+        "top": {
+          "hand": {
+            "fingers": [
+              0.19,
+              0,
+              -0.98
+            ],
+            "palm": [
+              -0.98,
+              0,
+              -0.19
+            ],
+            "curl": 75,
+            "pos": [
+              0.3,
+              -0.06,
+              0.99
+            ]
+          },
+          "elbow": [
+            0.3,
+            1,
+            -0.2
+          ]
+        }
+      }
+    },
+    {
+      "line": 1,
+      "status": "review",
+      "ring": [
+        "clavicle_L",
+        "clavicle_R"
+      ],
+      "poses": {
+        "fwd": {
+          "extends": "bottom",
+          "clavicle": [
+            8,
+            12
+          ],
+          "hand": {
+            "fingers": [
+              0.19,
+              0,
+              -0.98
+            ],
+            "palm": [
+              -0.98,
+              0,
+              -0.19
+            ],
+            "curl": 75,
+            "pos": [
+              0.3,
+              -0.09,
+              0.849
+            ]
+          }
+        },
+        "back": {
+          "extends": "bottom",
+          "clavicle": [
+            8,
+            -10
+          ],
+          "hand": {
+            "fingers": [
+              0.19,
+              0,
+              -0.98
+            ],
+            "palm": [
+              -0.98,
+              0,
+              -0.19
+            ],
+            "curl": 75,
+            "pos": [
+              0.3,
+              0.04,
+              0.84
+            ]
+          }
+        }
+      },
+      "keys": [
+        [
+          0,
+          "bottom"
+        ],
+        [
+          0.4,
+          "fwd"
+        ],
+        [
+          0.8,
+          "top"
+        ],
+        [
+          1.2,
+          "back"
+        ],
+        [
+          1.7,
+          "bottom"
+        ],
+        [
+          2.1,
+          "fwd"
+        ],
+        [
+          2.5,
+          "top"
+        ],
+        [
+          2.9,
+          "back"
+        ],
+        [
+          3.4,
+          "bottom"
+        ],
+        [
+          3.7,
+          "bottom"
+        ]
+      ]
+    }
+  ]
+}
