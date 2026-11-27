@@ -1,0 +1,170 @@
+{
+  "status": "review",
+  "view": [
+    60,
+    8
+  ],
+  "poses": {
+    "bottom": {
+      "pelvis": [
+        0,
+        -0.13,
+        0.56
+      ],
+      "pelvis_rot": [
+        -10,
+        0,
+        0
+      ],
+      "lumbar": 0,
+      "chest": 0,
+      "neck": 4,
+      "foot": {
+        "at": [
+          0.24,
+          -0.6
+        ],
+        "floor": 0,
+        "yaw": 15
+      },
+      "hand": {
+        "pos": [
+          0.36,
+          -0.215,
+          1.13
+        ],
+        "fingers": [
+          0,
+          0.2,
+          0.98
+        ],
+        "palm": [
+          0,
+          -0.98,
+          0.2
+        ],
+        "curl": 75
+      },
+      "elbow": [
+        0.7,
+        -0.5,
+        -0.5
+      ],
+      "clavicle": [
+        0,
+        0
+      ]
+    },
+    "top": {
+      "extends": "bottom",
+      "hand": {
+        "pos": [
+          0.36,
+          -0.215,
+          1.558
+        ],
+        "fingers": [
+          0,
+          0.1,
+          0.995
+        ],
+        "palm": [
+          0,
+          -0.995,
+          0.1
+        ],
+        "curl": 75
+      },
+      "clavicle": [
+        12,
+        0
+      ],
+      "elbow": [
+        1,
+        0,
+        -0.2
+      ]
+    }
+  },
+  "keys": [
+    [
+      0,
+      "bottom"
+    ],
+    [
+      1.0,
+      "top"
+    ],
+    [
+      1.2,
+      "top"
+    ],
+    [
+      2.6,
+      "bottom"
+    ],
+    [
+      3.0,
+      "bottom"
+    ]
+  ],
+  "gear": [
+    {
+      "kit": "smith_machine",
+      "at": [
+        0,
+        -0.215,
+        0
+      ]
+    },
+    {
+      "kit": "incline_bench",
+      "top_y": 0.156,
+      "top_z": 1.271
+    }
+  ],
+  "mistakes": [
+    {
+      "line": 0,
+      "shown": false,
+      "why": "Where the bench stands is gear; a mistake changes only the body."
+    },
+    {
+      "line": 1,
+      "status": "review",
+      "ring": [
+        "lumbar"
+      ],
+      "poses": {
+        "bottom": {
+          "pelvis": [
+            0,
+            -0.143,
+            0.5737
+          ],
+          "pelvis_rot": [
+            4,
+            0,
+            0
+          ],
+          "lumbar": -16,
+          "chest": -8
+        },
+        "top": {
+          "pelvis": [
+            0,
+            -0.143,
+            0.5737
+          ],
+          "pelvis_rot": [
+            4,
+            0,
+            0
+          ],
+          "lumbar": -16,
+          "chest": -8
+        }
+      }
+    }
+  ]
+}
