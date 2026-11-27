@@ -1,0 +1,45 @@
+{
+  "status": "draft",
+  "view": [40, 8],
+  "poses": {
+    "top": {
+      "pelvis": [0.0, 0.516, 0.824],
+      "pelvis_rot": [-45.0, 0, 0],
+      "lumbar": 1.5,
+      "chest": 0.0,
+      "neck": 30.0,
+      "foot": {"at": [0.16, -0.113], "floor": 0.157, "yaw": 15.0, "pitch": -18.0},
+      "hand": {"pos": [0.265, 0.735, 1.171], "fingers": [-0.018, -0.238, 0.971], "palm": [-1, 0, 0], "curl": 75},
+      "elbow": [0.566, -0.686, -0.457],
+      "clavicle": [0, 0]
+    },
+    "bottom": {
+      "extends": "top",
+      "pelvis": [0.0, 0.237, 0.495],
+      "lumbar": 8.5,
+      "neck": 23.0,
+      "hand": {"pos": [0.265, 0.431, 0.866]}
+    }
+  },
+  "keys": [[0, "top"], [2.0, "bottom"], [2.2, "bottom"], [3.3, "top"], [3.8, "top"]],
+  "gear": [{"kit": "hack_squat_machine"}],
+  "mistakes": [
+    {
+      "line": 0,
+      "status": "review",
+      "ring": ["foot_L", "foot_R"],
+      "poses": {
+        "bottom": {"foot": {"pitch": 6.0, "floor": 0.168}}
+      }
+    },
+    {
+      "line": 1,
+      "status": "review",
+      "ring": ["knee_L", "knee_R"],
+      "poses": {
+        "short": {"extends": "top", "pelvis": [0.0, 0.386, 0.671], "lumbar": 4.8, "neck": 26.7, "hand": {"pos": [0.265, 0.594, 1.029]}}
+      },
+      "keys": [[0, "top"], [1.1, "short"], [1.3, "short"], [1.9, "top"], [2.4, "top"]]
+    }
+  ]
+}
