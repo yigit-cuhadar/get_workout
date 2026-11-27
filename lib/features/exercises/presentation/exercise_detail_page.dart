@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:forge_core/forge_core.dart';
@@ -435,7 +437,12 @@ class _CatalogueBodyState extends State<_CatalogueBody>
         SliverToBoxAdapter(child: _Hero(exercise)),
         SliverPadding(
           padding: const EdgeInsets.fromLTRB(Gap.md, Gap.sm, Gap.md, Gap.sm),
-          sliver: SliverToBoxAdapter(child: _FormCards(exercise)),
+          sliver: SliverToBoxAdapter(
+            child: MuscleLegend(
+              main: exercise.mainMuscles,
+              secondary: exercise.secondaryMuscles,
+            ),
+          ),
         ),
         SliverPersistentHeader(
           pinned: true,
@@ -955,6 +962,7 @@ class _HeroState extends State<_Hero> {
           main: main,
           secondary: secondary,
           height: _Hero.height,
+          controlsOnTop: true,
         ),
       ),
       BodyModelReady(:final model) => figures(model),
@@ -981,200 +989,139 @@ class _HeroState extends State<_Hero> {
                 onChanged: (moving) => setState(() => _moving = moving),
               ),
             ),
+          if (ready != null && _moving)
+            Positioned(
+              left: Gap.sm,
+              right: Gap.sm,
+              bottom: height - _Hero.height + Gap.sm,
+              child: _FormPicker(exercise, ready),
+            ),
         ],
       ),
     );
   }
 }
 
-/// A card per form under the stage, swiped sideways: the correct form with
-/// its cues, then each common mistake with its line. The card in view
-/// plays on the stage; a mistake without an animation leaves the correct
-/// form playing and says so. Dots under the cards mark the one in view;
-/// the worked muscles' legend closes the part.
-class _FormCards extends StatefulWidget {
-  const _FormCards(this.exercise);
+/// The forms to play, on the stage's foot in frosted see-through chips: the
+/// picked one open with its name and, for a mistake, its line; each other
+/// a small circle with a check (the correct form) or its number. A tap
+/// plays that form.
+class _FormPicker extends StatelessWidget {
+  const _FormPicker(this.exercise, this.motion);
 
   final Exercise exercise;
+  final MotionReady motion;
 
-  @override
-  State<_FormCards> createState() => _FormCardsState();
-}
-
-class _FormCardsState extends State<_FormCards> {
-  final _pages = PageController(viewportFraction: 0.88);
-  var _current = 0;
-
-  static const int _bodyLines = 3;
-  static const double _border = 1.5;
-
-  @override
-  void dispose() {
-    _pages.dispose();
-    super.dispose();
-  }
+  static const double _size = 36;
+  static const double _badge = 24;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final style = ForgeStyle.of(context);
     final p = style.colors;
-    final textTheme = Theme.of(context).textTheme;
-    final exercise = widget.exercise;
-    final text = exercise.localized(context);
-    final motion = context.watch<ExerciseMotionCubit>().state;
-    final legend = MuscleLegend(
-      main: exercise.mainMuscles,
-      secondary: exercise.secondaryMuscles,
-    );
-    // Without an animation there is nothing for a card to play: the
-    // mistakes are on How to do it.
-    if (motion is! MotionReady) return legend;
-    final forms = [for (final clip in motion.clips) clip.line];
-    // A clip picked elsewhere (a mistake's play button) brings its card.
-    if (motion.selected != _current) {
-      _current = motion.selected;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (_pages.hasClients) {
-          _pages.animateToPage(
-            _current,
-            duration: const Duration(milliseconds: 250),
-            curve: Curves.easeOut,
-          );
-        }
-      });
-    }
+    final text = Theme.of(context).textTheme;
+    final mistakes = exercise.localized(context).mistakes;
+    final cubit = context.read<ExerciseMotionCubit>();
 
-    final scale = MediaQuery.textScalerOf(context);
-    final body = textTheme.bodyMedium!;
-    final title = textTheme.titleSmall!;
-    double lines(TextStyle style, int count) =>
-        scale.scale(style.fontSize!) * style.height! * count;
-    // The padding and the picked card's border on both sides, then its lines.
-    final height =
-        2 * (14 + _border) +
-        lines(title, 1).clamp(24, double.infinity) +
-        Gap.sm +
-        lines(body, _bodyLines);
+    Color tone(int? line) => line == null ? p.success : p.danger;
 
-    Widget card(int index) {
-      final line = forms[index];
-      final selected = index == _current;
-      final tone = line == null ? p.success : p.danger;
-      return Padding(
-        padding: const EdgeInsetsDirectional.only(end: Gap.sm),
-        child: Semantics(
-          button: true,
-          selected: selected,
-          child: GestureDetector(
-            onTap: () => _pages.animateToPage(
-              index,
-              duration: const Duration(milliseconds: 250),
-              curve: Curves.easeOut,
-            ),
-            child: Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: Gap.md,
-                vertical: 14,
-              ),
-              decoration: BoxDecoration(
-                color: p.surface,
-                borderRadius: BorderRadius.circular(style.radii.lg),
-                border: Border.all(
-                  color: selected ? tone : p.line,
-                  width: selected ? _border : 1,
-                ),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                spacing: Gap.sm,
-                children: [
-                  Row(
-                    spacing: 10,
-                    children: [
-                      Container(
-                        width: 24,
-                        height: 24,
-                        alignment: Alignment.center,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Color.lerp(p.surface, tone, 0.14),
-                        ),
-                        child: line == null
-                            ? ForgeIcon(ForgeIcons.check, size: 14, color: tone)
-                            : Text(
-                                '${line + 1}',
-                                style: style.data.copyWith(
-                                  fontSize: 12,
-                                  color: tone,
-                                ),
-                              ),
-                      ),
-                      Expanded(
-                        child: Text(
-                          line == null
-                              ? l10n.motionCorrectForm
-                              : l10n.motionMistake(line + 1),
-                          style: title.copyWith(color: p.ink),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ],
-                  ),
-                  Text(
-                    line == null
-                        ? [...text.setup, ...text.execution].firstOrNull ?? ''
-                        : text.mistakes[line],
-                    style: body,
-                    maxLines: _bodyLines,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
-              ),
+    Widget glass({required Widget child, Color? border}) => ClipRRect(
+      borderRadius: BorderRadius.circular(_size / 2),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+        child: Container(
+          constraints: const BoxConstraints(minHeight: _size),
+          decoration: BoxDecoration(
+            color: p.surface.withValues(alpha: 0.72),
+            borderRadius: BorderRadius.circular(_size / 2),
+            border: Border.all(
+              color: border ?? p.line.withValues(alpha: 0.8),
+              width: border == null ? 1 : 1.5,
             ),
           ),
+          child: child,
         ),
-      );
-    }
+      ),
+    );
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
+    Widget mark(int? line) => line == null
+        ? ForgeIcon(ForgeIcons.check, size: 16, color: tone(line))
+        : Text('${line + 1}', style: style.data.copyWith(color: tone(line)));
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.end,
       spacing: Gap.sm,
       children: [
-        SizedBox(
-          height: height,
-          child: PageView.builder(
-            controller: _pages,
-            padEnds: false,
-            itemCount: forms.length,
-            onPageChanged: (index) {
-              setState(() => _current = index);
-              context.read<ExerciseMotionCubit>().select(index);
-            },
-            itemBuilder: (context, index) => card(index),
-          ),
-        ),
-        ExcludeSemantics(
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            spacing: 6,
-            children: [
-              for (var i = 0; i < forms.length; i++)
-                AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  width: i == _current ? 18 : 6,
-                  height: 6,
-                  decoration: BoxDecoration(
-                    color: i == _current ? p.ink : p.lineStrong,
-                    borderRadius: BorderRadius.circular(3),
+        for (final (i, clip) in motion.clips.indexed)
+          if (i == motion.selected)
+            Expanded(
+              child: Semantics(
+                selected: true,
+                child: glass(
+                  border: tone(clip.line),
+                  child: Padding(
+                    padding: const EdgeInsetsDirectional.fromSTEB(
+                      6,
+                      6,
+                      Gap.md,
+                      6,
+                    ),
+                    child: Row(
+                      spacing: Gap.sm,
+                      children: [
+                        Container(
+                          width: _badge,
+                          height: _badge,
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Color.lerp(p.surface, tone(clip.line), 0.14),
+                          ),
+                          child: mark(clip.line),
+                        ),
+                        Expanded(
+                          child: Text(
+                            switch (clip.line) {
+                              null => l10n.motionCorrectForm,
+                              final line =>
+                                mistakes.elementAtOrNull(line) ??
+                                    l10n.motionMistake(line + 1),
+                            },
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: text.bodySmall!.copyWith(
+                              color: p.ink,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-            ],
-          ),
-        ),
-        const SizedBox(height: Gap.xs),
-        legend,
+              ),
+            )
+          else
+            Semantics(
+              button: true,
+              label: switch (clip.line) {
+                null => l10n.motionCorrectForm,
+                final line => l10n.motionMistake(line + 1),
+              },
+              child: GestureDetector(
+                onTap: () => cubit.select(i),
+                child: SizedBox(
+                  width: _size,
+                  height: _size,
+                  child: glass(
+                    child: Center(
+                      child: ExcludeSemantics(child: mark(clip.line)),
+                    ),
+                  ),
+                ),
+              ),
+            ),
       ],
     );
   }

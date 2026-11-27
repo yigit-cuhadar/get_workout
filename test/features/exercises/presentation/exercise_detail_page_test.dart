@@ -166,7 +166,7 @@ void main() {
     await settle(tester);
   }
 
-  testWidgets('without an animation: no form cards, mistakes listed', (
+  testWidgets('without an animation: no form chips, mistakes listed', (
     tester,
   ) async {
     await pump(tester, DetailReady(bench, alternatives: [dumbbell]));
@@ -185,7 +185,7 @@ void main() {
     expect(find.text('Exercise options'), findsNothing);
   });
 
-  testWidgets('with an animation: a card per clip, every mistake listed', (
+  testWidgets('with an animation: a chip per clip, every mistake listed', (
     tester,
   ) async {
     await sl.unregister<ExerciseMotionCubit>();
@@ -205,20 +205,17 @@ void main() {
     );
     await pump(tester, DetailReady(bench));
 
+    // The picked form is open on the stage, each other a small chip.
     expect(find.text('Correct form'), findsOneWidget);
-    expect(find.text('Mistake 1'), findsOneWidget);
-    expect(find.text('Mistake 2'), findsNothing);
+    expect(find.bySemanticsLabel('Mistake 1'), findsOneWidget);
+    expect(find.bySemanticsLabel('Mistake 2'), findsNothing);
     // Every mistake is on How to do it; the one with a clip plays it.
     expect(find.text('Common mistakes'), findsOneWidget);
     expect(find.text('Flaring the elbows.'), findsOneWidget);
     expect(find.bySemanticsLabel('Watch mistake 1'), findsOneWidget);
     expect(find.bySemanticsLabel('Watch mistake 2'), findsNothing);
 
-    await tester.timedDrag(
-      find.byType(PageView),
-      const Offset(-300, 0),
-      const Duration(milliseconds: 300),
-    );
+    await tester.tap(find.bySemanticsLabel('Mistake 1'));
     await settle(tester);
     verify(() => motion.select(1)).called(1);
 
