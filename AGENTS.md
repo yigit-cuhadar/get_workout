@@ -7,10 +7,14 @@ Built with MobileAppForge. Work from the forge root (this repo is cloned at
 - Run: `flutter run` (debug and profile use the dev Firebase project, release uses prod)
 - Check before every commit: `dart format lib tool test && flutter analyze && flutter test`
 - Widgetbook of the app's components: `cd widgetbook && dart run build_runner build -d && flutter run -d chrome`
-- Grant or revoke the admin claim: `GOOGLE_ACCESS_TOKEN=$(gcloud auth print-access-token) tool/set_admin.sh <project-id> <email> [--revoke]`
-- Grant or remove server-side Premium on dev (writes `entitlements/{uid}`; refuses non `-dev` projects): `GOOGLE_ACCESS_TOKEN=$(gcloud auth print-access-token) tool/set_premium.sh <project>-dev <uid> [days|off]`
-- Seed a dev account with eight weeks of demo data for store screenshots (profile, an active Upper/Lower 4-Day copy, ~30 workouts with their stats, weigh-ins, measurement days, cardio, favourites; no photos; ids start with `demo_`, `--clear` removes them and keeps the profile): `GOOGLE_ACCESS_TOKEN=$(gcloud auth print-access-token) dart run tool/seed_demo.dart --project getworkout-dev --uid <uid> [--dry-run] [--clear]`
-- Validate content (exercises and programs, with a per-program summary): `dart run tool/validate_content.dart`
-- Import content, exercises then programs (validates first, writes only changes): `GOOGLE_ACCESS_TOKEN=$(gcloud auth print-access-token) dart run tool/import_content.dart --project <project-id> [--dry-run] [--force]` (`--force` overwrites documents edited elsewhere, e.g. in the admin panel; a program's card and detail are written together or not at all)
-- Admin panel (Flutter web, `lib/main_admin.dart`, code in `lib/admin/`): `flutter run -d chrome -t lib/main_admin.dart` (dev project); sign in with an account that has the admin claim
-- Deploy the admin panel to Firebase Hosting: `tool/deploy_admin.sh <dev|prod>` (dev builds in profile mode against dev, prod in release mode against prod)
+- Admin panel (Flutter web, `lib/main_admin.dart`, code in `lib/admin/`): `flutter run -d chrome -t lib/main_admin.dart` against dev, with an account that has the admin claim; `tool/deploy_admin.sh <dev|prod>` deploys it to Firebase Hosting
+
+Scripts in `tool/`; each prints or opens with its own usage. Those that reach a
+Firebase project read a Google access token for it from `GOOGLE_ACCESS_TOKEN`.
+
+- `validate_content.dart`: checks the exercises, programs and animations in `content/`
+- `import_content.dart`: validates, then writes only what changed to a project
+- `seed_demo.dart`: fills a dev account with demo data for store screenshots
+- `set_admin.sh`: grants or revokes the admin claim
+- `set_premium.sh`: grants or removes server-side Premium on a dev project
+- `animation/`: the exercise animation tools (see SPEC › Exercise animations)
