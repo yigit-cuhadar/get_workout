@@ -2345,5 +2345,13 @@
   "reviewThanksTitle": "Thanks for telling us",
   "reviewThanksMessage": "Tell us what to improve and we will look into it.",
   "reviewWriteToUs": "Write to us",
-  "verifyEmailTooMany": "Wait a minute before sending another email."
+  "verifyEmailTooMany": "Wait a minute before sending another email.",
+  "detailDetailsTab": "Details",
+  "detailPerformanceTab": "Performance",
+  "performanceLastTime": "Last time · {date}",
+  "@performanceLastTime": {"placeholders": {"date": {"type": "String"}}},
+  "performanceSeeProgress": "See progress",
+  "performanceEmptyTitle": "No sets yet",
+  "performanceEmptyMessage": "Do this exercise in a workout and your sets show here.",
+  "motionMistakeNotShown": "Not shown in the animation"
 }
