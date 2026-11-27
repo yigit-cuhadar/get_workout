@@ -247,9 +247,8 @@ behaviour and traps are under Feature notes.
   (`preacher_bench`, `landmine_hand`, `t_bar_handle`). Drafts are on dev
   and prod for the admin account. The four recipes on draft kits stay
   `draft` until their kit is approved (the validator refuses a `review`
-  recipe on a draft kit). Open questions: whether "Dropping fast to the
-  bottom" (preacher curl), a tempo mistake, keeps its animation; the
-  Meadows row's pivot on the rowing side.
+  recipe on a draft kit). Open question: the Meadows row's pivot on the
+  rowing side.
 
 - **Review marks on the owner's prod account** (2026-11-27): the account
   has the admin claim, which shows animations under review, and the 271
@@ -1523,7 +1522,9 @@ files, not here.
   key poses with their times; the gear; a status. A mistake is the correct
   form with the few values that go wrong changed, the catalogue `mistakes`
   line it shows, and the body region to ring. A mistake no pose can show
-  (breathing, tempo, load) gets no animation and the recipe says so. A pose
+  (breathing, tempo, load) gets no animation and the recipe says so; a
+  drop that ends in a visible bounce is shown (2026-11-27, the preacher
+  curl's "Dropping fast to the bottom"). A pose
   gives the pelvis, the spine's angles, where each hand grips and each foot
   stands, where elbows and knees point; the solver does the rest, so hands
   stay on the bar and feet on the floor. Muscles come from the catalogue's
