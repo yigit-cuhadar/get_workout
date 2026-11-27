@@ -1,0 +1,44 @@
+{
+  "status": "draft",
+  "view": [-50, 8],
+  "poses": {
+    "top": {
+      "pelvis": [0, 0.02, 1.415],
+      "pelvis_rot": [4, 0, 0],
+      "lumbar": 0,
+      "chest": 0,
+      "neck": 0,
+      "foot": {"pos": [0.09, 0.2, -0.7], "yaw": 5, "pitch": 35, "rel": "pelvis"},
+      "knee": [0, -1, 0],
+      "hand": {"pos": [0.25, 0, 1.25], "fingers": [0, 0, -1], "palm": [-1, 0, 0], "curl": 75},
+      "elbow": [0.2, 1, 0],
+      "clavicle": [-2, 0]
+    },
+    "bottom": {
+      "extends": "top",
+      "pelvis": [0, -0.13, 1.1],
+      "pelvis_rot": [10, 0, 0],
+      "clavicle": [2, 6]
+    }
+  },
+  "keys": [[0, "top"], [1.4, "bottom"], [1.6, "bottom"], [2.5, "top"], [3.0, "top"]],
+  "gear": [{"kit": "dip_station"}],
+  "mistakes": [
+    {
+      "line": 0,
+      "status": "review",
+      "ring": ["hip_L", "hip_R"],
+      "poses": {
+        "bottom": {"pelvis": [0, 0.06, 1.19], "pelvis_rot": [40, 0, 0], "chest": 6, "neck": -10}
+      }
+    },
+    {
+      "line": 1,
+      "status": "review",
+      "ring": ["shoulder_L", "shoulder_R"],
+      "poses": {
+        "bottom": {"pelvis": [0, -0.16, 0.94], "pelvis_rot": [12, 0, 0], "clavicle": [16, 10], "neck": 8}
+      }
+    }
+  ]
+}
