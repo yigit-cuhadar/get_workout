@@ -1,0 +1,231 @@
+{
+  "status": "draft",
+  "view": [
+    55,
+    10
+  ],
+  "poses": {
+    "top": {
+      "pelvis": [
+        0.0,
+        -0.04,
+        0.515
+      ],
+      "pelvis_rot": [
+        -44,
+        0,
+        0
+      ],
+      "lumbar": 2,
+      "chest": 8,
+      "neck": 6,
+      "foot": {
+        "pos": [
+          0.14,
+          -0.691,
+          1.026
+        ],
+        "yaw": 10,
+        "pitch": -135
+      },
+      "hand": {
+        "pos": [
+          0.3,
+          -0.06,
+          0.47
+        ],
+        "fingers": [
+          0.0,
+          -0.9,
+          -0.436
+        ],
+        "palm": [
+          0.0,
+          -0.436,
+          0.9
+        ],
+        "curl": 75
+      },
+      "elbow": [
+        0.6,
+        0.5,
+        -0.6
+      ],
+      "clavicle": [
+        0,
+        0
+      ],
+      "knee": [
+        0.15,
+        0.7,
+        0.7
+      ]
+    },
+    "bottom": {
+      "extends": "top",
+      "foot": {
+        "pos": [
+          0.14,
+          -0.493,
+          0.828
+        ]
+      }
+    }
+  },
+  "keys": [
+    [
+      0,
+      "top"
+    ],
+    [
+      1.9,
+      "bottom"
+    ],
+    [
+      2.1,
+      "bottom"
+    ],
+    [
+      3.2,
+      "top"
+    ],
+    [
+      3.6,
+      "top"
+    ]
+  ],
+  "gear": [
+    {
+      "kit": "leg_press_machine"
+    }
+  ],
+  "mistakes": [
+    {
+      "line": 0,
+      "status": "review",
+      "ring": [
+        "pelvis",
+        "lumbar"
+      ],
+      "poses": {
+        "bottom": {
+          "pelvis": [
+            0.0,
+            -0.07,
+            0.6
+          ],
+          "pelvis_rot": [
+            -74,
+            0,
+            0
+          ],
+          "lumbar": 24,
+          "chest": 24,
+          "foot": {
+            "pos": [
+              0.14,
+              -0.45,
+              0.785
+            ]
+          }
+        }
+      }
+    },
+    {
+      "line": 1,
+      "status": "review",
+      "ring": [
+        "knee_L",
+        "knee_R"
+      ],
+      "poses": {
+        "lock": {
+          "extends": "top",
+          "foot": {
+            "pos": [
+              0.14,
+              -0.705,
+              1.04
+            ]
+          }
+        }
+      },
+      "keys": [
+        [
+          0,
+          "top"
+        ],
+        [
+          1.9,
+          "bottom"
+        ],
+        [
+          2.1,
+          "bottom"
+        ],
+        [
+          2.7,
+          "lock"
+        ],
+        [
+          3.1,
+          "lock"
+        ],
+        [
+          3.6,
+          "top"
+        ],
+        [
+          3.9,
+          "top"
+        ]
+      ]
+    },
+    {
+      "line": 2,
+      "status": "review",
+      "ring": [
+        "knee_L",
+        "knee_R"
+      ],
+      "poses": {
+        "part": {
+          "extends": "top",
+          "foot": {
+            "pos": [
+              0.14,
+              -0.641,
+              0.976
+            ]
+          }
+        }
+      },
+      "keys": [
+        [
+          0,
+          "top"
+        ],
+        [
+          0.6,
+          "part"
+        ],
+        [
+          1.0,
+          "top"
+        ],
+        [
+          1.6,
+          "part"
+        ],
+        [
+          2.0,
+          "top"
+        ],
+        [
+          2.3,
+          "top"
+        ]
+      ]
+    }
+  ]
+}
