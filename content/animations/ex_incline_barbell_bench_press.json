@@ -1,0 +1,212 @@
+{
+  "status": "review",
+  "view": [
+    55,
+    12
+  ],
+  "poses": {
+    "top": {
+      "pelvis": [
+        0,
+        -0.063,
+        0.565
+      ],
+      "pelvis_rot": [
+        -46,
+        0,
+        0
+      ],
+      "lumbar": -4,
+      "chest": -6,
+      "neck": 10,
+      "foot": {
+        "at": [
+          0.25,
+          -0.62
+        ],
+        "floor": 0,
+        "yaw": 20
+      },
+      "hand": {
+        "pos": [
+          0.36,
+          0.3,
+          1.355
+        ],
+        "fingers": [
+          0.0,
+          0.2,
+          0.98
+        ],
+        "palm": [
+          0.0,
+          -0.98,
+          0.2
+        ],
+        "curl": 75
+      },
+      "elbow": [
+        1,
+        -0.6,
+        -0.4
+      ],
+      "clavicle": [
+        0,
+        -12
+      ]
+    },
+    "bottom": {
+      "extends": "top",
+      "hand": {
+        "pos": [
+          0.36,
+          0.182,
+          0.952
+        ],
+        "fingers": [
+          0.0,
+          0.45,
+          0.893
+        ],
+        "palm": [
+          0.0,
+          -0.893,
+          0.45
+        ]
+      }
+    }
+  },
+  "keys": [
+    [
+      0,
+      "top"
+    ],
+    [
+      1.6,
+      "bottom"
+    ],
+    [
+      1.8,
+      "bottom"
+    ],
+    [
+      2.7,
+      "top"
+    ],
+    [
+      3.2,
+      "top"
+    ]
+  ],
+  "gear": [
+    {
+      "kit": "barbell"
+    },
+    {
+      "kit": "incline_bench",
+      "top_y": 0.689,
+      "top_z": 0.964
+    }
+  ],
+  "mistakes": [
+    {
+      "line": 0,
+      "status": "review",
+      "ring": [
+        "chest"
+      ],
+      "poses": {
+        "rebound": {
+          "extends": "bottom",
+          "hand": {
+            "pos": [
+              0.36,
+              0.21,
+              1.03
+            ]
+          }
+        }
+      },
+      "keys": [
+        [
+          0,
+          "top"
+        ],
+        [
+          0.6,
+          "bottom"
+        ],
+        [
+          0.72,
+          "rebound"
+        ],
+        [
+          1.5,
+          "top"
+        ],
+        [
+          2.0,
+          "top"
+        ]
+      ]
+    },
+    {
+      "line": 1,
+      "status": "review",
+      "ring": [
+        "hip_L",
+        "hip_R"
+      ],
+      "poses": {
+        "drive": {
+          "extends": "bottom",
+          "pelvis": [
+            0,
+            -0.107,
+            0.636
+          ],
+          "pelvis_rot": [
+            -70,
+            0,
+            0
+          ],
+          "lumbar": 8,
+          "chest": 6,
+          "hand": {
+            "pos": [
+              0.36,
+              0.22,
+              1.1
+            ]
+          }
+        }
+      },
+      "keys": [
+        [
+          0,
+          "top"
+        ],
+        [
+          1.6,
+          "bottom"
+        ],
+        [
+          1.8,
+          "bottom"
+        ],
+        [
+          2.2,
+          "drive"
+        ],
+        [
+          2.7,
+          "top"
+        ],
+        [
+          3.2,
+          "top"
+        ]
+      ]
+    }
+  ]
+}

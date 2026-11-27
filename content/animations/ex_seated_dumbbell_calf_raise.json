@@ -1,0 +1,268 @@
+{
+  "status": "review",
+  "view": [
+    55,
+    8
+  ],
+  "poses": {
+    "low": {
+      "pelvis": [
+        0,
+        0.05,
+        0.578
+      ],
+      "pelvis_rot": [
+        8,
+        0,
+        0
+      ],
+      "lumbar": 2,
+      "chest": 2,
+      "neck": -8,
+      "foot": {
+        "at": [
+          0.15,
+          -0.39
+        ],
+        "floor": 0.15,
+        "yaw": 8,
+        "pitch": -22
+      },
+      "knee": [
+        0.1,
+        -1,
+        0.2
+      ],
+      "hand": {
+        "pos": [
+          0.15,
+          -0.26,
+          0.86
+        ],
+        "fingers": [
+          0,
+          -1,
+          0
+        ],
+        "palm": [
+          -1,
+          0,
+          0
+        ],
+        "curl": 75
+      },
+      "elbow": [
+        0.6,
+        0.3,
+        -1
+      ],
+      "clavicle": [
+        0,
+        6
+      ]
+    },
+    "flat": {
+      "extends": "low",
+      "foot": {
+        "pitch": 0
+      },
+      "hand": {
+        "pos": [
+          0.15,
+          -0.248,
+          0.905
+        ]
+      }
+    },
+    "high": {
+      "extends": "low",
+      "foot": {
+        "pitch": 38
+      },
+      "hand": {
+        "pos": [
+          0.153,
+          -0.23,
+          0.946
+        ]
+      }
+    }
+  },
+  "keys": [
+    [
+      0,
+      "low"
+    ],
+    [
+      0.37,
+      "flat"
+    ],
+    [
+      1.0,
+      "high"
+    ],
+    [
+      1.5,
+      "high"
+    ],
+    [
+      2.39,
+      "flat"
+    ],
+    [
+      2.9,
+      "low"
+    ],
+    [
+      3.3,
+      "low"
+    ]
+  ],
+  "gear": [
+    {
+      "kit": "flat_bench",
+      "at": [
+        0,
+        0.5,
+        0
+      ]
+    },
+    {
+      "kit": "calf_step",
+      "at": [
+        0,
+        -0.62,
+        0
+      ],
+      "px": -0.5,
+      "py": 0.0
+    },
+    {
+      "kit": "dumbbell",
+      "side": "L"
+    },
+    {
+      "kit": "dumbbell",
+      "side": "R"
+    }
+  ],
+  "mistakes": [
+    {
+      "line": 0,
+      "status": "review",
+      "ring": [
+        "foot_L",
+        "foot_R"
+      ],
+      "poses": {
+        "part_low": {
+          "extends": "low",
+          "foot": {
+            "pitch": -6
+          },
+          "hand": {
+            "pos": [
+              0.15,
+              -0.251,
+              0.893
+            ]
+          }
+        },
+        "part_high": {
+          "extends": "low",
+          "foot": {
+            "pitch": 15
+          },
+          "hand": {
+            "pos": [
+              0.151,
+              -0.241,
+              0.921
+            ]
+          }
+        }
+      },
+      "keys": [
+        [
+          0,
+          "part_low"
+        ],
+        [
+          0.35,
+          "part_high"
+        ],
+        [
+          0.5,
+          "part_high"
+        ],
+        [
+          0.9,
+          "part_low"
+        ],
+        [
+          1.25,
+          "part_high"
+        ],
+        [
+          1.4,
+          "part_high"
+        ],
+        [
+          1.8,
+          "part_low"
+        ],
+        [
+          2.1,
+          "part_low"
+        ]
+      ]
+    },
+    {
+      "line": 1,
+      "status": "review",
+      "ring": [
+        "elbow_L",
+        "elbow_R",
+        "shoulder_L",
+        "shoulder_R"
+      ],
+      "poses": {
+        "high": {
+          "pelvis_rot": [
+            0,
+            0,
+            0
+          ],
+          "lumbar": -4,
+          "chest": -2,
+          "neck": -2,
+          "clavicle": [
+            14,
+            0
+          ],
+          "elbow": [
+            0.9,
+            0.6,
+            -0.4
+          ]
+        },
+        "flat": {
+          "pelvis_rot": [
+            4,
+            0,
+            0
+          ],
+          "clavicle": [
+            7,
+            3
+          ],
+          "elbow": [
+            0.75,
+            0.45,
+            -0.7
+          ]
+        }
+      }
+    }
+  ]
+}
