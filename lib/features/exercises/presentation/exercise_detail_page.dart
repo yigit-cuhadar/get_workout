@@ -906,7 +906,8 @@ class _FormCardsState extends State<_FormCards> {
   final _pages = PageController(viewportFraction: 0.88);
   var _current = 0;
 
-  static const int _bodyLines = 4;
+  static const int _bodyLines = 3;
+  static const double _border = 1.5;
 
   @override
   void dispose() {
@@ -952,13 +953,19 @@ class _FormCardsState extends State<_FormCards> {
     final title = textTheme.titleSmall!;
     double lines(TextStyle style, int count) =>
         scale.scale(style.fontSize!) * style.height! * count;
+    // Room for the line under a mistake the animation does not show, only
+    // when one of them has it.
+    final anyNotShown =
+        shown != null &&
+        [for (var i = 0; i < text.mistakes.length; i++) i]
+            .any((line) => !shown.contains(line));
+    // The padding and the picked card's border on both sides, then its lines.
     final height =
-        2 * 14 +
+        2 * (14 + _border) +
         lines(title, 1).clamp(24, double.infinity) +
         Gap.sm +
         lines(body, _bodyLines) +
-        Gap.sm +
-        lines(small, 1);
+        (anyNotShown ? Gap.sm + lines(small, 1) : 0);
 
     Widget card(int index) {
       final line = forms[index];
@@ -986,7 +993,7 @@ class _FormCardsState extends State<_FormCards> {
                 borderRadius: BorderRadius.circular(style.radii.lg),
                 border: Border.all(
                   color: selected ? tone : p.line,
-                  width: selected ? 1.5 : 1,
+                  width: selected ? _border : 1,
                 ),
               ),
               child: Column(
@@ -1019,7 +1026,7 @@ class _FormCardsState extends State<_FormCards> {
                           line == null
                               ? l10n.motionCorrectForm
                               : l10n.motionMistake(line + 1),
-                          style: title,
+                          style: title.copyWith(color: p.ink),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),

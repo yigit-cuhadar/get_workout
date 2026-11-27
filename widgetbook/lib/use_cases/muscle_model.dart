@@ -140,3 +140,41 @@ Widget muscleModelPairFailed(BuildContext context) => SingleChildScrollView(
     onRetry: () {},
   ),
 );
+
+@widgetbook.UseCase(name: 'Still pair, on its own', type: MuscleFigures)
+Widget muscleFigures(BuildContext context) => SingleChildScrollView(
+  padding: const EdgeInsets.all(Gap.md),
+  child: _withModel(
+    (model) => MuscleFigures(
+      model: model,
+      main: const [Muscle.pec],
+      secondary: const [Muscle.frontDelt, Muscle.triceps],
+    ),
+  ),
+);
+
+@widgetbook.UseCase(name: 'Still pair, loading', type: MuscleFigures)
+Widget muscleFiguresLoading(BuildContext context) =>
+    const SingleChildScrollView(
+      padding: EdgeInsets.all(Gap.md),
+      child: MuscleFigures(
+        model: null,
+        main: [Muscle.pec],
+        secondary: [Muscle.frontDelt, Muscle.triceps],
+      ),
+    );
+
+@widgetbook.UseCase(name: 'Main and secondary', type: MuscleLegend)
+Widget muscleLegend(BuildContext context) => const Padding(
+  padding: EdgeInsets.all(Gap.md),
+  child: MuscleLegend(
+    main: [Muscle.pec],
+    secondary: [Muscle.frontDelt, Muscle.triceps],
+  ),
+);
+
+@widgetbook.UseCase(name: 'Main only', type: MuscleLegend)
+Widget muscleLegendMain(BuildContext context) => const Padding(
+  padding: EdgeInsets.all(Gap.md),
+  child: MuscleLegend(main: [Muscle.quads]),
+);
