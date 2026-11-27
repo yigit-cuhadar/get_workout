@@ -3,7 +3,11 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:forge_ui/forge_ui.dart';
 import 'package:get_workout/app/theme.dart';
 import 'package:get_workout/features/programs/presentation/training_days_sheet.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:get_workout/features/settings/presentation/settings_cubit.dart';
 import 'package:get_workout/l10n/app_localizations.dart';
+
+import '../../../loaded_settings.dart';
 
 void main() {
   const upperLower = ['Upper Body Strength A', 'Lower Body Hypertrophy B'];
@@ -28,31 +32,34 @@ void main() {
       ..devicePixelRatio = 3;
     addTearDown(tester.view.reset);
     await tester.pumpWidget(
-      MaterialApp(
-        theme: AppPreset.slate.lightTheme(),
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
-        supportedLocales: AppLocalizations.supportedLocales,
-        builder: (context, child) => MediaQuery(
-          data: MediaQuery.of(context)
-              .copyWith(textScaler: TextScaler.linear(textScale)),
-          child: child!,
-        ),
-        home: Builder(
-          builder: (context) => Center(
-            child: TextButton(
-              onPressed: () async {
-                result = await showForgeBottomSheet<Map<int, int>>(
-                  context: context,
-                  builder: (_) => TrainingDaysSheet(
-                    dayNames: dayNames,
-                    initial: initial,
-                    firstWeekday: firstWeekday,
-                    confirmLabel: 'Save',
-                  ),
-                );
-                closed = true;
-              },
-              child: const Text('open'),
+      BlocProvider<SettingsCubit>.value(
+        value: loadedSettings(),
+        child: MaterialApp(
+          theme: AppPreset.slate.lightTheme(),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          builder: (context, child) => MediaQuery(
+            data: MediaQuery.of(context)
+                .copyWith(textScaler: TextScaler.linear(textScale)),
+            child: child!,
+          ),
+          home: Builder(
+            builder: (context) => Center(
+              child: TextButton(
+                onPressed: () async {
+                  result = await showForgeBottomSheet<Map<int, int>>(
+                    context: context,
+                    builder: (_) => TrainingDaysSheet(
+                      dayNames: dayNames,
+                      initial: initial,
+                      firstWeekday: firstWeekday,
+                      confirmLabel: 'Save',
+                    ),
+                  );
+                  closed = true;
+                },
+                child: const Text('open'),
+              ),
             ),
           ),
         ),

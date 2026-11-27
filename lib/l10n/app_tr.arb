@@ -358,7 +358,6 @@
   "volumeWithin": "{min}–{max} set",
   "volumeAbove": "{max} setin üstünde",
   "volumeModelLabel": "Kas başına sete göre renklenmiş vücut modeli, {week}",
-  "volumeModelHint": "Döndürmek için sürükle · yakınlaştırmak için iki parmakla aç",
   "volumeModelTurnHint": "Döndürmek için sürükle",
   "volumeMuscleSummary": "{sets} · {zone}",
   "volumeContributionsTitle": "Setler nereden geldi",
@@ -1866,5 +1865,8 @@
   "performanceEmptyMessage": "Bu egzersizi bir antrenmanda yaptığında setlerin burada görünür.",
   "detailSeeAllCount": "Tümünü gör ({count})",
   "similarEasier": "Daha kolay",
-  "similarHarder": "Daha zor"
+  "similarHarder": "Daha zor",
+  "tipModelTurn": "Modeli çevirmek için sürükle, yakınlaştırmak için iki parmakla aç.",
+  "tipVolumeModel": "Modeli çevirmek için sürükle, setlerini görmek için bir kasa dokun.",
+  "motionBackToCorrect": "Doğru yapılışa dön"
 }

@@ -11,6 +11,8 @@ import '../../../app/router.dart';
 import '../../../core/widgets/muscle_model.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../analytics/domain/analytics.dart';
+import '../../settings/domain/user_settings.dart';
+import '../../settings/presentation/once_tip.dart';
 import '../../settings/presentation/settings_cubit.dart';
 import '../../strength/domain/strength.dart';
 import '../../strength/presentation/exercise_strength_cubit.dart';
@@ -403,6 +405,8 @@ class _CatalogueBodyState extends State<_CatalogueBody>
     const side = EdgeInsets.symmetric(horizontal: Gap.md);
     final content = switch (tab) {
       _Tab.howTo => [
+        if (text.mistakes.isNotEmpty)
+          _Mistakes(text.mistakes, onWatch: _showMotion),
         if (text.setup.isNotEmpty ||
             text.execution.isNotEmpty ||
             text.cues.isNotEmpty)
@@ -419,8 +423,6 @@ class _CatalogueBodyState extends State<_CatalogueBody>
               ),
             ],
           ),
-        if (text.mistakes.isNotEmpty)
-          _Mistakes(text.mistakes, onWatch: _showMotion),
         if (text.safety case final safety?)
           SectionCard.plain(
             title: l10n.detailSafety,
@@ -443,9 +445,18 @@ class _CatalogueBodyState extends State<_CatalogueBody>
         SliverPadding(
           padding: const EdgeInsets.fromLTRB(Gap.md, Gap.sm, Gap.md, Gap.sm),
           sliver: SliverToBoxAdapter(
-            child: MuscleLegend(
-              main: exercise.mainMuscles,
-              secondary: exercise.secondaryMuscles,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              spacing: Gap.sm,
+              children: [
+                // Only a stage that plays can be turned.
+                if (context.watch<ExerciseMotionCubit>().state is MotionReady)
+                  OnceTip(Tip.modelTurn, l10n.tipModelTurn),
+                MuscleLegend(
+                  main: exercise.mainMuscles,
+                  secondary: exercise.secondaryMuscles,
+                ),
+              ],
             ),
           ),
         ),
@@ -714,9 +725,17 @@ class _Mistakes extends StatelessWidget {
                 label: l10n.motionWatchMistake((clip.line ?? 0) + 1),
                 variant: ForgeIconButtonVariant.ink,
                 fill: ForgeIconButtonFill.sunken,
+                // On while it plays; a second tap goes back to the
+                // correct form.
+                toggled: i == motion.selected,
                 onPressed: () {
-                  context.read<ExerciseMotionCubit>().select(i);
-                  onWatch();
+                  final cubit = context.read<ExerciseMotionCubit>();
+                  if (i == motion.selected) {
+                    cubit.select(0);
+                  } else {
+                    cubit.select(i);
+                    onWatch();
+                  }
                 },
               ),
         },
@@ -941,12 +960,7 @@ class _HeroState extends State<_Hero> {
       ),
     );
     // The animation's stage, then its hint line under it.
-    final hint = Theme.of(context).textTheme.labelMedium!;
-    final height =
-        _Hero.height +
-        Gap.sm +
-        MediaQuery.textScalerOf(context).scale(hint.fontSize!) * hint.height! +
-        Gap.sm;
+    const height = _Hero.height;
     final stage = switch (context.watch<BodyModelCubit>().state) {
       BodyModelFailed() => Padding(
         padding: const EdgeInsets.all(Gap.md),
@@ -960,15 +974,11 @@ class _HeroState extends State<_Hero> {
       ),
       BodyModelLoading() => figures(null),
       BodyModelReady() when motion is MotionLoading => figures(null),
-      BodyModelReady() when ready != null && _moving => Padding(
-        padding: const EdgeInsets.only(bottom: Gap.sm),
-        child: ExerciseMotionView(
-          motion: ready,
-          main: main,
-          secondary: secondary,
-          height: _Hero.height,
-          controlsOnTop: true,
-        ),
+      BodyModelReady() when ready != null && _moving => ExerciseMotionView(
+        motion: ready,
+        main: main,
+        secondary: secondary,
+        height: _Hero.height,
       ),
       BodyModelReady(:final model) => figures(model),
     };
@@ -994,12 +1004,12 @@ class _HeroState extends State<_Hero> {
                 onChanged: (moving) => setState(() => _moving = moving),
               ),
             ),
-          if (ready != null && _moving)
+          if (ready != null && _moving && ready.selected != 0)
             Positioned(
               left: Gap.sm,
               right: Gap.sm,
-              bottom: height - _Hero.height + Gap.sm,
-              child: _FormPicker(exercise, ready),
+              bottom: Gap.sm,
+              child: _PlayingMistake(exercise, ready),
             ),
         ],
       ),
@@ -1007,17 +1017,14 @@ class _HeroState extends State<_Hero> {
   }
 }
 
-/// The forms to play, on the stage's foot in frosted see-through chips: the
-/// picked one open with its name and, for a mistake, its line; each other
-/// a small circle with a check (the correct form) or its number. A tap
-/// plays that form.
-class _FormPicker extends StatelessWidget {
-  const _FormPicker(this.exercise, this.motion);
+/// The mistake playing on the stage, on its foot over the floor: its number,
+/// its line and × back to the correct form. The correct form shows nothing.
+class _PlayingMistake extends StatelessWidget {
+  const _PlayingMistake(this.exercise, this.motion);
 
   final Exercise exercise;
   final MotionReady motion;
 
-  static const double _size = 36;
   static const double _badge = 24;
 
   @override
@@ -1025,109 +1032,56 @@ class _FormPicker extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final style = ForgeStyle.of(context);
     final p = style.colors;
-    final text = Theme.of(context).textTheme;
-    final mistakes = exercise.localized(context).mistakes;
-    final cubit = context.read<ExerciseMotionCubit>();
-
-    Color tone(int? line) => line == null ? p.success : p.danger;
-
-    Widget glass({required Widget child, Color? border}) => ClipRRect(
-      borderRadius: BorderRadius.circular(_size / 2),
+    final line = motion.clips[motion.selected].line!;
+    final text =
+        exercise.localized(context).mistakes.elementAtOrNull(line) ??
+        l10n.motionMistake(line + 1);
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(style.radii.md),
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
         child: Container(
-          constraints: const BoxConstraints(minHeight: _size),
+          padding: const EdgeInsetsDirectional.fromSTEB(Gap.sm, 2, 2, 2),
           decoration: BoxDecoration(
-            color: p.surface.withValues(alpha: 0.72),
-            borderRadius: BorderRadius.circular(_size / 2),
-            border: Border.all(
-              color: border ?? p.line.withValues(alpha: 0.8),
-              width: border == null ? 1 : 1.5,
-            ),
+            color: p.surface.withValues(alpha: 0.85),
+            borderRadius: BorderRadius.circular(style.radii.md),
+            border: Border.all(color: p.danger, width: 1.5),
           ),
-          child: child,
+          child: Row(
+            spacing: Gap.sm,
+            children: [
+              Container(
+                width: _badge,
+                height: _badge,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Color.lerp(p.surface, p.danger, 0.14),
+                ),
+                child: Text(
+                  '${line + 1}',
+                  style: style.data.copyWith(color: p.danger),
+                ),
+              ),
+              Expanded(
+                child: Text(
+                  text,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.bodySmall!
+                      .copyWith(color: p.ink, fontWeight: FontWeight.w500),
+                ),
+              ),
+              ForgeIconButton(
+                icon: ForgeIcons.close,
+                label: l10n.motionBackToCorrect,
+                variant: ForgeIconButtonVariant.ink,
+                onPressed: () => context.read<ExerciseMotionCubit>().select(0),
+              ),
+            ],
+          ),
         ),
       ),
-    );
-
-    Widget mark(int? line) => line == null
-        ? ForgeIcon(ForgeIcons.check, size: 16, color: tone(line))
-        : Text('${line + 1}', style: style.data.copyWith(color: tone(line)));
-
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.end,
-      spacing: Gap.sm,
-      children: [
-        for (final (i, clip) in motion.clips.indexed)
-          if (i == motion.selected)
-            Expanded(
-              child: Semantics(
-                selected: true,
-                child: glass(
-                  border: tone(clip.line),
-                  child: Padding(
-                    padding: const EdgeInsetsDirectional.fromSTEB(
-                      6,
-                      6,
-                      Gap.md,
-                      6,
-                    ),
-                    child: Row(
-                      spacing: Gap.sm,
-                      children: [
-                        Container(
-                          width: _badge,
-                          height: _badge,
-                          alignment: Alignment.center,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: Color.lerp(p.surface, tone(clip.line), 0.14),
-                          ),
-                          child: mark(clip.line),
-                        ),
-                        Expanded(
-                          child: Text(
-                            switch (clip.line) {
-                              null => l10n.motionCorrectForm,
-                              final line =>
-                                mistakes.elementAtOrNull(line) ??
-                                    l10n.motionMistake(line + 1),
-                            },
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: text.bodySmall!.copyWith(
-                              color: p.ink,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            )
-          else
-            Semantics(
-              button: true,
-              label: switch (clip.line) {
-                null => l10n.motionCorrectForm,
-                final line => l10n.motionMistake(line + 1),
-              },
-              child: GestureDetector(
-                onTap: () => cubit.select(i),
-                child: SizedBox(
-                  width: _size,
-                  height: _size,
-                  child: glass(
-                    child: Center(
-                      child: ExcludeSemantics(child: mark(clip.line)),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-      ],
     );
   }
 }

@@ -208,7 +208,7 @@ behaviour and traps are under Feature notes.
   keeps its short page (no tabs). The tab bar is Material's
   TabBar in Forge's theme, with no Forge component or studio card yet.
 - **Exercise page parts** (2026-11-26, 2026-11-27): studio component cards and Widgetbook
-  use cases are owed for the stage, the form picker, the page's tab bar, the
+  use cases are owed for the stage, the playing-mistake strip, the page's tab bar, the
   motion view, the playback buttons, the workout card's play button and the
   similar-exercise rows; `widgetbook/lib/use_cases`
   and the studio page have none of them.
@@ -734,12 +734,13 @@ of the older row.
 | 2026-11-24 | Admin announcements and simulator | Compose opens with the audience (Everyone, Free, Premium) and a Now / Schedule choice in the admin's local time; the confirmation names the audience and time, a scheduled one can be cancelled until then; history lists Scheduled first with Cancel, then Sent; the generator simulator's weekly sets are two columns of bars with a mark at each muscle's target | https://claude.ai/artifact/6Jg7vHHUGovZYiCsuiShJq |
 | 2026-11-25 | Language setting | Language sits under Week starts on in Appearance; the sheet lists each language in its own name | https://claude.ai/artifact/F51NiEKmssC2zSSXk8b3Ba |
 | 2026-11-25 | Exercise gear | Gear stays in neutral tones, colour only on muscles; the barbell has thick sleeves and two plates a side; the flat bench is a pad on a beam; the pull-up bar has no posts; a light floor with the body's shadow under every model; smith machine, squat box and landmine approved as drawn | https://claude.ai/artifact/6oF4mJVecSe7n2gtZyZ5fW |
-| 2026-11-25 | Exercise animations | Every exercise gets its correct form and each mistake a pose can show; the exercise page's first card has Movement and Muscles tabs; a chip for the correct form and one per mistake, the picked mistake playing in place with its region marked; the workout's open card gets a play button opening a sheet with the animation, cues and a link to the page | https://claude.ai/artifact/RGTHJ9yhTVxSxnX1LG3ZL2 |
+| 2026-11-25 | Exercise animations | Every exercise gets its correct form and each mistake a pose can show; the exercise page's first card has Movement and Muscles tabs; a chip for the correct form and one per mistake, the picked mistake playing in place with its region marked; the workout's open card gets a play button | https://claude.ai/artifact/RGTHJ9yhTVxSxnX1LG3ZL2 |
 | 2026-11-26 | Exercise page | The picked mistake chip fills in danger, the others tinted, the correct-form chip green; chips sit right under the animation with the text in a fixed two-line place below; pause / play and half speed buttons, in the workout's sheet too; a hint for turning and zooming, no view buttons; the workout card's play button is filled | https://claude.ai/artifact/Y8sMp2DB83WX6ga5MhbCvW |
 | 2026-11-26 | Exercise screen review | The own note is removed; Setup and How to do it share one card; each common mistake carries its chip's number, and one with an animation plays it from its row; the Safety card takes the warning tone; half speed looks filled while on; Tips get a title icon; each similar exercise is its own row with See all; the favourite star sits in the app bar beside the menu. Without a board: a mistake without an animation leaves a gap in the chip numbers | https://claude.ai/artifact/Gp3cZ7kU1JMSZ5TG59rXGn |
 | 2026-11-27 | Exercise page redesign | The animation is a full-width 380 px stage under the app bar, Movement / Muscles on the stage; under it a swipeable card per form (the correct form with its cues, each mistake with its line and region; swiping plays that form) replaces the chips, their line and the Mistakes list; then the tabs How to do it, Details, Performance; Details keeps the seven-row info table, then Similar exercises; Performance shows last time, best set and estimated 1RM with "See progress" to the strength page, then each workout's sets (the record set marked, a row opens the workout); never done, it says so and offers Add to workout. Built 2026-11-27; Performance lists each workout's best set (what the stats keep), and its rows and See progress switch to the Progress tab | https://claude.ai/artifact/GEGQYC6oV96g6h38z6BLmC |
 | 2026-11-27 | Similar exercises | Each group (Variations, Alternatives) under its label with its count, its first three as library rows (muscles · equipment, the star), "See all (n)" opening that group in a sheet; a row whose level differs from the exercise's says Easier or Harder; Movement and Muscles keep one stage height | https://claude.ai/artifact/GEGQYC6oV96g6h38z6BLmC |
 | 2026-11-27 | Mistakes and cues | The forms the animation plays are picked on the stage's foot in frosted see-through chips: the picked one open with its name or mistake line, each other a small circle with a check or its number; pause and half speed move to the stage's top corner (45 of 852 mistakes cannot be shown; 118 of 419 exercises have no animation and no picker); How to do it lists every mistake numbered in danger, one with a clip ending in a play button that scrolls up and plays it on the stage; the cues are the third part of the How to do it card, each beside a bulb in a pale warning circle aligned with the steps | https://claude.ai/artifact/GEGQYC6oV96g6h38z6BLmC |
+| 2026-11-27 | Exercise page, second pass | The stage plays the correct form with nothing on it; a mistake plays from its play button in Common mistakes, now first on How to do it, and the stage's foot names it with × back to the correct form (FM2 A); the workout's play button, shown only with an animation, opens the exercise page; gesture lines that always showed become first-use tips dismissed with Got it: turning a model (exercise page, Weekly volume), picking training days and the ruler answers (HN1-HN4 B); icon buttons' press ink stays inside their circle (forge v0.65.0) | https://claude.ai/artifact/GEGQYC6oV96g6h38z6BLmC |
 
 Rules still binding that the studio does not show:
 - Colours stay muted and black is not a default accent; the plates'
@@ -1658,21 +1659,20 @@ files, not here.
     opened once plays offline, and a fixed recipe shows from the second
     opening on. No animation document means none; missing kits or text
     that is not a JSON object is a failure.
-- **In the app** (2026-11-25): with an animation, exercise detail's first
-  card has two tabs, the animation (first; the tab is not remembered) and
-  the front and back muscle pair; with none, while loading, on failure and
-  for custom exercises the card shows the muscle pair alone. Under the
-  animation one chip per clip: the correct form, then each mistake in
-  catalogue order, numbered because the catalogue has no short names for
-  mistakes (a mistake whose recipe entry is `shown: false` has none); the
-  picked mistake's catalogue text shows under the chips. The body is the
-  profile's sex; a clip is solved once, when first picked, and again when
-  the body changes. The view turns and zooms and has pause and half speed:
-  both are kept while another clip is picked and forgotten when the view
-  closes, and switching the speed restarts the loop. In the workout in
-  progress only, each exercise of an open card that has an animation gets
-  a play button; its sheet plays the correct form over the running workout
-  with the cues and links to the exercise's detail page.
+- **In the app** (2026-11-25, reworked 2026-11-27): with an animation the
+  exercise page's stage plays it, Movement / Muscles on the stage; with
+  none, while loading, on failure the stage shows the still front and back
+  pair, and a custom exercise keeps its short page. The stage plays the
+  correct form; a mistake with a clip plays from its play button in Common
+  mistakes (How to do it), the stage's foot then naming it with × back to
+  the correct form; a second tap of that play button does the same. A
+  mistake whose recipe entry is `shown: false` has no play button. The
+  body is the profile's sex; a clip is solved once, when first picked, and
+  again when the body changes. The view turns and zooms and has pause and
+  half speed: both are kept while another clip is picked and forgotten
+  when the page closes, and switching the speed restarts the loop. In the
+  workout in progress only, each exercise of an open card that has an
+  animation gets a play button opening the exercise's page.
 
 ### Programs
 
