@@ -12,8 +12,9 @@ Updated 2026-11-27. Keep this block and Open true with every change.
   result is not known here. TestFlight builds 8-13 followed (2026-11-25 to
   2026-11-27). 305 of 419 live exercises have an approved animation.
 - **Next**:
-  1. The next animation batch (Feature notes › Exercise animations: Where it
-     stands, then A batch, step by step).
+  1. The owner's answer on the batch in review (Open › Waits on the owner),
+     then the next animation batch (Feature notes › Exercise animations:
+     Where it stands, then A batch, step by step).
   2. The exercise page's owed studio cards and Widgetbook use cases (Open).
   3. The App Review result, then what waits on it (Open › Waits outside).
 - **Waits on the owner**: each animation batch's approval; two playback
@@ -195,12 +196,12 @@ behaviour and traps are under Feature notes.
 
 ### An agent can do now
 
-- **Next animation batch** (Features, Group 15): 113 live exercises have no
-  recipe and `ex_lat_pulldown` is a draft without its mistakes. Nearly
-  every exercise left needs a kit not built yet (bands, machines, rings,
-  suspension, rack, plates, sled, ab wheel; a wall is the `block`
-  kit sized as one). Read Feature notes › Exercise animations: Where it stands, then A batch,
-  step by step (it starts with `python3 tool/animation/batch.py`); the
+- **Next animation batch** (Features, Group 15): 109 live exercises have no
+  recipe. Nearly every exercise left needs a kit not built yet (bands,
+  machines, rings, suspension, rack, plates, sled, ab wheel; a wall is the
+  `block` kit sized as one). Start it once the batch waiting on the owner
+  is answered. Read Feature notes › Exercise animations: Where it stands,
+  then A batch, step by step (it starts with `python3 tool/animation/batch.py`); the
   owner approves each batch. Sample every clip frame by frame for body
   parts inside gear: the owner caught feet passing through a box.
 - **Exercise page parts** (2026-11-26): studio component cards and Widgetbook
@@ -238,6 +239,19 @@ behaviour and traps are under Feature notes.
   session (Design, studio links).
 
 ### Waits on the owner
+
+- **Animation batch in review** (2026-11-27, branch
+  `content/animations-popular-machines`): lat pulldown (its three mistakes
+  added), leg extension, leg press, single-leg leg press, hack squat, and
+  three draft kits (`leg_extension_machine`, `leg_press_machine`,
+  `hack_squat_machine`). Drafts are on dev and prod for the admin account.
+  The four recipes on draft kits stay `draft` until their kit is
+  approved.
+- **Lat pulldown seat and thigh pad**: in the approved
+  `lat_pulldown_machine` kit both bodies sink about 4.5 cm into the seat and
+  the thigh pad (every pulldown using it); the gap between them is too
+  narrow for the thighs. Fixing the kit re-renders those recipes; the owner
+  says whether to.
 
 - **Review marks on the owner's prod account** (2026-11-27): the account
   has the admin claim, which shows animations under review, and the 271
@@ -1491,8 +1505,7 @@ files, not here.
   for every approved recipe, solved on the phone by `forge_motion`.
   Recipes approved: 305 of 419 live exercises (the last 5 on
   2026-11-27), and all 34 kits; dev and prod hold all of them since
-  2026-11-27. `ex_lat_pulldown` stays a draft: its
-  mistakes are not drawn. Not started: about 113 exercises (bands,
+  2026-11-27. Not started: about 109 exercises (bands,
   machines, suspension and small groups), and those skipped for gear
   without a kit (a wall, a rack, a trap bar, plates) or, like the
   kettlebell snatch and clean, by their session. What is open is under
