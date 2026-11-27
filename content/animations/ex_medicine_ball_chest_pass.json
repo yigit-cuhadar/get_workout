@@ -1,5 +1,5 @@
 {
-  "status": "draft",
+  "status": "approved",
   "view": [-60, 8],
   "poses": {
     "set": {
@@ -32,7 +32,7 @@
   "mistakes": [
     {
       "line": 0,
-      "status": "draft",
+      "status": "approved",
       "ring": ["hand_L", "hand_R"],
       "poses": {
         "load": {"pelvis": [0, 0.02, 0.95], "pelvis_rot": [6, 0, 0]},

@@ -1,5 +1,5 @@
 {
-  "status": "draft",
+  "status": "approved",
   "view": [55, 12],
   "poses": {
     "top": {
@@ -28,7 +28,7 @@
     },
     {
       "line": 1,
-      "status": "draft",
+      "status": "approved",
       "ring": ["lumbar"],
       "poses": {
         "top": {"pelvis": [0, -0.023, 0.536], "pelvis_rot": [-26.0, 0, 0], "lumbar": -20, "chest": -10}

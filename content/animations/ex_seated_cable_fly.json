@@ -1,5 +1,5 @@
 {
-  "status": "draft",
+  "status": "approved",
   "view": [
     30,
     14
@@ -157,7 +157,7 @@
   "mistakes": [
     {
       "line": 0,
-      "status": "draft",
+      "status": "approved",
       "ring": [
         "elbow_L",
         "elbow_R"
@@ -215,7 +215,7 @@
     },
     {
       "line": 1,
-      "status": "draft",
+      "status": "approved",
       "ring": [
         "clavicle_L",
         "clavicle_R"

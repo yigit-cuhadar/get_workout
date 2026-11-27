@@ -1,5 +1,5 @@
 {
-  "status": "draft",
+  "status": "approved",
   "view": [15, 8],
   "poses": {
     "top": {"pelvis": [0, 0, 0.98], "pelvis_rot": [0, 0, 0], "lumbar": 0, "chest": 0, "neck": 0, "foot": {"at": [0.13, 0.037], "floor": 0, "yaw": 10}, "clavicle": [0, 0], "hand": {"pos": [0.301, -0.041, 0.822], "fingers": [0.2, -0.261, -0.944], "palm": [-0.98, -0.053, -0.193], "curl": 75}, "elbow": [0.2, 1, -0.3], "hand_R": {"pos": [-0.245, -0.04, 0.12], "rel": "pelvis", "curl": 20, "fingers": [0.718, -0.408, -0.563], "palm": [-0.49, 0.278, -0.826]}, "elbow_R": [-1, 0.3, 0]},
@@ -10,7 +10,7 @@
   "mistakes": [
     {
       "line": 0,
-      "status": "draft",
+      "status": "approved",
       "ring": ["lumbar", "chest"],
       "poses": {
         "bottom": {"pelvis_rot": [10, 0, 0], "lumbar": [8, 0, 10], "chest": [6, 0, 8], "hand": {"pos": [0.301, -0.131, 0.738], "fingers": [0.126, -0.236, -0.964], "palm": [-0.992, -0.03, -0.122], "curl": 75}}

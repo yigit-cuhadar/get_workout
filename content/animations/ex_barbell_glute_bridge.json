@@ -1,5 +1,5 @@
 {
-  "status": "draft",
+  "status": "approved",
   "view": [50, 14],
   "poses": {
     "top": {
@@ -29,7 +29,7 @@
   "mistakes": [
     {
       "line": 0,
-      "status": "draft",
+      "status": "approved",
       "ring": ["lumbar"],
       "poses": {
         "top": {"pelvis_rot": [-108, 0, 0], "lumbar": -24, "chest": -10, "neck": -5, "pelvis": [0, -0.1, 0.575]}
@@ -37,7 +37,7 @@
     },
     {
       "line": 1,
-      "status": "draft",
+      "status": "approved",
       "ring": ["foot_L", "foot_R"],
       "poses": {
         "top": {"foot": {"pitch": 35}, "pelvis": [0, -0.1, 0.456]}

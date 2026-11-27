@@ -1,5 +1,5 @@
 {
-  "status": "draft",
+  "status": "approved",
   "view": [
     60,
     8
@@ -121,7 +121,7 @@
   "mistakes": [
     {
       "line": 0,
-      "status": "draft",
+      "status": "approved",
       "ring": [
         "hip_L",
         "hip_R",
@@ -222,7 +222,7 @@
     },
     {
       "line": 1,
-      "status": "draft",
+      "status": "approved",
       "ring": [
         "hip_L",
         "hip_R"

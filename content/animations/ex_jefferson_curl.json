@@ -1,5 +1,5 @@
 {
-  "status": "draft",
+  "status": "approved",
   "view": [70, 6],
   "poses": {
     "top": {"pelvis": [0, 0.0, 1.4], "pelvis_rot": [0, 0, 0], "lumbar": 0, "chest": 0, "neck": 0, "clavicle": [0, 0], "foot": {"at": [0.1, 0.02], "floor": 0.42, "yaw": 8}, "hand": {"pos": [0.077, -0.296, 1.344], "fingers": [-0.245, -0.727, -0.642], "palm": [0.0, 0.662, -0.75], "curl": 75}, "elbow": [0.3, 1, 0], "hand_R": {"pos": [-0.061, -0.315, 1.363], "curl": 60, "fingers": [0.252, -0.753, -0.608], "palm": [0.289, 0.658, -0.695]}, "elbow_R": [-0.3, 1, 0]},
@@ -11,6 +11,6 @@
   "gear": [{"kit": "dumbbell", "side": "L"}, {"kit": "squat_box", "at": [0, 0.02, 0]}],
   "mistakes": [
     {"line": 0, "shown": false, "why": "The load is a weight, not a pose."},
-    {"line": 1, "status": "draft", "ring": ["lumbar", "chest"], "keys": [[0, "top"], [0.3, "neck"], [0.8, "mid"], [1.3, "bottom"], [1.4, "bottom"], [1.9, "mid"], [2.3, "neck"], [2.6, "top"], [2.8, "top"]]}
+    {"line": 1, "status": "approved", "ring": ["lumbar", "chest"], "keys": [[0, "top"], [0.3, "neck"], [0.8, "mid"], [1.3, "bottom"], [1.4, "bottom"], [1.9, "mid"], [2.3, "neck"], [2.6, "top"], [2.8, "top"]]}
   ]
 }

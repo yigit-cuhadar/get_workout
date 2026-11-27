@@ -1,5 +1,5 @@
 {
-  "status": "draft",
+  "status": "approved",
   "view": [-60, 8],
   "poses": {
     "down": {
@@ -25,7 +25,7 @@
   "mistakes": [
     {
       "line": 0,
-      "status": "draft",
+      "status": "approved",
       "ring": ["lumbar"],
       "poses": {
         "up": {"foot": {"pos": [0.1, 1.26, 0.86], "yaw": 0, "pitch": 110}, "lumbar": -6}
@@ -33,7 +33,7 @@
     },
     {
       "line": 1,
-      "status": "draft",
+      "status": "approved",
       "ring": ["hip_L", "hip_R"],
       "keys": [[0, "down"], [0.5, "up"], [1.0, "down"], [1.5, "up"], [2.0, "down"]]
     }

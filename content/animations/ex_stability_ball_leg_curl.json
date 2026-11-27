@@ -1,5 +1,5 @@
 {
-  "status": "draft",
+  "status": "approved",
   "view": [60, 10],
   "poses": {
     "out": {
@@ -26,7 +26,7 @@
   "mistakes": [
     {
       "line": 0,
-      "status": "draft",
+      "status": "approved",
       "ring": ["hip_L", "hip_R"],
       "poses": {
         "in": {"pelvis": [0, 0.02, 0.24], "pelvis_rot": [-100, 0, 0]}
@@ -34,7 +34,7 @@
     },
     {
       "line": 1,
-      "status": "draft",
+      "status": "approved",
       "ring": ["knee_L", "knee_R"],
       "keys": [[0, "out"], [0.45, "in"], [0.5, "in"], [0.95, "out"], [1.2, "out"]]
     }

@@ -1,5 +1,5 @@
 {
-  "status": "draft",
+  "status": "approved",
   "view": [-60, 10],
   "poses": {
     "plank": {
@@ -27,7 +27,7 @@
   "mistakes": [
     {
       "line": 0,
-      "status": "draft",
+      "status": "approved",
       "ring": ["hip_L", "hip_R", "lumbar"],
       "poses": {
         "plank": {"pelvis": [0.0, 0.3, 0.422], "lumbar": -10, "chest": -4},
@@ -36,7 +36,7 @@
     },
     {
       "line": 1,
-      "status": "draft",
+      "status": "approved",
       "ring": ["shoulder_L", "shoulder_R"],
       "poses": {
         "plank": {"pelvis": [0.0, 0.39, 0.497]},

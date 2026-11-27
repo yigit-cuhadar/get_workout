@@ -3410,23 +3410,20 @@ the feature you are about to touch, and keep it true when you change it.
   half-speed button while on, whether pause and speed survive a chip
   change, the loop restarting when the speed changes) are built with
   defaults and still to be drawn and asked.
-  Recipes approved: 5 of
-  419 live exercises (which carry 852 mistakes), 6 more sent back with
-  `fix` after the owner's review in the app (2026-11-26: the back, box and
-  Smith squats, the front squat, the bench press and the Smith bench press;
-  their published animations stay until the fixes are approved), and 260
-  drafts written by six sessions on 2026-11-26 (bodyweight, pull-up bar,
-  barbell family, dumbbell and kettlebell, bench, cable) and fixed once
-  after that review; none of them is approved. Draft kits waiting with
-  them: `dumbbell`, `dumbbell_cupped`, `kettlebell`, `incline_bench`,
-  `decline_bench`, `cable_column`, `cable_bar`, `cable_rope`,
-  `cable_handle`, `cable_v_handle`, `row_seat`, `pulldown_seat`,
-  `dumbbell_feet`, `ankle_cuff`, `calf_step`, `stability_ball`,
-  `stability_ball_feet`, `stability_ball_hands`, `medicine_ball`,
-  `medicine_ball_knees`. On 2026-11-27 the exercises that had worked around
-  feet that could not step, pivot or roll were redone, and those that
-  needed gear on a foot or a ball were added. Still not drawn: gear that
-  leaves the hands inside a clip (a slam or a throw stops at the release).
+  Recipes approved: 270 of
+  419 live exercises (which carry 852 mistakes). The owner approved, on
+  2026-11-27 after reviewing them in the app (builds 11-13, drafts shown to
+  the admin account), everything written since batch 2: 259 drafts by six
+  sessions (bodyweight, pull-up bar, barbell family, dumbbell and
+  kettlebell, bench, cable, stability and medicine ball), the fixes to six
+  approved recipes the owner had sent back (the back, box and Smith squats,
+  the front squat, the bench press and the Smith bench press), and the 20
+  kits drawn for them. `ex_lat_pulldown` stays a draft: its mistakes are not
+  drawn. Not started: about 148 exercises (bands, machines, suspension and
+  small groups); skipped for gear without a kit (a wall, a rack, a trap
+  bar, plates) or, like the kettlebell snatch and clean, by their session.
+  Still not drawn: gear that leaves the hands inside a clip (a slam or a
+  throw stops at the release).
   Earlier: batch 1, the barbell squat
   family, and batch 2, the bench press and curl families, both approved by
   the owner 2026-11-26 after the hands were seated on the bar (pages
@@ -3485,7 +3482,13 @@ the feature you are about to touch, and keep it true when you change it.
   uses it goes to review; a change to a kit changes every exercise using
   it, so those are rendered again. Approved so far (2026-11-25, Design ›
   Exercise gear): `barbell`, `flat_bench`, `pull_up_bar`,
-  `lat_pulldown_machine`, `smith_machine`, `squat_box`, `landmine`; `ez_bar` (2026-11-26, EK10). Every kit uses the same four tones (`gear`,
+  `lat_pulldown_machine`, `smith_machine`, `squat_box`, `landmine`; `ez_bar` (2026-11-26, EK10). Approved with their exercises on 2026-11-27, seen in the
+  app rather than on a board: `dumbbell`, `dumbbell_cupped`,
+  `dumbbell_feet`, `kettlebell`, `incline_bench`, `decline_bench`,
+  `calf_step`, `cable_column`, `cable_bar`, `cable_rope`, `cable_handle`,
+  `cable_v_handle`, `ankle_cuff`, `row_seat`, `pulldown_seat`,
+  `stability_ball`, `stability_ball_feet`, `stability_ball_hands`,
+  `medicine_ball`, `medicine_ball_knees`. Every kit uses the same four tones (`gear`,
   `steel`, `pad`, `plate`). Under every exercise lies a light floor disc
   with the body's soft shadow; the preview paints it, the app's viewer does
   not draw it yet (part of Animations in the app).

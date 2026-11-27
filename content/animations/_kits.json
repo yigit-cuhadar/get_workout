@@ -114,7 +114,7 @@
     ]
   },
   "dumbbell": {
-    "status": "draft",
+    "status": "approved",
     "values": {"side": "L", "head": 0.055},
     "pieces": [
       {"cyl": [{"hand": "$side", "at": [0, 0, -0.07]}, {"hand": "$side", "at": [0, 0, 0.07]}], "r": 0.014, "colour": "steel"},
@@ -123,7 +123,7 @@
     ]
   },
   "kettlebell": {
-    "status": "draft",
+    "status": "approved",
     "values": {"side": "L", "other": "L", "a": [0, 0, 0.06], "b": [0, 0, -0.06], "bell": [0.18, 0, 0]},
     "pieces": [
       {"cyl": [{"hand": "$side", "at": "$a"}, {"hand": "$other", "at": "$b"}], "r": 0.015, "colour": "steel"},
@@ -135,7 +135,7 @@
     ]
   },
   "incline_bench": {
-    "status": "draft",
+    "status": "approved",
     "values": {"top_y": 0.636, "top_z": 1.021},
     "pieces": [
       {"box": [0, -0.19, 0.385], "size": [0.28, 0.36, 0.07], "colour": "pad"},
@@ -156,7 +156,7 @@
     ]
   },
   "dumbbell_cupped": {
-    "status": "draft",
+    "status": "approved",
     "values": {"head": 0.08},
     "pieces": [
       {"cyl": [{"between": [{"hand": "L", "at": [0, -0.015, 0]}, {"hand": "R", "at": [0, -0.015, 0]}], "t": 0.5}, {"between": [{"hand": "L", "at": [0, 0.035, 0]}, {"hand": "R", "at": [0, 0.035, 0]}], "t": 0.5}], "r": "$head", "colour": "plate"},
@@ -165,7 +165,7 @@
     ]
   },
   "decline_bench": {
-    "status": "draft",
+    "status": "approved",
     "pieces": [
       {"cyl": [[-0.105, -0.05, 0.62], [-0.105, 1.1, 0.2]], "r": 0.035, "colour": "pad"},
       {"cyl": [[-0.07, -0.05, 0.62], [-0.07, 1.1, 0.2]], "r": 0.035, "colour": "pad"},
@@ -187,7 +187,7 @@
     ]
   },
   "cable_column": {
-    "status": "draft",
+    "status": "approved",
     "values": {"pulley": 1.0, "reach": 0.06, "side": "L", "one": 0, "hx": 0.12, "hy": 0.03, "jy": 0, "jz": 0, "leg": 0, "fx": 0, "fy": -0.07, "fz": 0.06, "ax": 0, "ay": 1, "az": 0, "rest": 0.3, "top": 0.52},
     "movers": {
       "stack": {"follows": {"between": [{"between": [{"grips": [0, "$jy", "$jz"]}, {"hand": "$side", "at": ["$hx", "$hy", 0]}], "t": "$one"}, {"foot": "$side", "at": ["$fx", "$fy", "$fz"]}], "t": "$leg"}, "axis": ["$ax", "$ay", "$az"], "along": [0, 0, 1]}
@@ -206,7 +206,7 @@
     ]
   },
   "cable_bar": {
-    "status": "draft",
+    "status": "approved",
     "values": {"half": 0.3, "arm": 0, "jy": 0, "jz": 0.06},
     "pieces": [
       {"cyl": [{"between": [{"grips": [0, 0, 0]}, {"grips": ["$half", 0, 0]}], "t": -1}, {"grips": ["$half", 0, 0]}], "r": 0.014, "colour": "steel"},
@@ -215,7 +215,7 @@
     ]
   },
   "cable_rope": {
-    "status": "draft",
+    "status": "approved",
     "values": {"jy": 0, "jz": 0.14, "kl": 0.05, "kr": -0.05},
     "pieces": [
       {"cyl": [{"hand": "L", "at": [0, 0, "$kl"]}, {"between": [{"hand": "L", "at": [0, 0, "$kl"]}, {"hand": "L", "at": [0, 0, 0]}], "t": 2}], "r": 0.012, "colour": "pad"},
@@ -227,7 +227,7 @@
     ]
   },
   "cable_handle": {
-    "status": "draft",
+    "status": "approved",
     "values": {"side": "L", "hx": 0.12, "hy": 0.03},
     "pieces": [
       {"cyl": [{"hand": "$side", "at": [0, 0, -0.065]}, {"hand": "$side", "at": [0, 0, 0.065]}], "r": 0.014, "colour": "steel"},
@@ -236,7 +236,7 @@
     ]
   },
   "cable_v_handle": {
-    "status": "draft",
+    "status": "approved",
     "values": {"jy": 0, "jz": 0},
     "pieces": [
       {"cyl": [{"hand": "L", "at": [0, 0, -0.06]}, {"hand": "L", "at": [0, 0, 0.06]}], "r": 0.014, "colour": "steel"},
@@ -248,7 +248,7 @@
     ]
   },
   "row_seat": {
-    "status": "draft",
+    "status": "approved",
     "pieces": [
       {"box": [0, 0, 0.385], "size": [0.32, 0.5, 0.07], "colour": "pad"},
       {"box": [0, 0, 0.2], "size": [0.08, 0.08, 0.3]},
@@ -258,7 +258,7 @@
     ]
   },
   "pulldown_seat": {
-    "status": "draft",
+    "status": "approved",
     "pieces": [
       {"box": [0, 0.03, 0.4], "size": [0.36, 0.38, 0.08], "colour": "pad"},
       {"box": [0, 0.03, 0.2], "size": [0.08, 0.08, 0.34]},
@@ -269,7 +269,7 @@
     ]
   },
   "dumbbell_feet": {
-    "status": "draft",
+    "status": "approved",
     "values": {"head": 0.055},
     "pieces": [
       {"cyl": [{"between": [{"foot": "L", "at": [0, -0.05, -0.07]}, {"foot": "R", "at": [0, -0.05, -0.07]}], "t": 0.5}, {"between": [{"foot": "L", "at": [0, -0.05, -0.13]}, {"foot": "R", "at": [0, -0.05, -0.13]}], "t": 0.5}], "r": "$head", "colour": "plate"},
@@ -278,7 +278,7 @@
     ]
   },
   "ankle_cuff": {
-    "status": "draft",
+    "status": "approved",
     "values": {"side": "L", "fx": 0, "fy": -0.07, "fz": 0.06},
     "pieces": [
       {"cyl": [{"foot": "$side", "at": [0, 0, 0.035]}, {"foot": "$side", "at": [0, 0, 0.095]}], "r": 0.05, "colour": "pad"},
@@ -286,7 +286,7 @@
     ]
   },
   "calf_step": {
-    "status": "draft",
+    "status": "approved",
     "values": {"px": -0.36, "py": 0.2},
     "pieces": [
       {"box": [0, 0, 0.075], "size": [0.6, 0.38, 0.15], "colour": "pad"},
@@ -295,14 +295,14 @@
     ]
   },
   "stability_ball": {
-    "status": "draft",
+    "status": "approved",
     "values": {"r": 0.32},
     "pieces": [
       {"ball": [0, 0, "$r"], "r": "$r", "colour": "pad"}
     ]
   },
   "stability_ball_feet": {
-    "status": "draft",
+    "status": "approved",
     "values": {"r": 0.32},
     "movers": {
       "roll": {"follows": {"between": [{"foot": "L", "at": [0, 0, 0]}, {"foot": "R", "at": [0, 0, 0]}], "t": 0.5}, "axis": [0, 1, 0], "along": [0, 1, 0]}
@@ -312,7 +312,7 @@
     ]
   },
   "stability_ball_hands": {
-    "status": "draft",
+    "status": "approved",
     "values": {"r": 0.32},
     "movers": {
       "roll": {"follows": {"grips": [0, 0, 0]}, "axis": [0, 1, 0], "along": [0, 1, 0]}
@@ -322,14 +322,14 @@
     ]
   },
   "medicine_ball": {
-    "status": "draft",
+    "status": "approved",
     "values": {"r": 0.11},
     "pieces": [
       {"ball": {"grips": [0, 0, 0]}, "r": "$r", "colour": "plate"}
     ]
   },
   "medicine_ball_knees": {
-    "status": "draft",
+    "status": "approved",
     "values": {"r": 0.09},
     "pieces": [
       {"ball": {"between": [{"foot": "L", "at": [0, 0.21, 0.37]}, {"foot": "R", "at": [0, 0.21, 0.37]}], "t": 0.5}, "r": "$r", "colour": "plate"}

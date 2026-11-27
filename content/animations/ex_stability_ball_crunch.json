@@ -1,5 +1,5 @@
 {
-  "status": "draft",
+  "status": "approved",
   "view": [60, 10],
   "poses": {
     "down": {
@@ -25,7 +25,7 @@
   "mistakes": [
     {
       "line": 0,
-      "status": "draft",
+      "status": "approved",
       "ring": ["pelvis"],
       "poses": {
         "up": {"pelvis": [0, -0.2, 0.66], "pelvis_rot": [-58, 0, 0], "lumbar": -10, "chest": -8, "neck": 0}
@@ -33,7 +33,7 @@
     },
     {
       "line": 1,
-      "status": "draft",
+      "status": "approved",
       "ring": ["neck"],
       "poses": {
         "up": {"lumbar": -4, "chest": 2, "neck": 42, "head": 20}

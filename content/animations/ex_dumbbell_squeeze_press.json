@@ -1,5 +1,5 @@
 {
-  "status": "draft",
+  "status": "approved",
   "view": [50, 14],
   "poses": {
     "top": {
@@ -23,7 +23,7 @@
   "mistakes": [
     {
       "line": 0,
-      "status": "draft",
+      "status": "approved",
       "ring": ["hand_L", "hand_R"],
       "poses": {
         "apart": {"extends": "bottom", "hand": {"pos": [0.17, 0.38, 0.8], "fingers": [-0.629, 0.274, 0.727], "palm": [-0.777, -0.183, -0.603]}, "elbow": [1, -0.6, -0.5]}
