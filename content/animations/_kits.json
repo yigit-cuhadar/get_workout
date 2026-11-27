@@ -336,7 +336,7 @@
     ]
   },
   "block": {
-    "status": "draft",
+    "status": "approved",
     "values": {"w": 0.5, "d": 0.4, "h": 0.15},
     "pieces": [
       {"box": {"between": [[0, 0, 0], [0, 0, "$h"]], "t": 0.5}, "size": ["$w", "$d", "$h"], "colour": "pad"}
