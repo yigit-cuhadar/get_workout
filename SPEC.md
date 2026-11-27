@@ -203,11 +203,10 @@ behaviour and traps are under Feature notes.
   parts inside gear: the owner caught feet passing through a box.
 - **Exercise page redesign** (Design, 2026-11-27): built on its own PR,
   which the owner may turn down and ask to revert as one. Left to the
-  build: the muscle legend sits under the stage; a custom exercise
-  keeps its short page (no tabs). The tab bar is Material's
+  build: a custom exercise keeps its short page (no tabs). The tab bar is Material's
   TabBar in Forge's theme, with no Forge component or studio card yet.
 - **Exercise page parts** (2026-11-26, 2026-11-27): studio component cards and Widgetbook
-  use cases are owed for the stage, the playing-mistake strip, the page's tab bar, the
+  use cases are owed for the stage (its Widgetbook use cases exist), the playing-mistake strip, the page's tab bar, the
   motion view, the playback buttons, the workout card's play button and the
   similar-exercise rows; `widgetbook/lib/use_cases`
   and the studio page have none of them.
@@ -740,6 +739,7 @@ of the older row.
 | 2026-11-27 | Similar exercises | Each group (Variations, Alternatives) under its label with its count, its first three as library rows (muscles · equipment, the star), "See all (n)" opening that group in a sheet; a row whose level differs from the exercise's says Easier or Harder; Movement and Muscles keep one stage height | https://claude.ai/artifact/GEGQYC6oV96g6h38z6BLmC |
 | 2026-11-27 | Mistakes and cues | The forms the animation plays are picked on the stage's foot in frosted see-through chips: the picked one open with its name or mistake line, each other a small circle with a check or its number; pause and half speed move to the stage's top corner (45 of 852 mistakes cannot be shown; 118 of 419 exercises have no animation and no picker); How to do it lists every mistake numbered in danger, one with a clip ending in a play button that scrolls up and plays it on the stage; the cues are the third part of the How to do it card, each beside a bulb in a pale warning circle aligned with the steps | https://claude.ai/artifact/GEGQYC6oV96g6h38z6BLmC |
 | 2026-11-27 | Exercise page, second pass | The stage plays the correct form with nothing on it; a mistake plays from its play button in Common mistakes, now first on How to do it, and the stage's foot names it with × back to the correct form (FM2 A); the workout's play button, shown only with an animation, opens the exercise page; gesture lines that always showed become first-use tips dismissed with Got it: turning a model (exercise page, Weekly volume), picking training days and the ruler answers (HN1-HN4 B); icon buttons' press ink stays inside their circle (forge v0.65.0) | https://claude.ai/artifact/GEGQYC6oV96g6h38z6BLmC |
+| 2026-11-27 | Stage legend | The owner's ask, without a canvas: the main / secondary colour key moves from under the stage into it, below the animation or the still pair, on both tabs | |
 
 Rules still binding that the studio does not show:
 - Colours stay muted and black is not a default accent; the plates'
@@ -1663,7 +1663,10 @@ files, not here.
 - **In the app** (2026-11-25, reworked 2026-11-27): with an animation the
   exercise page's stage plays it, Movement / Muscles on the stage; with
   none, while loading, on failure the stage shows the still front and back
-  pair, and a custom exercise keeps its short page. The stage plays the
+  pair, and a custom exercise keeps its short page. Inside the stage, under
+  the animation or the still pair on both tabs, the legend names the main
+  and secondary muscles by colour (2026-11-27, the owner's ask); it is
+  left out while the model has failed. The stage plays the
   correct form; a mistake with a clip plays from its play button in Common
   mistakes (How to do it), the stage's foot then naming it with × back to
   the correct form; a second tap of that play button does the same. A

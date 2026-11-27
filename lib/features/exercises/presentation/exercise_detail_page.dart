@@ -29,6 +29,7 @@ import 'exercise_motion_cubit.dart';
 import 'favorites_cubit.dart';
 import 'vocabulary_labels.dart';
 import 'widgets/exercise_motion_view.dart';
+import 'widgets/exercise_stage.dart';
 import 'widgets/exercise_tile.dart';
 
 class ExerciseDetailPage extends StatelessWidget {
@@ -452,10 +453,6 @@ class _CatalogueBodyState extends State<_CatalogueBody>
                 // Only a stage that plays can be turned.
                 if (context.watch<ExerciseMotionCubit>().state is MotionReady)
                   OnceTip(Tip.modelTurn, l10n.tipModelTurn),
-                MuscleLegend(
-                  main: exercise.mainMuscles,
-                  secondary: exercise.secondaryMuscles,
-                ),
               ],
             ),
           ),
@@ -917,8 +914,6 @@ class _Hero extends StatefulWidget {
 
   final Exercise exercise;
 
-  static const double height = 380;
-
   /// The still pair's width before it is scaled into the stage.
   static const double figuresWidth = 320;
 
@@ -938,7 +933,6 @@ class _HeroState extends State<_Hero> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final p = ForgeStyle.of(context).colors;
     final exercise = widget.exercise;
     final main = exercise.mainMuscles;
     final secondary = exercise.secondaryMuscles;
@@ -959,9 +953,8 @@ class _HeroState extends State<_Hero> {
         ),
       ),
     );
-    // The animation's stage, then its hint line under it.
-    const height = _Hero.height;
-    final stage = switch (context.watch<BodyModelCubit>().state) {
+    final model = context.watch<BodyModelCubit>().state;
+    final stage = switch (model) {
       BodyModelFailed() => Padding(
         padding: const EdgeInsets.all(Gap.md),
         child: ErrorView(
@@ -978,41 +971,38 @@ class _HeroState extends State<_Hero> {
         motion: ready,
         main: main,
         secondary: secondary,
-        height: _Hero.height,
+        height: ExerciseStage.height,
       ),
       BodyModelReady(:final model) => figures(model),
     };
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: p.surface,
-        border: Border(bottom: BorderSide(color: p.line)),
-      ),
-      child: Stack(
-        children: [
-          SizedBox(height: height, width: double.infinity, child: stage),
-          if (ready != null)
-            PositionedDirectional(
-              top: Gap.sm,
-              start: Gap.md,
-              width: 200,
-              child: ForgeSegmentedControl<bool>(
-                segments: [
-                  ForgeSegment(value: true, label: l10n.motionTab),
-                  ForgeSegment(value: false, label: l10n.musclesTab),
-                ],
-                selected: _moving,
-                onChanged: (moving) => setState(() => _moving = moving),
-              ),
+    return ExerciseStage(
+      main: main,
+      secondary: secondary,
+      legend: model is! BodyModelFailed,
+      overlays: [
+        if (ready != null)
+          PositionedDirectional(
+            top: Gap.sm,
+            start: Gap.md,
+            width: 200,
+            child: ForgeSegmentedControl<bool>(
+              segments: [
+                ForgeSegment(value: true, label: l10n.motionTab),
+                ForgeSegment(value: false, label: l10n.musclesTab),
+              ],
+              selected: _moving,
+              onChanged: (moving) => setState(() => _moving = moving),
             ),
-          if (ready != null && _moving && ready.selected != 0)
-            Positioned(
-              left: Gap.sm,
-              right: Gap.sm,
-              bottom: Gap.sm,
-              child: _PlayingMistake(exercise, ready),
-            ),
-        ],
-      ),
+          ),
+        if (ready != null && _moving && ready.selected != 0)
+          Positioned(
+            left: Gap.sm,
+            right: Gap.sm,
+            bottom: Gap.sm,
+            child: _PlayingMistake(exercise, ready),
+          ),
+      ],
+      child: stage,
     );
   }
 }
