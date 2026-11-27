@@ -418,7 +418,6 @@
   "@volumeAbove": {"placeholders": {"max": {"type": "int"}}},
   "volumeModelLabel": "Body model coloured by sets per muscle, {week}",
   "@volumeModelLabel": {"placeholders": {"week": {"type": "String"}}},
-  "volumeModelHint": "Drag to turn · pinch to zoom",
   "volumeModelTurnHint": "Drag to turn",
   "volumeMuscleSummary": "{sets} · {zone}",
   "@volumeMuscleSummary": {"placeholders": {"sets": {"type": "String"}, "zone": {"type": "String"}}},
@@ -1255,8 +1254,6 @@
   "@workoutAddedWeight": {"placeholders": {"unit": {"type": "String"}}},
   "workoutAssistance": "−{unit}",
   "@workoutAssistance": {"placeholders": {"unit": {"type": "String"}}},
-  "workoutWarmupShort": "W",
-  "workoutDropShort": "D",
   "workoutSetOptions": "Set options",
   "workoutSetBubble": "Set {number}",
   "@workoutSetBubble": {"placeholders": {"number": {"type": "int"}}},
@@ -2356,5 +2353,8 @@
   "detailSeeAllCount": "See all ({count})",
   "@detailSeeAllCount": {"placeholders": {"count": {"type": "int"}}},
   "similarEasier": "Easier",
-  "similarHarder": "Harder"
+  "similarHarder": "Harder",
+  "tipModelTurn": "Drag to turn the model; pinch with two fingers to zoom.",
+  "tipVolumeModel": "Drag to turn the model; tap a muscle to see its sets.",
+  "motionBackToCorrect": "Back to the correct form"
 }

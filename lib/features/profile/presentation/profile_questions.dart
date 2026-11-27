@@ -15,6 +15,7 @@ import '../../settings/domain/user_settings.dart';
 import '../../settings/presentation/settings_cubit.dart';
 import '../domain/user_profile.dart';
 import 'profile_form_cubit.dart';
+import '../../settings/presentation/once_tip.dart';
 
 /// Display names of the profile answers. Level and equipment names come
 /// from [VocabularyLabels].
@@ -734,8 +735,8 @@ void _openEntry(BuildContext context, _Entry entry) =>
       builder: (_) => _EntrySheet(entry),
     );
 
-/// The unit switch, narrow and centred, over the [picker] and the hint
-/// that its value can be typed.
+/// The unit switch, narrow and centred, over the [picker] and, once, the
+/// tip that its value can be typed.
 class _NumberAnswer extends StatelessWidget {
   const _NumberAnswer({required this.unitSwitch, required this.picker});
 
@@ -755,12 +756,7 @@ class _NumberAnswer extends StatelessWidget {
           child: SizedBox(width: _switchWidth, child: unitSwitch),
         ),
         picker,
-        Text(
-          l10n.profileRulerHint,
-          style: Theme.of(context).textTheme.bodySmall!
-              .copyWith(color: ForgeStyle.of(context).colors.inkMuted),
-          textAlign: TextAlign.center,
-        ),
+        OnceTip(Tip.ruler, l10n.profileRulerHint),
       ],
     );
   }

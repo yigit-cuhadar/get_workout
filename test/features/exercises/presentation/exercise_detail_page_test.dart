@@ -185,7 +185,7 @@ void main() {
     expect(find.text('Exercise options'), findsNothing);
   });
 
-  testWidgets('with an animation: a chip per clip, every mistake listed', (
+  testWidgets('with an animation: mistakes first, played on the stage', (
     tester,
   ) async {
     await sl.unregister<ExerciseMotionCubit>();
@@ -205,23 +205,47 @@ void main() {
     );
     await pump(tester, DetailReady(bench));
 
-    // The picked form is open on the stage, each other a small chip.
-    expect(find.text('Correct form'), findsOneWidget);
-    expect(find.bySemanticsLabel('Mistake 1'), findsOneWidget);
-    expect(find.bySemanticsLabel('Mistake 2'), findsNothing);
-    // Every mistake is on How to do it; the one with a clip plays it.
+    // The correct form plays with nothing on the stage's foot.
+    expect(find.bySemanticsLabel('Back to the correct form'), findsNothing);
+    // Every mistake is on How to do it, first; the one with a clip plays it.
     expect(find.text('Common mistakes'), findsOneWidget);
+    expect(
+      tester.getTopLeft(find.text('Common mistakes')).dy,
+      lessThan(tester.getTopLeft(find.text('Set the bench flat.')).dy),
+    );
     expect(find.text('Flaring the elbows.'), findsOneWidget);
     expect(find.bySemanticsLabel('Watch mistake 1'), findsOneWidget);
     expect(find.bySemanticsLabel('Watch mistake 2'), findsNothing);
 
-    await tester.tap(find.bySemanticsLabel('Mistake 1'));
-    await settle(tester);
-    verify(() => motion.select(1)).called(1);
-
     await tester.tap(find.bySemanticsLabel('Watch mistake 1'));
     await settle(tester);
     verify(() => motion.select(1)).called(1);
+  });
+
+  testWidgets('a mistake playing is named on the stage; × goes back', (
+    tester,
+  ) async {
+    await sl.unregister<ExerciseMotionCubit>();
+    final motion = _MotionCubit();
+    when(() => motion.state).thenReturn(
+      MotionReady(
+        clips: const [AnimationClip.correct(), AnimationClip.mistake(0, 0)],
+        selected: 1,
+        model: _Model(),
+        motion: _Clip(),
+      ),
+    );
+    when(motion.load).thenAnswer((_) async {});
+    when(() => motion.select(any())).thenReturn(null);
+    sl.registerFactoryParam<ExerciseMotionCubit, String, void>(
+      (_, _) => motion,
+    );
+    await pump(tester, DetailReady(bench));
+
+    // On the stage's foot and in the list.
+    expect(find.text('Bouncing the bar.'), findsNWidgets(2));
+    await tester.tap(find.bySemanticsLabel('Back to the correct form'));
+    verify(() => motion.select(0)).called(1);
   });
 
   testWidgets('Details holds the facts and the similar exercises', (

@@ -6,6 +6,8 @@ import '../../settings/presentation/first_weekday.dart';
 import '../domain/calendar_date.dart';
 import '../domain/program_schedule.dart';
 import 'program_text.dart';
+import '../../settings/domain/user_settings.dart';
+import '../../settings/presentation/once_tip.dart';
 
 /// Asks which program day each training weekday does, starting
 /// from [initial]; [dayNames] are the program's days by index. Returns the
@@ -192,14 +194,16 @@ class _TrainingDaysSheetState extends State<TrainingDaysSheet> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 spacing: Gap.md,
                 children: [
+                  // How weekdays are picked, once.
+                  OnceTip(
+                    Tip.trainingDays,
+                    _simple
+                        ? l10n.programTrainingDaysSimpleHint(_dayCount)
+                        : l10n.programTrainingDaysHint,
+                  ),
                   if (_simple) ...[
-                    Text(
-                      l10n.programTrainingDaysSimpleHint(_dayCount),
-                      style: muted,
-                    ),
                     _weekdays(selected: _picked.contains, onPressed: _pick),
                   ] else ...[
-                    Text(l10n.programTrainingDaysHint, style: muted),
                     for (final (dayIndex, name) in widget.dayNames.indexed)
                       SectionCard.plain(
                         title: name,

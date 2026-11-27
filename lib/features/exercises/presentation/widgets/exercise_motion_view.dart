@@ -15,8 +15,8 @@ import '../exercise_motion_cubit.dart';
 /// stage: the [main] muscles in heat-high, the [secondary] ones in the
 /// lighter green, the gear in the palette's greys on a light floor, and a
 /// mistake's region ringed in danger. It starts from the recipe's view; one
-/// finger turns it, a pinch zooms, and a line under the stage says so. Two
-/// buttons in the stage's corner pause and resume the loop and switch half
+/// finger turns it and a pinch zooms. Two
+/// buttons in the stage's top corner pause and resume the loop and switch half
 /// speed; both hold while another clip is picked.
 class ExerciseMotionView extends StatefulWidget {
   const ExerciseMotionView({
@@ -25,17 +25,12 @@ class ExerciseMotionView extends StatefulWidget {
     required this.main,
     required this.secondary,
     required this.height,
-    this.controlsOnTop = false,
   });
 
   final MotionReady motion;
   final List<Muscle> main;
   final List<Muscle> secondary;
   final double height;
-
-  /// The buttons in the stage's top corner, leaving its foot free (the
-  /// exercise page draws the form picker there).
-  final bool controlsOnTop;
 
   @override
   State<ExerciseMotionView> createState() => _ExerciseMotionViewState();
@@ -97,51 +92,37 @@ class _ExerciseMotionViewState extends State<ExerciseMotionView> {
       groundParts: const {'floor', 'shadow'},
       markerColor: p.danger,
     );
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      spacing: Gap.sm,
-      children: [
-        SizedBox(
-          height: widget.height,
-          child: Stack(
-            children: [
-              Positioned.fill(child: viewer),
-              Positioned(
-                right: Gap.xs,
-                top: widget.controlsOnTop ? Gap.xs : null,
-                bottom: widget.controlsOnTop ? null : Gap.xs,
-                child: Row(
-                  spacing: Gap.xs,
-                  children: [
-                    ForgeIconButton(
-                      icon: _playing ? ForgeIcons.pause : ForgeIcons.playArrow,
-                      label: _playing ? l10n.motionPause : l10n.motionPlay,
-                      variant: ForgeIconButtonVariant.ink,
-                      fill: ForgeIconButtonFill.surface,
-                      onPressed: () => setState(() => _playing = !_playing),
-                    ),
-                    ForgeIconButton.text(
-                      l10n.motionHalfSpeed,
-                      label: l10n.motionHalfSpeedLabel,
-                      variant: ForgeIconButtonVariant.ink,
-                      fill: ForgeIconButtonFill.surface,
-                      toggled: _slow,
-                      onPressed: () => setState(() => _slow = !_slow),
-                    ),
-                  ],
+    return SizedBox(
+      height: widget.height,
+      child: Stack(
+        children: [
+          Positioned.fill(child: viewer),
+          Positioned(
+            right: Gap.xs,
+            top: Gap.xs,
+            child: Row(
+              spacing: Gap.xs,
+              children: [
+                ForgeIconButton(
+                  icon: _playing ? ForgeIcons.pause : ForgeIcons.playArrow,
+                  label: _playing ? l10n.motionPause : l10n.motionPlay,
+                  variant: ForgeIconButtonVariant.ink,
+                  fill: ForgeIconButtonFill.surface,
+                  onPressed: () => setState(() => _playing = !_playing),
                 ),
-              ),
-            ],
+                ForgeIconButton.text(
+                  l10n.motionHalfSpeed,
+                  label: l10n.motionHalfSpeedLabel,
+                  variant: ForgeIconButtonVariant.ink,
+                  fill: ForgeIconButtonFill.surface,
+                  toggled: _slow,
+                  onPressed: () => setState(() => _slow = !_slow),
+                ),
+              ],
+            ),
           ),
-        ),
-        Text(
-          l10n.motionHint,
-          textAlign: TextAlign.center,
-          style: Theme.of(context).textTheme.labelMedium!
-              .copyWith(color: p.inkMuted),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

@@ -15,9 +15,11 @@ import 'package:get_workout/features/exercises/presentation/exercise_catalogue_c
 import 'package:get_workout/features/profile/domain/user_profile.dart';
 import 'package:get_workout/features/programs/presentation/program_list_cubit.dart';
 import 'package:get_workout/features/programs/presentation/program_volume_page.dart';
+import 'package:get_workout/features/settings/presentation/settings_cubit.dart';
 import 'package:get_workout/l10n/app_localizations.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../loaded_settings.dart';
 import '../exercises/fixtures.dart';
 import 'fixtures.dart';
 
@@ -61,6 +63,7 @@ void main() {
         providers: [
           BlocProvider<ExerciseCatalogueCubit>.value(value: catalogue),
           BlocProvider<BodyModelCubit>.value(value: model),
+          BlocProvider<SettingsCubit>.value(value: loadedSettings()),
         ],
         child: MaterialApp(
           theme: AppPreset.slate.lightTheme(),
@@ -116,6 +119,7 @@ void main() {
       body: BodyModelReady(body!, Sex.male),
     );
 
+    // How it turns is a first-use tip.
     expect(find.text('Drag to turn'), findsOneWidget);
     expect(
       tester.widget<ModelViewer>(find.byType(ModelViewer)).onPartTap,
