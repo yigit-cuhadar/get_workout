@@ -11,6 +11,8 @@ import 'package:get_workout/features/exercises/presentation/body_model_cubit.dar
 import 'package:get_workout/features/exercises/presentation/exercise_catalogue_cubit.dart';
 import 'package:get_workout/features/exercises/presentation/exercise_detail_cubit.dart';
 import 'package:get_workout/features/exercises/presentation/exercise_detail_page.dart';
+import 'package:get_workout/features/exercises/domain/exercise_animation.dart';
+import 'package:get_workout/features/exercises/presentation/exercise_motion_cubit.dart';
 import 'package:get_workout/features/exercises/presentation/favorites_cubit.dart';
 import 'package:get_workout/features/exercises/presentation/widgets/exercise_tile.dart';
 import 'package:get_workout/features/settings/domain/user_settings.dart';
@@ -18,6 +20,7 @@ import 'package:get_workout/features/settings/presentation/settings_cubit.dart';
 import 'package:get_workout/features/strength/presentation/exercise_strength_cubit.dart';
 import 'package:get_workout/features/workout/domain/exercise_stats.dart';
 import 'package:get_workout/l10n/app_localizations.dart';
+import 'package:forge_model_viewer/forge_model_viewer.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
@@ -37,6 +40,13 @@ class _FavoritesCubit extends MockCubit<FavoritesState>
     implements FavoritesCubit {}
 
 class _ModelCubit extends MockCubit<BodyModelState> implements BodyModelCubit {}
+
+class _MotionCubit extends MockCubit<ExerciseMotionState>
+    implements ExerciseMotionCubit {}
+
+class _Model extends Fake implements Model3D {}
+
+class _Clip extends Fake implements ClipMotion {}
 
 class _SettingsCubit extends MockCubit<SettingsState>
     implements SettingsCubit {}
@@ -156,31 +166,59 @@ void main() {
     await settle(tester);
   }
 
-  testWidgets('a catalogue exercise: form cards, then How to do it', (
+  testWidgets('without an animation: no form cards, mistakes on How to do it', (
     tester,
   ) async {
     await pump(tester, DetailReady(bench, alternatives: [dumbbell]));
 
-    // A card for the correct form, then one per mistake.
+    expect(find.text('Correct form'), findsNothing);
+    expect(find.text('Mistake 1'), findsNothing);
+    expect(find.text('Common mistakes'), findsOneWidget);
+    expect(find.text('• Bouncing the bar.'), findsOneWidget);
+    expect(find.text('• Flaring the elbows.'), findsOneWidget);
+    // How to do it is open: the steps and the safety line.
+    expect(find.byType(BenefitList), findsOneWidget);
+    expect(find.text('• Use a spotter.'), findsOneWidget);
+    expect(find.text('Pattern'), findsNothing);
+    expect(find.text('Custom'), findsNothing);
+    expect(find.text('Exercise options'), findsNothing);
+  });
+
+  testWidgets('with an animation: a card per clip, the rest on How to do it', (
+    tester,
+  ) async {
+    await sl.unregister<ExerciseMotionCubit>();
+    final motion = _MotionCubit();
+    when(() => motion.state).thenReturn(
+      MotionReady(
+        clips: const [AnimationClip.correct(), AnimationClip.mistake(0, 0)],
+        selected: 0,
+        model: _Model(),
+        motion: _Clip(),
+      ),
+    );
+    when(motion.load).thenAnswer((_) async {});
+    when(() => motion.select(any())).thenReturn(null);
+    sl.registerFactoryParam<ExerciseMotionCubit, String, void>(
+      (_, _) => motion,
+    );
+    await pump(tester, DetailReady(bench));
+
     expect(find.text('Correct form'), findsOneWidget);
     expect(find.text('Mistake 1'), findsOneWidget);
-    expect(find.text('Bouncing the bar.'), findsOneWidget);
-    // A swipe brings the next mistake.
+    expect(find.text('Mistake 2'), findsNothing);
+    // The mistake no clip shows is on How to do it.
+    expect(find.text('Also watch for'), findsOneWidget);
+    expect(find.text('• Flaring the elbows.'), findsOneWidget);
+    expect(find.text('• Bouncing the bar.'), findsNothing);
+
     await tester.timedDrag(
       find.byType(PageView),
       const Offset(-300, 0),
       const Duration(milliseconds: 300),
     );
     await settle(tester);
-    await settle(tester);
-    expect(find.text('Mistake 2'), findsOneWidget);
-    // How to do it is open: the steps and the safety line.
-    expect(find.byType(BenefitList), findsOneWidget);
-    expect(find.text('• Use a spotter.'), findsOneWidget);
-    expect(find.text('Pattern'), findsNothing);
-    expect(find.text('Similar exercises'), findsNothing);
-    expect(find.text('Custom'), findsNothing);
-    expect(find.text('Exercise options'), findsNothing);
+    verify(() => motion.select(1)).called(1);
   });
 
   testWidgets('Details holds the facts and the similar exercises', (

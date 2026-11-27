@@ -207,9 +207,9 @@ behaviour and traps are under Feature notes.
   parts inside gear: the owner caught feet passing through a box.
 - **Exercise page redesign** (Design, 2026-11-27): built on its own PR,
   which the owner may turn down and ask to revert as one. Left to the
-  build: the muscle legend sits under the form cards; a mistake without an
-  animation still gets its card, the stage staying on the correct form; a
-  custom exercise keeps its short page (no tabs). The tab bar is Material's
+  build: the muscle legend sits under the form cards; the "Also watch for"
+  list is bulleted, not numbered, as the cards keep the catalogue's mistake
+  numbers; a custom exercise keeps its short page (no tabs). The tab bar is Material's
   TabBar in Forge's theme, with no Forge component or studio card yet.
 - **Exercise page parts** (2026-11-26, 2026-11-27): studio component cards and Widgetbook
   use cases are owed for the stage, the form cards, the page's tab bar, the
@@ -743,6 +743,7 @@ of the older row.
 | 2026-11-26 | Exercise screen review | The own note is removed; Setup and How to do it share one card; each common mistake carries its chip's number, and one with an animation plays it from its row; the Safety card takes the warning tone; half speed looks filled while on; Tips get a title icon; each similar exercise is its own row with See all; the favourite star sits in the app bar beside the menu. Without a board: a mistake without an animation leaves a gap in the chip numbers | https://claude.ai/artifact/Gp3cZ7kU1JMSZ5TG59rXGn |
 | 2026-11-27 | Exercise page redesign | The animation is a full-width 380 px stage under the app bar, Movement / Muscles on the stage; under it a swipeable card per form (the correct form with its cues, each mistake with its line and region; swiping plays that form) replaces the chips, their line and the Mistakes list; then the tabs How to do it, Details, Performance; Details keeps the seven-row info table, then Similar exercises; Performance shows last time, best set and estimated 1RM with "See progress" to the strength page, then each workout's sets (the record set marked, a row opens the workout); never done, it says so and offers Add to workout. Built 2026-11-27; Performance lists each workout's best set (what the stats keep), and its rows and See progress switch to the Progress tab | https://claude.ai/artifact/GEGQYC6oV96g6h38z6BLmC |
 | 2026-11-27 | Similar exercises | Each group (Variations, Alternatives) under its label with its count, its first three as library rows (muscles · equipment, the star), "See all (n)" opening that group in a sheet; a row whose level differs from the exercise's says Easier or Harder; Movement and Muscles keep one stage height | https://claude.ai/artifact/GEGQYC6oV96g6h38z6BLmC |
+| 2026-11-27 | Mistakes the animation cannot show | The form cards hold only the forms the animation plays; an animated exercise's other mistakes (breath, tempo, force, load, gear it cannot draw: 45 of 852) are listed on How to do it as "Also watch for"; an exercise without an animation (118 of 419) has no form cards and lists all its mistakes there as "Common mistakes" | https://claude.ai/artifact/GEGQYC6oV96g6h38z6BLmC |
 
 Rules still binding that the studio does not show:
 - Colours stay muted and black is not a default accent; the plates'

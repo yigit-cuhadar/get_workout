@@ -381,6 +381,30 @@ class _CatalogueBodyState extends State<_CatalogueBody>
     super.dispose();
   }
 
+  /// The mistakes no form card plays, under their title: with an
+  /// animation the ones it cannot show ("Also watch for"), without one all
+  /// of them; none while the animation loads.
+  (String, List<String>)? _unplayed(List<String> mistakes) {
+    final l10n = AppLocalizations.of(context);
+    final List<String> lines;
+    final String title;
+    switch (context.watch<ExerciseMotionCubit>().state) {
+      case MotionLoading():
+        return null;
+      case MotionReady(:final clips):
+        final shown = {for (final clip in clips) ?clip.line};
+        lines = [
+          for (final (i, line) in mistakes.indexed)
+            if (!shown.contains(i)) line,
+        ];
+        title = l10n.detailMistakesAlso;
+      case MotionNone() || MotionFailed():
+        lines = mistakes;
+        title = l10n.detailMistakes;
+    }
+    return lines.isEmpty ? null : (title, lines);
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
@@ -395,6 +419,12 @@ class _CatalogueBodyState extends State<_CatalogueBody>
           SectionCard.plain(
             title: l10n.detailExecution,
             child: _Steps(setup: text.setup, execution: text.execution),
+          ),
+        if (_unplayed(text.mistakes) case (final title, final lines))
+          SectionCard.plain(
+            title: title,
+            icon: ForgeIcons.warning,
+            child: _Bullets(lines),
           ),
         if (text.cues.isNotEmpty)
           SectionCard.plain(
@@ -914,16 +944,6 @@ class _FormCardsState extends State<_FormCards> {
     super.dispose();
   }
 
-  /// Plays the clip of mistake [line] (null: the correct form), or the
-  /// correct form when the mistake has none.
-  void _play(int? line) {
-    final cubit = context.read<ExerciseMotionCubit>();
-    if (cubit.state case MotionReady(:final clips)) {
-      final index = clips.indexWhere((clip) => clip.line == line);
-      cubit.select(index < 0 ? 0 : index);
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
@@ -933,43 +953,30 @@ class _FormCardsState extends State<_FormCards> {
     final exercise = widget.exercise;
     final text = exercise.localized(context);
     final motion = context.watch<ExerciseMotionCubit>().state;
-    final shown = motion is MotionReady
-        ? {for (final clip in motion.clips) ?clip.line}
-        : null;
-    final forms = <int?>[
-      null,
-      for (var i = 0; i < text.mistakes.length; i++) i,
-    ];
     final legend = MuscleLegend(
       main: exercise.mainMuscles,
       secondary: exercise.secondaryMuscles,
     );
-    if (text.cues.isEmpty && text.mistakes.isEmpty) return legend;
+    // Without an animation there is nothing for a card to play: the
+    // mistakes are on How to do it.
+    if (motion is! MotionReady) return legend;
+    final forms = [for (final clip in motion.clips) clip.line];
 
     final scale = MediaQuery.textScalerOf(context);
     final body = textTheme.bodyMedium!;
-    final small = textTheme.bodySmall!;
     final title = textTheme.titleSmall!;
     double lines(TextStyle style, int count) =>
         scale.scale(style.fontSize!) * style.height! * count;
-    // Room for the line under a mistake the animation does not show, only
-    // when one of them has it.
-    final anyNotShown =
-        shown != null &&
-        [for (var i = 0; i < text.mistakes.length; i++) i]
-            .any((line) => !shown.contains(line));
     // The padding and the picked card's border on both sides, then its lines.
     final height =
         2 * (14 + _border) +
         lines(title, 1).clamp(24, double.infinity) +
         Gap.sm +
-        lines(body, _bodyLines) +
-        (anyNotShown ? Gap.sm + lines(small, 1) : 0);
+        lines(body, _bodyLines);
 
     Widget card(int index) {
       final line = forms[index];
       final selected = index == _current;
-      final notShown = line != null && shown != null && !shown.contains(line);
       final tone = line == null ? p.success : p.danger;
       return Padding(
         padding: const EdgeInsetsDirectional.only(end: Gap.sm),
@@ -1040,11 +1047,6 @@ class _FormCardsState extends State<_FormCards> {
                     maxLines: _bodyLines,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  if (notShown)
-                    Text(
-                      l10n.motionMistakeNotShown,
-                      style: small.copyWith(color: p.inkMuted),
-                    ),
                 ],
               ),
             ),
@@ -1065,7 +1067,7 @@ class _FormCardsState extends State<_FormCards> {
             itemCount: forms.length,
             onPageChanged: (index) {
               setState(() => _current = index);
-              _play(forms[index]);
+              context.read<ExerciseMotionCubit>().select(index);
             },
             itemBuilder: (context, index) => card(index),
           ),
