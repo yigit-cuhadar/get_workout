@@ -9,7 +9,7 @@ Updated 2026-11-27. Keep this block and Open true with every change.
 
 - **State**: feature groups 1-14 and the animation code of Group 15 are on
   main. iOS 1.0.0 (build 7) was submitted to App Review on 2026-11-24; its
-  result is not known here. TestFlight builds 8-14 followed (2026-11-25 to
+  result is not known here. TestFlight builds 8-15 followed (2026-11-25 to
   2026-11-27). 310 of 419 live exercises have an approved animation.
 - **Next**:
   1. The owner's verdict on the exercise page redesign PR (Open).
