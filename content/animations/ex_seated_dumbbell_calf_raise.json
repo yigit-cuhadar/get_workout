@@ -1,5 +1,5 @@
 {
-  "status": "review",
+  "status": "draft",
   "view": [
     55,
     8
@@ -128,14 +128,14 @@
       ]
     },
     {
-      "kit": "calf_step",
+      "kit": "block",
       "at": [
         0,
         -0.62,
         0
       ],
-      "px": -0.5,
-      "py": 0.0
+      "w": 0.6,
+      "d": 0.38
     },
     {
       "kit": "dumbbell",
