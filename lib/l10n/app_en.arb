@@ -2353,5 +2353,9 @@
   "performanceSeeProgress": "See progress",
   "performanceEmptyTitle": "No sets yet",
   "performanceEmptyMessage": "Do this exercise in a workout and your sets show here.",
-  "motionMistakeNotShown": "Not shown in the animation"
+  "motionMistakeNotShown": "Not shown in the animation",
+  "detailSeeAllCount": "See all ({count})",
+  "@detailSeeAllCount": {"placeholders": {"count": {"type": "int"}}},
+  "similarEasier": "Easier",
+  "similarHarder": "Harder"
 }

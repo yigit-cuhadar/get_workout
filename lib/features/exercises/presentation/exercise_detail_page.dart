@@ -613,9 +613,11 @@ class _Steps extends StatelessWidget {
   }
 }
 
-/// The exercise's variations and alternatives as two groups, each with its
-/// count and its first few as rows that open them; "See all" opens a sheet
-/// listing them all.
+/// The exercise's variations and alternatives, each group under its label
+/// with its count, its first few as library rows (muscles and equipment,
+/// the star, and Easier or Harder when the level differs from this
+/// exercise's) and, when it has more, See all opening the whole group in a
+/// sheet. A row opens that exercise in the same tab.
 class _Similar extends StatelessWidget {
   const _Similar(this.detail, this.exerciseRoute);
 
@@ -624,113 +626,93 @@ class _Similar extends StatelessWidget {
 
   static const int _preview = 3;
 
-  List<(String, List<Exercise>)> _groups(AppLocalizations l10n) => [
-    if (detail.variations.isNotEmpty)
-      (l10n.detailVariations(detail.variations.length), detail.variations),
-    if (detail.alternatives.isNotEmpty)
-      (
-        l10n.detailAlternatives(detail.alternatives.length),
-        detail.alternatives,
-      ),
-  ];
-
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final text = Theme.of(context).textTheme;
-    final muted = ForgeStyle.of(context).colors.inkMuted;
-    final groups = _groups(l10n);
-    return SectionCard.plain(
-      title: l10n.detailSimilar,
-      note: '${detail.variations.length + detail.alternatives.length}',
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        spacing: Gap.sm,
-        children: [
-          for (final (label, exercises) in groups)
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Text(label, style: text.labelMedium!.copyWith(color: muted)),
-                for (final (i, exercise)
-                    in exercises.take(_preview).indexed) ...[
-                  if (i > 0) const Divider(height: 1),
-                  InkWell(
-                    onTap: () => context.push(exerciseRoute(exercise.id)),
-                    child: ConstrainedBox(
-                      constraints: const BoxConstraints(
-                        minHeight: ForgeTheme.tapMin,
-                      ),
-                      child: Row(
-                        spacing: Gap.sm,
-                        children: [
-                          Expanded(
-                            child: Text(
-                              exercise.localized(context).name,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: text.bodyLarge,
-                            ),
-                          ),
-                          ForgeIcon(
-                            ForgeIcons.chevronRight,
-                            size: 18,
-                            color: muted,
-                          ),
-                        ],
-                      ),
+    final groups = [
+      if (detail.variations.isNotEmpty)
+        (l10n.detailVariations(detail.variations.length), detail.variations),
+      if (detail.alternatives.isNotEmpty)
+        (
+          l10n.detailAlternatives(detail.alternatives.length),
+          detail.alternatives,
+        ),
+    ];
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      spacing: Gap.sm,
+      children: [
+        for (final (label, exercises) in groups)
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              SectionLabel(label),
+              ListRowCard(
+                children: [
+                  for (final exercise in exercises.take(_preview))
+                    _tile(context, exercise),
+                  if (exercises.length > _preview)
+                    ListRow(
+                      title: l10n.detailSeeAllCount(exercises.length),
+                      end: ListRowEnd.chevron,
+                      onTap: () => _showAll(context, label, exercises),
                     ),
-                  ),
                 ],
-              ],
-            ),
-          if (groups.any((group) => group.$2.length > _preview))
-            Align(
-              alignment: AlignmentDirectional.centerStart,
-              child: ForgeButton(
-                label: l10n.detailSeeAll,
-                variant: ForgeButtonVariant.text,
-                onPressed: () => _showAll(context),
               ),
-            ),
-        ],
-      ),
+            ],
+          ),
+      ],
     );
   }
 
-  /// Every variation and alternative, by group; a row closes the sheet and
-  /// opens that exercise.
-  Future<void> _showAll(BuildContext context) {
+  /// [exercise] as a library row; [onOpen] in place of opening it here.
+  Widget _tile(
+    BuildContext context,
+    Exercise exercise, {
+    VoidCallback? onOpen,
+  }) {
     final l10n = AppLocalizations.of(context);
-    return showForgeBottomSheet<void>(
-      context: context,
-      builder: (sheet) => ForgeBottomSheet(
-        title: l10n.detailSimilar,
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              for (final (label, exercises) in _groups(l10n)) ...[
-                SectionLabel(label),
-                ListRowCard(
-                  children: [
-                    for (final exercise in exercises)
-                      ExerciseTile(
-                        exercise,
-                        onOpen: () {
-                          Navigator.pop(sheet);
-                          context.push(exerciseRoute(exercise.id));
-                        },
-                      ),
-                  ],
-                ),
-              ],
-            ],
-          ),
-        ),
-      ),
+    final here = detail.exercise.level;
+    final level = exercise.level;
+    return ExerciseTile(
+      exercise,
+      showFavorite: true,
+      route: exerciseRoute,
+      onOpen: onOpen,
+      tag: here == null || level == null || level == here
+          ? null
+          : level.index < here.index
+          ? l10n.similarEasier
+          : l10n.similarHarder,
     );
   }
+
+  /// The whole group; a row closes the sheet and opens that exercise.
+  Future<void> _showAll(
+    BuildContext context,
+    String label,
+    List<Exercise> exercises,
+  ) => showForgeBottomSheet<void>(
+    context: context,
+    builder: (sheet) => ForgeBottomSheet(
+      title: label,
+      child: SingleChildScrollView(
+        child: ListRowCard(
+          children: [
+            for (final exercise in exercises)
+              _tile(
+                context,
+                exercise,
+                onOpen: () {
+                  Navigator.pop(sheet);
+                  context.push(exerciseRoute(exercise.id));
+                },
+              ),
+          ],
+        ),
+      ),
+    ),
+  );
 }
 
 /// One line per item, each marked with a bullet.
@@ -806,6 +788,9 @@ class _Hero extends StatefulWidget {
 
   static const double height = 380;
 
+  /// The still pair's width before it is scaled into the stage.
+  static const double figuresWidth = 320;
+
   @override
   State<_Hero> createState() => _HeroState();
 }
@@ -832,10 +817,24 @@ class _HeroState extends State<_Hero> {
     final top = ready == null
         ? Gap.md
         : Gap.sm * 2 + ForgeSegmentedControl.height;
+    // The still pair is scaled into the stage's box, so Movement and
+    // Muscles take the same height and nothing below moves.
     Widget figures(Model3D? model) => Padding(
-      padding: EdgeInsets.fromLTRB(Gap.xl, top, Gap.xl, Gap.md),
-      child: MuscleFigures(model: model, main: main, secondary: secondary),
+      padding: EdgeInsets.fromLTRB(Gap.md, top, Gap.md, Gap.md),
+      child: FittedBox(
+        child: SizedBox(
+          width: _Hero.figuresWidth,
+          child: MuscleFigures(model: model, main: main, secondary: secondary),
+        ),
+      ),
     );
+    // The animation's stage, then its hint line under it.
+    final hint = Theme.of(context).textTheme.labelMedium!;
+    final height =
+        _Hero.height +
+        Gap.sm +
+        MediaQuery.textScalerOf(context).scale(hint.fontSize!) * hint.height! +
+        Gap.sm;
     final stage = switch (context.watch<BodyModelCubit>().state) {
       BodyModelFailed() => Padding(
         padding: const EdgeInsets.all(Gap.md),
@@ -867,7 +866,7 @@ class _HeroState extends State<_Hero> {
       ),
       child: Stack(
         children: [
-          stage,
+          SizedBox(height: height, width: double.infinity, child: stage),
           if (ready != null)
             PositionedDirectional(
               top: Gap.sm,

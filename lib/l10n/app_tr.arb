@@ -1866,5 +1866,8 @@
   "performanceSeeProgress": "İlerlemeyi gör",
   "performanceEmptyTitle": "Henüz kayıt yok",
   "performanceEmptyMessage": "Bu egzersizi bir antrenmanda yaptığında setlerin burada görünür.",
-  "motionMistakeNotShown": "Animasyonda gösterilmiyor"
+  "motionMistakeNotShown": "Animasyonda gösterilmiyor",
+  "detailSeeAllCount": "Tümünü gör ({count})",
+  "similarEasier": "Daha kolay",
+  "similarHarder": "Daha zor"
 }

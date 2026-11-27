@@ -12,6 +12,7 @@ import 'package:get_workout/features/exercises/presentation/exercise_catalogue_c
 import 'package:get_workout/features/exercises/presentation/exercise_detail_cubit.dart';
 import 'package:get_workout/features/exercises/presentation/exercise_detail_page.dart';
 import 'package:get_workout/features/exercises/presentation/favorites_cubit.dart';
+import 'package:get_workout/features/exercises/presentation/widgets/exercise_tile.dart';
 import 'package:get_workout/features/settings/domain/user_settings.dart';
 import 'package:get_workout/features/settings/presentation/settings_cubit.dart';
 import 'package:get_workout/features/strength/presentation/exercise_strength_cubit.dart';
@@ -191,7 +192,6 @@ void main() {
     expect(find.text('Pattern'), findsOneWidget);
     expect(find.text('Logged as'), findsOneWidget);
     expect(find.text('Also called'), findsOneWidget);
-    expect(find.text('Similar exercises'), findsOneWidget);
     expect(find.text('Alternatives · 1'), findsOneWidget);
     expect(find.text('Dumbbell Bench Press'), findsOneWidget);
   });
@@ -253,12 +253,8 @@ void main() {
     );
     await openTab(tester, 'Details');
 
-    final card = find.ancestor(
-      of: find.text('Similar exercises'),
-      matching: find.byType(SectionCard),
-    );
-    expect(find.descendant(of: card, matching: find.text('5')), findsOneWidget);
     expect(find.text('Variations · 4'), findsOneWidget);
+    expect(find.text('See all (4)'), findsOneWidget);
     expect(find.text('Alternatives · 1'), findsOneWidget);
     expect(find.text('Variation 3'), findsOneWidget);
     expect(find.text('Variation 4'), findsNothing);
@@ -273,13 +269,13 @@ void main() {
     await pump(tester, DetailReady(bench, alternatives: [dumbbell]));
     await openTab(tester, 'Details');
 
-    expect(find.text('See all'), findsNothing);
+    expect(find.textContaining('See all'), findsNothing);
     await tester.tap(find.text('Dumbbell Bench Press'));
     await settle(tester);
     expect(find.text('Opened dumbbell'), findsOneWidget);
   });
 
-  testWidgets('See all opens every one; a row opens it', (tester) async {
+  testWidgets('See all opens its group; a row opens it', (tester) async {
     final variations = [
       for (var i = 1; i <= 4; i++) exercise('v$i', name: 'Variation $i'),
     ];
@@ -289,21 +285,20 @@ void main() {
     );
     await openTab(tester, 'Details');
 
-    await tester.tap(find.text('See all'));
+    await tester.tap(find.text('See all (4)'));
     await settle(tester);
     final sheet = find.byType(ForgeBottomSheet);
-    for (final name in [
-      'Variations · 4',
-      'Variation 4',
-      'Alternatives · 1',
-      'Dumbbell Bench Press',
-    ]) {
+    for (final name in ['Variations · 4', 'Variation 1', 'Variation 4']) {
       expect(
         find.descendant(of: sheet, matching: find.text(name)),
         findsOneWidget,
         reason: name,
       );
     }
+    expect(
+      find.descendant(of: sheet, matching: find.text('Dumbbell Bench Press')),
+      findsNothing,
+    );
 
     await tester.tap(
       find.descendant(of: sheet, matching: find.text('Variation 4')),
@@ -318,7 +313,38 @@ void main() {
   ) async {
     await pump(tester, DetailReady(bench));
     await openTab(tester, 'Details');
-    expect(find.text('Similar exercises'), findsNothing);
+    expect(find.textContaining('Variations'), findsNothing);
+    expect(find.textContaining('Alternatives'), findsNothing);
+  });
+
+  testWidgets('a row says Easier or Harder when its level differs', (
+    tester,
+  ) async {
+    await pump(
+      tester,
+      DetailReady(
+        exercise('mid', name: 'Middle', level: Level.intermediate),
+        variations: [
+          exercise('easy', name: 'Easy one'),
+          exercise('same', name: 'Same one', level: Level.intermediate),
+          exercise('hard', name: 'Hard one', level: Level.advanced),
+        ],
+      ),
+    );
+    await openTab(tester, 'Details');
+
+    expect(find.text('Easier'), findsOneWidget);
+    expect(find.text('Harder'), findsOneWidget);
+    expect(
+      find.descendant(
+        of: find.ancestor(
+          of: find.text('Same one'),
+          matching: find.byType(ExerciseTile),
+        ),
+        matching: find.byType(ForgeTag),
+      ),
+      findsNothing,
+    );
   });
 
   testWidgets('the ⋯ menu adds to a workout or a program; no bottom bar', (
