@@ -406,13 +406,18 @@ class _CatalogueBodyState extends State<_CatalogueBody>
         if (text.setup.isNotEmpty ||
             text.execution.isNotEmpty ||
             text.cues.isNotEmpty)
-          SectionCard.plain(
-            title: l10n.detailExecution,
-            child: _Steps(
-              setup: text.setup,
-              execution: text.execution,
-              cues: text.cues,
-            ),
+          // Untitled: the tab above already says How to do it.
+          ListRowCard(
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(Gap.md),
+                child: _Steps(
+                  setup: text.setup,
+                  execution: text.execution,
+                  cues: text.cues,
+                ),
+              ),
+            ],
           ),
         if (text.mistakes.isNotEmpty)
           _Mistakes(text.mistakes, onWatch: _showMotion),
