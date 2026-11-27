@@ -1,0 +1,166 @@
+{
+  "status": "approved",
+  "view": [
+    55,
+    12
+  ],
+  "poses": {
+    "top": {
+      "pelvis": [
+        0,
+        -0.063,
+        0.565
+      ],
+      "pelvis_rot": [
+        -46,
+        0,
+        0
+      ],
+      "lumbar": -4,
+      "chest": -6,
+      "neck": 10,
+      "foot": {
+        "at": [
+          0.25,
+          -0.62
+        ],
+        "floor": 0,
+        "yaw": 20
+      },
+      "hand": {
+        "pos": [
+          0.36,
+          0.182,
+          1.345
+        ],
+        "fingers": [
+          0.0,
+          0.2,
+          0.98
+        ],
+        "palm": [
+          0.0,
+          -0.98,
+          0.2
+        ],
+        "curl": 75
+      },
+      "elbow": [
+        1,
+        -0.6,
+        -0.4
+      ],
+      "clavicle": [
+        0,
+        -12
+      ]
+    },
+    "bottom": {
+      "extends": "top",
+      "hand": {
+        "pos": [
+          0.36,
+          0.182,
+          0.952
+        ],
+        "fingers": [
+          0.0,
+          0.45,
+          0.893
+        ],
+        "palm": [
+          0.0,
+          -0.893,
+          0.45
+        ]
+      }
+    }
+  },
+  "keys": [
+    [
+      0,
+      "top"
+    ],
+    [
+      1.6,
+      "bottom"
+    ],
+    [
+      1.8,
+      "bottom"
+    ],
+    [
+      2.7,
+      "top"
+    ],
+    [
+      3.2,
+      "top"
+    ]
+  ],
+  "gear": [
+    {
+      "kit": "smith_machine",
+      "at": [
+        0,
+        0.182,
+        0
+      ]
+    },
+    {
+      "kit": "incline_bench",
+      "top_y": 0.689,
+      "top_z": 0.964
+    }
+  ],
+  "mistakes": [
+    {
+      "line": 0,
+      "status": "approved",
+      "ring": [
+        "neck"
+      ],
+      "poses": {
+        "top": {
+          "pelvis": [
+            0,
+            -0.2,
+            0.55
+          ],
+          "pelvis_rot": [
+            -60,
+            0,
+            0
+          ],
+          "foot": {
+            "at": [
+              0.25,
+              -0.75
+            ]
+          },
+          "hand": {
+            "pos": [
+              0.36,
+              0.182,
+              1.23
+            ]
+          }
+        },
+        "bottom": {
+          "hand": {
+            "pos": [
+              0.36,
+              0.182,
+              0.845
+            ]
+          }
+        }
+      }
+    },
+    {
+      "line": 1,
+      "shown": false,
+      "why": "The safety stops are a setup step; no pose of the body shows them."
+    }
+  ]
+}

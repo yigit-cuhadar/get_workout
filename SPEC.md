@@ -10,7 +10,7 @@ Updated 2026-11-27. Keep this block and Open true with every change.
 - **State**: feature groups 1-14 and the animation code of Group 15 are on
   main. iOS 1.0.0 (build 7) was submitted to App Review on 2026-11-24; its
   result is not known here. TestFlight builds 8-13 followed (2026-11-25 to
-  2026-11-27). 270 of 419 live exercises have an approved animation.
+  2026-11-27). 284 of 419 live exercises have an approved animation.
 - **Next**:
   1. The next animation batch (Feature notes › Exercise animations: Where it
      stands, then A batch, step by step).
@@ -175,7 +175,7 @@ animations, whose "Where it stands" entry is kept current)
 - [x] Solver on the phone — the pose solver and the gear builder in Dart, in a Forge package (`forge_motion`)
 - [x] Recipes in Firestore — the import writes approved recipes to `exercises/{id}/animation/main`, rules, the app reads and caches them
 - [x] Animations in the app — Exercise detail's first card with the movement and muscles tabs and the mistake chips, the workout's play button and its sheet, both body models — plays on the simulator
-- [ ] All exercises — batches by equipment family, each exercise with its correct form and its mistakes, each batch approved by the owner — every live exercise has an approved recipe (2026-11-27: 270 of 419 live exercises approved)
+- [ ] All exercises — batches by equipment family, each exercise with its correct form and its mistakes, each batch approved by the owner — every live exercise has an approved recipe (2026-11-27: 284 of 419 live exercises approved)
 
 After release (owner's list, 2026-11-19; not before the first release):
 - Health improvements.
@@ -195,11 +195,15 @@ behaviour and traps are under Feature notes.
 
 ### An agent can do now
 
-- **Next animation batch** (Features, Group 15): 148 live exercises have no
-  recipe and `ex_lat_pulldown` is a draft without its mistakes. Read
-  Feature notes › Exercise animations: Where it stands, then A batch, step
-  by step (it starts with `python3
-  tool/animation/batch.py`); the owner approves each batch.
+- **Next animation batch** (Features, Group 15): 134 live exercises have no
+  recipe and `ex_lat_pulldown` is a draft without its mistakes. Nearly
+  every exercise left needs a kit not built yet (bands, machines, rings,
+  suspension, wall, rack, trap bar, plates, sled, ab wheel); the landmine
+  press and the Meadows row need the landmine kit to follow one hand.
+  Read Feature notes › Exercise animations: Where it stands, then A batch,
+  step by step (it starts with `python3 tool/animation/batch.py`); the
+  owner approves each batch. Sample every clip frame by frame for body
+  parts inside gear: the owner caught feet passing through a box.
 - **Exercise page parts** (2026-11-26): studio component cards and Widgetbook
   use cases are owed for the animation stage with its tabs, the motion view,
   the mistake chips, the playback buttons, the workout card's play button, the
@@ -1486,10 +1490,10 @@ files, not here.
 - **Where it stands** (keep this entry current): built end to end and on
   main; animations play in exercise detail and on the open workout card
   for every approved recipe, solved on the phone by `forge_motion`.
-  Recipes approved: 270 of 419 live exercises (the last 259 on
-  2026-11-27), and all 28 kits; dev and prod hold all of them since
+  Recipes approved: 284 of 419 live exercises (the last 14 on
+  2026-11-27), and all 30 kits; dev and prod hold all of them since
   2026-11-27. `ex_lat_pulldown` stays a draft: its
-  mistakes are not drawn. Not started: about 148 exercises (bands,
+  mistakes are not drawn. Not started: about 134 exercises (bands,
   machines, suspension and small groups), and those skipped for gear
   without a kit (a wall, a rack, a trap bar, plates) or, like the
   kettlebell snatch and clean, by their session. What is open is under
