@@ -1,0 +1,318 @@
+{
+  "status": "approved",
+  "view": [
+    60,
+    8
+  ],
+  "poses": {
+    "bottom": {
+      "pelvis": [
+        0,
+        -0.13,
+        0.56
+      ],
+      "pelvis_rot": [
+        -10,
+        0,
+        0
+      ],
+      "lumbar": 0,
+      "chest": 0,
+      "neck": 4,
+      "foot": {
+        "at": [
+          0.24,
+          -0.6
+        ],
+        "floor": 0,
+        "yaw": 15
+      },
+      "hand": {
+        "pos": [
+          0.36,
+          -0.175,
+          1.04
+        ],
+        "fingers": [
+          0,
+          0.301,
+          0.954
+        ],
+        "palm": [
+          0,
+          -0.954,
+          0.301
+        ],
+        "curl": 75
+      },
+      "elbow": [
+        0.6,
+        -0.6,
+        -0.6
+      ],
+      "clavicle": [
+        0,
+        0
+      ]
+    },
+    "front": {
+      "extends": "bottom",
+      "hand": {
+        "pos": [
+          0.36,
+          -0.215,
+          1.22
+        ],
+        "fingers": [
+          0,
+          0.2,
+          0.98
+        ],
+        "palm": [
+          0,
+          -0.98,
+          0.2
+        ],
+        "curl": 75
+      },
+      "elbow": [
+        0.8,
+        -0.3,
+        -0.4
+      ]
+    },
+    "top": {
+      "extends": "bottom",
+      "hand": {
+        "pos": [
+          0.36,
+          -0.02,
+          1.592
+        ],
+        "fingers": [
+          0,
+          0.1,
+          0.995
+        ],
+        "palm": [
+          0,
+          -0.995,
+          0.1
+        ],
+        "curl": 75
+      },
+      "clavicle": [
+        12,
+        0
+      ],
+      "elbow": [
+        1,
+        0,
+        -0.2
+      ]
+    }
+  },
+  "keys": [
+    [
+      0,
+      "bottom"
+    ],
+    [
+      0.45,
+      "front"
+    ],
+    [
+      1.0,
+      "top"
+    ],
+    [
+      1.2,
+      "top"
+    ],
+    [
+      1.9,
+      "front"
+    ],
+    [
+      2.6,
+      "bottom"
+    ],
+    [
+      3.0,
+      "bottom"
+    ]
+  ],
+  "gear": [
+    {
+      "kit": "barbell"
+    },
+    {
+      "kit": "incline_bench",
+      "top_y": 0.156,
+      "top_z": 1.271
+    }
+  ],
+  "mistakes": [
+    {
+      "line": 0,
+      "status": "approved",
+      "ring": [
+        "lumbar"
+      ],
+      "poses": {
+        "bottom": {
+          "pelvis": [
+            0,
+            -0.17,
+            0.56
+          ],
+          "pelvis_rot": [
+            2,
+            0,
+            0
+          ],
+          "lumbar": -18,
+          "chest": -8
+        },
+        "front": {
+          "pelvis": [
+            0,
+            -0.17,
+            0.56
+          ],
+          "pelvis_rot": [
+            2,
+            0,
+            0
+          ],
+          "lumbar": -18,
+          "chest": -8
+        },
+        "top": {
+          "pelvis": [
+            0,
+            -0.17,
+            0.56
+          ],
+          "pelvis_rot": [
+            2,
+            0,
+            0
+          ],
+          "lumbar": -18,
+          "chest": -8,
+          "hand": {
+            "pos": [
+              0.36,
+              -0.05,
+              1.565
+            ]
+          }
+        }
+      }
+    },
+    {
+      "line": 1,
+      "status": "approved",
+      "ring": [
+        "neck",
+        "head"
+      ],
+      "poses": {
+        "over": {
+          "extends": "bottom",
+          "hand": {
+            "pos": [
+              0.36,
+              0.03,
+              1.48
+            ],
+            "fingers": [
+              0,
+              0.0,
+              1.0
+            ],
+            "palm": [
+              0,
+              -1.0,
+              0.0
+            ],
+            "curl": 75
+          },
+          "clavicle": [
+            10,
+            0
+          ],
+          "elbow": [
+            1,
+            0.3,
+            -0.2
+          ],
+          "neck": 20
+        },
+        "behind": {
+          "extends": "bottom",
+          "hand": {
+            "pos": [
+              0.36,
+              0.075,
+              1.13
+            ],
+            "fingers": [
+              0,
+              -0.25,
+              0.968
+            ],
+            "palm": [
+              0,
+              -0.968,
+              -0.25
+            ],
+            "curl": 75
+          },
+          "clavicle": [
+            4,
+            -8
+          ],
+          "elbow": [
+            1,
+            0.3,
+            -0.6
+          ],
+          "neck": 24,
+          "head": 6
+        }
+      },
+      "keys": [
+        [
+          0,
+          "top"
+        ],
+        [
+          0.5,
+          "over"
+        ],
+        [
+          1.1,
+          "behind"
+        ],
+        [
+          1.3,
+          "behind"
+        ],
+        [
+          1.8,
+          "over"
+        ],
+        [
+          2.3,
+          "top"
+        ],
+        [
+          2.6,
+          "top"
+        ]
+      ]
+    }
+  ]
+}
