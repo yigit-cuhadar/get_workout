@@ -195,8 +195,8 @@ behaviour and traps are under Feature notes.
 
 ### An agent can do now
 
-- **Next animation batch** (Features, Group 15): 149 live exercises have no
-  approved recipe. Read Feature notes › Exercise animations: Where it stands,
+- **Next animation batch** (Features, Group 15): 148 live exercises have no
+  recipe and `ex_lat_pulldown` is a draft without its mistakes. Read Feature notes › Exercise animations: Where it stands,
   then A batch, step by step (it starts with `python3
   tool/animation/batch.py`); the owner approves each batch.
 - **Exercise page parts** (2026-11-26): studio component cards and Widgetbook
@@ -327,8 +327,9 @@ Paths are from the app root; `tools/` is the forge's, run from the forge root.
   --dart-define=REVENUECAT_IOS_KEY=...` (the plist is
   `ios/Firebase/prod/GoogleService-Info.plist`).
 - **Secrets**, by name. macOS Keychain through `tools/secret.sh`:
-  `ASC_API_KEY_P8`, `ASC_KEY_ID`, `ASC_ISSUER_ID`, `REVENUECAT_IOS_KEY`, and a
-  copy of `SUPPORT_GMAIL_APP_PASSWORD`. Firebase Functions secrets, per
+  `ASC_API_KEY_P8`, `ASC_KEY_ID`, `ASC_ISSUER_ID`, `ASC_IAP_KEY_P8`,
+  `REVENUECAT_IOS_KEY`, `REVENUECAT_SECRET_KEY`, `RC_WEBHOOK_AUTH_dev`,
+  `RC_WEBHOOK_AUTH_prod`, and a copy of `SUPPORT_GMAIL_APP_PASSWORD`. Firebase Functions secrets, per
   project: `REVENUECAT_WEBHOOK_AUTHORIZATION`, `APPLE_SIGN_IN_KEY`,
   `SUPPORT_GMAIL_APP_PASSWORD`, `REVENUECAT_API_KEY` (Data model › Cloud
   Functions).
@@ -654,7 +655,7 @@ Every admin function needs the `admin` custom claim, set by
 
 How anything looks lives only in the two studios; a design change is made
 there, never here. The studio rules (tags, build check, components chosen
-before drawing) are in AGENTS.md › Design studios. This section keeps only
+before drawing) are in the forge's `workflow/design.md`. This section keeps only
 what was decided and when; what is still owed is under Open.
 - GetWorkout Studio https://claude.ai/artifact/PuK5WUbeyhVHMxA6THNDC2 (in
   git as `design/studio.html`): the app's preset tokens, rules, components
@@ -744,7 +745,7 @@ Rules still binding that the studio does not show:
   builder's Rename dialog; Save as program, the new custom exercise page
   and the set sheet's note open unfocused.
 - A widget with more than one reasonable look is picked by the owner from
-  drawn variants (AGENTS.md › Working with the user).
+  drawn variants (the forge's `workflow/design.md`).
 
 ## Feature notes
 
@@ -1544,8 +1545,10 @@ files, not here.
   and correcting until `validate.py` and the checks below pass; (3) the
   Reviewer looks at every sheet against the checks and the exercise's own
   `setup`, `execution`, `mistakes` and `cues` text; (4) import the
-  drafts so the owner watches them in the released app with the admin
-  account, with a line per exercise on what to look at; (5)
+  drafts to dev and to prod, where they land in the draft documents only
+  admins see (a standing exception to asking before prod, 2026-11-26), so
+  the owner watches them in the released app, with a line per exercise on
+  what to look at; (5)
   ask the owner which exercises need a fix, then what to change in each;
   (6) fixes go back through 2-4 and are shown again; (7) when the owner
   approves, statuses become `approved`, the count here is updated, the
