@@ -1,5 +1,6 @@
 {
-  "status": "approved",
+  "status": "fix",
+  "note": "Seat and thigh pad no longer sink into the thighs (pulldown_machine kit)",
   "view": [
     145,
     8
@@ -116,7 +117,7 @@
   ],
   "gear": [
     {
-      "kit": "lat_pulldown_machine"
+      "kit": "pulldown_machine"
     }
   ],
   "mistakes": [

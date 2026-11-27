@@ -1,5 +1,5 @@
 {
-  "status": "review",
+  "status": "draft",
   "view": [
     145,
     8
@@ -113,7 +113,7 @@
   ],
   "gear": [
     {
-      "kit": "lat_pulldown_machine"
+      "kit": "pulldown_machine"
     }
   ],
   "mistakes": [
