@@ -10,13 +10,13 @@
       "neck": -20,
       "foot": {"at": [0.26, 0.03], "floor": 0, "yaw": 25},
       "knee": [0.5, -1, 0],
-      "hand": {"pos": [0.07, -0.25, 0.624], "fingers": [0, -0.396, -0.918], "palm": [-1, 0, 0], "curl": 75},
+      "hand": {"pos": [0.07, -0.25, 0.628], "fingers": [-0.102, -0.407, -0.908], "palm": [-1, 0, 0], "curl": 75},
       "elbow": [0.3, 1, 0],
       "clavicle": [-4, 10]
     },
     "top": {
       "extends": "bottom",
-      "hand": {"pos": [0.07, -0.146, 0.825], "fingers": [0, -0.522, -0.853]},
+      "hand": {"pos": [0.07, -0.121, 0.892], "fingers": [-0.097, -0.749, -0.655]},
       "elbow": [0.3, 1, 0.8],
       "clavicle": [-2, -14]
     }
@@ -29,8 +29,8 @@
       "status": "review",
       "ring": ["lumbar", "pelvis"],
       "poses": {
-        "bottom": {"pelvis_rot": [40, 0, 0], "lumbar": 20, "chest": 14, "neck": -32, "hand": {"pos": [0.07, -0.274, 0.566], "fingers": [0, -0.358, -0.934]}},
-        "top": {"pelvis_rot": [40, 0, 0], "lumbar": 20, "chest": 14, "neck": -32, "hand": {"pos": [0.07, -0.189, 0.75], "fingers": [0, -0.475, -0.88]}}
+        "bottom": {"pelvis_rot": [40, 0, 0], "lumbar": 20, "chest": 14, "neck": -42, "hand": {"pos": [0.07, -0.272, 0.568], "fingers": [-0.102, -0.378, -0.92]}},
+        "top": {"pelvis_rot": [40, 0, 0], "lumbar": 20, "chest": 14, "neck": -42, "hand": {"pos": [0.07, -0.15, 0.84], "fingers": [-0.107, -0.697, -0.709]}}
       }
     },
     {
@@ -38,8 +38,8 @@
       "status": "review",
       "ring": ["knee_L", "knee_R", "hip_L", "hip_R"],
       "poses": {
-        "dip": {"extends": "bottom", "pelvis": [0, 0.25, 0.86], "pelvis_rot": [60, 0, 0], "hand": {"pos": [0.07, -0.279, 0.552], "fingers": [0, -0.349, -0.937]}},
-        "top2": {"extends": "top", "pelvis": [0, 0.24, 0.93], "pelvis_rot": [42, 0, 0], "hand": {"pos": [0.07, -0.138, 0.838], "fingers": [0, -0.531, -0.848]}}
+        "dip": {"extends": "bottom", "pelvis": [0, 0.25, 0.86], "pelvis_rot": [60, 0, 0], "hand": {"pos": [0.07, -0.277, 0.554], "fingers": [-0.102, -0.398, -0.912]}},
+        "top2": {"extends": "top", "pelvis": [0, 0.24, 0.93], "pelvis_rot": [42, 0, 0], "hand": {"pos": [0.07, -0.098, 0.927], "fingers": [-0.107, -0.76, -0.641]}}
       },
       "keys": [[0, "bottom"], [0.4, "dip"], [0.7, "top2"], [0.9, "top2"], [2.3, "bottom"], [2.6, "bottom"]]
     }
