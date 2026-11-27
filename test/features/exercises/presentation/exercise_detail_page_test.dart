@@ -14,7 +14,9 @@ import 'package:get_workout/features/exercises/presentation/exercise_detail_page
 import 'package:get_workout/features/exercises/domain/exercise_animation.dart';
 import 'package:get_workout/features/exercises/presentation/exercise_motion_cubit.dart';
 import 'package:get_workout/features/exercises/presentation/favorites_cubit.dart';
+import 'package:get_workout/features/exercises/presentation/widgets/exercise_stage.dart';
 import 'package:get_workout/features/exercises/presentation/widgets/exercise_tile.dart';
+import 'package:get_workout/core/widgets/muscle_model.dart';
 import 'package:get_workout/features/settings/domain/user_settings.dart';
 import 'package:get_workout/features/settings/presentation/settings_cubit.dart';
 import 'package:get_workout/features/strength/presentation/exercise_strength_cubit.dart';
@@ -171,6 +173,12 @@ void main() {
   ) async {
     await pump(tester, DetailReady(bench, alternatives: [dumbbell]));
 
+    // The still pair carries its colour key inside the stage.
+    final legend = find.descendant(
+      of: find.byType(ExerciseStage),
+      matching: find.byType(MuscleLegend),
+    );
+    expect(legend, findsOneWidget);
     expect(find.text('Correct form'), findsNothing);
     expect(find.text('Mistake 1'), findsNothing);
     expect(find.text('Common mistakes'), findsOneWidget);
@@ -204,6 +212,18 @@ void main() {
       (_, _) => motion,
     );
     await pump(tester, DetailReady(bench));
+
+    // Movement and Muscles both carry the colour key inside the stage.
+    final legend = find.descendant(
+      of: find.byType(ExerciseStage),
+      matching: find.byType(MuscleLegend),
+    );
+    expect(legend, findsOneWidget);
+    await tester.tap(find.text('Muscles'));
+    await settle(tester);
+    expect(legend, findsOneWidget);
+    await tester.tap(find.text('Movement'));
+    await settle(tester);
 
     // The correct form plays with nothing on the stage's foot.
     expect(find.bySemanticsLabel('Back to the correct form'), findsNothing);
