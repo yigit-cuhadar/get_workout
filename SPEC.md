@@ -564,6 +564,7 @@ After release (owner's list, 2026-11-19; not before the first release):
 - Exercise images and videos (beyond the animations of Group 15).
 - Other languages.
 - Timers for time-based sets and exercises, and rest set per series.
+
 ## Design
 
 How anything looks lives only in the two studios; a design change is made
@@ -672,6 +673,7 @@ Open:
 - Not confirmed as drawn in the studio afterwards: the states built from
   standard forms on the Programs tab and the workout screen (2026-11-15),
   and the admin pages (no admin component is tagged in the studio page).
+
 ## Open questions
 
 Only what is still open, with the outside set-up it depends on. Settled
@@ -754,6 +756,7 @@ behaviour and traps are under Feature notes.
   - Watch the metrics per product, then enforce per product (API
     `services/<service>` `enforcementMode: ENFORCED`) and add
     `enforceAppCheck: true` to the app's callables' `onCall` options.
+
 ## Feature notes
 
 How each feature behaves, by area. Not needed to resume: read the area of
@@ -1619,6 +1622,7 @@ files, not here.
   progress only, each exercise of an open card that has an animation gets
   a play button; its sheet plays the correct form over the running workout
   with the cues and links to the exercise's detail page.
+
 ### Programs
 
 - **Programs**: a name of 1-60 characters, 1-7 days, day names of at most
