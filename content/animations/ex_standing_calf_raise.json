@@ -1,0 +1,95 @@
+{
+  "status": "approved",
+  "view": [50, 8],
+  "poses": {
+    "low": {
+      "pelvis": [0, 0, 1.065],
+      "pelvis_rot": [3, 0, 0],
+      "lumbar": 0,
+      "chest": 0,
+      "neck": 0,
+      "clavicle": [0, 0],
+      "hand": {
+        "pos": [0.27, -0.203, 0.33],
+        "rel": "pelvis",
+        "fingers": [0.17, -0.833, 0.527],
+        "palm": [-0.986, -0.143, 0.091],
+        "curl": 75
+      },
+      "elbow": [0.3, -0.2, -1],
+      "foot": {
+        "at": [0.1, 0.0],
+        "floor": 0.15,
+        "yaw": 10,
+        "pitch": -22
+      }
+    },
+    "rise": {
+      "extends": "low",
+      "pelvis": [0, 0, 1.099],
+      "foot": {
+        "pitch": -11
+      }
+    },
+    "flat": {
+      "extends": "low",
+      "pelvis": [0, 0, 1.131],
+      "foot": {
+        "pitch": 0
+      }
+    },
+    "lift": {
+      "extends": "low",
+      "pelvis": [0, 0, 1.177],
+      "foot": {
+        "pitch": 19
+      }
+    },
+    "high": {
+      "extends": "low",
+      "pelvis": [0, 0, 1.215],
+      "foot": {
+        "pitch": 38,
+        "floor": 0.159
+      }
+    }
+  },
+  "keys": [
+    [0, "low"],
+    [0.18, "rise"],
+    [0.37, "flat"],
+    [0.68, "lift"],
+    [1.0, "high"],
+    [1.5, "high"],
+    [1.94, "lift"],
+    [2.39, "flat"],
+    [2.64, "rise"],
+    [2.9, "low"],
+    [3.3, "low"]
+  ],
+  "gear": [
+    {
+      "kit": "standing_calf_machine"
+    }
+  ],
+  "mistakes": [
+    {
+      "line": 0,
+      "status": "approved",
+      "ring": ["foot_L", "foot_R"],
+      "poses": {
+        "kick": {"extends": "rise"}
+      },
+      "keys": [[0, "low"], [0.18, "rise"], [0.37, "flat"], [0.68, "lift"], [1.0, "high"], [1.5, "high"], [1.94, "lift"], [2.39, "flat"], [2.5, "rise"], [2.6, "low"], [2.8, "kick"], [3.0, "low"]]
+    },
+    {
+      "line": 1,
+      "status": "approved",
+      "ring": ["knee_L", "knee_R"],
+      "poses": {
+        "dip": {"extends": "low", "pelvis": [0, 0, 1.03]}
+      },
+      "keys": [[0, "low"], [0.4, "dip"], [0.5, "dip"], [0.95, "flat"], [1.18, "lift"], [1.5, "high"], [2.0, "high"], [2.44, "lift"], [2.89, "flat"], [3.14, "rise"], [3.4, "low"], [3.8, "low"]]
+    }
+  ]
+}
