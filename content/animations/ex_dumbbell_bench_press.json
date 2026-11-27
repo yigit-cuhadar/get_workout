@@ -1,5 +1,5 @@
 {
-  "status": "draft",
+  "status": "approved",
   "view": [50, 14],
   "poses": {
     "top": {
@@ -23,7 +23,7 @@
   "mistakes": [
     {
       "line": 0,
-      "status": "draft",
+      "status": "approved",
       "ring": ["hand_L", "hand_R"],
       "poses": {
         "clang": {"extends": "top", "hand": {"pos": [0.135, 0.47, 1.1]}}
@@ -32,7 +32,7 @@
     },
     {
       "line": 1,
-      "status": "draft",
+      "status": "approved",
       "ring": ["elbow_L", "elbow_R"],
       "poses": {
         "bottom": {"hand": {"pos": [0.43, 0.31, 0.67]}, "elbow": [1, -0.3, -0.9]}

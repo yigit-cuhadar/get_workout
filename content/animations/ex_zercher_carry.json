@@ -1,5 +1,5 @@
 {
-  "status": "draft",
+  "status": "approved",
   "view": [60, 8],
   "poses": {
     "k0": {
@@ -112,7 +112,7 @@
   "mistakes": [
     {
       "line": 0,
-      "status": "draft",
+      "status": "approved",
       "ring": ["lumbar", "chest"],
       "poses": {
         "k0": {"lumbar": 18, "chest": 14, "neck": -12},
@@ -127,7 +127,7 @@
     },
     {
       "line": 1,
-      "status": "draft",
+      "status": "approved",
       "ring": ["elbow_L", "elbow_R"],
       "poses": {
         "k2": {"hand": {"hold": [-0.142, 0.04]}, "elbow": [0.3, 0.5, -1]},

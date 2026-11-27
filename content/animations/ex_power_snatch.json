@@ -1,5 +1,5 @@
 {
-  "status": "draft",
+  "status": "approved",
   "view": [40, 8],
   "poses": {
     "floor": {
@@ -131,7 +131,7 @@
   "mistakes": [
     {
       "line": 0,
-      "status": "draft",
+      "status": "approved",
       "ring": ["elbow_L", "elbow_R"],
       "poses": {
         "early": {"extends": "knee", "pelvis": [0, 0.18, 0.86], "pelvis_rot": [48, 0, 0], "hand": {"pos": [0.45, -0.12, 0.7], "fingers": [0.016, -0.201, -0.98], "palm": [0.003, 0.98, -0.201], "curl": 75}, "elbow": [1, 0.3, 0.6]}
@@ -140,7 +140,7 @@
     },
     {
       "line": 1,
-      "status": "draft",
+      "status": "approved",
       "ring": ["elbow_L", "elbow_R"],
       "poses": {
         "catch": {"hand": {"pos": [0.45, -0.02, 1.62], "fingers": [-0.038, 0.315, 0.948], "palm": [-0.086, -0.947, 0.311]}, "elbow": [1, -0.3, 0]}

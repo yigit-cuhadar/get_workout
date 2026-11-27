@@ -1,5 +1,5 @@
 {
-  "status": "draft",
+  "status": "approved",
   "view": [-60, 10],
   "poses": {
     "plank": {
@@ -27,7 +27,7 @@
   "mistakes": [
     {
       "line": 0,
-      "status": "draft",
+      "status": "approved",
       "ring": ["knee_L", "knee_R"],
       "poses": {
         "pike": {"foot": {"pos": [0.08, 0.62, 0.71], "yaw": 0, "pitch": 150}, "knee": [0, -0.3, -1], "pelvis": [0, 0.001, 0.895], "pelvis_rot": [150, 0, 0]}
@@ -35,7 +35,7 @@
     },
     {
       "line": 1,
-      "status": "draft",
+      "status": "approved",
       "ring": ["shoulder_L", "shoulder_R"],
       "poses": {
         "pike": {"clavicle": [-14, 0], "neck": -25, "pelvis": [0, 0.001, 0.935]},

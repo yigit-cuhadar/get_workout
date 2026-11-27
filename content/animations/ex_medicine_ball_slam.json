@@ -1,5 +1,5 @@
 {
-  "status": "draft",
+  "status": "approved",
   "view": [-60, 8],
   "poses": {
     "top": {
@@ -42,7 +42,7 @@
     },
     {
       "line": 1,
-      "status": "draft",
+      "status": "approved",
       "ring": ["lumbar", "chest"],
       "poses": {
         "slam": {"pelvis": [0, 0.16, 0.84], "pelvis_rot": [62, 0, 0], "lumbar": 26, "chest": 22, "hand": {"pos": [0.085, -0.39, 0.33], "fingers": [-0.281, -0.356, -0.891], "palm": [-0.959, 0.149, 0.243]}}

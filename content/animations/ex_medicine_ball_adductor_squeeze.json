@@ -1,5 +1,5 @@
 {
-  "status": "draft",
+  "status": "approved",
   "view": [50, 20],
   "poses": {
     "rest": {
@@ -24,7 +24,7 @@
   "mistakes": [
     {
       "line": 0,
-      "status": "draft",
+      "status": "approved",
       "ring": ["hip_L", "hip_R"],
       "poses": {
         "squeeze": {"pelvis": [0, -0.02, 0.3], "pelvis_rot": [-112, 0, 0]}

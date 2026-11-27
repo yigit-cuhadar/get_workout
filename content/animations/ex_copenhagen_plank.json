@@ -1,5 +1,5 @@
 {
-  "status": "draft",
+  "status": "approved",
   "view": [0, 10],
   "poses": {
     "hold": {
@@ -41,13 +41,13 @@
   "mistakes": [
     {
       "line": 0,
-      "status": "draft",
+      "status": "approved",
       "ring": ["hip_L", "hip_R"],
       "keys": [[0, "hold"], [1.5, "drop"], [3.5, "drop"], [5.0, "hold"]]
     },
     {
       "line": 1,
-      "status": "draft",
+      "status": "approved",
       "ring": ["chest", "pelvis"],
       "keys": [[0, "hold"], [1.5, "fwd"], [3.5, "fwd"], [5.0, "hold"]]
     }

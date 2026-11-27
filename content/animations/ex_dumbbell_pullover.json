@@ -1,5 +1,5 @@
 {
-  "status": "draft",
+  "status": "approved",
   "view": [60, 10],
   "poses": {
     "top": {
@@ -24,7 +24,7 @@
   "mistakes": [
     {
       "line": 0,
-      "status": "draft",
+      "status": "approved",
       "ring": ["elbow_L", "elbow_R"],
       "poses": {
         "stretch": {"hand": {"pos": [0.045, 0.86, 0.86]}, "elbow": [1, -0.3, 1]}
@@ -32,7 +32,7 @@
     },
     {
       "line": 1,
-      "status": "draft",
+      "status": "approved",
       "ring": ["lumbar"],
       "poses": {
         "stretch": {"pelvis": [0, 0.07, 0.66], "pelvis_rot": [-104, 0, 0], "lumbar": 6, "chest": 6}
