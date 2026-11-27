@@ -70,7 +70,7 @@ void main() {
     detail = _DetailCubit();
     details = StreamController.broadcast();
     when(() => detail.existingCopyId).thenReturn(null);
-    when(() => detail.copy(any())).thenAnswer((_) async {});
+    when(() => detail.copyOnceReady(any())).thenReturn(null);
     when(detail.copyHandled).thenReturn(null);
     sl
       ..registerSingleton<ProgramCatalogueCubit>(catalogue)
@@ -189,7 +189,7 @@ void main() {
     );
 
     await tester.tap(find.text('Start this program'));
-    verify(() => detail.copy(CopyIntent.keep)).called(1);
+    verify(() => detail.copyOnceReady(CopyIntent.keep)).called(1);
     expect(paywalls, 0);
   });
 
@@ -204,8 +204,12 @@ void main() {
     expect(paywalls, 1);
     expect(find.text('at /today'), findsOneWidget);
     expect(onboardingPaywalls, 0);
-    verifyNever(() => detail.copy(any()));
+    verifyNever(() => detail.copyOnceReady(any()));
   });
+
+  ForgeButton startButton(WidgetTester tester) => tester.widget<ForgeButton>(
+    find.widgetWithText(ForgeButton, 'Start this program'),
+  );
 
   testWidgets('subscribed on that paywall, the program is saved once it '
       'unlocks and opens', (tester) async {
@@ -213,23 +217,16 @@ void main() {
     await pump(tester, programs: [paid], detailState: locked());
 
     await tester.tap(find.text('Start this program'));
-    // Start spins until the program unlocks.
-    await tester.pump();
     await tester.pump();
     expect(paywalls, 1);
-    expect(
-      tester
-          .widget<ForgeButton>(
-            find.widgetWithText(ForgeButton, 'Start this program'),
-          )
-          .loading,
-      isTrue,
-    );
-    verifyNever(() => detail.copy(any()));
+    verify(() => detail.copyOnceReady(CopyIntent.keep)).called(1);
 
-    details.add(ready(paid));
-    await tester.pumpAndSettle();
-    verify(() => detail.copy(CopyIntent.keep)).called(1);
+    // Start spins while the copy waits for the program to unlock.
+    details.add(locked().copyWith(queuedCopy: () => CopyIntent.keep));
+    await tester.pump();
+    await tester.pump();
+    expect(startButton(tester).loading, isTrue);
+    expect(startButton(tester).onPressed, isNull);
 
     details.add(
       ready(paid).copyWith(
@@ -243,6 +240,57 @@ void main() {
     // Leaving as Start does: the onboarding paywall's turn (not due for a
     // subscriber).
     expect(onboardingPaywalls, 1);
+  });
+
+  testWidgets('subscribed, but the server never unlocks the program: '
+      'Start stops spinning, says so and tries again', (tester) async {
+    paywallAnswers = [true];
+    await pump(tester, programs: [paid], detailState: locked());
+    await tester.tap(find.text('Start this program'));
+    await tester.pump();
+    details.add(
+      CatalogueDetailState(
+        status: CatalogueDetailStatus.unlocking,
+        program: paid,
+        queuedCopy: CopyIntent.keep,
+      ),
+    );
+    await tester.pump();
+    await tester.pump();
+    expect(startButton(tester).loading, isTrue);
+
+    details.add(
+      CatalogueDetailState(
+        status: CatalogueDetailStatus.unlocking,
+        program: paid,
+        copyStatus: CopyStatus.failed,
+        copyIntent: CopyIntent.keep,
+        copyFailure: const PermissionFailure(),
+      ),
+    );
+    await tester.pump();
+    verify(detail.copyHandled).called(1);
+    details.add(
+      CatalogueDetailState(
+        status: CatalogueDetailStatus.unlocking,
+        program: paid,
+      ),
+    );
+    await tester.pump();
+    expect(
+      find.text(
+        "Premium is active, but this program isn't unlocked yet. "
+        'Try again in a moment.',
+      ),
+      findsOneWidget,
+    );
+    expect(startButton(tester).loading, isFalse);
+    expect(find.text('at /suggestion'), findsNothing);
+
+    await tester.tap(find.text('Start this program'));
+    await tester.pump();
+    verify(() => detail.copyOnceReady(CopyIntent.keep)).called(2);
+    expect(paywalls, 1);
   });
 
   testWidgets('nothing to suggest goes straight to Today', (tester) async {

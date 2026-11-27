@@ -694,6 +694,101 @@ void main() {
       expect(failed.state.status, CatalogueDetailStatus.failure);
     });
 
+    group('a copy asked for before the days can be copied', () {
+      test('is made at once when they can', () async {
+        final cubit = await open(free.id);
+
+        cubit.copyOnceReady(CopyIntent.keep);
+        await pumpEventQueue();
+
+        verify(() => programRepository.createProgram('u1', any())).called(1);
+        expect(cubit.state.copyStatus, CopyStatus.copied);
+        expect(cubit.state.queuedCopy, isNull);
+      });
+
+      test('is made once Premium bought on the paywall unlocks the '
+          'days', () async {
+        final cubit = await open(paid.id);
+        expect(cubit.state.status, CatalogueDetailStatus.locked);
+
+        // The paywall closes before the premium status catches up.
+        cubit.copyOnceReady(CopyIntent.keep);
+        await pumpEventQueue();
+        expect(cubit.state.queuedCopy, CopyIntent.keep);
+        verifyNever(() => programRepository.createProgram(any(), any()));
+
+        premiumStatus.controller.add(true);
+        await pumpEventQueue();
+
+        verify(() => programRepository.createProgram('u1', any())).called(1);
+        expect(cubit.state.copyStatus, CopyStatus.copied);
+        expect(cubit.state.copyIntent, CopyIntent.keep);
+        expect(cubit.state.copyId, 'copy1');
+        expect(cubit.state.queuedCopy, isNull);
+      });
+
+      test('waits while the server refuses the days and retries, and is '
+          'made when it lets them through', () async {
+        final refused = Completer<void>();
+        var reads = 0;
+        when(() => catalogueRepository.getDays(paid.id)).thenAnswer((_) async {
+          reads++;
+          if (reads == 2) await refused.future;
+          return reads < 3 ? const Err(PermissionFailure()) : Ok(days);
+        });
+        final cubit = await open(paid.id);
+        cubit.copyOnceReady(CopyIntent.keep);
+        premiumStatus.controller.add(true);
+        await pumpEventQueue();
+        expect(cubit.state.queuedCopy, CopyIntent.keep);
+        expect(cubit.state.copyStatus, CopyStatus.idle);
+
+        refused.complete();
+        await pumpEventQueue();
+        expect(cubit.state.copyStatus, CopyStatus.copied);
+      });
+
+      test('fails when the server never unlocks them, and asking again '
+          'reads them again', () async {
+        when(() => catalogueRepository.getDays(paid.id))
+            .thenAnswer((_) async => const Err(PermissionFailure()));
+        final cubit = await open(paid.id);
+        cubit.copyOnceReady(CopyIntent.keep);
+        premiumStatus.controller.add(true);
+        await pumpEventQueue();
+
+        expect(cubit.state.status, CatalogueDetailStatus.unlocking);
+        expect(cubit.state.copyStatus, CopyStatus.failed);
+        expect(cubit.state.copyFailure, isA<PermissionFailure>());
+        expect(cubit.state.queuedCopy, isNull);
+        verify(() => catalogueRepository.getDays(paid.id)).called(4);
+        verifyNever(() => programRepository.createProgram(any(), any()));
+
+        cubit.copyHandled();
+        when(() => catalogueRepository.getDays(paid.id))
+            .thenAnswer((_) async => Ok(days));
+        cubit.copyOnceReady(CopyIntent.keep);
+        await pumpEventQueue();
+
+        verify(() => catalogueRepository.getDays(paid.id)).called(1);
+        expect(cubit.state.copyStatus, CopyStatus.copied);
+      });
+
+      test('fails offline, with a network failure', () async {
+        when(() => catalogueRepository.getDays(paid.id))
+            .thenAnswer((_) async => const Err(NetworkFailure()));
+        final cubit = await open(paid.id);
+        cubit.copyOnceReady(CopyIntent.keep);
+        premiumStatus.controller.add(true);
+        await pumpEventQueue();
+
+        expect(cubit.state.status, CatalogueDetailStatus.offline);
+        expect(cubit.state.copyStatus, CopyStatus.failed);
+        expect(cubit.state.copyFailure, isA<NetworkFailure>());
+        expect(cubit.state.queuedCopy, isNull);
+      });
+    });
+
     test('a kept copy is stored in the user\'s programs', () async {
       final cubit = await open(free.id);
 

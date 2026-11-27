@@ -823,6 +823,7 @@
   "suggestionEyebrow": "Sana önerilen · ücretsiz",
   "suggestionWhy": "Neden bu",
   "suggestionSeeOthers": "Diğer programları gör",
+  "suggestionUnlockLate": "Premium etkin, ama bu program henüz açılmadı. Birazdan tekrar dene.",
   "suggestionAnswers": "İstediğin: {wants}.",
   "suggestionWantsDays": "{days, plural, =1{1 gün} other{{days} gün}} antrenman yapmak",
   "suggestionWantsEquipment": "{equipment} kullanmak",

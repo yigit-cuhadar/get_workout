@@ -208,9 +208,6 @@ class _Suggestion extends StatefulWidget {
 }
 
 class _SuggestionState extends State<_Suggestion> {
-  /// Premium was bought from Start: it saves once the program unlocks.
-  bool _startWhenReady = false;
-
   Recommendation get suggestion => widget.suggestion;
 
   /// The paywall for a locked program: subscribed, it saves once it
@@ -219,23 +216,12 @@ class _SuggestionState extends State<_Suggestion> {
     final unlocked = await widget.premium.show(context);
     if (!mounted) return;
     if (!unlocked) return _Leave.to(context, Routes.today, paywall: false);
-    setState(() => _startWhenReady = true);
-    _startIfReady(context.read<CatalogueDetailCubit>().state);
-  }
-
-  void _startIfReady(CatalogueDetailState state) {
-    if (!_startWhenReady || !_ready(state)) return;
-    setState(() => _startWhenReady = false);
     _start(context);
   }
 
-  static bool _ready(CatalogueDetailState state) =>
-      state.status == CatalogueDetailStatus.ready &&
-      state.useStatus == UseStatus.ready &&
-      state.copyStatus == CopyStatus.idle;
-
-  /// Saves a copy among the user's programs without starting it; the
-  /// program page it opens starts it.
+  /// Saves a copy among the user's programs without starting it, once the
+  /// days can be copied (a program just bought waits for the server to
+  /// unlock it); the program page it opens starts it.
   void _start(BuildContext context) {
     final cubit = context.read<CatalogueDetailCubit>();
     // The user's copy opens rather than another one.
@@ -248,7 +234,7 @@ class _SuggestionState extends State<_Suggestion> {
         ),
       );
     }
-    cubit.copy(CopyIntent.keep);
+    cubit.copyOnceReady(CopyIntent.keep);
   }
 
   @override
@@ -266,7 +252,6 @@ class _SuggestionState extends State<_Suggestion> {
           previous.status != current.status ||
           previous.useStatus != current.useStatus,
       listener: (context, state) {
-        _startIfReady(state);
         final cubit = context.read<CatalogueDetailCubit>();
         switch (state.copyStatus) {
           case CopyStatus.copied:
@@ -282,9 +267,12 @@ class _SuggestionState extends State<_Suggestion> {
             cubit.copyHandled();
             showForgeSnackbar(
               context,
-              message: state.copyFailure is NetworkFailure
-                  ? l10n.errorNetwork
-                  : l10n.catalogueCopyFailed,
+              message: switch (state.copyFailure) {
+                NetworkFailure() => l10n.errorNetwork,
+                // Bought, but the server has not unlocked it yet.
+                PermissionFailure() => l10n.suggestionUnlockLate,
+                _ => l10n.catalogueCopyFailed,
+              },
               error: true,
             );
           case CopyStatus.startFailed:
@@ -302,6 +290,11 @@ class _SuggestionState extends State<_Suggestion> {
             state.status == CatalogueDetailStatus.ready &&
             state.useStatus == UseStatus.ready;
         final locked = state.status == CatalogueDetailStatus.locked;
+        final loading =
+            state.queuedCopy != null ||
+            state.copyStatus == CopyStatus.copying ||
+            (state.status == CatalogueDetailStatus.ready &&
+                state.useStatus == UseStatus.waiting);
         return _Layout(
           title: Text(
             l10n.suggestionTitle,
@@ -342,16 +335,19 @@ class _SuggestionState extends State<_Suggestion> {
           start: ForgeButton(
             label: l10n.catalogueStart,
             size: ForgeButtonSize.large,
-            loading:
-                _startWhenReady ||
-                state.copyStatus == CopyStatus.copying ||
-                (state.status == CatalogueDetailStatus.ready &&
-                    state.useStatus == UseStatus.waiting),
-            onPressed: locked
-                ? () => unawaited(_unlock())
-                : ready
-                ? () => _start(context)
-                : null,
+            loading: loading,
+            onPressed: switch (state.status) {
+              _ when loading => null,
+              CatalogueDetailStatus.locked => () => unawaited(_unlock()),
+              CatalogueDetailStatus.ready =>
+                ready ? () => _start(context) : null,
+              // Reads the days again, then saves.
+              CatalogueDetailStatus.unlocking ||
+              CatalogueDetailStatus.offline ||
+              CatalogueDetailStatus.failure => () => _start(context),
+              CatalogueDetailStatus.loading ||
+              CatalogueDetailStatus.notFound => null,
+            },
           ),
         );
       },
