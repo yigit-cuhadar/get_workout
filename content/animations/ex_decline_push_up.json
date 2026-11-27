@@ -1,0 +1,156 @@
+{
+  "status": "review",
+  "view": [
+    40,
+    15
+  ],
+  "poses": {
+    "top": {
+      "pelvis": [
+        0.0,
+        -0.1656,
+        0.5405
+      ],
+      "pelvis_rot": [
+        95.5,
+        0,
+        0
+      ],
+      "lumbar": 0,
+      "chest": 0,
+      "neck": 0,
+      "foot": {
+        "at": [
+          0.09,
+          0.908
+        ],
+        "floor": 0.4855,
+        "yaw": 10,
+        "pitch": 82.5
+      },
+      "hand": {
+        "pos": [
+          0.25,
+          -0.45,
+          0.035
+        ],
+        "fingers": [
+          0,
+          -1,
+          0
+        ],
+        "palm": [
+          0,
+          0,
+          -1
+        ],
+        "curl": 0,
+        "hold": [
+          0.05,
+          0
+        ]
+      },
+      "elbow": [
+        0.4,
+        1,
+        0
+      ],
+      "clavicle": [
+        0,
+        0
+      ]
+    },
+    "bottom": {
+      "extends": "top",
+      "pelvis": [
+        0.0,
+        -0.102,
+        0.3893
+      ],
+      "pelvis_rot": [
+        109.5,
+        0,
+        0
+      ]
+    }
+  },
+  "keys": [
+    [
+      0,
+      "top"
+    ],
+    [
+      1.4,
+      "bottom"
+    ],
+    [
+      1.7,
+      "bottom"
+    ],
+    [
+      2.5,
+      "top"
+    ],
+    [
+      3.0,
+      "top"
+    ]
+  ],
+  "gear": [
+    {
+      "kit": "block",
+      "at": [
+        0,
+        0.865,
+        0
+      ],
+      "w": 0.6,
+      "d": 0.4,
+      "h": 0.45
+    }
+  ],
+  "mistakes": [
+    {
+      "line": 0,
+      "status": "review",
+      "ring": [
+        "lumbar"
+      ],
+      "poses": {
+        "top": {
+          "pelvis": [
+            0.0,
+            -0.1288,
+            0.4422
+          ],
+          "pelvis_rot": [
+            90.5,
+            0,
+            0
+          ],
+          "lumbar": -12,
+          "chest": -6
+        },
+        "bottom": {
+          "pelvis": [
+            0.0,
+            -0.074,
+            0.3144
+          ],
+          "pelvis_rot": [
+            103.5,
+            0,
+            0
+          ],
+          "lumbar": -12,
+          "chest": -6
+        }
+      }
+    },
+    {
+      "line": 1,
+      "shown": false,
+      "why": "The box height is gear; a mistake changes only the body, so a higher box cannot be drawn."
+    }
+  ]
+}

@@ -195,12 +195,14 @@ behaviour and traps are under Feature notes.
 
 ### An agent can do now
 
-- **Next animation batch** (Features, Group 15): 144 live exercises have no
+- **Next animation batch** (Features, Group 15): 138 live exercises have no
   recipe and `ex_lat_pulldown` is a draft without its mistakes. In review
   with the owner (2026-11-27): incline and decline barbell bench press,
-  incline Smith press, seated dumbbell calf raise. Nearly every exercise
-  left needs a kit not built yet (bands, machines, rings, suspension,
-  dip station, box, wall, rack, trap bar, plates, sled, ab wheel); the
+  incline Smith press, seated dumbbell calf raise; then incline, decline
+  and elevated pike push-up, step-up, lateral step-up and box jump on the
+  `block` kit. Nearly every exercise left needs a kit not built yet (bands,
+  machines, rings, suspension, dip station, wall, rack, trap bar, plates,
+  sled, ab wheel); the
   landmine press and the Meadows row need the landmine kit to follow one
   hand. Read
   Feature notes › Exercise animations: Where it stands, then A batch, step
@@ -1491,7 +1493,7 @@ files, not here.
   Recipes approved: 270 of 419 live exercises (the last 259 on
   2026-11-27), and all 28 kits; dev and prod hold all of them since
   2026-11-27. `ex_lat_pulldown` stays a draft: its
-  mistakes are not drawn. Not started: about 144 exercises (bands,
+  mistakes are not drawn. Not started: about 138 exercises (bands,
   machines, suspension and small groups), and those skipped for gear
   without a kit (a wall, a rack, a trap bar, plates) or, like the
   kettlebell snatch and clean, by their session. What is open is under
