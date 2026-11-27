@@ -1,5 +1,5 @@
 {
-  "status": "review",
+  "status": "approved",
   "view": [-55, 8],
   "poses": {
     "support": {
@@ -30,7 +30,7 @@
   "mistakes": [
     {
       "line": 0,
-      "status": "review",
+      "status": "approved",
       "ring": ["knee_L", "knee_R"],
       "poses": {
         "l": {"foot": {"pos": [0.09, -0.45, -0.33], "pitch": 25}}
@@ -38,7 +38,7 @@
     },
     {
       "line": 1,
-      "status": "review",
+      "status": "approved",
       "ring": ["clavicle_L", "clavicle_R"],
       "poses": {
         "l": {"pelvis": [0, 0.07, 1.345], "clavicle": [24, 0], "neck": 2}

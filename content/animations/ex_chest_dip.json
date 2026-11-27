@@ -1,5 +1,5 @@
 {
-  "status": "review",
+  "status": "approved",
   "view": [-50, 8],
   "poses": {
     "top": {
@@ -27,7 +27,7 @@
   "mistakes": [
     {
       "line": 0,
-      "status": "review",
+      "status": "approved",
       "ring": ["shoulder_L", "shoulder_R"],
       "poses": {
         "bottom": {"pelvis": [0, 0.05, 0.98], "clavicle": [16, 12], "neck": 0}
@@ -35,7 +35,7 @@
     },
     {
       "line": 1,
-      "status": "review",
+      "status": "approved",
       "ring": ["clavicle_L", "clavicle_R"],
       "poses": {
         "top": {"pelvis": [0, 0.1, 1.36], "clavicle": [24, 2], "neck": 4},

@@ -1,5 +1,5 @@
 {
-  "status": "review",
+  "status": "approved",
   "view": [-50, 8],
   "poses": {
     "top": {
@@ -26,7 +26,7 @@
   "mistakes": [
     {
       "line": 0,
-      "status": "review",
+      "status": "approved",
       "ring": ["hip_L", "hip_R"],
       "poses": {
         "bottom": {"pelvis": [0, 0.06, 1.19], "pelvis_rot": [40, 0, 0], "chest": 6, "neck": -10}
@@ -34,7 +34,7 @@
     },
     {
       "line": 1,
-      "status": "review",
+      "status": "approved",
       "ring": ["shoulder_L", "shoulder_R"],
       "poses": {
         "bottom": {"pelvis": [0, -0.16, 0.94], "pelvis_rot": [12, 0, 0], "clavicle": [16, 10], "neck": 8}
