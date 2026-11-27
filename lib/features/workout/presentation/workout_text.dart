@@ -16,6 +16,7 @@ import '../domain/set_selection.dart';
 import '../domain/workout.dart';
 import '../domain/workout_lock_screen.dart';
 import '../domain/workout_editing.dart' as editing;
+import 'widgets/set_bubble.dart';
 
 extension WorkoutText on AppLocalizations {
   /// The plates on each side of the bar in the plate breakdown, heaviest
@@ -40,8 +41,8 @@ extension WorkoutText on AppLocalizations {
   String setLabel(WorkoutExercise exercise, int set) {
     final number = exercise.sets.take(set + 1).where((s) => !s.isWarmup).length;
     return switch (exercise.sets[set].type) {
-      SetType.warmup => workoutWarmupShort,
-      SetType.drop => '$number$workoutDropShort',
+      SetType.warmup => warmupMark,
+      SetType.drop => '$number$dropMark',
       SetType.normal => '$number',
     };
   }

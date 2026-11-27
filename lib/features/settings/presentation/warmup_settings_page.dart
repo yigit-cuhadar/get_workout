@@ -254,7 +254,7 @@ class _WarmupBubble extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => SetBubble(
-    label: l10n.workoutWarmupShort,
+    label: warmupMark,
     semanticLabel: l10n.workoutWarmupBubble,
     onTap: null,
     warmup: true,

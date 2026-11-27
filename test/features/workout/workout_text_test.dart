@@ -163,6 +163,14 @@ void main() {
       );
     });
 
+    test('the marks are the English initials in Turkish too', () {
+      final tr = lookupAppLocalizations(const Locale('tr'));
+      expect(
+        [for (var i = 0; i < 4; i++) tr.setLabel(bench, i)],
+        ['W', '1', '2D', '3'],
+      );
+    });
+
     test('the set to do now names its kind and counts its own kind', () {
       expect(l10n.setToDo(bench, 3), 'Bench Press · set 3 of 3');
       expect(l10n.setToDo(bench, 2), 'Bench Press · Drop set 2 of 3');
