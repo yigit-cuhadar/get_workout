@@ -12,8 +12,9 @@ Updated 2026-11-27. Keep this block and Open true with every change.
   result is not known here. TestFlight builds 8-13 followed (2026-11-25 to
   2026-11-27). 300 of 419 live exercises have an approved animation.
 - **Next**:
-  1. The next animation batch (Feature notes › Exercise animations: Where it
-     stands, then A batch, step by step).
+  1. The owner's answer on the batch in review (Open › Waits on the owner),
+     then the next animation batch (Feature notes › Exercise animations:
+     Where it stands, then A batch, step by step).
   2. The exercise page's owed studio cards and Widgetbook use cases (Open).
   3. The App Review result, then what waits on it (Open › Waits outside).
 - **Waits on the owner**: each animation batch's approval; two playback
@@ -195,13 +196,12 @@ behaviour and traps are under Feature notes.
 
 ### An agent can do now
 
-- **Next animation batch** (Features, Group 15): 118 live exercises have no
+- **Next animation batch** (Features, Group 15): 113 live exercises have no
   recipe and `ex_lat_pulldown` is a draft without its mistakes. Nearly
   every exercise left needs a kit not built yet (bands, machines, rings,
   suspension, rack, plates, sled, ab wheel; a wall is the `block`
-  kit sized as one); the landmine
-  press and the Meadows row need the landmine kit to follow one hand.
-  Read Feature notes › Exercise animations: Where it stands, then A batch,
+  kit sized as one). Start it once the batch waiting on the owner is
+  answered. Read Feature notes › Exercise animations: Where it stands, then A batch,
   step by step (it starts with `python3 tool/animation/batch.py`); the
   owner approves each batch. Sample every clip frame by frame for body
   parts inside gear: the owner caught feet passing through a box.
@@ -240,6 +240,16 @@ behaviour and traps are under Feature notes.
   session (Design, studio links).
 
 ### Waits on the owner
+
+- **Animation batch in review** (2026-11-27, branch
+  `content/animations-barbell-rack-landmine`): rack pull, preacher curl,
+  Meadows row, landmine press, T-bar row, and three draft kits
+  (`preacher_bench`, `landmine_hand`, `t_bar_handle`). Drafts are on dev
+  and prod for the admin account. The four recipes on draft kits stay
+  `draft` until their kit is approved (the validator refuses a `review`
+  recipe on a draft kit). Open questions: whether "Dropping fast to the
+  bottom" (preacher curl), a tempo mistake, keeps its animation; the
+  Meadows row's pivot on the rowing side.
 
 - **Review marks on the owner's prod account** (2026-11-27): the account
   has the admin claim, which shows animations under review, and the 271
