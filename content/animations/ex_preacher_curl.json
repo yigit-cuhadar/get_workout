@@ -1,5 +1,5 @@
 {
-  "status": "draft",
+  "status": "approved",
   "view": [-50, 8],
   "poses": {
     "bottom": {
@@ -25,14 +25,14 @@
   "mistakes": [
     {
       "line": 0,
-      "status": "review",
+      "status": "approved",
       "ring": ["elbow_L", "elbow_R"],
       "poses": {"drop": {"hand": {"pos": [0.22, -0.662, 0.702], "fingers": [0.0, -0.799, -0.602], "palm": [-0.447, -0.538, 0.714], "curl": 75}, "elbow": [0.188, -0.752, -0.631], "extends": "bottom"}},
       "keys": [[0, "bottom"], [0.5, "mid"], [1.0, "top"], [1.2, "top"], [1.4, "mid"], [1.65, "drop"], [1.95, "bottom"], [2.35, "bottom"]]
     },
     {
       "line": 1,
-      "status": "review",
+      "status": "approved",
       "ring": ["elbow_L", "elbow_R"],
       "poses": {"mid": {"hand": {"pos": [0.22, -0.618, 1.165], "fingers": [0.0, -0.707, 0.707], "palm": [-0.447, 0.632, 0.632], "curl": 75}, "elbow": [0.188, -0.851, -0.491]}, "top": {"hand": {"pos": [0.22, -0.503, 1.283], "fingers": [0.0, -0.309, 0.951], "palm": [-0.447, 0.851, 0.276], "curl": 75}, "elbow": [0.188, -0.934, -0.303]}}
     }
