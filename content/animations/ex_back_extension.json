@@ -1,0 +1,190 @@
+{
+  "status": "draft",
+  "view": [
+    -60,
+    8
+  ],
+  "poses": {
+    "top": {
+      "pelvis": [
+        0.0,
+        -0.0193,
+        0.9693
+      ],
+      "pelvis_rot": [
+        45.0,
+        0,
+        0
+      ],
+      "lumbar": 0,
+      "chest": 0,
+      "neck": -5,
+      "foot": {
+        "pos": [
+          0.11,
+          0.5961,
+          0.3539
+        ],
+        "yaw": 10,
+        "pitch": 40
+      },
+      "hand": {
+        "pos": [
+          -0.05,
+          -0.175,
+          0.06
+        ],
+        "fingers": [
+          -1,
+          0,
+          0.2
+        ],
+        "palm": [
+          0,
+          1,
+          0
+        ],
+        "curl": 20,
+        "rel": "chest"
+      },
+      "hand_R": {
+        "pos": [
+          0.05,
+          -0.175,
+          0.02
+        ],
+        "fingers": [
+          1,
+          0,
+          0.2
+        ],
+        "palm": [
+          0,
+          1,
+          0
+        ],
+        "curl": 20,
+        "rel": "chest"
+      },
+      "elbow": [
+        0.5,
+        -1,
+        -0.5
+      ],
+      "elbow_R": [
+        -0.5,
+        -1,
+        -0.5
+      ],
+      "clavicle": [
+        0,
+        0
+      ]
+    },
+    "bottom": {
+      "extends": "top",
+      "pelvis": [
+        0.0,
+        -0.0243,
+        0.9376
+      ],
+      "pelvis_rot": [
+        117.0,
+        0,
+        0
+      ],
+      "lumbar": 6,
+      "chest": 6,
+      "neck": -12
+    }
+  },
+  "keys": [
+    [
+      0,
+      "top"
+    ],
+    [
+      2.0,
+      "bottom"
+    ],
+    [
+      2.3,
+      "bottom"
+    ],
+    [
+      3.5,
+      "top"
+    ],
+    [
+      3.9,
+      "top"
+    ]
+  ],
+  "gear": [
+    {
+      "kit": "back_extension_bench"
+    }
+  ],
+  "mistakes": [
+    {
+      "line": 0,
+      "status": "review",
+      "ring": [
+        "lumbar"
+      ],
+      "poses": {
+        "arch": {
+          "extends": "top",
+          "pelvis": [
+            0.0,
+            -0.0156,
+            0.9723
+          ],
+          "pelvis_rot": [
+            35.0,
+            0,
+            0
+          ],
+          "lumbar": -12,
+          "chest": -8,
+          "neck": -14
+        }
+      },
+      "keys": [
+        [
+          0,
+          "top"
+        ],
+        [
+          2.0,
+          "bottom"
+        ],
+        [
+          2.3,
+          "bottom"
+        ],
+        [
+          3.5,
+          "arch"
+        ],
+        [
+          3.8,
+          "arch"
+        ],
+        [
+          4.3,
+          "top"
+        ],
+        [
+          4.7,
+          "top"
+        ]
+      ]
+    },
+    {
+      "line": 1,
+      "shown": false,
+      "why": "The hip pad is gear that stands where the correct form needs it; a pad set too high would need the bench changed for this clip alone."
+    }
+  ]
+}

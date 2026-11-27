@@ -1,0 +1,218 @@
+{
+  "status": "draft",
+  "view": [
+    -60,
+    8
+  ],
+  "poses": {
+    "start": {
+      "pelvis": [
+        0.0,
+        -0.0183,
+        0.6868
+      ],
+      "pelvis_rot": [
+        30.0,
+        0,
+        0
+      ],
+      "lumbar": 0,
+      "chest": 3,
+      "neck": 0,
+      "foot": {
+        "at": [
+          0.118,
+          -0.4
+        ],
+        "floor": 0.1
+      },
+      "knee": [
+        0,
+        -1,
+        0.3
+      ],
+      "hand": {
+        "pos": [
+          -0.05,
+          -0.175,
+          0.06
+        ],
+        "fingers": [
+          -1,
+          0,
+          0.2
+        ],
+        "palm": [
+          0,
+          1,
+          0
+        ],
+        "curl": 20,
+        "rel": "chest"
+      },
+      "hand_R": {
+        "pos": [
+          0.05,
+          -0.175,
+          0.02
+        ],
+        "fingers": [
+          1,
+          0,
+          0.2
+        ],
+        "palm": [
+          0,
+          1,
+          0
+        ],
+        "curl": 20,
+        "rel": "chest"
+      },
+      "elbow": [
+        0.5,
+        -1,
+        -0.5
+      ],
+      "elbow_R": [
+        -0.5,
+        -1,
+        -0.5
+      ],
+      "clavicle": [
+        0,
+        0
+      ]
+    },
+    "end": {
+      "extends": "start",
+      "pelvis": [
+        0.0,
+        0.0024,
+        0.6895
+      ],
+      "pelvis_rot": [
+        -15.0,
+        0,
+        0
+      ],
+      "lumbar": 0,
+      "chest": 3,
+      "neck": 0
+    }
+  },
+  "keys": [
+    [
+      0,
+      "start"
+    ],
+    [
+      1.0,
+      "end"
+    ],
+    [
+      1.3,
+      "end"
+    ],
+    [
+      3.0,
+      "start"
+    ],
+    [
+      3.4,
+      "start"
+    ]
+  ],
+  "gear": [
+    {
+      "kit": "back_extension_machine"
+    }
+  ],
+  "mistakes": [
+    {
+      "line": 0,
+      "status": "review",
+      "ring": [
+        "hip_L",
+        "hip_R"
+      ],
+      "poses": {
+        "dip": {
+          "extends": "start",
+          "pelvis": [
+            0.0,
+            -0.0211,
+            0.685
+          ],
+          "pelvis_rot": [
+            37.0,
+            0,
+            0
+          ],
+          "lumbar": 0,
+          "chest": 3,
+          "neck": 0
+        },
+        "throw": {
+          "extends": "start",
+          "pelvis": [
+            0.0,
+            0.0064,
+            0.6881
+          ],
+          "pelvis_rot": [
+            -24.0,
+            0,
+            0
+          ],
+          "lumbar": 0,
+          "chest": 3,
+          "neck": 0
+        }
+      },
+      "keys": [
+        [
+          0,
+          "start"
+        ],
+        [
+          0.25,
+          "dip"
+        ],
+        [
+          0.6,
+          "throw"
+        ],
+        [
+          0.85,
+          "end"
+        ],
+        [
+          1.15,
+          "end"
+        ],
+        [
+          2.85,
+          "start"
+        ],
+        [
+          3.25,
+          "start"
+        ]
+      ]
+    },
+    {
+      "line": 1,
+      "status": "review",
+      "ring": [
+        "neck"
+      ],
+      "poses": {
+        "end": {
+          "neck": -22,
+          "head": -14
+        }
+      }
+    }
+  ]
+}
