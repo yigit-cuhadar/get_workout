@@ -33,30 +33,8 @@
       {"cyl": [[0.62, 0, 2.25], [0.66, 0, 2.25]], "r": 0.032, "colour": "pad"}
     ]
   },
-  "lat_pulldown_machine": {
-    "status": "approved",
-    "movers": {
-      "stack": {"follows": {"grips": [0, 0, 0]}, "axis": [0, 0, -1], "along": [0, 0, 1]}
-    },
-    "pieces": [
-      {"cyl": [{"grips": [-0.62, 0, 0]}, {"grips": [0.62, 0, 0]}], "r": 0.014, "colour": "steel"},
-      {"cyl": [[0, -0.05, 2.05], {"grips": [0, 0, 0]}], "r": 0.006, "colour": "steel"},
-      {"cyl": [[0, -0.05, 2.15], [0, -0.68, 2.15]], "r": 0.006, "colour": "steel"},
-      {"cyl": [[0, -0.68, 2.15], {"at": [0, -0.68, 0.6], "with": "stack"}], "r": 0.006, "colour": "steel"},
-      {"cyl": [[-0.02, -0.05, 2.1], [0.02, -0.05, 2.1]], "r": 0.05, "colour": "steel"},
-      {"box": {"at": [0, -0.68, 0.35], "with": "stack"}, "size": [0.26, 0.14, 0.5], "colour": "plate"},
-      {"box": [0, -0.8, 1.1], "size": [0.1, 0.1, 2.2]},
-      {"box": [0, -0.42, 2.2], "size": [0.08, 0.86, 0.08]},
-      {"box": [0, -0.8, 0.03], "size": [0.6, 0.24, 0.06]},
-      {"box": [0, 0.03, 0.4], "size": [0.36, 0.38, 0.08], "colour": "pad"},
-      {"box": [0, 0.03, 0.2], "size": [0.08, 0.08, 0.34]},
-      {"box": [0, 0.03, 0.02], "size": [0.44, 0.3, 0.04]},
-      {"cyl": [[-0.27, -0.26, 0.68], [0.27, -0.26, 0.68]], "r": 0.05, "colour": "pad"},
-      {"box": [0, -0.53, 0.68], "size": [0.05, 0.54, 0.05]}
-    ]
-  },
   "pulldown_machine": {
-    "status": "draft",
+    "status": "approved",
     "movers": {
       "stack": {"follows": {"grips": [0, 0, 0]}, "axis": [0, 0, -1], "along": [0, 0, 1]}
     },
@@ -458,7 +436,7 @@
     ]
   },
   "leg_press_machine": {
-    "status": "draft",
+    "status": "approved",
     "movers": {
       "sled": {"follows": {"foot": "L", "at": [0, 0, 0]}, "axis": [0.0, -0.707, 0.707], "along": [0.0, -0.707, 0.707]}
     },
@@ -522,7 +500,7 @@
     ]
   },
   "hack_squat_machine": {
-    "status": "draft",
+    "status": "approved",
     "movers": {"sled": {"follows": {"grips": [0, 0, 0]}, "axis": [0.0, 0.707, 0.707], "along": [0.0, 0.707, 0.707]}},
     "pieces": [
       {"cyl": [[-0.36, 0.0, 0.035], [-0.36, -0.476, 0.19]], "r": 0.03},
@@ -572,7 +550,7 @@
     ]
   },
   "leg_extension_machine": {
-    "status": "draft",
+    "status": "approved",
     "movers": {"stack": {"follows": {"between": [{"foot": "L", "at": [0, -0.07, 0.08]}, {"foot": "R", "at": [0, -0.07, 0.08]}], "t": 0.5}, "axis": [0, 0, 1], "along": [0, 0, 0.5]}},
     "pieces": [
       {"box": [0, -0.08, 0.487], "size": [0.4, 0.44, 0.07], "colour": "pad"},

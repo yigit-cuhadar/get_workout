@@ -1,5 +1,5 @@
 {
-  "status": "draft",
+  "status": "approved",
   "view": [
     55,
     10
@@ -102,7 +102,7 @@
   "mistakes": [
     {
       "line": 0,
-      "status": "review",
+      "status": "approved",
       "ring": [
         "pelvis",
         "lumbar"
@@ -133,7 +133,7 @@
     },
     {
       "line": 1,
-      "status": "review",
+      "status": "approved",
       "ring": [
         "knee_L",
         "knee_R"
@@ -183,7 +183,7 @@
     },
     {
       "line": 2,
-      "status": "review",
+      "status": "approved",
       "ring": [
         "knee_L",
         "knee_R"
