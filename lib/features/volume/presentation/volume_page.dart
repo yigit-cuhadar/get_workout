@@ -14,7 +14,9 @@ import '../../exercises/presentation/body_model_cubit.dart';
 import '../../exercises/presentation/exercise_catalogue_cubit.dart';
 import '../../exercises/presentation/vocabulary_labels.dart';
 import '../../programs/domain/calendar_date.dart';
+import '../../settings/domain/user_settings.dart';
 import '../../settings/presentation/first_weekday.dart';
+import '../../settings/presentation/once_tip.dart';
 import '../domain/weekly_volume.dart';
 import 'volume_charts.dart';
 import 'volume_cubit.dart';
@@ -261,7 +263,7 @@ class _VolumeModelState extends State<VolumeModel> {
     final label = widget.semanticLabel;
     final model = context.watch<BodyModelCubit>().state;
     // One model, turned by dragging, shows the front and the back.
-    return SizedBox(
+    final turn = SizedBox(
       height: MediaQuery.sizeOf(context).height * _heightRatio,
       child: switch (model) {
         BodyModelFailed() => MuscleModel.failed(
@@ -274,11 +276,7 @@ class _VolumeModelState extends State<VolumeModel> {
           sides: false,
           onOpen: widget.onOpen,
           semanticLabel: label,
-          footer: _Footer(
-            widget.onOpen == null
-                ? l10n.volumeModelTurnHint
-                : l10n.volumeModelHint,
-          ),
+          footer: const MuscleHeatLegend(),
         ),
         _ => const MuscleModel.loading(
           sides: false,
@@ -286,36 +284,20 @@ class _VolumeModelState extends State<VolumeModel> {
         ),
       },
     );
-  }
-}
-
-/// What the model does, over the heat scale.
-class _Footer extends StatelessWidget {
-  const _Footer(this.hint);
-  final String hint;
-
-  @override
-  Widget build(BuildContext context) {
-    final muted = ForgeStyle.of(context).colors.inkMuted;
+    // How the model turns, and what a tap does, once.
     return Column(
       mainAxisSize: MainAxisSize.min,
-      spacing: 12,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      spacing: Gap.sm,
       children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          spacing: Gap.sm,
-          children: [
-            ForgeIcon(ForgeIcons.sync, size: 16, color: muted),
-            Flexible(
-              child: Text(
-                hint,
-                style: Theme.of(context).textTheme.labelMedium!
-                    .copyWith(fontWeight: FontWeight.w400, color: muted),
-              ),
-            ),
-          ],
-        ),
-        const MuscleHeatLegend(),
+        if (model is BodyModelReady && label != null)
+          OnceTip(
+            Tip.volumeModel,
+            widget.onOpen == null
+                ? l10n.volumeModelTurnHint
+                : l10n.tipVolumeModel,
+          ),
+        turn,
       ],
     );
   }

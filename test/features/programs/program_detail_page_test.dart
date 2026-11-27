@@ -130,8 +130,9 @@ void main() {
         .thenReturn(const ActiveWorkoutState(status: WorkoutStatus.none));
     when(() => workout.access(any())).thenReturn(ProgramAccess.locked);
     final settings = _SettingsCubit();
-    when(() => settings.state)
-        .thenReturn(SettingsState(UserSettings.defaultsFor(null)));
+    when(
+      () => settings.state,
+    ).thenReturn(SettingsState(UserSettings.defaultsFor(null), loaded: true));
     final entitlement = _EntitlementCubit();
     when(() => entitlement.state).thenReturn(const EntitlementUnknown());
     Widget location(BuildContext _, GoRouterState state) =>

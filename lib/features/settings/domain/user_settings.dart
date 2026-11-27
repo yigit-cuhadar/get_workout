@@ -87,6 +87,19 @@ enum Tip {
 
   /// The paywall at the end of onboarding.
   onboardingPaywall,
+
+  /// On a turnable 3D model (the exercise page's stage): drag to turn,
+  /// pinch to zoom.
+  modelTurn,
+
+  /// On Weekly volume's body model: drag to turn, tap a muscle.
+  volumeModel,
+
+  /// In the Training days sheet: how weekdays are picked.
+  trainingDays,
+
+  /// Under a ruler answer: drag it, or tap the number to type.
+  ruler,
 }
 
 const kgPerLb = 0.45359237;
