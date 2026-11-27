@@ -652,6 +652,24 @@
       {"cyl": [{"at": [-0.24, -0.29, 0.768], "with": "lever"}, {"at": [0.24, -0.29, 0.768], "with": "lever"}], "r": 0.05, "colour": "pad"}
     ]
   },
+  "ab_wheel": {
+    "status": "draft",
+    "pieces": [
+      {"cyl": [{"grips": [-0.035, 0, 0]}, {"grips": [0.035, 0, 0]}], "r": 0.09, "colour": "gear"},
+      {"cyl": [{"grips": [-0.045, 0, 0]}, {"grips": [0.045, 0, 0]}], "r": 0.035, "colour": "steel"},
+      {"cyl": [{"grips": [-0.18, 0, 0]}, {"grips": [0.18, 0, 0]}], "r": 0.012, "colour": "steel"},
+      {"cyl": [{"grips": [0.06, 0, 0]}, {"grips": [0.17, 0, 0]}], "r": 0.016, "colour": "pad"},
+      {"cyl": [{"grips": [0.17, 0, 0]}, {"grips": [0.18, 0, 0]}], "r": 0.02, "colour": "steel"},
+      {"cyl": [{"grips": [-0.06, 0, 0]}, {"grips": [-0.17, 0, 0]}], "r": 0.016, "colour": "pad"},
+      {"cyl": [{"grips": [-0.17, 0, 0]}, {"grips": [-0.18, 0, 0]}], "r": 0.02, "colour": "steel"}
+    ]
+  },
+  "wall": {
+    "status": "draft",
+    "pieces": [
+      {"box": [0, -0.06, 0.9], "size": [1.6, 0.12, 1.8], "colour": "gear"}
+    ]
+  },
   "chest_press_machine": {
     "status": "draft",
     "pieces": [
