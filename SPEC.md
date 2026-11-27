@@ -243,16 +243,14 @@ behaviour and traps are under Feature notes.
 - **Animation batch in review** (2026-11-27, branch
   `content/animations-popular-machines`): lat pulldown (its three mistakes
   added), leg extension, leg press, single-leg leg press, hack squat, and
-  three draft kits (`leg_extension_machine`, `leg_press_machine`,
-  `hack_squat_machine`). Drafts are on dev and prod for the admin account.
-  The four recipes on draft kits stay `draft` until their kit is
-  approved.
-- **Lat pulldown seat and thigh pad**: in the approved
-  `lat_pulldown_machine` kit both bodies sink about 4.5 cm into the seat and
-  the thigh pad (every pulldown using it); the gap between them is too
-  narrow for the thighs. Fixing the kit re-renders those recipes; the owner
-  says whether to.
-
+  four draft kits (`leg_extension_machine`, `leg_press_machine`,
+  `hack_squat_machine`, and `pulldown_machine`, the approved
+  `lat_pulldown_machine` with its seat lowered and thigh pad raised so the
+  thighs no longer sink 4.5 cm into them). Drafts are on dev and prod for
+  the admin account. `ex_reverse_grip_lat_pulldown` moves to the new kit
+  as `fix`, its published animation live until approved. The recipes on
+  draft kits stay `draft` until their kit is approved; once both
+  pulldowns are approved, `lat_pulldown_machine` is removed.
 - **Review marks on the owner's prod account** (2026-11-27): the account
   has the admin claim, which shows animations under review, and the 271
   animated exercises were set as its favourites to tell them apart. The
