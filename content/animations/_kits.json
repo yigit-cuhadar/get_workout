@@ -416,10 +416,10 @@
   },
   "preacher_bench": {
     "status": "draft",
-    "values": {"seat": 0.6, "top_y": -0.22, "top_z": 1.0, "low_y": -0.46, "low_z": 0.76},
+    "values": {"seat": 0.485, "top_y": -0.2, "top_z": 0.862, "low_y": -0.369, "low_z": 0.721},
     "pieces": [
-      {"box": [0, 0, "$seat"], "size": [0.32, 0.3, 0.07], "colour": "pad"},
-      {"cyl": [[0, 0.02, 0.04], [0, 0.02, "$seat"]], "r": 0.03, "colour": "steel"},
+      {"box": [0, 0.06, "$seat"], "size": [0.32, 0.22, 0.07], "colour": "pad"},
+      {"cyl": [[0, 0.06, 0.04], [0, 0.06, "$seat"]], "r": 0.03, "colour": "steel"},
       {"cyl": [[-0.21, "$low_y", "$low_z"], [-0.21, "$top_y", "$top_z"]], "r": 0.035, "colour": "pad"},
       {"cyl": [[-0.14, "$low_y", "$low_z"], [-0.14, "$top_y", "$top_z"]], "r": 0.035, "colour": "pad"},
       {"cyl": [[-0.07, "$low_y", "$low_z"], [-0.07, "$top_y", "$top_z"]], "r": 0.035, "colour": "pad"},
@@ -427,10 +427,10 @@
       {"cyl": [[0.07, "$low_y", "$low_z"], [0.07, "$top_y", "$top_z"]], "r": 0.035, "colour": "pad"},
       {"cyl": [[0.14, "$low_y", "$low_z"], [0.14, "$top_y", "$top_z"]], "r": 0.035, "colour": "pad"},
       {"cyl": [[0.21, "$low_y", "$low_z"], [0.21, "$top_y", "$top_z"]], "r": 0.035, "colour": "pad"},
-      {"cyl": [[-0.28, -0.72, 0.04], [-0.21, "$low_y", "$low_z"]], "r": 0.022, "colour": "steel"},
+      {"cyl": [[0, -0.72, 0.04], {"between": [[0, "$low_y", "$low_z"], [0, "$top_y", "$top_z"]], "t": 0.35}], "r": 0.025, "colour": "steel"},
       {"box": [-0.28, -0.31, 0.02], "size": [0.05, 0.9, 0.04]},
-      {"cyl": [[0.28, -0.72, 0.04], [0.21, "$low_y", "$low_z"]], "r": 0.022, "colour": "steel"},
       {"box": [0.28, -0.31, 0.02], "size": [0.05, 0.9, 0.04]},
+      {"box": [0, -0.72, 0.02], "size": [0.61, 0.05, 0.04]},
       {"cyl": [[-0.158, "$low_y", "$low_z"], [0.158, "$low_y", "$low_z"]], "r": 0.022, "colour": "steel"},
       {"box": [0, 0.12, 0.02], "size": [0.61, 0.05, 0.04]}
     ]
