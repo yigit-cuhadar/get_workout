@@ -196,8 +196,9 @@ behaviour and traps are under Feature notes.
 ### An agent can do now
 
 - **Next animation batch** (Features, Group 15): 148 live exercises have no
-  recipe and `ex_lat_pulldown` is a draft without its mistakes. Read Feature notes › Exercise animations: Where it stands,
-  then A batch, step by step (it starts with `python3
+  recipe and `ex_lat_pulldown` is a draft without its mistakes. Read
+  Feature notes › Exercise animations: Where it stands, then A batch, step
+  by step (it starts with `python3
   tool/animation/batch.py`); the owner approves each batch.
 - **Exercise page parts** (2026-11-26): studio component cards and Widgetbook
   use cases are owed for the animation stage with its tabs, the motion view,
@@ -228,8 +229,17 @@ behaviour and traps are under Feature notes.
   `enforceAppCheck: true` to the app's callables. What is enforced when is
   under Feature notes › Account and privacy › App Check.
 
+- **GetWorkout Studio's published copy is behind** `design/studio.html`
+  (2026-11-27: one wrapper tagged `Layout`, two derived lists rebuilt; no
+  look changed). Republish the file to the studio link from a Claude
+  session (Design, studio links).
+
 ### Waits on the owner
 
+- **Review marks on the owner's prod account** (2026-11-27): the account
+  has the admin claim, which shows animations under review, and the 271
+  animated exercises were set as its favourites to tell them apart. The
+  owner says when the favourites, or the claim, should go.
 - **Playback details, to be drawn and asked** (an agent draws the rows first):
   whether pause and half speed survive a chip change (built: they do) and
   whether a speed change restarts the loop (built: it does; the screen review
