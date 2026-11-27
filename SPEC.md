@@ -1550,13 +1550,9 @@ files, not here.
   owner's `note`. A mistake carries its own status. Only `approved`
   recipes are imported. `batch.py` prints the counts and the next batch;
   the count in Where it stands is the only state kept here.
-- **Order**: by equipment group, the catalogue's first matching code
-  deciding: barbell (barbell, ez_bar, trap_bar, smith_machine, landmine,
-  plate), dumbbell and kettlebell, cable, machine (machine, sled,
-  back_extension_bench), bars (pull_up_bar, dip_station, rings,
-  suspension_trainer), bands, then bodyweight and the rest. Inside a group
-  whole families together, the family with the most popular exercise
-  first, then `familyRank`. A batch is about 5 exercises with their
+- **Order** (2026-11-27, the owner: popular first): whole families, the
+  family whose most popular exercise still lacks an approved recipe first,
+  then `familyRank`; the equipment group is only printed. A batch is about 5 exercises with their
   mistakes (10-15 animations) and never splits a family.
 - **A batch, step by step**: (1) list the batch (`batch.py`), build any
   kit it lacks and get that kit approved; (2) write the recipes, one
