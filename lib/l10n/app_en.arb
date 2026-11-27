@@ -2356,6 +2356,5 @@
   "detailSeeAllCount": "See all ({count})",
   "@detailSeeAllCount": {"placeholders": {"count": {"type": "int"}}},
   "similarEasier": "Easier",
-  "similarHarder": "Harder",
-  "detailMistakesAlso": "Also watch for"
+  "similarHarder": "Harder"
 }

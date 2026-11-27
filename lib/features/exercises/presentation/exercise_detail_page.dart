@@ -377,33 +377,19 @@ class _CatalogueBodyState extends State<_CatalogueBody>
 
   @override
   void dispose() {
+    _scroll.dispose();
     _tabs.dispose();
     super.dispose();
   }
 
-  /// The mistakes no form card plays, under their title: with an
-  /// animation the ones it cannot show ("Also watch for"), without one all
-  /// of them; none while the animation loads.
-  (String, List<String>)? _unplayed(List<String> mistakes) {
-    final l10n = AppLocalizations.of(context);
-    final List<String> lines;
-    final String title;
-    switch (context.watch<ExerciseMotionCubit>().state) {
-      case MotionLoading():
-        return null;
-      case MotionReady(:final clips):
-        final shown = {for (final clip in clips) ?clip.line};
-        lines = [
-          for (final (i, line) in mistakes.indexed)
-            if (!shown.contains(i)) line,
-        ];
-        title = l10n.detailMistakesAlso;
-      case MotionNone() || MotionFailed():
-        lines = mistakes;
-        title = l10n.detailMistakes;
-    }
-    return lines.isEmpty ? null : (title, lines);
-  }
+  final _scroll = ScrollController();
+
+  /// Brings the stage into view; the form cards follow the clip picked.
+  void _showMotion() => _scroll.animateTo(
+    0,
+    duration: const Duration(milliseconds: 300),
+    curve: Curves.easeOut,
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -415,23 +401,19 @@ class _CatalogueBodyState extends State<_CatalogueBody>
     const side = EdgeInsets.symmetric(horizontal: Gap.md);
     final content = switch (tab) {
       _Tab.howTo => [
-        if (text.setup.isNotEmpty || text.execution.isNotEmpty)
+        if (text.setup.isNotEmpty ||
+            text.execution.isNotEmpty ||
+            text.cues.isNotEmpty)
           SectionCard.plain(
             title: l10n.detailExecution,
-            child: _Steps(setup: text.setup, execution: text.execution),
+            child: _Steps(
+              setup: text.setup,
+              execution: text.execution,
+              cues: text.cues,
+            ),
           ),
-        if (_unplayed(text.mistakes) case (final title, final lines))
-          SectionCard.plain(
-            title: title,
-            icon: ForgeIcons.warning,
-            child: _Bullets(lines),
-          ),
-        if (text.cues.isNotEmpty)
-          SectionCard.plain(
-            title: l10n.detailCues,
-            icon: ForgeIcons.lightbulb,
-            child: _Bullets(text.cues),
-          ),
+        if (text.mistakes.isNotEmpty)
+          _Mistakes(text.mistakes, onWatch: _showMotion),
         if (text.safety case final safety?)
           SectionCard.plain(
             title: l10n.detailSafety,
@@ -448,6 +430,7 @@ class _CatalogueBodyState extends State<_CatalogueBody>
       _Tab.performance => [_Performance(exercise)],
     };
     return CustomScrollView(
+      controller: _scroll,
       slivers: [
         SliverToBoxAdapter(child: _Hero(exercise)),
         SliverPadding(
@@ -613,32 +596,119 @@ class _Performance extends StatelessWidget {
   }
 }
 
-/// Setup and the movement as numbered steps, each under its own heading
-/// when the exercise has both.
+/// Setup and the movement as numbered steps, then the cues each with a
+/// bulb; every part under its own heading when there is more than one.
 class _Steps extends StatelessWidget {
-  const _Steps({required this.setup, required this.execution});
+  const _Steps({
+    required this.setup,
+    required this.execution,
+    required this.cues,
+  });
 
   final List<String> setup;
   final List<String> execution;
+  final List<String> cues;
+
+  /// The numbered steps' circle (Forge BenefitList's).
+  static const double _circle = 28;
 
   @override
   Widget build(BuildContext context) {
-    if (setup.isEmpty || execution.isEmpty) {
-      return BenefitList.numbered(setup.isEmpty ? execution : setup);
-    }
     final l10n = AppLocalizations.of(context);
+    final colors = ForgeStyle.of(context).colors;
     final heading = Theme.of(context).textTheme.labelLarge!
-        .copyWith(color: ForgeStyle.of(context).colors.inkMuted);
+        .copyWith(color: colors.inkMuted);
+    final parts = [
+      if (setup.isNotEmpty) (l10n.detailSetup, BenefitList.numbered(setup)),
+      if (execution.isNotEmpty)
+        (l10n.detailMovement, BenefitList.numbered(execution)),
+      if (cues.isNotEmpty)
+        (
+          l10n.detailCues,
+          // Each cue beside a bulb in a pale warning-tinted circle, sized
+          // and spaced as the numbered steps and mistakes it sits among.
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            spacing: Gap.md,
+            children: [
+              for (final cue in cues)
+                Row(
+                  spacing: Gap.md,
+                  children: [
+                    Container(
+                      width: _circle,
+                      height: _circle,
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Color.lerp(colors.surface, colors.warning, 0.14),
+                      ),
+                      child: ForgeIcon(
+                        ForgeIcons.lightbulb,
+                        size: 16,
+                        color: Color.lerp(colors.ink, colors.warning, 0.7),
+                      ),
+                    ),
+                    Expanded(
+                      child: Text(
+                        cue,
+                        style: Theme.of(context).textTheme.bodyLarge,
+                      ),
+                    ),
+                  ],
+                ),
+            ],
+          ),
+        ),
+    ];
+    if (parts.length == 1) return parts.single.$2;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       spacing: Gap.md,
       children: [
-        Text(l10n.detailSetup, style: heading),
-        BenefitList.numbered(setup),
-        const Divider(height: 1),
-        Text(l10n.detailMovement, style: heading),
-        BenefitList.numbered(execution),
+        for (final (i, (title, part)) in parts.indexed) ...[
+          if (i > 0) const Divider(height: 1),
+          Text(title, style: heading),
+          part,
+        ],
       ],
+    );
+  }
+}
+
+/// Every common mistake in its catalogue number; one the animation shows
+/// ends in a play button that plays it on the stage and calls [onWatch].
+class _Mistakes extends StatelessWidget {
+  const _Mistakes(this.mistakes, {required this.onWatch});
+
+  final List<String> mistakes;
+  final VoidCallback onWatch;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final motion = context.watch<ExerciseMotionCubit>().state;
+    return SectionCard.plain(
+      title: l10n.detailMistakes,
+      icon: ForgeIcons.warning,
+      child: BenefitList.numbered(
+        mistakes,
+        danger: true,
+        trailing: {
+          if (motion is MotionReady)
+            for (final (i, clip) in motion.clips.indexed)
+              ?clip.line: ForgeIconButton(
+                icon: ForgeIcons.playArrow,
+                label: l10n.motionWatchMistake((clip.line ?? 0) + 1),
+                variant: ForgeIconButtonVariant.ink,
+                fill: ForgeIconButtonFill.sunken,
+                onPressed: () {
+                  context.read<ExerciseMotionCubit>().select(i);
+                  onWatch();
+                },
+              ),
+        },
+      ),
     );
   }
 }
@@ -961,6 +1031,19 @@ class _FormCardsState extends State<_FormCards> {
     // mistakes are on How to do it.
     if (motion is! MotionReady) return legend;
     final forms = [for (final clip in motion.clips) clip.line];
+    // A clip picked elsewhere (a mistake's play button) brings its card.
+    if (motion.selected != _current) {
+      _current = motion.selected;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (_pages.hasClients) {
+          _pages.animateToPage(
+            _current,
+            duration: const Duration(milliseconds: 250),
+            curve: Curves.easeOut,
+          );
+        }
+      });
+    }
 
     final scale = MediaQuery.textScalerOf(context);
     final body = textTheme.bodyMedium!;
@@ -1041,7 +1124,7 @@ class _FormCardsState extends State<_FormCards> {
                   ),
                   Text(
                     line == null
-                        ? text.cues.map(l10n.stepBullet).join('\n')
+                        ? [...text.setup, ...text.execution].firstOrNull ?? ''
                         : text.mistakes[line],
                     style: body,
                     maxLines: _bodyLines,

@@ -1868,6 +1868,5 @@
   "performanceEmptyMessage": "Bu egzersizi bir antrenmanda yaptığında setlerin burada görünür.",
   "detailSeeAllCount": "Tümünü gör ({count})",
   "similarEasier": "Daha kolay",
-  "similarHarder": "Daha zor",
-  "detailMistakesAlso": "Ayrıca dikkat et"
+  "similarHarder": "Daha zor"
 }

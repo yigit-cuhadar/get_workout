@@ -166,7 +166,7 @@ void main() {
     await settle(tester);
   }
 
-  testWidgets('without an animation: no form cards, mistakes on How to do it', (
+  testWidgets('without an animation: no form cards, mistakes listed', (
     tester,
   ) async {
     await pump(tester, DetailReady(bench, alternatives: [dumbbell]));
@@ -174,17 +174,18 @@ void main() {
     expect(find.text('Correct form'), findsNothing);
     expect(find.text('Mistake 1'), findsNothing);
     expect(find.text('Common mistakes'), findsOneWidget);
-    expect(find.text('• Bouncing the bar.'), findsOneWidget);
-    expect(find.text('• Flaring the elbows.'), findsOneWidget);
-    // How to do it is open: the steps and the safety line.
-    expect(find.byType(BenefitList), findsOneWidget);
+    expect(find.text('Bouncing the bar.'), findsOneWidget);
+    expect(find.text('Flaring the elbows.'), findsOneWidget);
+    expect(find.bySemanticsLabel('Watch mistake 1'), findsNothing);
+    // How to do it is open: the steps, the mistakes and the safety line.
+    expect(find.byType(BenefitList), findsNWidgets(2));
     expect(find.text('• Use a spotter.'), findsOneWidget);
     expect(find.text('Pattern'), findsNothing);
     expect(find.text('Custom'), findsNothing);
     expect(find.text('Exercise options'), findsNothing);
   });
 
-  testWidgets('with an animation: a card per clip, the rest on How to do it', (
+  testWidgets('with an animation: a card per clip, every mistake listed', (
     tester,
   ) async {
     await sl.unregister<ExerciseMotionCubit>();
@@ -207,16 +208,21 @@ void main() {
     expect(find.text('Correct form'), findsOneWidget);
     expect(find.text('Mistake 1'), findsOneWidget);
     expect(find.text('Mistake 2'), findsNothing);
-    // The mistake no clip shows is on How to do it.
-    expect(find.text('Also watch for'), findsOneWidget);
-    expect(find.text('• Flaring the elbows.'), findsOneWidget);
-    expect(find.text('• Bouncing the bar.'), findsNothing);
+    // Every mistake is on How to do it; the one with a clip plays it.
+    expect(find.text('Common mistakes'), findsOneWidget);
+    expect(find.text('Flaring the elbows.'), findsOneWidget);
+    expect(find.bySemanticsLabel('Watch mistake 1'), findsOneWidget);
+    expect(find.bySemanticsLabel('Watch mistake 2'), findsNothing);
 
     await tester.timedDrag(
       find.byType(PageView),
       const Offset(-300, 0),
       const Duration(milliseconds: 300),
     );
+    await settle(tester);
+    verify(() => motion.select(1)).called(1);
+
+    await tester.tap(find.bySemanticsLabel('Watch mistake 1'));
     await settle(tester);
     verify(() => motion.select(1)).called(1);
   });
