@@ -3,8 +3,8 @@
   python3 batch.py [size]     (default: 5 exercises)
 
 Prints the count of live exercises by recipe status, the kits and their
-status, and the next batch: whole families, by equipment group, the family
-with the most popular exercise first, then by family rank.
+status, and the next batch: whole families, the family whose most popular
+exercise still lacks an approved recipe first, then by family rank.
 """
 
 import os
@@ -36,7 +36,13 @@ def group(exercise):
 families = {}
 for e in live:
     families.setdefault((group(e), e["family"]), []).append(e)
-order = sorted(families.items(), key=lambda kv: (kv[0][0], min(e["popularity"] for e in kv[1]), kv[0][1]))
+
+
+def first_todo(members):
+    return min((e["popularity"] for e in members if status[e["id"]] != "approved"), default=len(live) + 1)
+
+
+order = sorted(families.items(), key=lambda kv: (first_todo(kv[1]), kv[0][1]))
 
 counts = Counter(status.values())
 print(f"{len(live)} live exercises: " + ", ".join(f"{counts[s]} {s}" for s in (*recipe.STATUSES, "none") if counts[s]))
