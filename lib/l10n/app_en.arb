@@ -1255,8 +1255,6 @@
   "@workoutAddedWeight": {"placeholders": {"unit": {"type": "String"}}},
   "workoutAssistance": "−{unit}",
   "@workoutAssistance": {"placeholders": {"unit": {"type": "String"}}},
-  "workoutWarmupShort": "W",
-  "workoutDropShort": "D",
   "workoutSetOptions": "Set options",
   "workoutSetBubble": "Set {number}",
   "@workoutSetBubble": {"placeholders": {"number": {"type": "int"}}},

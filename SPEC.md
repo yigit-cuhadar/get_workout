@@ -48,7 +48,7 @@ App-wide decisions only. How each feature behaves is under Feature notes.
   overrides it. Turkish rules (2026-11-25): the user is addressed as "sen";
   exercise names stay English, their texts are Turkish; program and split
   names keep the English split term with Turkish around it ("Upper/Lower 4
-  Gün"); day names stay as stored; muscles are Turkish in gym usage (biceps
+  Gün"); day names stay as stored; the set bubbles' warm-up and drop marks are W and D in every language; muscles are Turkish in gym usage (biceps
   "Ön kol", lats "Sırt"; body measurements keep "Ön kol" for the forearm,
   where the tape goes); established training terms stay English (set,
   superset, drop set, circuit, RIR, RPE, 1RM; Squat, Hinge, Lunge as

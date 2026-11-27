@@ -4,6 +4,11 @@ import 'package:flutter/semantics.dart';
 import 'package:flutter/widgets.dart';
 import 'package:forge_ui/forge_ui.dart';
 
+/// A warm-up's and a drop set's mark in a set bubble: the English initials
+/// in every language, as lifters write them.
+const warmupMark = 'W';
+const dropMark = 'D';
+
 /// One set as a circle with its [label] in mono: a done set filled in
 /// accent, the current set (selected, not done) ringed 2.5px in accent, a
 /// pending set ringed 1.5px in line-strong; a [warmup]'s ring is dashed. A

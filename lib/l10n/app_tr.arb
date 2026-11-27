@@ -1025,8 +1025,6 @@
   "workoutSeconds": "Saniye",
   "workoutAddedWeight": "+{unit}",
   "workoutAssistance": "−{unit}",
-  "workoutWarmupShort": "I",
-  "workoutDropShort": "D",
   "workoutSetOptions": "Set seçenekleri",
   "workoutSetBubble": "Set {number}",
   "workoutDropBubble": "Set {number}, drop set",
