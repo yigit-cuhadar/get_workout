@@ -1,5 +1,5 @@
 {
-  "status": "review",
+  "status": "approved",
   "view": [
     130,
     8
@@ -190,7 +190,7 @@
   "mistakes": [
     {
       "line": 0,
-      "status": "review",
+      "status": "approved",
       "ring": [
         "foot_R"
       ],
@@ -205,7 +205,7 @@
     },
     {
       "line": 1,
-      "status": "review",
+      "status": "approved",
       "ring": [
         "foot_R"
       ],

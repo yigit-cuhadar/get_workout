@@ -1,5 +1,5 @@
 {
-  "status": "review",
+  "status": "approved",
   "view": [
     50,
     6
@@ -573,7 +573,7 @@
   "mistakes": [
     {
       "line": 0,
-      "status": "review",
+      "status": "approved",
       "ring": [
         "clavicle_L",
         "clavicle_R",
@@ -647,7 +647,7 @@
     },
     {
       "line": 1,
-      "status": "review",
+      "status": "approved",
       "ring": [
         "hand_L",
         "hand_R"

@@ -1,5 +1,5 @@
 {
-  "status": "review",
+  "status": "approved",
   "view": [
     70,
     6
@@ -157,7 +157,7 @@
   "mistakes": [
     {
       "line": 0,
-      "status": "review",
+      "status": "approved",
       "ring": [
         "knee_L",
         "knee_R"
