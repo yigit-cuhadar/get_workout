@@ -1,0 +1,31 @@
+{
+  "status": "approved",
+  "view": [40, 10],
+  "poses": {
+    "bottom": {"pelvis": [0, 0.015, 0.953], "pelvis_rot": [4, -6, 0], "lumbar": 3, "chest": 3, "neck": -6, "foot_L": {"at": [0.14, 0.22], "floor": 0, "yaw": 14}, "foot_R": {"at": [-0.13, -0.18], "floor": 0, "yaw": 8}, "hand_L": {"pos": [0.16, -0.27, 1.37], "fingers": [-0.307, -0.62, 0.722], "palm": [-0.952, 0.2, -0.233], "curl": 58, "hold": [0.066, 0.046]}, "hand_R": {"pos": [-0.33, -0.004, -0.142], "rel": "pelvis", "curl": 40, "fingers": [-0.208, -0.239, -0.948], "palm": [0.978, -0.051, -0.201]}, "elbow_L": [0.4, 0.8, -1], "elbow_R": [-0.2, 0.5, -0.2], "clavicle": [0, 0]},
+    "mid": {"extends": "bottom", "hand_L": {"pos": [0.16, -0.358, 1.466], "fingers": [-0.577, -0.572, 0.583], "palm": [-0.817, 0.404, -0.412], "curl": 58, "hold": [0.066, 0.046]}, "elbow_L": [0.6, 0.2, -0.6], "clavicle_L": [4, 5]},
+    "top": {"extends": "bottom", "hand_L": {"pos": [0.16, -0.587, 1.666], "fingers": [-0.068, -0.801, 0.595], "palm": [-0.998, 0.055, -0.041], "curl": 58, "hold": [0.066, 0.046]}, "elbow_L": [0.6, 0, -1], "clavicle_L": [8, 10]}
+  },
+  "keys": [[0, "bottom"], [0.3, "mid"], [1.0, "top"], [1.3, "top"], [2.4, "mid"], [2.9, "bottom"], [3.2, "bottom"]],
+  "gear": [{"kit": "landmine_hand", "at": [0.16, -1.75, 0.0], "side": "L"}],
+  "mistakes": [
+    {
+      "line": 0,
+      "status": "approved",
+      "ring": ["lumbar"],
+      "poses": {
+        "mid": {"lumbar": -8, "chest": -5},
+        "top": {"lumbar": -16, "chest": -10, "neck": 4, "hand_L": {"pos": [0.16, -0.467, 1.569], "fingers": [-0.102, -0.749, 0.654], "palm": [-0.995, 0.077, -0.067], "curl": 58, "hold": [0.066, 0.046]}}
+      }
+    },
+    {
+      "line": 1,
+      "status": "approved",
+      "ring": ["hip_L", "hip_R"],
+      "poses": {
+        "mid": {"pelvis": [0, 0.015, 0.947], "pelvis_rot": [4, -20, 0], "foot_L": {"at": [0.14, 0.22], "floor": 0, "yaw": 2}},
+        "top": {"pelvis": [0, 0.015, 0.937], "pelvis_rot": [4, -35, 0], "foot_L": {"at": [0.14, 0.22], "floor": 0, "yaw": -12}, "hand_L": {"pos": [0.16, -0.645, 1.707], "fingers": [0.033, -0.824, 0.566], "palm": [-0.999, -0.027, 0.018], "curl": 58, "hold": [0.066, 0.046]}}
+      }
+    }
+  ]
+}

@@ -383,5 +383,56 @@
       {"cyl": [{"grips": [-0.14, -0.42, 0]}, {"grips": [0.14, -0.42, 0]}], "r": 0.02, "colour": "steel"},
       {"cyl": [{"grips": [-0.14, 0.42, 0]}, {"grips": [0.14, 0.42, 0]}], "r": 0.02, "colour": "steel"}
     ]
+  },
+  "landmine_hand": {
+    "status": "approved",
+    "values": {"side": "R"},
+    "pieces": [
+      {"cyl": [[0, 0, 0.1], {"between": [[0, 0, 0.1], {"hand": "$side", "at": [0, 0, 0]}], "t": 1.04}], "r": 0.014, "colour": "steel"},
+      {"cyl": [{"between": [[0, 0, 0.1], {"hand": "$side", "at": [0, 0, 0]}], "t": 0.875}, {"between": [[0, 0, 0.1], {"hand": "$side", "at": [0, 0, 0]}], "t": 1.04}], "r": 0.025, "colour": "steel"},
+      {"cyl": [{"between": [[0, 0, 0.1], {"hand": "$side", "at": [0, 0, 0]}], "t": 0.895}, {"between": [[0, 0, 0.1], {"hand": "$side", "at": [0, 0, 0]}], "t": 0.915}], "r": 0.225, "colour": "plate"},
+      {"cyl": [{"between": [[0, 0, 0.1], {"hand": "$side", "at": [0, 0, 0]}], "t": 0.915}, {"between": [[0, 0, 0.1], {"hand": "$side", "at": [0, 0, 0]}], "t": 0.93}], "r": 0.17, "colour": "plate"},
+      {"box": [0, 0, 0.03], "size": [0.34, 0.34, 0.06]},
+      {"cyl": [[0, 0, 0.06], [0, 0, 0.13]], "r": 0.04, "colour": "steel"}
+    ]
+  },
+  "t_bar_handle": {
+    "status": "approved",
+    "values": {"jy": -0.1, "jz": 0.07},
+    "pieces": [
+      {"cyl": [[0, 0, 0.1], {"between": [[0, 0, 0.1], {"grips": [0, "$jy", "$jz"]}], "t": 1.2}], "r": 0.014, "colour": "steel"},
+      {"cyl": [{"between": [[0, 0, 0.1], {"grips": [0, "$jy", "$jz"]}], "t": 1.02}, {"between": [[0, 0, 0.1], {"grips": [0, "$jy", "$jz"]}], "t": 1.2}], "r": 0.025, "colour": "steel"},
+      {"cyl": [{"between": [[0, 0, 0.1], {"grips": [0, "$jy", "$jz"]}], "t": 1.035}, {"between": [[0, 0, 0.1], {"grips": [0, "$jy", "$jz"]}], "t": 1.055}], "r": 0.16, "colour": "plate"},
+      {"cyl": [{"between": [[0, 0, 0.1], {"grips": [0, "$jy", "$jz"]}], "t": 1.055}, {"between": [[0, 0, 0.1], {"grips": [0, "$jy", "$jz"]}], "t": 1.071}], "r": 0.12, "colour": "plate"},
+      {"box": [0, 0, 0.03], "size": [0.34, 0.34, 0.06]},
+      {"cyl": [[0, 0, 0.06], [0, 0, 0.13]], "r": 0.04, "colour": "steel"},
+      {"cyl": [{"hand": "L", "at": [0, 0, -0.06]}, {"hand": "L", "at": [0, 0, 0.06]}], "r": 0.014, "colour": "steel"},
+      {"cyl": [{"hand": "L", "at": [0, 0, -0.06]}, {"grips": [0, "$jy", "$jz"]}], "r": 0.01, "colour": "steel"},
+      {"cyl": [{"hand": "L", "at": [0, 0, 0.06]}, {"grips": [0, "$jy", "$jz"]}], "r": 0.01, "colour": "steel"},
+      {"cyl": [{"hand": "R", "at": [0, 0, -0.06]}, {"hand": "R", "at": [0, 0, 0.06]}], "r": 0.014, "colour": "steel"},
+      {"cyl": [{"hand": "R", "at": [0, 0, -0.06]}, {"grips": [0, "$jy", "$jz"]}], "r": 0.01, "colour": "steel"},
+      {"cyl": [{"hand": "R", "at": [0, 0, 0.06]}, {"grips": [0, "$jy", "$jz"]}], "r": 0.01, "colour": "steel"}
+    ]
+  },
+  "preacher_bench": {
+    "status": "approved",
+    "values": {"seat": 0.485, "top_y": -0.194, "top_z": 0.854, "low_y": -0.362, "low_z": 0.713},
+    "pieces": [
+      {"box": [0, 0.06, "$seat"], "size": [0.32, 0.22, 0.07], "colour": "pad"},
+      {"cyl": [[0, 0.06, 0.04], [0, 0.06, "$seat"]], "r": 0.03, "colour": "steel"},
+      {"cyl": [[-0.21, "$low_y", "$low_z"], [-0.21, "$top_y", "$top_z"]], "r": 0.035, "colour": "pad"},
+      {"cyl": [[-0.14, "$low_y", "$low_z"], [-0.14, "$top_y", "$top_z"]], "r": 0.035, "colour": "pad"},
+      {"cyl": [[-0.07, "$low_y", "$low_z"], [-0.07, "$top_y", "$top_z"]], "r": 0.035, "colour": "pad"},
+      {"cyl": [[0, "$low_y", "$low_z"], [0, "$top_y", "$top_z"]], "r": 0.035, "colour": "pad"},
+      {"cyl": [[0.07, "$low_y", "$low_z"], [0.07, "$top_y", "$top_z"]], "r": 0.035, "colour": "pad"},
+      {"cyl": [[0.14, "$low_y", "$low_z"], [0.14, "$top_y", "$top_z"]], "r": 0.035, "colour": "pad"},
+      {"cyl": [[0.21, "$low_y", "$low_z"], [0.21, "$top_y", "$top_z"]], "r": 0.035, "colour": "pad"},
+      {"cyl": [[0, -0.72, 0.04], {"between": [[0, "$low_y", "$low_z"], [0, "$top_y", "$top_z"]], "t": 0.35}], "r": 0.025, "colour": "steel"},
+      {"box": [-0.28, -0.31, 0.02], "size": [0.05, 0.9, 0.04]},
+      {"box": [0.28, -0.31, 0.02], "size": [0.05, 0.9, 0.04]},
+      {"box": [0, -0.72, 0.02], "size": [0.61, 0.05, 0.04]},
+      {"cyl": [[-0.158, "$low_y", "$low_z"], [0.158, "$low_y", "$low_z"]], "r": 0.022, "colour": "steel"},
+      {"box": [0, 0.12, 0.02], "size": [0.61, 0.05, 0.04]}
+    ]
   }
 }

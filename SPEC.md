@@ -10,7 +10,7 @@ Updated 2026-11-27. Keep this block and Open true with every change.
 - **State**: feature groups 1-14 and the animation code of Group 15 are on
   main. iOS 1.0.0 (build 7) was submitted to App Review on 2026-11-24; its
   result is not known here. TestFlight builds 8-13 followed (2026-11-25 to
-  2026-11-27). 300 of 419 live exercises have an approved animation.
+  2026-11-27). 305 of 419 live exercises have an approved animation.
 - **Next**:
   1. The next animation batch (Feature notes › Exercise animations: Where it
      stands, then A batch, step by step).
@@ -175,7 +175,7 @@ animations, whose "Where it stands" entry is kept current)
 - [x] Solver on the phone — the pose solver and the gear builder in Dart, in a Forge package (`forge_motion`)
 - [x] Recipes in Firestore — the import writes approved recipes to `exercises/{id}/animation/main`, rules, the app reads and caches them
 - [x] Animations in the app — Exercise detail's first card with the movement and muscles tabs and the mistake chips, the workout's play button and its sheet, both body models — plays on the simulator
-- [ ] All exercises — batches by equipment family, each exercise with its correct form and its mistakes, each batch approved by the owner — every live exercise has an approved recipe (2026-11-27: 300 of 419 live exercises approved)
+- [ ] All exercises — batches by equipment family, each exercise with its correct form and its mistakes, each batch approved by the owner — every live exercise has an approved recipe (2026-11-27: 305 of 419 live exercises approved)
 
 After release (owner's list, 2026-11-19; not before the first release):
 - Health improvements.
@@ -195,13 +195,11 @@ behaviour and traps are under Feature notes.
 
 ### An agent can do now
 
-- **Next animation batch** (Features, Group 15): 118 live exercises have no
+- **Next animation batch** (Features, Group 15): 113 live exercises have no
   recipe and `ex_lat_pulldown` is a draft without its mistakes. Nearly
   every exercise left needs a kit not built yet (bands, machines, rings,
   suspension, rack, plates, sled, ab wheel; a wall is the `block`
-  kit sized as one); the landmine
-  press and the Meadows row need the landmine kit to follow one hand.
-  Read Feature notes › Exercise animations: Where it stands, then A batch,
+  kit sized as one). Read Feature notes › Exercise animations: Where it stands, then A batch,
   step by step (it starts with `python3 tool/animation/batch.py`); the
   owner approves each batch. Sample every clip frame by frame for body
   parts inside gear: the owner caught feet passing through a box.
@@ -1491,10 +1489,10 @@ files, not here.
 - **Where it stands** (keep this entry current): built end to end and on
   main; animations play in exercise detail and on the open workout card
   for every approved recipe, solved on the phone by `forge_motion`.
-  Recipes approved: 300 of 419 live exercises (the last 2 on
-  2026-11-27), and all 31 kits; dev and prod hold all of them since
+  Recipes approved: 305 of 419 live exercises (the last 5 on
+  2026-11-27), and all 34 kits; dev and prod hold all of them since
   2026-11-27. `ex_lat_pulldown` stays a draft: its
-  mistakes are not drawn. Not started: about 118 exercises (bands,
+  mistakes are not drawn. Not started: about 113 exercises (bands,
   machines, suspension and small groups), and those skipped for gear
   without a kit (a wall, a rack, a trap bar, plates) or, like the
   kettlebell snatch and clean, by their session. What is open is under
@@ -1513,7 +1511,9 @@ files, not here.
   key poses with their times; the gear; a status. A mistake is the correct
   form with the few values that go wrong changed, the catalogue `mistakes`
   line it shows, and the body region to ring. A mistake no pose can show
-  (breathing, tempo, load) gets no animation and the recipe says so. A pose
+  (breathing, tempo, load) gets no animation and the recipe says so; a
+  drop that ends in a visible bounce is shown (2026-11-27, the preacher
+  curl's "Dropping fast to the bottom"). A pose
   gives the pelvis, the spine's angles, where each hand grips and each foot
   stands, where elbows and knees point; the solver does the rest, so hands
   stay on the bar and feet on the floor. Muscles come from the catalogue's
