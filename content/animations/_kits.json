@@ -343,7 +343,7 @@
     ]
   },
   "dip_station": {
-    "status": "draft",
+    "status": "approved",
     "pieces": [
       {"cyl": [[0.25, -0.45, 1.25], [0.25, 0.45, 1.25]], "r": 0.02, "colour": "steel"},
       {"cyl": [[-0.25, -0.45, 1.25], [-0.25, 0.45, 1.25]], "r": 0.02, "colour": "steel"},
