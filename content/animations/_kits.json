@@ -590,5 +590,29 @@
       {"cyl": [[-0.37, 0.135, 0.075], [-0.37, -0.388, 0.075]], "r": 0.006, "colour": "steel"},
       {"cyl": [[-0.37, -0.388, 0.075], [-0.37, -0.388, 0.637]], "r": 0.006, "colour": "steel"}
     ]
+  },
+  "standing_calf_machine": {
+    "status": "draft",
+    "pieces": [
+      {"box": [0, 0.6, 0.03], "size": [0.6, 0.24, 0.06]}
+    ]
+  },
+  "chest_press_machine": {
+    "status": "draft",
+    "pieces": [
+      {"box": [0, 0.6, 0.03], "size": [0.6, 0.24, 0.06]}
+    ]
+  },
+  "seated_leg_curl_machine": {
+    "status": "draft",
+    "pieces": [
+      {"box": [0, 0.6, 0.03], "size": [0.6, 0.24, 0.06]}
+    ]
+  },
+  "lying_leg_curl_machine": {
+    "status": "draft",
+    "pieces": [
+      {"box": [0, 0.6, 0.03], "size": [0.6, 0.24, 0.06]}
+    ]
   }
 }
