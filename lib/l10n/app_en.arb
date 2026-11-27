@@ -1016,6 +1016,7 @@
   "suggestionEyebrow": "Recommended for you · free",
   "suggestionWhy": "Why this one",
   "suggestionSeeOthers": "See other programs",
+  "suggestionUnlockLate": "Premium is active, but this program isn't unlocked yet. Try again in a moment.",
   "suggestionAnswers": "You want to {wants}.",
   "@suggestionAnswers": {"description": "The answers the suggested program matches, e.g. You want to build muscle, train 3 days and use a full gym.", "placeholders": {"wants": {"type": "String"}}},
   "suggestionWantsDays": "train {days, plural, =1{1 day} other{{days} days}}",

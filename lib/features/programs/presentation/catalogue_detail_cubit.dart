@@ -75,6 +75,7 @@ class CatalogueDetailState extends Equatable {
     this.copyIntent,
     this.copyId,
     this.copyFailure,
+    this.queuedCopy,
   });
 
   final CatalogueDetailStatus status;
@@ -94,11 +95,16 @@ class CatalogueDetailState extends Equatable {
   final String? copyId;
   final Failure? copyFailure;
 
+  /// A copy asked for before the days could be copied, e.g. right after
+  /// Premium was bought: made once they are, or given up as failed.
+  final CopyIntent? queuedCopy;
+
   CatalogueDetailState copyWith({
     CopyStatus? copyStatus,
     CopyIntent? Function()? copyIntent,
     String? Function()? copyId,
     Failure? Function()? copyFailure,
+    CopyIntent? Function()? queuedCopy,
   }) => CatalogueDetailState(
     status: status,
     program: program,
@@ -108,6 +114,7 @@ class CatalogueDetailState extends Equatable {
     copyIntent: copyIntent != null ? copyIntent() : this.copyIntent,
     copyId: copyId != null ? copyId() : this.copyId,
     copyFailure: copyFailure != null ? copyFailure() : this.copyFailure,
+    queuedCopy: queuedCopy != null ? queuedCopy() : this.queuedCopy,
   );
 
   @override
@@ -120,6 +127,7 @@ class CatalogueDetailState extends Equatable {
     copyIntent,
     copyId,
     copyFailure,
+    queuedCopy,
   ];
 }
 
@@ -289,6 +297,49 @@ class CatalogueDetailCubit extends Cubit<CatalogueDetailState> {
     );
   }
 
+  /// Copies for [intent] as soon as the days can be copied: at once when
+  /// they can, else once they unlock or load, reading them again if they
+  /// stopped trying. Gives up as [CopyStatus.failed] when they cannot
+  /// come: the unlock stopped retrying, offline, gone, or the exercises
+  /// missing.
+  void copyOnceReady(CopyIntent intent) {
+    if (state.copyStatus != CopyStatus.idle) return;
+    emit(state.copyWith(queuedCopy: () => intent));
+    if (_stalled) return retry();
+    _emit(state.status);
+  }
+
+  /// Whether the days stopped coming until [retry].
+  bool get _stalled => switch (state.status) {
+    CatalogueDetailStatus.unlocking => _retryTimer == null,
+    CatalogueDetailStatus.offline || CatalogueDetailStatus.failure => true,
+    _ => false,
+  };
+
+  void _runQueuedCopy() {
+    final intent = state.queuedCopy;
+    if (intent == null || isClosed) return;
+    final status = state.status;
+    final ready = status == CatalogueDetailStatus.ready;
+    if (ready && state.useStatus == UseStatus.ready) {
+      emit(state.copyWith(queuedCopy: () => null));
+      unawaited(copy(intent));
+    } else if (_stalled ||
+        status == CatalogueDetailStatus.notFound ||
+        (ready && state.useStatus != UseStatus.waiting)) {
+      emit(
+        state.copyWith(
+          copyStatus: CopyStatus.failed,
+          copyIntent: () => intent,
+          copyFailure: () => status == CatalogueDetailStatus.offline
+              ? const NetworkFailure()
+              : _daysFailure ?? const UnknownFailure(),
+          queuedCopy: () => null,
+        ),
+      );
+    }
+  }
+
   /// The page has acted on the copy status.
   void copyHandled() => emit(
     state.copyWith(
@@ -403,8 +454,10 @@ class CatalogueDetailCubit extends Cubit<CatalogueDetailState> {
         copyIntent: state.copyIntent,
         copyId: state.copyId,
         copyFailure: state.copyFailure,
+        queuedCopy: state.queuedCopy,
       ),
     );
+    _runQueuedCopy();
   }
 
   @override

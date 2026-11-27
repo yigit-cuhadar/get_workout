@@ -1289,7 +1289,11 @@ files, not here.
     among the user's programs without starting it and opens its page; the
     user's existing copy opens instead. On a locked premium program Start
     opens the paywall: subscribed, Start waits until the program unlocks,
-    then saves it and goes on as above; closed without subscribing, the
+    then saves it and goes on as above. When the server has not unlocked
+    it by the end of the detail cubit's retries (about 14 s; the webhook
+    can take longer, and the fake store never reaches it), or the days
+    cannot load, Start stops waiting with a snackbar and a tap reads the
+    days again (2026-11-27). Closed without subscribing, the
     suggestion is passed like leaving it (onboarding completes, Today,
     nothing saved) without the onboarding paywall, since one was just
     closed (2026-11-21).
