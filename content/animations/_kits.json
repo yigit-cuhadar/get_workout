@@ -592,7 +592,7 @@
     ]
   },
   "standing_calf_machine": {
-    "status": "draft",
+    "status": "approved",
     "movers": {"carriage": {"follows": {"hand": "L", "at": [0, 0, 0]}, "axis": [0, 0, 1], "along": [0, 0, 1]}},
     "pieces": [
       {"box": [0, -0.45, 0.015], "size": [0.8, 0.9, 0.03], "colour": "gear"},
@@ -625,7 +625,7 @@
     ]
   },
   "seated_calf_machine": {
-    "status": "draft",
+    "status": "approved",
     "movers": {"lever": {"follows": {"foot": "L", "at": [0, 0, 0]}, "axis": [0, 0, 1], "along": [0, 0, 0.71]}},
     "pieces": [
       {"box": [0, -0.25, 0.02], "size": [0.9, 1.1, 0.04], "colour": "gear"},
@@ -653,7 +653,7 @@
     ]
   },
   "ab_wheel": {
-    "status": "draft",
+    "status": "approved",
     "pieces": [
       {"cyl": [{"grips": [-0.035, 0, 0]}, {"grips": [0.035, 0, 0]}], "r": 0.09, "colour": "gear"},
       {"cyl": [{"grips": [-0.045, 0, 0]}, {"grips": [0.045, 0, 0]}], "r": 0.035, "colour": "steel"},
@@ -665,13 +665,13 @@
     ]
   },
   "wall": {
-    "status": "draft",
+    "status": "approved",
     "pieces": [
       {"box": [0, -0.06, 0.9], "size": [1.6, 0.12, 1.8], "colour": "gear"}
     ]
   },
   "leg_press_calf_machine": {
-    "status": "draft",
+    "status": "approved",
     "movers": {"sled": {"follows": {"foot": "L", "at": [0.03, -0.158, -0.085]}, "axis": [0.0, -0.707, 0.707], "along": [0.0, -0.707, 0.707]}},
     "pieces": [
       {"cyl": [{"at": [-0.34, -0.635, 1.211], "with": "sled"}, {"at": [0.34, -0.635, 1.211], "with": "sled"}], "r": 0.03, "colour": "gear"},
@@ -733,7 +733,7 @@
     ]
   },
   "chest_press_machine": {
-    "status": "draft",
+    "status": "approved",
     "movers": {
       "stack": {"follows": {"grips": [0, 0, 0]}, "axis": [0, -1, 0], "along": [0, 0, 0.9]}
     },
@@ -773,7 +773,7 @@
     ]
   },
   "pec_deck_machine": {
-    "status": "draft",
+    "status": "approved",
     "values": {"lx": 0.201, "rx": -0.201, "ay": 0.083, "ld": -0.55, "rd": 0.55},
     "movers": {
       "stack": {"follows": {"hand": "L", "at": [0, 0, 0]}, "axis": [-1, 0, 0], "along": [0, 0, 0.4]}
@@ -814,7 +814,7 @@
     ]
   },
   "hip_machine": {
-    "status": "draft",
+    "status": "approved",
     "values": {"lo": 0.107, "ro": -0.107, "lf": -0.07, "rf": 0.07, "ax": 1},
     "movers": {
       "stack": {"follows": {"foot": "L", "at": [0, 0, 0]}, "axis": ["$ax", 0, 0], "along": [0, 0, 0.5]}
@@ -865,7 +865,7 @@
     ]
   },
   "seated_leg_curl_machine": {
-    "status": "draft",
+    "status": "approved",
     "movers": {"stack": {"follows": {"between": [{"foot": "L", "at": [0, 0.118, 0.1]}, {"foot": "R", "at": [0, 0.118, 0.1]}], "t": 0.5}, "axis": [0, 1, 0], "along": [0, 0, 0.3]}},
     "pieces": [
       {"box": [0, -0.04, 0.487], "size": [0.4, 0.36, 0.07], "colour": "pad"},
@@ -910,7 +910,7 @@
     ]
   },
   "lying_leg_curl_machine": {
-    "status": "draft",
+    "status": "approved",
     "movers": {"stack": {"follows": {"between": [{"foot": "L", "at": [0, 0.115, 0.06]}, {"foot": "R", "at": [0, 0.115, 0.06]}], "t": 0.5}, "axis": [0, 0, 1], "along": [0, 0, 0.4]}},
     "pieces": [
       {"box": [0, 0.01, 0.485], "size": [0.3, 0.66, 0.07], "colour": "pad"},
@@ -947,7 +947,7 @@
     ]
   },
   "back_extension_bench": {
-    "status": "draft",
+    "status": "approved",
     "pieces": [
       {"cyl": [[0.26, 0.7192, 0.2849], [-0.26, 0.7192, 0.2849]], "r": 0.025, "colour": "gear"},
       {"cyl": [[0.26, 0.6809, 0.2528], [-0.26, 0.6809, 0.2528]], "r": 0.025, "colour": "gear"},
@@ -975,7 +975,7 @@
     ]
   },
   "back_extension_machine": {
-    "status": "draft",
+    "status": "approved",
     "movers": {"stack": {"follows": {"hand": "L", "at": [0.2177, 0.325, -0.0686]}, "axis": [0, 1, 0], "along": [0, 0, 0.4]}},
     "pieces": [
       {"box": [0, -0.06, 0.484], "size": [0.4, 0.44, 0.07], "colour": "pad"},

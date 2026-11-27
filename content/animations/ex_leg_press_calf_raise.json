@@ -1,5 +1,5 @@
 {
-  "status": "draft",
+  "status": "approved",
   "view": [55, 10],
   "poses": {
     "low": {
@@ -100,7 +100,7 @@
   "mistakes": [
     {
       "line": 0,
-      "status": "review",
+      "status": "approved",
       "ring": ["foot_L", "foot_R"],
       "poses": {
         "slip": {"extends": "low", "foot": {"pos": [0.14, -0.667, 1.054], "pitch": -155.8}}
@@ -109,7 +109,7 @@
     },
     {
       "line": 1,
-      "status": "review",
+      "status": "approved",
       "ring": ["knee_L", "knee_R"],
       "poses": {
         "dip": {"extends": "low", "foot": {"pos": [0.139, -0.618, 1.054], "pitch": -155.8}},

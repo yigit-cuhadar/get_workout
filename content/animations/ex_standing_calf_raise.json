@@ -1,5 +1,5 @@
 {
-  "status": "draft",
+  "status": "approved",
   "view": [50, 8],
   "poses": {
     "low": {
@@ -75,7 +75,7 @@
   "mistakes": [
     {
       "line": 0,
-      "status": "review",
+      "status": "approved",
       "ring": ["foot_L", "foot_R"],
       "poses": {
         "kick": {"extends": "rise"}
@@ -84,7 +84,7 @@
     },
     {
       "line": 1,
-      "status": "review",
+      "status": "approved",
       "ring": ["knee_L", "knee_R"],
       "poses": {
         "dip": {"extends": "low", "pelvis": [0, 0, 1.03]}

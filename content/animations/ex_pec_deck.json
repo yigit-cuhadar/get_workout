@@ -1,5 +1,5 @@
 {
-  "status": "draft",
+  "status": "approved",
   "view": [
     40,
     25
@@ -248,7 +248,7 @@
   "mistakes": [
     {
       "line": 0,
-      "status": "review",
+      "status": "approved",
       "ring": [
         "shoulder_L",
         "shoulder_R"
@@ -475,7 +475,7 @@
     },
     {
       "line": 1,
-      "status": "review",
+      "status": "approved",
       "ring": [
         "shoulder_L",
         "shoulder_R"

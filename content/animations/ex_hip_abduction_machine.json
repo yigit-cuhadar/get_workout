@@ -1,5 +1,5 @@
 {
-  "status": "draft",
+  "status": "approved",
   "view": [
     30,
     18
@@ -234,7 +234,7 @@
   "mistakes": [
     {
       "line": 0,
-      "status": "review",
+      "status": "approved",
       "ring": [
         "hip_L",
         "hip_R"
@@ -348,7 +348,7 @@
     },
     {
       "line": 1,
-      "status": "review",
+      "status": "approved",
       "ring": [
         "lumbar",
         "chest"

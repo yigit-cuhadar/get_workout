@@ -1,5 +1,5 @@
 {
-  "status": "draft",
+  "status": "approved",
   "view": [
     -140,
     20
@@ -259,7 +259,7 @@
   "mistakes": [
     {
       "line": 0,
-      "status": "review",
+      "status": "approved",
       "ring": [
         "clavicle_L",
         "clavicle_R"
@@ -362,7 +362,7 @@
     },
     {
       "line": 1,
-      "status": "review",
+      "status": "approved",
       "ring": [
         "lumbar",
         "pelvis"

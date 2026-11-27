@@ -1,5 +1,5 @@
 {
-  "status": "draft",
+  "status": "approved",
   "view": [125, 12],
   "poses": {
     "start": {
@@ -138,7 +138,7 @@
   "mistakes": [
     {
       "line": 0,
-      "status": "review",
+      "status": "approved",
       "ring": ["lumbar", "pelvis"],
       "poses": {
         "o2": {"pelvis": [0.0, -0.274, 0.411], "pelvis_rot": [78.6786641699262, 0, 0], "foot": {"pos": [0.11, 0.447, 0.1], "yaw": 0, "pitch": 160}, "knee": [0, -0.3, -1], "lumbar": [-7.4, 0, 0], "chest": [-2.4, 0, 0], "neck": -20.4, "clavicle": [0, 0], "elbow": [0.3, 1, 0], "hand": {"pos": [0.17, -1.017, 0.09], "fingers": [0.0, -0.76, -0.65], "palm": [0.0, 0.65, -0.76], "curl": 75}, "hand_R": {"pos": [-0.17, -1.017, 0.09], "fingers": [0.0, -0.76, -0.65], "palm": [0.0, 0.65, -0.76], "curl": 75}, "elbow_R": [-0.3, 1, 0]},

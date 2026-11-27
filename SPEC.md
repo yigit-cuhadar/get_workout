@@ -10,12 +10,11 @@ Updated 2026-11-27. Keep this block and Open true with every change.
 - **State**: feature groups 1-14 and the animation code of Group 15 are on
   main. iOS 1.0.0 (build 7) was submitted to App Review on 2026-11-24; its
   result is not known here. TestFlight builds 8-15 followed (2026-11-25 to
-  2026-11-27). 310 of 419 live exercises have an approved animation.
+  2026-11-27). 326 of 419 live exercises have an approved animation.
 - **Next**:
   1. The owner's verdict on the exercise page redesign PR (Open).
-  2. The owner's answer on the animation batch in review (Open › Waits on
-     the owner), then the next batch (Feature notes › Exercise animations:
-     Where it stands, then A batch, step by step).
+  2. The next animation batch (Feature notes › Exercise animations: Where it
+     stands, then A batch, step by step).
   3. The App Review result, then what waits on it (Open › Waits outside).
 - **Waits on the owner**: each animation batch's approval; two playback
   details to draw and ask; checks on a real device (Open).
@@ -176,7 +175,7 @@ animations, whose "Where it stands" entry is kept current)
 - [x] Solver on the phone — the pose solver and the gear builder in Dart, in a Forge package (`forge_motion`)
 - [x] Recipes in Firestore — the import writes approved recipes to `exercises/{id}/animation/main`, rules, the app reads and caches them
 - [x] Animations in the app — Exercise detail's first card with the movement and muscles tabs and the mistake chips, the workout's play button and its sheet, both body models — plays on the simulator
-- [ ] All exercises — batches by family, most popular first, each exercise with its correct form and its mistakes, each batch approved by the owner — every live exercise has an approved recipe (2026-11-27: 310 of 419 live exercises approved)
+- [ ] All exercises — batches by family, most popular first, each exercise with its correct form and its mistakes, each batch approved by the owner — every live exercise has an approved recipe (2026-11-27: 326 of 419 live exercises approved)
 
 After release (owner's list, 2026-11-19; not before the first release):
 - Health improvements.
@@ -198,9 +197,7 @@ behaviour and traps are under Feature notes.
 
 - **Next animation batch** (Features, Group 15): 93 live exercises have no
   recipe. Nearly every exercise left needs a kit not built yet (bands,
-  machines, rings, suspension, rack, plates, sled, ab wheel; a wall is the
-  `block` kit sized as one). Start it once the batch waiting on the owner
-  is answered. Read Feature notes › Exercise animations: Where it stands,
+  machines, rings, suspension, rack, plates, sled, ab wheel). Read Feature notes › Exercise animations: Where it stands,
   then A batch, step by step (it starts with `python3 tool/animation/batch.py`); the
   owner approves each batch. Sample every clip frame by frame for body
   parts inside gear: the owner caught feet passing through a box.
@@ -244,20 +241,6 @@ behaviour and traps are under Feature notes.
   session (Design, studio links).
 
 ### Waits on the owner
-
-- **Animation batch in review** (2026-11-27, branch
-  `content/animations-calf-chest-curl`, 16 exercises): standing, seated and
-  leg press calf raises; machine chest press; pec deck and reverse pec
-  deck; hip abduction and adduction machines; seated and lying leg curls;
-  back extension and back extension machine; the four ab wheel rollouts.
-  Twelve draft kits: `standing_calf_machine`, `seated_calf_machine`,
-  `leg_press_calf_machine` (the leg press with its sled following the
-  balls of the feet), `chest_press_machine`, `pec_deck_machine`,
-  `hip_machine`, `seated_leg_curl_machine`, `lying_leg_curl_machine`,
-  `back_extension_bench`, `back_extension_machine`, `ab_wheel`, `wall`.
-  Drafts are on dev and prod for the admin account; every recipe stays
-  `draft` until its kit is approved. Not shown: the back extension's "pad
-  set too high" (a gear setting) and the wall rollout's "rushing" (tempo).
 
 - **Review marks on the owner's prod account** (2026-11-27): the account
   has the admin claim, which shows animations under review, and the 271
@@ -1513,11 +1496,11 @@ files, not here.
 - **Where it stands** (keep this entry current): built end to end and on
   main; animations play in exercise detail and on the open workout card
   for every approved recipe, solved on the phone by `forge_motion`.
-  Recipes approved: 310 of 419 live exercises (the last 6 on
-  2026-11-27), and all 37 kits; dev and prod hold all of them since
+  Recipes approved: 326 of 419 live exercises (the last 16 on
+  2026-11-27), and all 49 kits; dev and prod hold all of them since
   2026-11-27. Not started: about 93 exercises (bands,
   machines, suspension and small groups), and those skipped for gear
-  without a kit (a wall, a rack, a trap bar, plates) or, like the
+  without a kit (a rack, plates) or, like the
   kettlebell snatch and clean, by their session. What is open is under
   Open.
 - **Tools** (`tool/animation/`; prerequisites under Operations; each
