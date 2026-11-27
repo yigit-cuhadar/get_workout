@@ -197,8 +197,8 @@ behaviour and traps are under Feature notes.
 
 - **Next animation batch** (Features, Group 15): 93 live exercises have no
   recipe. Nearly every exercise left needs a kit not built yet (bands,
-  machines, rings, suspension, rack, plates, sled, ab wheel). Read Feature notes › Exercise animations: Where it stands,
-  then A batch, step by step (it starts with `python3 tool/animation/batch.py`); the
+  machines, rings, suspension, rack, plates, sled). Read Feature notes ›
+  Exercise animations: Where it stands, then A batch, step by step (it starts with `python3 tool/animation/batch.py`); the
   owner approves each batch. Sample every clip frame by frame for body
   parts inside gear: the owner caught feet passing through a box.
 - **Exercise page redesign** (Design, 2026-11-27): built on its own PR,
