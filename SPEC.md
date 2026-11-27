@@ -13,8 +13,9 @@ Updated 2026-11-27. Keep this block and Open true with every change.
   2026-11-27). 310 of 419 live exercises have an approved animation.
 - **Next**:
   1. The owner's verdict on the exercise page redesign PR (Open).
-  2. The next animation batch (Feature notes › Exercise animations: Where it
-     stands, then A batch, step by step).
+  2. The owner's answer on the animation batch in review (Open › Waits on
+     the owner), then the next batch (Feature notes › Exercise animations:
+     Where it stands, then A batch, step by step).
   3. The App Review result, then what waits on it (Open › Waits outside).
 - **Waits on the owner**: each animation batch's approval; two playback
   details to draw and ask; checks on a real device (Open).
@@ -195,10 +196,11 @@ behaviour and traps are under Feature notes.
 
 ### An agent can do now
 
-- **Next animation batch** (Features, Group 15): 109 live exercises have no
+- **Next animation batch** (Features, Group 15): 93 live exercises have no
   recipe. Nearly every exercise left needs a kit not built yet (bands,
   machines, rings, suspension, rack, plates, sled, ab wheel; a wall is the
-  `block` kit sized as one). Read Feature notes › Exercise animations: Where it stands,
+  `block` kit sized as one). Start it once the batch waiting on the owner
+  is answered. Read Feature notes › Exercise animations: Where it stands,
   then A batch, step by step (it starts with `python3 tool/animation/batch.py`); the
   owner approves each batch. Sample every clip frame by frame for body
   parts inside gear: the owner caught feet passing through a box.
@@ -242,6 +244,20 @@ behaviour and traps are under Feature notes.
   session (Design, studio links).
 
 ### Waits on the owner
+
+- **Animation batch in review** (2026-11-27, branch
+  `content/animations-calf-chest-curl`, 16 exercises): standing, seated and
+  leg press calf raises; machine chest press; pec deck and reverse pec
+  deck; hip abduction and adduction machines; seated and lying leg curls;
+  back extension and back extension machine; the four ab wheel rollouts.
+  Twelve draft kits: `standing_calf_machine`, `seated_calf_machine`,
+  `leg_press_calf_machine` (the leg press with its sled following the
+  balls of the feet), `chest_press_machine`, `pec_deck_machine`,
+  `hip_machine`, `seated_leg_curl_machine`, `lying_leg_curl_machine`,
+  `back_extension_bench`, `back_extension_machine`, `ab_wheel`, `wall`.
+  Drafts are on dev and prod for the admin account; every recipe stays
+  `draft` until its kit is approved. Not shown: the back extension's "pad
+  set too high" (a gear setting) and the wall rollout's "rushing" (tempo).
 
 - **Review marks on the owner's prod account** (2026-11-27): the account
   has the admin claim, which shows animations under review, and the 271
@@ -1499,7 +1515,7 @@ files, not here.
   for every approved recipe, solved on the phone by `forge_motion`.
   Recipes approved: 310 of 419 live exercises (the last 6 on
   2026-11-27), and all 37 kits; dev and prod hold all of them since
-  2026-11-27. Not started: about 109 exercises (bands,
+  2026-11-27. Not started: about 93 exercises (bands,
   machines, suspension and small groups), and those skipped for gear
   without a kit (a wall, a rack, a trap bar, plates) or, like the
   kettlebell snatch and clean, by their session. What is open is under
